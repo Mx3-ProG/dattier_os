@@ -22,7 +22,7 @@ Variables : `DATTIER_DEMO=true` est indispensable ; `DATTIER_DATA_DIR` sélectio
 
 | Profil fictif | Rôle |
 | --- | --- |
-| Mathieu | SUPER_ADMIN, administration technique de la démo |
+| Slimane | SUPER_ADMIN, administration technique de la démo |
 | Nadia | OWNER, pilotage et configuration |
 | Lina | MANAGER, supervision opérationnelle |
 | Sarah | WAITER, salle et réservations |
@@ -32,7 +32,9 @@ Variables : `DATTIER_DEMO=true` est indispensable ; `DATTIER_DATA_DIR` sélectio
 | Inès | PURCHASING, fournisseurs et livraisons |
 | Leïla | ACCOUNTANT, finances et dépenses |
 
-Le changement de profil via `/demo` conserve toutes les opérations. Nadia et Mathieu accèdent aux deux établissements initiaux ; les autres profils sont affectés à Bernay. Les sessions utilisent un cookie HttpOnly, SameSite strict, avec jeton opaque haché en base et expiration de 12 heures. Cette sélection de personnages est uniquement une authentification de démonstration.
+Slimane est le super administrateur. Son adresse e-mail reste à fournir : elle sera rattachée lors de la mise en place de l’authentification de production (la table `profiles` ne contient pas encore de colonne e-mail).
+
+Le changement de profil via `/demo` conserve toutes les opérations. Nadia et Slimane accèdent aux deux établissements initiaux ; les autres profils sont affectés à Bernay. Les sessions utilisent un cookie HttpOnly, SameSite strict, avec jeton opaque haché en base et expiration de 12 heures. Cette sélection de personnages est uniquement une authentification de démonstration.
 
 ## Parcours principal
 

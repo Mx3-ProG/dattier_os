@@ -11,7 +11,7 @@ export async function seed(db: Transaction) {
     "INSERT INTO restaurants VALUES ('bernay','Le Dattier Hefsi','29 Rue du Général Leclerc, 27300 Bernay','02 32 46 12 11',150000),('atelier','L’Atelier — établissement fictif','Établissement de démonstration','',90000)",
   );
   const people = [
-    ["mathieu", "Mathieu", "SUPER_ADMIN"],
+    ["slimane", "Slimane", "SUPER_ADMIN"],
     ["nadia", "Nadia", "OWNER"],
     ["lina", "Lina", "MANAGER"],
     ["sarah", "Sarah", "WAITER"],
