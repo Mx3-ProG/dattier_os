@@ -1323,21 +1323,13 @@ td .btn {
 .public-demo {
   background: #334b3c;
   color: #dfdfcc;
-  font-size: 10px;
+  font-size: 12px;
   padding: 8px 25px;
   text-align: center;
   letter-spacing: 0.3px;
 }
 .public-demo a {
   text-decoration: underline;
-}
-.public-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 25px;
-  padding: 28px 6%;
-  border-bottom: 1px solid #e9e4d8;
 }
 .public-brand {
   display: flex;
@@ -1354,17 +1346,9 @@ td .btn {
 }
 .public-brand small {
   font-family: Arial, sans-serif;
-  font-size: 8px;
+  font-size: 9px;
   letter-spacing: 3px;
   margin-top: 7px;
-}
-.public-header nav {
-  display: flex;
-  gap: 28px;
-  font-size: 11px;
-}
-.public-header .btn {
-  font-size: 11px;
 }
 .public-hero {
   display: grid;
@@ -1388,19 +1372,19 @@ td .btn {
   color: #a16e4d;
 }
 .public-hero p {
-  max-width: 440px;
-  line-height: 1.9;
-  font-size: 14px;
+  max-width: 460px;
+  line-height: 1.8;
+  font-size: 16px;
   margin: 25px 0;
 }
 .public-hero .eyebrow {
-  font-size: 9px;
+  font-size: 11px;
   letter-spacing: 3px;
   color: #8c906f;
   margin-bottom: 24px;
 }
 .hero-address {
-  font-size: 10px;
+  font-size: 13px;
   display: flex;
   align-items: center;
   gap: 8px;
@@ -1513,7 +1497,7 @@ td .btn {
   gap: 20px;
   border-block: 1px solid #dfdfcd;
   padding: 22px 30px;
-  font-size: 9px;
+  font-size: 11px;
   letter-spacing: 2px;
   color: #848a6e;
   background: #f0efe2;
@@ -1558,7 +1542,7 @@ td .btn {
   font-weight: 400;
 }
 .public-menu-item p {
-  font-size: 11px;
+  font-size: 13px;
   max-width: 330px;
 }
 .public-menu-item > div:last-child {
@@ -1569,7 +1553,7 @@ td .btn {
   min-width: 90px;
 }
 .public-menu-item small {
-  font-size: 10px;
+  font-size: 12px;
 }
 .public-form {
   max-width: 550px;
@@ -1595,26 +1579,6 @@ td .btn {
 }
 .editorial p {
   margin: 25px 0;
-}
-.public-footer {
-  background: #eaeadd;
-  border-top: 1px solid #d7dbc8;
-  padding: 40px 6%;
-  display: flex;
-  gap: 30px;
-  align-items: center;
-  justify-content: space-between;
-  flex-wrap: wrap;
-}
-.public-footer > div {
-  display: flex;
-  gap: 20px;
-  flex-wrap: wrap;
-  font-size: 10px;
-}
-.public-footer > small {
-  width: 100%;
-  font-size: 9px;
 }
 @media (min-width: 1500px) {
   .welcome-art {
@@ -1688,9 +1652,6 @@ td .btn {
   .public-section h1 {
     font-size: 46px;
   }
-  .public-header nav {
-    gap: 15px;
-  }
   .food-plate {
     width: 280px;
     height: 280px;
@@ -1753,28 +1714,12 @@ td .btn {
   .three-grid {
     gap: 13px;
   }
-  .public-header {
-    padding: 20px 5%;
-    flex-wrap: wrap;
-    gap: 15px;
-  }
-  .public-header nav {
-    order: 3;
-    width: 100%;
-    justify-content: center;
-  }
-  .public-header .btn {
-    font-size: 10px;
-  }
   .public-hero {
     grid-template-columns: 1fr 1fr;
     gap: 20px;
   }
   .public-hero h1 {
     font-size: 38px;
-  }
-  .public-hero p {
-    font-size: 12px;
   }
   .public-art {
     height: 360px;
@@ -1784,11 +1729,7 @@ td .btn {
     height: 230px;
     transform: translate(-50%, -50%) rotate(-20deg) scale(0.85);
   }
-  .public-hero .actions .text-button {
-    font-size: 10px;
-  }
   .public-strip {
-    font-size: 7px;
     letter-spacing: 1px;
   }
   .public-section {
@@ -1961,22 +1902,11 @@ td .btn {
   .profile-card {
     min-height: 90px;
   }
-  .public-header {
-    padding: 18px 5%;
-  }
   .public-brand {
     font-size: 24px;
   }
   .public-brand small {
-    font-size: 6px;
-  }
-  .public-header nav {
-    font-size: 10px;
-    gap: 22px;
-  }
-  .public-header .btn {
-    padding: 9px 10px;
-    min-height: 38px;
+    font-size: 8px;
   }
   .public-hero {
     grid-template-columns: 1fr;
@@ -2011,7 +1941,6 @@ td .btn {
   .public-strip {
     flex-wrap: wrap;
     padding: 18px;
-    font-size: 7px;
     gap: 15px;
   }
   .public-strip i {
@@ -2036,21 +1965,11 @@ td .btn {
   .public-form {
     padding: 20px;
   }
-  .public-footer {
-    padding: 30px 6%;
-  }
-  .public-footer > div {
-    gap: 16px;
-  }
   .public-demo {
-    font-size: 8px;
     padding: 7px 15px;
   }
   .public-section.two-grid {
     gap: 10px;
-  }
-  .public-site .eyebrow {
-    font-size: 8px;
   }
 }
 @media (prefers-reduced-motion: reduce) {
