@@ -27,7 +27,7 @@ export async function createProduct(
   user: Actor,
   a: z.infer<typeof productSchema>,
 ) {
-  requirePermission(user.role, "catalog");
+  requirePermission(user, "catalog");
   if (new Set(a.ingredients.map((i) => i.id)).size !== a.ingredients.length)
     throw new Error("Chaque ingrédient doit apparaître une seule fois.");
   for (const i of a.ingredients)
@@ -57,7 +57,7 @@ export async function lifecycle(
   id: string,
   operation: "archive" | "restore" | "delete",
 ) {
-  requirePermission(user.role, "catalog");
+  requirePermission(user, "catalog");
   await one(
     db,
     "SELECT id FROM menu_items WHERE id=$1 AND restaurant_id=$2 FOR UPDATE",

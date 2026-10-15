@@ -22,7 +22,6 @@ import {
   Globe,
   Bell,
   Menu,
-  X,
   ChevronDown,
   ArrowUpRight,
   Leaf,
@@ -31,12 +30,12 @@ import { can, type Permission, roleLabels } from "@/lib/permissions";
 import type { Snapshot } from "@/lib/types";
 import { Dining, Kds, OrderList } from "./operations";
 import { Management } from "./management";
+import { NotificationCenter } from "./notifications";
 import dynamic from "next/dynamic";
 const Overview = dynamic(() => import("./overview").then((m) => m.Overview), {
   loading: () => <p>Chargement du tableau de bord…</p>,
 });
 const Finance = dynamic(() => import("./overview").then((m) => m.Finance));
-import { dateTime } from "@/lib/domain";
 const modules = [
   {
     id: "overview",
@@ -218,7 +217,7 @@ export function Workspace() {
   }
   const allowed = data
     ? modules.filter(
-        (m) => !m.permission || can(data.user.role, m.permission as Permission),
+        (m) => !m.permission || can(data.user, m.permission as Permission),
       )
     : [];
   const current =
@@ -340,11 +339,18 @@ export function Workspace() {
             </span>
             <button
               className="icon-button notification-button"
-              aria-label="Notifications"
+              aria-label={`Notifications${data.unreadNotifications ? ` (${data.unreadNotifications} non lues)` : ""}`}
+              aria-expanded={notifications}
               onClick={() => setNotifications(!notifications)}
             >
               <Bell size={20} />
-              {data.notifications.some((n) => !n.read) && <i />}
+              {data.unreadNotifications > 0 && (
+                <i>
+                  {data.unreadNotifications > 99
+                    ? "99+"
+                    : data.unreadNotifications}
+                </i>
+              )}
             </button>
             <Link href="/demo" className="avatar small">
               {data.user.name.slice(0, 1)}
@@ -357,33 +363,13 @@ export function Workspace() {
           <Link href="/demo">Changer de profil →</Link>
         </div>
         {notifications && (
-          <section className="notification-panel card">
-            <div className="section-heading">
-              <h2>Notifications</h2>
-              <button
-                aria-label="Fermer les notifications"
-                className="icon-button"
-                onClick={() => setNotifications(false)}
-              >
-                <X />
-              </button>
-            </div>
-            <button
-              className="text-button"
-              onClick={() => act({ action: "read" })}
-            >
-              Tout marquer comme lu
-            </button>
-            {data.notifications.map((n) => (
-              <div
-                className={`notification ${n.read ? "read" : ""}`}
-                key={n.id}
-              >
-                <b>{n.message}</b>
-                <small>{dateTime(n.created_at)}</small>
-              </div>
-            ))}
-          </section>
+          <NotificationCenter
+            data={data}
+            act={act}
+            modules={allowed.map((m) => m.id)}
+            navigate={navigate}
+            close={() => setNotifications(false)}
+          />
         )}
         <main className="content">
           {error && (

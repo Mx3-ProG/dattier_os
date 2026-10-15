@@ -9,6 +9,7 @@ Navigateur → Route Handler `/api/v1/*` → validation Zod → session opaque �
 - `src/features/orders/service.ts` : commandes, lots, transitions, règlements, événements.
 - `src/lib/actions.ts` : actions complémentaires et réservation publique.
 - `src/lib/snapshot.ts` : lecture filtrée par permission, projection des disponibilités.
+- `src/features/events` et `src/features/notifications` : journal d’événements métier transactionnel, catalogue et filtrage des notifications, alertes calculées (voir `NOTIFICATIONS.md`).
 - `src/lib/database` : adaptateur PGlite et seed reproductible.
 - `src/lib/auth` et `permissions.ts` : sessions et RBAC.
 - `src/components` : vues métier, formulaires, site public.

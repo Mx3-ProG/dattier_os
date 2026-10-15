@@ -4,6 +4,7 @@ import { z } from "zod";
 import { one, rows, type DB } from "@/lib/database/db";
 import type { Actor } from "@/lib/auth/session";
 import { requirePermission } from "@/lib/permissions";
+import { emit } from "@/features/events/service";
 export const orderSchema = z.object({
   restaurant: z.string(),
   table: z.string().optional(),
@@ -36,13 +37,6 @@ export async function log(
     actor,
     action,
     object,
-  ]);
-}
-export async function notify(db: DB, r: string, message: string) {
-  await db.query("INSERT INTO notifications VALUES($1,$2,$3,now())", [
-    uuid(),
-    r,
-    message,
   ]);
 }
 export async function movement(
@@ -121,7 +115,7 @@ export async function createOrder(
 ) {
   if (input.channel === "staff") {
     if (!user) throw new Error("Connexion requise.");
-    requirePermission(user.role, "orders");
+    requirePermission(user, "orders");
   } else if (!input.customer.trim() || !input.contact.trim())
     throw new Error("Nom et coordonnées requis.");
   const prior = await rows<{ id: string; restaurant_id: string }>(
@@ -229,11 +223,14 @@ export async function createOrder(
       : "Demande de commande à confirmer",
     id,
   );
-  await notify(
-    db,
-    input.restaurant,
-    `Nouvelle ${input.channel === "staff" ? "commande" : "demande à confirmer"} · ${id.slice(0, 6)}`,
-  );
+  await emit(db, input.restaurant, {
+    type: input.channel === "staff" ? "order.created" : "order.pending",
+    module: "orders",
+    actor: user?.id ?? null,
+    objectId: id,
+    summary: `Nouvelle ${input.channel === "staff" ? "commande" : "demande à confirmer"} · ${id.slice(0, 6)}`,
+    data: { channel: input.channel, items: input.items.length },
+  });
   return id;
 }
 export async function changeItem(
@@ -249,7 +246,7 @@ export async function changeItem(
     [id, r],
   );
   requirePermission(
-    user.role,
+    user,
     target === "served" || target === "cancelled"
       ? "orders"
       : item.station === "bar"
@@ -345,11 +342,14 @@ export async function changeItem(
   await db.query("UPDATE order_items SET status=$2 WHERE id=$1", [id, target]);
   await log(db, r, user.id, `Préparation : ${target}`, id);
   if (target === "ready")
-    await notify(
-      db,
-      r,
-      `${item.station === "bar" ? "Boisson" : "Plat"} prêt · commande ${item.order_id.slice(0, 6)}`,
-    );
+    await emit(db, r, {
+      type: "order.ready",
+      module: "orders",
+      actor: user.id,
+      objectId: item.order_id,
+      summary: `${item.station === "bar" ? "Boisson" : "Plat"} prêt · commande ${item.order_id.slice(0, 6)}`,
+      data: { item: id, station: item.station },
+    });
 }
 export async function pay(
   db: DB,
@@ -360,7 +360,7 @@ export async function pay(
   customer?: string,
   promo?: string,
 ) {
-  requirePermission(user.role, "payments");
+  requirePermission(user, "payments");
   const order = await one<{ session_id: string | null; status: string }>(
     db,
     "SELECT * FROM orders WHERE id=$1 AND restaurant_id=$2 FOR UPDATE",

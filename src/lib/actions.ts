@@ -10,15 +10,26 @@ import {
 } from "@/features/loyalty/service";
 import { randomUUID as uuid } from "node:crypto";
 import { z } from "zod";
+import { dateTime, money } from "./domain";
 import { rows, one, type DB } from "./database/db";
 import type { Actor } from "./auth/session";
-import { requirePermission } from "./permissions";
+import {
+  hasRole,
+  primaryRole,
+  requirePermission,
+  rolesOf,
+} from "./permissions";
+import { emit } from "@/features/events/service";
+import {
+  markRead,
+  notificationActionSchemas,
+  setPreference,
+} from "@/features/notifications/service";
 import {
   changeItem,
   createOrder,
   log,
   movement,
-  notify,
   orderSchema,
   pay,
   reserve,
@@ -125,7 +136,7 @@ export const actionSchema = z.discriminatedUnion("action", [
     ingredient: id,
     quantity: qty,
   }),
-  z.object({ action: z.literal("read") }),
+  ...notificationActionSchemas,
   z.object({
     action: z.literal("restaurant"),
     name: text,
@@ -159,7 +170,7 @@ export async function perform(
     case "pay":
       return pay(db, r, a.id, a.method, user, a.customer, a.promo);
     case "confirmOrder": {
-      requirePermission(user.role, "orders");
+      requirePermission(user, "orders");
       const o = await one<{ status: string; session_id: string | null }>(
         db,
         "SELECT status,session_id FROM orders WHERE id=$1 AND restaurant_id=$2 FOR UPDATE",
@@ -188,7 +199,7 @@ export async function perform(
       break;
     }
     case "table": {
-      requirePermission(user.role, "orders");
+      requirePermission(user, "orders");
       const t = await one<{ status: string }>(
         db,
         "SELECT status FROM dining_tables WHERE id=$1 AND restaurant_id=$2",
@@ -203,7 +214,7 @@ export async function perform(
       break;
     }
     case "reservation": {
-      requirePermission(user.role, "reservations");
+      requirePermission(user, "reservations");
       const res = await one<{
         status: string;
         table_id: string | null;
@@ -251,12 +262,10 @@ export async function perform(
       break;
     }
     case "stock": {
-      requirePermission(user.role, "stock");
+      requirePermission(user, "stock");
       if (
         a.kind === "inventory" &&
-        !["OWNER", "SUPER_ADMIN", "MANAGER", "STOCK_MANAGER"].includes(
-          user.role,
-        )
+        !hasRole(user, ["OWNER", "SUPER_ADMIN", "MANAGER", "STOCK_MANAGER"])
       )
         throw new Error("Correction d’inventaire non autorisée.");
       const lot = await one<{ quantity: number; reserved: number }>(
@@ -281,10 +290,19 @@ export async function perform(
         user.id,
         a.id,
       );
+      if (a.kind === "inventory" && next !== lot.quantity)
+        await emit(db, r, {
+          type: "stock.inventory_gap",
+          module: "stock",
+          actor: user.id,
+          objectId: a.id,
+          summary: `Écart d’inventaire de ${next - lot.quantity > 0 ? "+" : ""}${Math.round((next - lot.quantity) * 100) / 100} sur un lot · ${a.reason}`,
+          data: { before: lot.quantity, after: next },
+        });
       break;
     }
     case "supplier":
-      requirePermission(user.role, "purchases");
+      requirePermission(user, "purchases");
       await db.query("INSERT INTO suppliers VALUES($1,$2,$3,$4,2)", [
         uuid(),
         r,
@@ -293,7 +311,7 @@ export async function perform(
       ]);
       break;
     case "purchase":
-      requirePermission(user.role, "purchases");
+      requirePermission(user, "purchases");
       await one(
         db,
         "SELECT id FROM suppliers WHERE id=$1 AND restaurant_id=$2",
@@ -310,7 +328,7 @@ export async function perform(
       );
       break;
     case "receive": {
-      requirePermission(user.role, "purchases");
+      requirePermission(user, "purchases");
       const p = await one<{
         ingredient_id: string;
         quantity: number;
@@ -358,11 +376,18 @@ export async function perform(
         user.id,
         a.id,
       );
-      await notify(db, r, "Livraison réceptionnée · stocks actualisés");
+      await emit(db, r, {
+        type: "purchase.received",
+        module: "purchases",
+        actor: user.id,
+        objectId: a.id,
+        summary: "Livraison réceptionnée · stocks actualisés",
+        data: { quantity: a.quantity, lot },
+      });
       break;
     }
     case "shift": {
-      requirePermission(user.role, "team");
+      requirePermission(user, "team");
       await one(
         db,
         "SELECT profile_id FROM memberships WHERE profile_id=$1 AND restaurant_id=$2",
@@ -379,23 +404,44 @@ export async function perform(
         ).length
       )
         throw new Error("Créneau en conflit.");
+      const shift = uuid();
       await db.query("INSERT INTO shifts VALUES($1,$2,$3,$4,$5)", [
-        uuid(),
+        shift,
         r,
         a.profile,
         a.start,
         a.end,
       ]);
-      await notify(db, r, "Planning mis à jour");
+      await emit(db, r, {
+        type: "team.shift",
+        module: "team",
+        actor: user.id,
+        objectId: shift,
+        summary: `Nouveau créneau : ${dateTime(a.start)} → ${dateTime(a.end)}`,
+        permissions: ["team"],
+        notification: { recipient: a.profile },
+      });
       break;
     }
-    case "deleteShift":
-      requirePermission(user.role, "team");
-      await db.query("DELETE FROM shifts WHERE id=$1 AND restaurant_id=$2", [
-        a.id,
-        r,
-      ]);
+    case "deleteShift": {
+      requirePermission(user, "team");
+      const removed = await rows<{ profile_id: string; starts_at: string }>(
+        db,
+        "DELETE FROM shifts WHERE id=$1 AND restaurant_id=$2 RETURNING profile_id,starts_at",
+        [a.id, r],
+      );
+      if (removed[0])
+        await emit(db, r, {
+          type: "team.shift",
+          module: "team",
+          actor: user.id,
+          objectId: a.id,
+          summary: `Créneau du ${dateTime(removed[0].starts_at)} supprimé`,
+          permissions: ["team"],
+          notification: { recipient: removed[0].profile_id },
+        });
       break;
+    }
     case "clock": {
       const latest = await rows<{ event: string }>(
         db,
@@ -422,17 +468,37 @@ export async function perform(
       ]);
       break;
     }
-    case "expense":
-      requirePermission(user.role, "finance");
+    case "expense": {
+      requirePermission(user, "finance");
+      const usual = await one<{ average: number | null; count: number }>(
+        db,
+        "SELECT avg(amount)::float AS average,count(*)::int AS count FROM expenses WHERE restaurant_id=$1 AND created_at>now()-interval '90 days'",
+        [r],
+      );
+      const expense = uuid();
       await db.query("INSERT INTO expenses VALUES($1,$2,$3,$4,now())", [
-        uuid(),
+        expense,
         r,
         a.label,
         a.amount,
       ]);
+      const unusual =
+        usual.count >= 3 && a.amount > 3 * (usual.average ?? Infinity);
+      await emit(db, r, {
+        type: unusual ? "finance.unusual_expense" : "expense.created",
+        module: "finance",
+        actor: user.id,
+        objectId: expense,
+        summary: unusual
+          ? `Dépense inhabituelle : ${a.label} · ${money(a.amount)} (moyenne ${money(Math.round(usual.average!))})`
+          : `Dépense ajoutée : ${a.label} · ${money(a.amount)}`,
+        permissions: ["finance"],
+        data: { amount: a.amount },
+      });
       break;
+    }
     case "customer":
-      requirePermission(user.role, "customers");
+      requirePermission(user, "customers");
       await db.query("INSERT INTO customers VALUES($1,$2,$3,$4,$5,0)", [
         uuid(),
         r,
@@ -442,7 +508,7 @@ export async function perform(
       ]);
       break;
     case "loyalty": {
-      requirePermission(user.role, "customers");
+      requirePermission(user, "customers");
       const c = await one<{ points: number; consent: boolean }>(
         db,
         "SELECT * FROM customers WHERE id=$1 AND restaurant_id=$2 FOR UPDATE",
@@ -461,14 +527,14 @@ export async function perform(
       break;
     }
     case "menu":
-      requirePermission(user.role, "catalog");
+      requirePermission(user, "catalog");
       await db.query(
         "UPDATE menu_items SET name=$3,price=$4,enabled=$5,description=$6 WHERE id=$1 AND restaurant_id=$2",
         [a.id, r, a.name, a.price, a.enabled, a.description],
       );
       break;
     case "recipe":
-      requirePermission(user.role, "catalog");
+      requirePermission(user, "catalog");
       await one(
         db,
         "SELECT id FROM menu_items WHERE id=$1 AND restaurant_id=$2",
@@ -485,20 +551,20 @@ export async function perform(
       );
       break;
     case "read":
-      await db.query(
-        "INSERT INTO notification_reads SELECT id,$2 FROM notifications WHERE restaurant_id=$1 ON CONFLICT DO NOTHING",
-        [r, user.id],
-      );
+      await markRead(db, r, user, a.id);
+      break;
+    case "notificationPreference":
+      await setPreference(db, r, user, a.type, a.muted);
       break;
     case "restaurant":
-      requirePermission(user.role, "settings");
+      requirePermission(user, "settings");
       await db.query(
         "UPDATE restaurants SET name=$2,address=$3,phone=$4,goal=$5 WHERE id=$1",
         [r, a.name, a.address, a.phone, a.goal],
       );
       break;
     case "addRestaurant":
-      if (!["OWNER", "SUPER_ADMIN"].includes(user.role))
+      if (!hasRole(user, ["OWNER", "SUPER_ADMIN"]))
         throw new Error("Accès refusé.");
       {
         const rid = uuid();
@@ -509,7 +575,9 @@ export async function perform(
         await db.query("INSERT INTO memberships VALUES($1,$2,$3)", [
           user.id,
           rid,
-          user.role,
+          primaryRole(
+            rolesOf(user).filter((x) => x === "OWNER" || x === "SUPER_ADMIN"),
+          ),
         ]);
         break;
       }
@@ -536,7 +604,12 @@ export async function requestReservation(
     "INSERT INTO reservations(id,restaurant_id,name,contact,guests,starts_at,ends_at,note) VALUES($1,$2,$3,$4,$5,$6,$6::timestamptz+interval '2 hours',$7)",
     [id, a.restaurant, a.name, a.contact, a.guests, a.start, a.note],
   );
-  await notify(db, a.restaurant, "Nouvelle demande de réservation");
+  await emit(db, a.restaurant, {
+    type: "reservation.requested",
+    module: "reservations",
+    objectId: id,
+    summary: `Nouvelle demande de réservation · ${a.guests} pers.`,
+  });
   await log(db, a.restaurant, null, "Demande de réservation publique", id);
   return id;
 }

@@ -1,6 +1,6 @@
 # Données
 
-Migration PostgreSQL versionnée : `database/migrations/001_core.sql`. Migration additive `002_catalog_promotions.sql` : archivage des produits, codes nominatifs, client/remise liés aux déclarations. Versions enregistrées dans `schema_versions`. Seed transactionnel : `src/lib/database/seed.ts`. L’initialisation est automatique et atomique à la première requête.
+Migration PostgreSQL versionnée : `database/migrations/001_core.sql`. Migration additive `002_catalog_promotions.sql` : archivage des produits, codes nominatifs, client/remise liés aux déclarations. Migration additive `003_operations_notifications.sql` : journal `domain_events`, colonnes de type/priorité/visibilité/dédoublonnage sur `notifications` (lignes existantes conservées, visibles par tous), `notification_preferences`. Versions enregistrées dans `schema_versions`. Seed transactionnel : `src/lib/database/seed.ts`. L’initialisation est automatique et atomique à la première requête.
 
 ## Relations
 
@@ -12,7 +12,7 @@ Migration PostgreSQL versionnée : `database/migrations/001_core.sql`. Migration
 - reservations → tables avec capacité et créneaux contrôlés côté service.
 - suppliers → purchase_orders → receipts → stock_lots.
 - profiles → shifts / time_entries ; customers → loyalty_transactions.
-- notifications → notification_reads ; toutes les actions critiques → audit_logs.
+- notifications → notification_reads ; notifications → domain_events ; notification_preferences par profil/établissement/type ; toutes les actions critiques → audit_logs.
 
 Les prix de vente et règlements sont des entiers en centimes. Les coûts d’achat sont des euros par unité de référence. Le coût matière unitaire est figé sur la ligne commandée. Aucun taux de TVA n’est inventé : les écarts prix/coût sont des estimations, pas des marges HT officielles.
 
@@ -28,7 +28,7 @@ Paramètres → Réinitialiser, confirmation obligatoire, propriétaire/admin se
 
 Pour sauvegarder localement : arrêter le processus serveur, copier le dossier `.data/dattier-demo`, puis redémarrer. Ne pas copier une base ouverte pour une sauvegarde fiable. Un export/restauration SQL interopérable PostgreSQL devra être ajouté avant migration réelle.
 
-Le runner applique la version 2 transactionnellement, y compris sur une base ouverte avant la mise à jour, et vérifie la version pour ne pas la rejouer. L’ajout de migrations ultérieures nécessite de compléter ce runner. Ne pas modifier la migration initiale sur une installation contenant des données à conserver.
+Le runner applique dans l’ordre chaque migration de sa liste absente de `schema_versions`, transactionnellement, y compris sur une base ouverte avant la mise à jour. Ajouter une migration = un nouveau fichier + une ligne dans `migrations` (`src/lib/database/migrate.ts`). Ne pas modifier la migration initiale sur une installation contenant des données à conserver.
 
 ## Promotions
 

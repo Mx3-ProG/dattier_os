@@ -5,7 +5,7 @@ Le parcours de service central est implémenté. Les fonctions ci-dessous resten
 ## Compléments partiels
 
 - Multi-établissements : sélection et isolation ; pas de vue financière consolidée/comparative. L’ajout crée un établissement vide, dont l’équipement initial nécessite encore une intervention technique.
-- Utilisateurs : profils fictifs et affectations ; pas d’interface complète de création, invitation, suspension ou gestion multi-rôle. Le schéma autorise plusieurs rôles d’affectation mais la V0 exploite un rôle effectif par profil/établissement.
+- Utilisateurs : profils fictifs et affectations ; pas d’interface complète de création, invitation, suspension ou gestion multi-rôle. Plusieurs rôles par établissement sont pris en compte (union des permissions, rôle principal déterministe) mais aucune interface ne permet encore de les attribuer.
 - Salle : grille de tables fixe, capacités et états ; pas d’éditeur de positions, de zones ni de transfert/fusion de tables. Les réservations confirmées sont signalées, pas de timeline spatiale.
 - Commandes : ajouts successifs et annulation de lignes ; pas de variantes, suppléments, modification de quantité en place, division de ligne ni règlement partiel. Remplacer une ligne en l’annulant puis en ajoutant une nouvelle commande dans la session.
 - QR : interface `/qr?table=bernay-t8` pour une session ouverte et acceptation obligatoire par le personnel ; génération/impression des images QR non implémentée. Ne pas exposer ce canal sans anti-abus de production.
@@ -15,7 +15,7 @@ Le parcours de service central est implémenté. Les fonctions ci-dessous resten
 - Carte : création de produits avec recette, modification, archivage/restauration et suppression sans historique disponibles. Restent à développer : création d’ingrédients et de catégories, photos, allergènes validés, variantes, suppléments, menus composés et plages de vente.
 - Finance : déclarations, dépenses, ventes par jour, export CSV ; pas de fiscalité validée, marges HT, filtres avancés ni comptabilité. Aucun logiciel de caisse certifié.
 - Fidélité : consentement, mouvements manuels et codes nominatifs utilisables au règlement sont disponibles, avec échange de points et fiche privée partageable. Pas d’acquisition automatique de points après achat ni d’espace client authentifié. Le lien privé est un accès par possession du lien, pas une preuve d’identité ; vérifier le titulaire lors du règlement. Aucun envoi automatique.
-- Notifications : historique et lu/non lu ; pas d’alerte sonore, de destinataire serveur individuel, de notifications push, SMS ou e-mail.
+- Notifications : centre filtré par permissions effectives, priorités, lu unitaire/global, préférences par type, alertes calculées (stock faible, rupture, péremption, retard, indisponibilité, dépense inhabituelle) et notification individuelle de planning (voir `NOTIFICATIONS.md`). Pas d’alerte sonore, de push, SMS ni e-mail ; temps réel par polling. Seuils (20 min, 2 jours, ×3) non configurables depuis l’interface. Notifications « responsabilité / permission modifiée » à brancher quand la gestion des affectations aura une interface.
 
 ## Site et production
 

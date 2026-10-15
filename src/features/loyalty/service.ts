@@ -23,7 +23,7 @@ export async function issuePromo(
   user: Actor,
   a: z.infer<typeof promoSchema>,
 ) {
-  requirePermission(user.role, "customers");
+  requirePermission(user, "customers");
   const c = await one<{ points: number; consent: boolean }>(
     db,
     "SELECT points,consent FROM customers WHERE id=$1 AND restaurant_id=$2 FOR UPDATE",
@@ -66,7 +66,7 @@ export async function issuePromo(
   await log(db, r, user.id, "Code promo attribué au client", id);
 }
 export async function cancelPromo(db: DB, r: string, user: Actor, id: string) {
-  requirePermission(user.role, "customers");
+  requirePermission(user, "customers");
   const p = await one<{
     customer_id: string;
     status: string;

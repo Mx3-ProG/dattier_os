@@ -56,7 +56,7 @@ export function Recipes({
                   fiscale non validée
                 </p>
               )}
-              {can(data.user.role, "catalog") && (
+              {can(data.user, "catalog") && (
                 <Button variant="secondary" onClick={() => setEdit(m.id)}>
                   Modifier la recette
                 </Button>
