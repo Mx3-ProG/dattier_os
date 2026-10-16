@@ -1,11 +1,18 @@
 import Link from "next/link";
-import { ArrowUpRight, MapPin, Phone } from "lucide-react";
+import { Fragment } from "react";
+import { ArrowUpRight, ChevronDown, MapPin, Phone } from "lucide-react";
 import type { MenuItem, Restaurant } from "@/lib/types";
 import { homeAnchors } from "./navigation";
+import {
+  HeroVideo,
+  QuickBooking,
+  TiltCard,
+  useHeroMotion,
+} from "./home-motion";
 
 // Sections de l'accueil. Chaque section porte un id (ancre de navigation)
-// et un attribut data-scene, point d'accroche prévu pour les futures
-// animations au défilement (ScrollTrigger) sans modifier le balisage.
+// et un attribut data-scene ; les blocs marqués data-reveal apparaissent au
+// défilement (voir ScrollReveal dans home-motion.tsx).
 // Aucun contenu commercial n'est inventé : ce qui manque est signalé par
 // <MissingContent>.
 
@@ -25,7 +32,7 @@ function Heading({
   children: React.ReactNode;
 }) {
   return (
-    <header className="section-head">
+    <header className="section-head" data-reveal>
       <span className="eyebrow">{eyebrow}</span>
       <h2 id={id}>{children}</h2>
     </header>
@@ -33,75 +40,103 @@ function Heading({
 }
 
 export function HomeIntro({ restaurant }: { restaurant?: Restaurant }) {
+  const ref = useHeroMotion();
   return (
     <section
+      ref={ref}
       className="public-hero"
       data-scene="intro"
       aria-label="Introduction"
     >
-      <div className="public-hero-copy">
-        <span className="eyebrow">UNE ESCALE EN MÉDITERRANÉE</span>
-        <h1>
-          La chaleur d’un lieu.
-          <br />
-          <em>Le goût du partage.</em>
-        </h1>
-        <p>
-          Au cœur de Bernay, découvrez une cuisine tunisienne et maghrébine,
-          entre traditions généreuses et plaisirs simples.
-        </p>
-        <div className="actions">
-          <Link className="btn primary" href="/reservations">
-            Réserver une table <ArrowUpRight size={17} aria-hidden />
-          </Link>
-          <Link className="btn outline" href="/carte">
-            Découvrir notre carte
-          </Link>
-        </div>
-        <div className="hero-address">
-          <MapPin size={17} aria-hidden />{" "}
-          {restaurant?.address || "29 Rue du Général Leclerc, Bernay"}
-        </div>
-      </div>
-      {/* Emplacement média : illustration décorative actuelle, à remplacer
-          par une vidéo ou une scène 3D lorsque les visuels officiels existeront. */}
-      <div
-        className="public-art"
-        data-scene-media
-        role="img"
-        aria-label="Illustration décorative d’une assiette méditerranéenne"
+      <HeroVideo />
+      <div className="hero-veil" aria-hidden />
+      <div className="hero-glow" aria-hidden />
+      <svg
+        className="hero-arch"
+        viewBox="0 0 200 300"
+        aria-hidden
+        preserveAspectRatio="xMidYMax meet"
       >
-        <div className="sun-disc" />
-        <div className="food-plate">
-          <span className="couscous" />
-          <i />
-          <i />
-          <i />
-          <i />
-          <i />
-          <b>✳</b>
+        <path d="M6 300V100a94 94 0 0 1 188 0v200" />
+        <path d="M22 300V104a78 78 0 0 1 156 0v196" />
+      </svg>
+      <div className="hero-inner">
+        <div className="public-hero-copy">
+          <span className="eyebrow">UNE ESCALE EN MÉDITERRANÉE</span>
+          <h1>
+            <SplitWords text="La chaleur d’un lieu." from={0} />
+            <br />
+            <em>
+              <SplitWords text="Le goût du partage." from={4} />
+            </em>
+          </h1>
+          <p>
+            Au cœur de Bernay, découvrez une cuisine tunisienne et maghrébine,
+            entre traditions généreuses et plaisirs simples.
+          </p>
+          <div className="actions">
+            <Link className="btn light" href="/reservations">
+              Réserver une table <ArrowUpRight size={17} aria-hidden />
+            </Link>
+            <Link className="btn ghost" href="/carte">
+              Découvrir notre carte
+            </Link>
+          </div>
+          <div className="hero-address">
+            <MapPin size={17} aria-hidden />{" "}
+            {restaurant?.address || "29 Rue du Général Leclerc, Bernay"}
+          </div>
         </div>
-        <span className="art-word">
-          Un peu de soleil
-          <br />
-          <em>dans votre assiette.</em>
-        </span>
-        <div className="olive-branch">❧</div>
+        <QuickBooking />
       </div>
+      <a className="hero-scroll" href={`#${homeAnchors.specialites}`}>
+        <span>Découvrir</span>
+        <ChevronDown size={18} aria-hidden />
+      </a>
     </section>
   );
 }
 
+// Découpe un texte en mots animés l'un après l'autre (--i = rang du mot).
+// Les espaces restent hors des mots (inline-block) : le titre se lit
+// normalement et garde ses espaces.
+function SplitWords({ text, from }: { text: string; from: number }) {
+  return text.split(" ").map((w, i, all) => (
+    <Fragment key={i}>
+      <span
+        className="hero-word"
+        style={{ "--i": from + i } as React.CSSProperties}
+      >
+        {w}
+      </span>
+      {i < all.length - 1 ? " " : null}
+    </Fragment>
+  ));
+}
+
+const stripWords = [
+  "CUISINE TUNISIENNE",
+  "L’ART DE RECEVOIR",
+  "LE PLAISIR DE PARTAGER",
+  "BERNAY, NORMANDIE",
+];
+
+// Bandeau défilant : la suite est doublée pour boucler sans saut.
 export function HomeStrip() {
   return (
     <div className="public-strip" aria-hidden>
-      <span>CUISINE TUNISIENNE</span>
-      <i>✳</i>
-      <span>L’ART DE RECEVOIR</span>
-      <i>✳</i>
-      <span>LE PLAISIR DE PARTAGER</span>
-      <i>✳</i>
-      <span>BERNAY, NORMANDIE</span>
+      <div className="strip-track">
+        {[0, 1].map((k) => (
+          <div className="strip-run" key={k}>
+            {stripWords.map((w) => (
+              <span key={w}>
+                {w}
+                <i>✳</i>
+              </span>
+            ))}
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
@@ -119,7 +154,7 @@ export function HomeStory() {
         <br />
         <em>rapproche.</em>
       </Heading>
-      <div>
+      <div data-reveal>
         <p>
           Un couscous à partager, les parfums d’un tajine, un thé à la menthe
           pour prolonger l’instant. Bienvenue au Dattier Hefsi.
@@ -139,9 +174,9 @@ export function HomeStory() {
 // Les trois familles de plats citées dans la présentation existante.
 // Descriptions, photographies et sélection définitive restent à fournir.
 const specialties = [
-  { name: "Le couscous", line: "À partager." },
-  { name: "Les tajines", line: "Pour leurs parfums." },
-  { name: "Le thé à la menthe", line: "Pour prolonger l’instant." },
+  { name: "Le couscous", line: "À partager.", motif: "✳" },
+  { name: "Les tajines", line: "Pour leurs parfums.", motif: "◬" },
+  { name: "Le thé à la menthe", line: "Pour prolonger l’instant.", motif: "❧" },
 ];
 
 export function HomeSpecialties() {
@@ -157,13 +192,20 @@ export function HomeSpecialties() {
       </Heading>
       <ul className="specialty-grid">
         {specialties.map((s, i) => (
-          <li key={s.name} className="specialty-card">
+          <TiltCard
+            key={s.name}
+            className="specialty-card"
+            style={{ "--d": i } as React.CSSProperties}
+          >
             <span className="specialty-index" aria-hidden>
               {String(i + 1).padStart(2, "0")}
             </span>
+            <span className="specialty-motif" aria-hidden>
+              {s.motif}
+            </span>
             <h3>{s.name}</h3>
             <p>{s.line}</p>
-          </li>
+          </TiltCard>
         ))}
       </ul>
       <MissingContent>
@@ -188,10 +230,14 @@ export function HomeMenuPreview({ menu }: { menu?: MenuItem[] }) {
         Notre carte.
       </Heading>
       <ul className="menu-preview-grid">
-        {menuCategories.map((c) => {
+        {menuCategories.map((c, i) => {
           const items = menu?.filter((m) => m.category === c) || [];
           return (
-            <li key={c}>
+            <li
+              key={c}
+              data-reveal
+              style={{ "--d": i } as React.CSSProperties}
+            >
               <h3>{c}</h3>
               {menu ? (
                 <p>
@@ -304,7 +350,7 @@ export function HomeFaq() {
       <Heading id="faq-title" eyebrow="QUESTIONS FRÉQUENTES">
         Bon à savoir.
       </Heading>
-      <div className="faq-list">
+      <div className="faq-list" data-reveal>
         {faq.map((f) => (
           <details key={f.q}>
             <summary>{f.q}</summary>
@@ -331,7 +377,7 @@ export function HomePracticalInfo({ restaurant }: { restaurant?: Restaurant }) {
       <Heading id="info-title" eyebrow="INFORMATIONS PRATIQUES">
         Au cœur de Bernay.
       </Heading>
-      <dl className="info-grid">
+      <dl className="info-grid" data-reveal>
         <div>
           <dt>Adresse</dt>
           <dd>

@@ -19,6 +19,7 @@ import {
   HomeStory,
   HomeStrip,
 } from "./public/home-sections";
+import { ScrollReveal } from "./public/home-motion";
 export function PublicSite({ route }: { route: string }) {
   const [data, setData] = useState<{
       menu: MenuItem[];
@@ -81,6 +82,7 @@ export function PublicSite({ route }: { route: string }) {
         )}
         {route === "" ? (
           <>
+            <ScrollReveal />
             <HomeIntro restaurant={restaurant} />
             <HomeStrip />
             <HomeSpecialties />

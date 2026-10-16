@@ -86,6 +86,13 @@ export function Booking() {
       guests: number;
     } | null>(null);
 
+  // Nombre de couverts choisi depuis l'accueil (?couverts=4).
+  useEffect(() => {
+    const n = Number(
+      new URLSearchParams(window.location.search).get("couverts"),
+    );
+    if (Number.isInteger(n) && n >= 1 && n <= 20) setGuests(n);
+  }, []);
   useEffect(() => {
     let live = true;
     getJson<Calendar>(
