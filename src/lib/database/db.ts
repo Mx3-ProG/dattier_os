@@ -1,7 +1,7 @@
 import { PGlite, type Transaction } from "@electric-sql/pglite";
 import { readFile, mkdir } from "node:fs/promises";
 import path from "node:path";
-import { migrate } from "./migrate";
+import { applyMigrations, migrate } from "./migrate";
 import { seed } from "./seed";
 export type DB = PGlite | Transaction;
 export async function rows<T>(
@@ -51,15 +51,7 @@ export async function getDb() {
         );
         await db.transaction(async (tx) => {
           await tx.exec(migration);
-          await tx.exec(
-            await readFile(
-              path.join(
-                process.cwd(),
-                "database/migrations/002_catalog_promotions.sql",
-              ),
-              "utf8",
-            ),
-          );
+          await applyMigrations(tx);
           await seed(tx);
         });
       }

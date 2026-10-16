@@ -75,10 +75,22 @@ const grants: Record<Role, Permission[]> = {
   PURCHASING: ["purchases"],
   ACCOUNTANT: ["finance"],
 };
-export const can = (role: Role, permission: Permission) =>
-  grants[role]?.includes(permission) ?? false;
-export function requirePermission(role: Role, permission: Permission) {
-  if (!can(role, permission)) throw new Error("Accès refusé pour ce profil.");
+/** Un profil peut cumuler plusieurs rôles dans un établissement : ses permissions effectives en sont l’union. */
+export type Subject = Role | { role: Role; roles?: readonly Role[] };
+export const rolesOf = (s: Subject): readonly Role[] =>
+  typeof s === "string" ? [s] : s.roles?.length ? s.roles : [s.role];
+export const can = (s: Subject, permission: Permission) =>
+  rolesOf(s).some((r) => grants[r]?.includes(permission) ?? false);
+export const hasRole = (s: Subject, accepted: readonly Role[]) =>
+  rolesOf(s).some((r) => accepted.includes(r));
+export const permissionsOf = (s: Subject): Permission[] => [
+  ...new Set(rolesOf(s).flatMap((r) => grants[r] ?? [])),
+];
+/** Ordre de préséance pour le rôle principal affiché : le plus large d’abord. */
+export const primaryRole = (list: readonly Role[]): Role =>
+  [...list].sort((a, b) => roles.indexOf(a) - roles.indexOf(b))[0];
+export function requirePermission(s: Subject, permission: Permission) {
+  if (!can(s, permission)) throw new Error("Accès refusé pour ce profil.");
 }
 export const roleLabels: Record<Role, string> = {
   SUPER_ADMIN: "Super Admin",

@@ -3,168 +3,25 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import {
-  LayoutDashboard,
-  UtensilsCrossed,
-  ClipboardList,
-  ChefHat,
-  Wine,
-  CalendarDays,
-  Package,
-  BookOpen,
-  Truck,
-  Users,
-  Clock,
-  Wallet,
-  Receipt,
-  Heart,
-  Settings,
-  Activity,
   Globe,
   Bell,
   Menu,
-  X,
   ChevronDown,
   ArrowUpRight,
   Leaf,
 } from "lucide-react";
+import { modules } from "./modules";
 import { can, type Permission, roleLabels } from "@/lib/permissions";
 import type { Snapshot } from "@/lib/types";
 import { Dining, Kds, OrderList } from "./operations";
 import { Management } from "./management";
+import { NotificationsPage } from "./notifications";
+import { HistoryPage } from "./history";
 import dynamic from "next/dynamic";
 const Overview = dynamic(() => import("./overview").then((m) => m.Overview), {
   loading: () => <p>Chargement du tableau de bord…</p>,
 });
 const Finance = dynamic(() => import("./overview").then((m) => m.Finance));
-import { dateTime } from "@/lib/domain";
-const modules = [
-  {
-    id: "overview",
-    name: "Vue d’ensemble",
-    group: "PILOTAGE",
-    icon: LayoutDashboard,
-    permission: "finance",
-  },
-  {
-    id: "activity",
-    name: "Activité",
-    group: "PILOTAGE",
-    icon: Activity,
-    permission: "audit",
-  },
-  {
-    id: "dining",
-    name: "Plan de salle",
-    group: "OPÉRATIONS",
-    icon: UtensilsCrossed,
-    permission: "orders",
-  },
-  {
-    id: "orders",
-    name: "Commandes",
-    group: "OPÉRATIONS",
-    icon: ClipboardList,
-    permission: "orders",
-  },
-  {
-    id: "kitchen",
-    name: "Cuisine",
-    group: "OPÉRATIONS",
-    icon: ChefHat,
-    permission: "kitchen",
-  },
-  {
-    id: "bar",
-    name: "Bar",
-    group: "OPÉRATIONS",
-    icon: Wine,
-    permission: "bar",
-  },
-  {
-    id: "reservations",
-    name: "Réservations",
-    group: "OPÉRATIONS",
-    icon: CalendarDays,
-    permission: "reservations",
-  },
-  {
-    id: "stocks",
-    name: "Stocks & inventaire",
-    group: "GESTION",
-    icon: Package,
-    permission: "stock",
-  },
-  {
-    id: "recipes",
-    name: "Recettes",
-    group: "GESTION",
-    icon: BookOpen,
-    permission: "stock",
-  },
-  {
-    id: "suppliers",
-    name: "Fournisseurs",
-    group: "GESTION",
-    icon: Truck,
-    permission: "purchases",
-  },
-  {
-    id: "deliveries",
-    name: "Livraisons",
-    group: "GESTION",
-    icon: Package,
-    permission: "purchases",
-  },
-  {
-    id: "team",
-    name: "Équipe & planning",
-    group: "ÉQUIPE",
-    icon: Users,
-    permission: "team",
-  },
-  {
-    id: "attendance",
-    name: "Présences",
-    group: "ÉQUIPE",
-    icon: Clock,
-    permission: null,
-  },
-  {
-    id: "finance",
-    name: "Finances & rapports",
-    group: "PILOTAGE FINANCIER",
-    icon: Wallet,
-    permission: "finance",
-  },
-  {
-    id: "expenses",
-    name: "Dépenses",
-    group: "PILOTAGE FINANCIER",
-    icon: Receipt,
-    permission: "finance",
-  },
-  {
-    id: "customers",
-    name: "Clients & fidélité",
-    group: "RELATION CLIENT",
-    icon: Heart,
-    permission: "customers",
-  },
-  {
-    id: "menu",
-    name: "La carte",
-    group: "CONFIGURATION",
-    icon: BookOpen,
-    permission: "catalog",
-  },
-  {
-    id: "settings",
-    name: "Établissements",
-    group: "CONFIGURATION",
-    icon: Settings,
-    permission: "settings",
-  },
-] as const;
 export function Workspace() {
   const router = useRouter();
   const [data, setData] = useState<Snapshot | null>(null),
@@ -172,7 +29,6 @@ export function Workspace() {
     [module, setModule] = useState(""),
     [error, setError] = useState(""),
     [mobile, setMobile] = useState(false),
-    [notifications, setNotifications] = useState(false),
     [updated, setUpdated] = useState("");
   const load = useCallback(async () => {
     const r = await fetch(
@@ -218,7 +74,7 @@ export function Workspace() {
   }
   const allowed = data
     ? modules.filter(
-        (m) => !m.permission || can(data.user.role, m.permission as Permission),
+        (m) => !m.permission || can(data.user, m.permission as Permission),
       )
     : [];
   const current =
@@ -232,6 +88,7 @@ export function Workspace() {
             ? "bar"
             : ""),
     ) ||
+    allowed.find((m) => m.id !== "notifications" && m.id !== "history") ||
     allowed[0];
   const navigate = (s: string) => {
     setModule(s);
@@ -284,6 +141,9 @@ export function Workspace() {
               >
                 <m.icon size={18} />
                 {m.name}
+                {m.id === "notifications" && data.unreadNotifications > 0 && (
+                  <span className="nav-count">{data.unreadNotifications}</span>
+                )}
                 {m.id === "orders" &&
                   data.orders.some((o) => o.status === "active") && (
                     <span className="nav-count">
@@ -340,11 +200,20 @@ export function Workspace() {
             </span>
             <button
               className="icon-button notification-button"
-              aria-label="Notifications"
-              onClick={() => setNotifications(!notifications)}
+              aria-label={`Notifications${data.unreadNotifications ? ` (${data.unreadNotifications} non lues)` : ""}`}
+              aria-current={
+                current?.id === "notifications" ? "page" : undefined
+              }
+              onClick={() => navigate("notifications")}
             >
               <Bell size={20} />
-              {data.notifications.some((n) => !n.read) && <i />}
+              {data.unreadNotifications > 0 && (
+                <i>
+                  {data.unreadNotifications > 99
+                    ? "99+"
+                    : data.unreadNotifications}
+                </i>
+              )}
             </button>
             <Link href="/demo" className="avatar small">
               {data.user.name.slice(0, 1)}
@@ -356,35 +225,6 @@ export function Workspace() {
           locales · aucun encaissement réel{" "}
           <Link href="/demo">Changer de profil →</Link>
         </div>
-        {notifications && (
-          <section className="notification-panel card">
-            <div className="section-heading">
-              <h2>Notifications</h2>
-              <button
-                aria-label="Fermer les notifications"
-                className="icon-button"
-                onClick={() => setNotifications(false)}
-              >
-                <X />
-              </button>
-            </div>
-            <button
-              className="text-button"
-              onClick={() => act({ action: "read" })}
-            >
-              Tout marquer comme lu
-            </button>
-            {data.notifications.map((n) => (
-              <div
-                className={`notification ${n.read ? "read" : ""}`}
-                key={n.id}
-              >
-                <b>{n.message}</b>
-                <small>{dateTime(n.created_at)}</small>
-              </div>
-            ))}
-          </section>
-        )}
         <main className="content">
           {error && (
             <div className="error" role="alert">
@@ -412,6 +252,15 @@ export function Workspace() {
               station={current.id === "kitchen" ? "kitchen" : "bar"}
               act={act}
             />
+          ) : current?.id === "notifications" ? (
+            <NotificationsPage
+              data={data}
+              act={act}
+              allowed={allowed.map((m) => m.id)}
+              navigate={navigate}
+            />
+          ) : current?.id === "history" ? (
+            <HistoryPage key={restaurant} data={data} />
           ) : current?.id === "finance" ? (
             <Finance data={data} />
           ) : (

@@ -89,6 +89,11 @@ export type Notice = {
   message: string;
   created_at: string;
   read: boolean;
+  type: string;
+  priority: "low" | "normal" | "high" | "critical";
+  module: string | null;
+  object_id: string | null;
+  actor_name: string | null;
 };
 export type Supplier = {
   id: string;
@@ -171,6 +176,8 @@ export type Snapshot = {
   movements: StockMovement[];
   reservations: Reservation[];
   notifications: Notice[];
+  unreadNotifications: number;
+  notificationPreferences: { type: string; muted: boolean }[];
   audit: Event[];
   suppliers: Supplier[];
   purchases: Purchase[];

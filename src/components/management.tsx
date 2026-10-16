@@ -7,7 +7,7 @@ import Link from "next/link";
 import { useState } from "react";
 import type { Snapshot } from "@/lib/types";
 import { money, dateTime } from "@/lib/domain";
-import { roleLabels } from "@/lib/permissions";
+import { hasRole, roleLabels } from "@/lib/permissions";
 import { Button } from "./ui/button";
 import { Form, Modal, Badge, type Act, type Field } from "./forms";
 type Editor = {
@@ -144,12 +144,12 @@ export function Management({
                       >
                         Perte
                       </Button>
-                      {[
+                      {hasRole(data.user, [
                         "OWNER",
                         "SUPER_ADMIN",
                         "MANAGER",
                         "STOCK_MANAGER",
-                      ].includes(data.user.role) && (
+                      ]) && (
                         <Button
                           variant="ghost"
                           onClick={() =>

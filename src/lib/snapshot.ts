@@ -1,6 +1,10 @@
 import { type DB, rows, one } from "./database/db";
 import { type Actor, scope } from "./auth/session";
 import { can } from "./permissions";
+import {
+  listNotifications,
+  preferences,
+} from "@/features/notifications/service";
 import type { Snapshot, MenuItem, Restaurant, Order, Item } from "./types";
 export async function menu(
   db: DB,
@@ -20,7 +24,7 @@ export async function snapshot(
   r: string,
 ): Promise<Snapshot> {
   user = await scope(db, user, r);
-  const allowed = (p: Parameters<typeof can>[1]) => can(user.role, p);
+  const allowed = (p: Parameters<typeof can>[1]) => can(user, p);
   const restaurants = await rows<Restaurant>(
     db,
     "SELECT DISTINCT r.* FROM restaurants r JOIN memberships m ON m.restaurant_id=r.id WHERE m.profile_id=$1 ORDER BY r.id",
@@ -46,6 +50,7 @@ export async function snapshot(
     : [];
   for (const order of orders)
     order.items = items.filter((i) => i.order_id === order.id);
+  const notices = await listNotifications(db, r, user);
   return {
     now: new Date().toISOString(),
     user,
@@ -90,11 +95,9 @@ export async function snapshot(
           [r],
         )
       : [],
-    notifications: await rows(
-      db,
-      "SELECT n.*,EXISTS(SELECT 1 FROM notification_reads nr WHERE nr.notification_id=n.id AND nr.profile_id=$2) AS read FROM notifications n WHERE restaurant_id=$1 ORDER BY created_at DESC LIMIT 40",
-      [r, user.id],
-    ),
+    notifications: notices.items,
+    unreadNotifications: notices.unread,
+    notificationPreferences: await preferences(db, r, user),
     audit: allowed("audit")
       ? await rows(
           db,

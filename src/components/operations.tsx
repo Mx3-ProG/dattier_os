@@ -342,7 +342,7 @@ export function OrderList({
                     .reduce((s, i) => s + i.price * i.quantity, 0),
                 )}
               </strong>
-              {o.status === "active" && can(data.user.role, "payments") && (
+              {o.status === "active" && can(data.user, "payments") && (
                 <Button variant="secondary" onClick={() => setPayment(o.id)}>
                   Clôturer / déclarer le règlement
                 </Button>

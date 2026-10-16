@@ -14,7 +14,7 @@ Source centrale : `src/lib/permissions.ts`. Les contrôles sont exécutés côt�
 | PURCHASING | Fournisseurs, commandes et réceptions |
 | ACCOUNTANT | Rapports financiers et dépenses |
 
-Tous les profils peuvent consulter les notifications de leur établissement et pointer leur propre service. Les confirmations de réservation ne sont pas publiques. Le public ne peut demander qu’une réservation ou une commande à confirmer. Les profils publics de `/demo` ne sont disponibles que lorsque la démo locale est activée.
+Un profil peut cumuler plusieurs rôles dans un établissement : ses permissions effectives sont l’union de ces rôles (`scope()`, `can`, `hasRole`) et son rôle principal affiché est le plus large. Chaque profil ne voit que les notifications correspondant à ses permissions effectives ou qui lui sont adressées (voir `NOTIFICATIONS.md`) et peut pointer son propre service. Les confirmations de réservation ne sont pas publiques. Le public ne peut demander qu’une réservation ou une commande à confirmer. Les profils publics de `/demo` ne sont disponibles que lorsque la démo locale est activée.
 
 Les jetons ne contiennent aucun rôle choisi par le navigateur ; le serveur relit le profil et son affectation. La définition du seed attribue explicitement SUPER_ADMIN à l’identifiant `slimane` : aucune règle sur le prénom ou l’adresse électronique n’existe en production, dont l’authentification reste à implémenter.
 

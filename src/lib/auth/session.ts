@@ -1,8 +1,9 @@
 import { createHash, randomBytes } from "node:crypto";
 import { cookies } from "next/headers";
 import { getDb, one, rows, type DB } from "../database/db";
-import type { Role } from "../permissions";
-export type Actor = { id: string; name: string; role: Role };
+import { primaryRole, type Role } from "../permissions";
+/** `role` = rôle principal (affichage) ; `roles` = toutes les affectations de l’établissement courant. */
+export type Actor = { id: string; name: string; role: Role; roles?: Role[] };
 const hash = (s: string) => createHash("sha256").update(s).digest("hex");
 export async function login(id: string) {
   const db = await getDb();
@@ -39,5 +40,6 @@ export async function scope(db: DB, user: Actor, r: string) {
     [user.id, r],
   );
   if (!memberships.length) throw new Error("Établissement non autorisé.");
-  return { ...user, role: memberships[0].role };
+  const roles = memberships.map((m) => m.role);
+  return { ...user, role: primaryRole(roles), roles: roles.sort() };
 }
