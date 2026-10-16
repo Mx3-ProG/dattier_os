@@ -140,12 +140,16 @@ export async function createOrder(
     );
   let session: string | null = null;
   if (input.table) {
-    const table = await one<{ id: string; status: string }>(
+    const table = await one<{
+      id: string;
+      status: string;
+      archived_at: string | null;
+    }>(
       db,
       "SELECT * FROM dining_tables WHERE id=$1 AND restaurant_id=$2 FOR UPDATE",
       [input.table, input.restaurant],
     );
-    if (["unavailable", "cleaning"].includes(table.status))
+    if (table.archived_at || ["unavailable", "cleaning"].includes(table.status))
       throw new Error("Table indisponible.");
     const opened = await rows<{ id: string }>(
       db,

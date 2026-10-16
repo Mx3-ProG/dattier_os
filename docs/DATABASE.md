@@ -1,6 +1,6 @@
 # Données
 
-Migration PostgreSQL versionnée : `database/migrations/001_core.sql`. Migration additive `002_catalog_promotions.sql` : archivage des produits, codes nominatifs, client/remise liés aux déclarations. Versions enregistrées dans `schema_versions`. Seed transactionnel : `src/lib/database/seed.ts`. L’initialisation est automatique et atomique à la première requête.
+Migration PostgreSQL versionnée : `database/migrations/001_core.sql`. Migration additive `002_catalog_promotions.sql` : archivage des produits, codes nominatifs, client/remise liés aux déclarations. Migration additive `003_floor_plan.sql` : position (`pos_x`, `pos_y` en % du plan), zone, forme, nom affiché, réservable en ligne et archivage des tables, index des réservations par table. Versions enregistrées dans `schema_versions`. Seed transactionnel : `src/lib/database/seed.ts`. L’initialisation est automatique et atomique à la première requête.
 
 ## Relations
 
@@ -9,7 +9,7 @@ Migration PostgreSQL versionnée : `database/migrations/001_core.sql`. Migration
 - menu_items → recipe_ingredients → ingredients → stock_lots.
 - order_items → stock_reservations → stock_lots → stock_movements.
 - table_sessions / orders → payment_declarations.
-- reservations → tables avec capacité et créneaux contrôlés côté service.
+- reservations → tables avec capacité et créneaux contrôlés côté service (`src/features/reservations/service.ts`) : une demande, confirmée ou en cours retient sa table pendant la durée du repas ; la table est verrouillée (`FOR UPDATE`) pendant une demande publique.
 - suppliers → purchase_orders → receipts → stock_lots.
 - profiles → shifts / time_entries ; customers → loyalty_transactions.
 - notifications → notification_reads ; toutes les actions critiques → audit_logs.
@@ -28,7 +28,7 @@ Paramètres → Réinitialiser, confirmation obligatoire, propriétaire/admin se
 
 Pour sauvegarder localement : arrêter le processus serveur, copier le dossier `.data/dattier-demo`, puis redémarrer. Ne pas copier une base ouverte pour une sauvegarde fiable. Un export/restauration SQL interopérable PostgreSQL devra être ajouté avant migration réelle.
 
-Le runner applique la version 2 transactionnellement, y compris sur une base ouverte avant la mise à jour, et vérifie la version pour ne pas la rejouer. L’ajout de migrations ultérieures nécessite de compléter ce runner. Ne pas modifier la migration initiale sur une installation contenant des données à conserver.
+Le runner (`src/lib/database/migrate.ts`) applique chaque version manquante de sa liste transactionnellement, y compris sur une base ouverte avant la mise à jour, et vérifie la version pour ne pas la rejouer. Une nouvelle migration s’ajoute à cette liste. Ne pas modifier la migration initiale sur une installation contenant des données à conserver.
 
 ## Promotions
 

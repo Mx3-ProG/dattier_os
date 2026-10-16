@@ -86,7 +86,7 @@ export function Overview({
           },
           {
             title: "Tables occupées",
-            value: `${occupied} / ${data.tables.length}`,
+            value: `${occupied} / ${data.tables.filter((t) => !t.archived_at).length}`,
             detail: "Un service qui se partage",
             icon: Users,
           },

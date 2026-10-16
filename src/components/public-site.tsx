@@ -7,6 +7,7 @@ import { money } from "@/lib/domain";
 import { Form } from "./forms";
 import { SiteHeader } from "./public/site-header";
 import { SiteFooter } from "./public/site-footer";
+import { Booking } from "./public/booking";
 import {
   HomeFaq,
   HomeIntro,
@@ -219,60 +220,7 @@ export function PublicSite({ route }: { route: string }) {
             )}
           </section>
         )}
-        {route === "reservations" && (
-          <section className="public-section two-grid">
-            <div>
-              <span className="eyebrow">ON VOUS GARDE UNE PLACE ?</span>
-              <h1>
-                Les bons moments
-                <br />
-                <em>se réservent.</em>
-              </h1>
-              <p>
-                Choisissez votre créneau. Votre demande apparaît directement
-                auprès de l’équipe, qui doit l’accepter et vous affecter une
-                table.
-              </p>
-              <p className="muted">
-                Démonstration locale : aucune réservation réelle auprès du
-                restaurant.
-              </p>
-            </div>
-            <div className="card public-form">
-              <Form
-                label="Demander une réservation"
-                fields={[
-                  { name: "name", label: "Votre nom" },
-                  { name: "contact", label: "Téléphone ou e-mail" },
-                  {
-                    name: "guests",
-                    label: "Nombre de personnes",
-                    type: "number",
-                    min: 1,
-                    value: 2,
-                  },
-                  {
-                    name: "start",
-                    label: "Date et heure",
-                    type: "datetime-local",
-                  },
-                  {
-                    name: "note",
-                    label: "Une attention particulière ?",
-                    required: false,
-                  },
-                ]}
-                onSubmit={(v) =>
-                  submit("reservation", {
-                    ...v,
-                    restaurant: "bernay",
-                    start: new Date(v.start).toISOString(),
-                  })
-                }
-              />
-            </div>
-          </section>
-        )}
+        {route === "reservations" && <Booking />}
         {route === "contact" && (
           <section className="public-section">
             <span className="eyebrow">À BIENTÔT CHEZ NOUS</span>

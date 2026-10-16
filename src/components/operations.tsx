@@ -15,6 +15,7 @@ import type { Snapshot, Table, MenuItem } from "@/lib/types";
 import { money, dateTime } from "@/lib/domain";
 import { Button } from "./ui/button";
 import { Badge, Form, Modal, type Act } from "./forms";
+import { FloorEditor } from "./floor-editor";
 export function Composer({
   data,
   table,
@@ -151,70 +152,131 @@ export function Composer({
   );
 }
 export function Dining({ data, act }: { data: Snapshot; act: Act }) {
-  const [selected, setSelected] = useState<Table | null>(null);
+  const [selected, setSelected] = useState<Table | null>(null),
+    [view, setView] = useState<"service" | "layout">("service");
+  const tables = data.tables.filter((t) => !t.archived_at);
+  const canLayout = can(data.user.role, "floor");
+  // Prochaine réservation de la table dans les 12 heures, heure de Paris.
+  const nextBooking = (t: Table) =>
+    data.reservations
+      .filter(
+        (r) =>
+          r.table_id === t.id &&
+          ["requested", "confirmed"].includes(r.status) &&
+          new Date(r.ends_at).getTime() > Date.now() &&
+          new Date(r.starts_at).getTime() < Date.now() + 12 * 3600000,
+      )
+      .sort((a, b) => a.starts_at.localeCompare(b.starts_at))[0];
   return (
     <>
-      <div className="section-heading">
-        <div>
-          <h2>La salle, en un regard</h2>
-          <p>Ouvrez une table pour prendre une commande.</p>
-        </div>
-        <span className="pill">
-          <span className="dot" />
-          {data.tables.filter((t) => t.status === "occupied").length} tables en
-          service
-        </span>
-      </div>
-      <div className="legend">
-        {["free", "occupied", "cleaning", "unavailable"].map((s) => (
-          <Badge key={s} status={s} />
-        ))}
-      </div>
-      <div className="floor">
-        <span className="floor-label">SALLE PRINCIPALE</span>
-        <div className="table-grid">
-          {data.tables.map((t) => (
-            <div className={`table-wrap ${t.status}`} key={t.id}>
-              <button
-                className="dining-table"
-                disabled={["cleaning", "unavailable"].includes(t.status)}
-                onClick={() => setSelected(t)}
-              >
-                <span className="table-number">
-                  {String(t.number).padStart(2, "0")}
-                </span>
-                <span>
-                  <Users size={13} /> {t.capacity} places
-                </span>
-                <Badge status={t.status} />
-                {data.reservations.some(
-                  (r) => r.table_id === t.id && r.status === "confirmed",
-                ) && <small>Réservation prévue</small>}
-              </button>
-              {t.status === "cleaning" || t.status === "unavailable" ? (
-                <Button
-                  variant="ghost"
-                  onClick={() =>
-                    act({ action: "table", id: t.id, status: "free" })
-                  }
-                >
-                  Marquer libre
-                </Button>
-              ) : null}
-            </div>
+      {canLayout && (
+        <div className="tabs view-tabs" role="tablist">
+          {(
+            [
+              ["service", "Service"],
+              ["layout", "Aménager la salle"],
+            ] as const
+          ).map(([id, label]) => (
+            <button
+              key={id}
+              role="tab"
+              aria-selected={view === id}
+              className={view === id ? "active" : ""}
+              onClick={() => setView(id)}
+            >
+              {label}
+            </button>
           ))}
         </div>
-        <span className="floor-label bottom">ENTRÉE · TERRASSE</span>
-      </div>
-      {selected && (
-        <Composer
-          data={data}
-          table={selected}
-          act={act}
-          close={() => setSelected(null)}
-        />
       )}
-      <OrderList data={data} act={act} compact />
+      {view === "layout" && canLayout ? (
+        <FloorEditor data={data} act={act} />
+      ) : (
+        <>
+          <div className="section-heading">
+            <div>
+              <h2>La salle, en un regard</h2>
+              <p>Ouvrez une table pour prendre une commande.</p>
+            </div>
+            <span className="pill">
+              <span className="dot" />
+              {tables.filter((t) => t.status === "occupied").length} tables en
+              service
+            </span>
+          </div>
+          <div className="legend">
+            {["free", "occupied", "cleaning", "unavailable"].map((s) => (
+              <Badge key={s} status={s} />
+            ))}
+          </div>
+          {[...new Set(tables.map((t) => t.zone))].map((zone) => (
+            <div className="floor" key={zone}>
+              <span className="floor-label">{zone.toUpperCase()}</span>
+              <div className="table-grid">
+                {tables
+                  .filter((t) => t.zone === zone)
+                  .map((t) => {
+                    const booking = nextBooking(t);
+                    return (
+                      <div className={`table-wrap ${t.status}`} key={t.id}>
+                        <button
+                          className="dining-table"
+                          disabled={["cleaning", "unavailable"].includes(
+                            t.status,
+                          )}
+                          onClick={() => setSelected(t)}
+                        >
+                          <span className="table-number">
+                            {String(t.number).padStart(2, "0")}
+                          </span>
+                          <span>
+                            <Users size={13} /> {t.capacity} places
+                            {t.label ? ` · ${t.label}` : ""}
+                          </span>
+                          <Badge status={t.status} />
+                          {booking && (
+                            <small>
+                              Réservée{" "}
+                              {new Date(booking.starts_at).toLocaleTimeString(
+                                "fr-FR",
+                                {
+                                  timeZone: "Europe/Paris",
+                                  hour: "2-digit",
+                                  minute: "2-digit",
+                                },
+                              )}{" "}
+                              · {booking.guests} pers.
+                            </small>
+                          )}
+                        </button>
+                        {t.status === "cleaning" ||
+                        t.status === "unavailable" ? (
+                          <Button
+                            variant="ghost"
+                            onClick={() =>
+                              act({ action: "table", id: t.id, status: "free" })
+                            }
+                          >
+                            Marquer libre
+                          </Button>
+                        ) : null}
+                      </div>
+                    );
+                  })}
+              </div>
+            </div>
+          ))}
+          {selected && (
+            <Composer
+              data={data}
+              table={selected}
+              act={act}
+              close={() => setSelected(null)}
+            />
+          )}
+          <OrderList data={data} act={act} compact />
+        </>
+      )}
     </>
   );
 }
@@ -460,7 +522,10 @@ export function Kds({
         >
           <div className="three-grid">
             {data.tables
-              .filter((t) => ["free", "occupied"].includes(t.status))
+              .filter(
+                (t) =>
+                  !t.archived_at && ["free", "occupied"].includes(t.status),
+              )
               .map((t) => (
                 <Button
                   key={t.id}

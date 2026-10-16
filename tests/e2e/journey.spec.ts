@@ -91,10 +91,12 @@ test("parcours complet, réservations publiques, responsive et accès serveur", 
   });
   const other = await context.newPage();
   await other.goto("/reservations");
+  await other.locator(".slot:not([disabled])").first().click();
+  await other.locator(".map-table.free").first().click();
+  await expect(other.locator(".map-table.selected")).toHaveCount(1);
   await other.getByLabel("Votre nom").fill("E2E Réservation fictive");
   await other.getByLabel("Téléphone ou e-mail").fill("e2e@example.test");
-  await other.getByLabel("Date et heure").fill("2026-12-18T19:30");
-  await other.getByRole("button", { name: "Demander une réservation" }).click();
+  await other.getByRole("button", { name: /^Réserver · .* · table/ }).click();
   await expect(other.getByRole("status")).toContainText("enregistrée");
   await page.getByRole("button", { name: "Réservations", exact: true }).click();
   await expect(

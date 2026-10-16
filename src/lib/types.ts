@@ -76,6 +76,13 @@ export type Table = {
   number: number;
   capacity: number;
   status: string;
+  label: string;
+  zone: string;
+  shape: "round" | "square" | "rect";
+  pos_x: number;
+  pos_y: number;
+  bookable: boolean;
+  archived_at: string | null;
 };
 export type Event = {
   id: string;

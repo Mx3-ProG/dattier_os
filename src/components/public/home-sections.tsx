@@ -263,11 +263,11 @@ export function HomeReservation() {
         Les bons moments <em>se réservent.</em>
       </Heading>
       <p>
-        Choisissez votre créneau. Votre demande apparaît directement auprès de
-        l’équipe, qui doit l’accepter et vous affecter une table.
+        Choisissez votre jour et votre heure sur le calendrier, puis votre
+        table directement sur le plan de la salle. L’équipe confirme ensuite.
       </p>
       <Link className="btn light" href="/reservations">
-        Demander une table <ArrowUpRight size={17} aria-hidden />
+        Choisir ma table <ArrowUpRight size={17} aria-hidden />
       </Link>
     </section>
   );
@@ -281,7 +281,7 @@ const faq = [
   },
   {
     q: "Ma réservation est-elle confirmée immédiatement ?",
-    a: "Non. Votre demande est transmise à l’équipe, qui doit l’accepter et vous affecter une table.",
+    a: "Votre demande retient le créneau et la table choisie sur le plan. L’équipe doit ensuite la confirmer.",
   },
   {
     q: "Peut-on payer en ligne ?",

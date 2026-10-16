@@ -8,6 +8,12 @@ import {
   issuePromo,
   cancelPromo,
 } from "@/features/loyalty/service";
+import {
+  tableSchema,
+  saveTable,
+  moveTable,
+  tableLifecycle,
+} from "@/features/floor/service";
 import { randomUUID as uuid } from "node:crypto";
 import { z } from "zod";
 import { rows, one, type DB } from "./database/db";
@@ -53,7 +59,19 @@ export const actionSchema = z.discriminatedUnion("action", [
   z.object({
     action: z.literal("table"),
     id,
-    status: z.enum(["free", "unavailable"]),
+    status: z.enum(["free", "cleaning", "unavailable"]),
+  }),
+  tableSchema,
+  z.object({
+    action: z.literal("moveTable"),
+    id,
+    x: z.coerce.number().int().min(0).max(100),
+    y: z.coerce.number().int().min(0).max(100),
+  }),
+  z.object({
+    action: z.literal("tableLifecycle"),
+    id,
+    operation: z.enum(["archive", "restore", "delete"]),
   }),
   z.object({
     action: z.literal("reservation"),
@@ -187,6 +205,12 @@ export async function perform(
       ]);
       break;
     }
+    case "saveTable":
+      return saveTable(db, r, user, a);
+    case "moveTable":
+      return moveTable(db, r, user, a.id, a.x, a.y);
+    case "tableLifecycle":
+      return tableLifecycle(db, r, user, a.id, a.operation);
     case "table": {
       requirePermission(user.role, "orders");
       const t = await one<{ status: string }>(
@@ -227,7 +251,7 @@ export async function perform(
         if (!table) throw new Error("Affectez une table.");
         const t = await one<{ capacity: number; status: string }>(
           db,
-          "SELECT * FROM dining_tables WHERE id=$1 AND restaurant_id=$2",
+          "SELECT * FROM dining_tables WHERE id=$1 AND restaurant_id=$2 AND archived_at IS NULL",
           [table, r],
         );
         if (
@@ -238,7 +262,7 @@ export async function perform(
           throw new Error("Capacité ou état de table incompatible.");
         const conflicts = await rows(
           db,
-          "SELECT id FROM reservations WHERE table_id=$1 AND id<>$2 AND status IN ('confirmed','arrived') AND starts_at<$3 AND ends_at>$4",
+          "SELECT id FROM reservations WHERE table_id=$1 AND id<>$2 AND status IN ('requested','confirmed','arrived') AND starts_at<$3 AND ends_at>$4",
           [table, a.id, res.ends_at, res.starts_at],
         );
         if (conflicts.length)
@@ -516,27 +540,7 @@ export async function perform(
   }
   await log(db, r, user.id, `Action : ${a.action}`, "id" in a ? a.id : null);
 }
-export const reservationSchema = z.object({
-  restaurant: id,
-  name: text,
-  contact: text,
-  guests: z.coerce.number().int().min(1).max(20),
-  start: dt,
-  note: z.string().max(300).default(""),
-});
-export async function requestReservation(
-  db: DB,
-  a: z.infer<typeof reservationSchema>,
-) {
-  if (new Date(a.start).getTime() < Date.now())
-    throw new Error("Choisissez un créneau futur.");
-  const id = uuid();
-  await one(db, "SELECT id FROM restaurants WHERE id=$1", [a.restaurant]);
-  await db.query(
-    "INSERT INTO reservations(id,restaurant_id,name,contact,guests,starts_at,ends_at,note) VALUES($1,$2,$3,$4,$5,$6,$6::timestamptz+interval '2 hours',$7)",
-    [id, a.restaurant, a.name, a.contact, a.guests, a.start, a.note],
-  );
-  await notify(db, a.restaurant, "Nouvelle demande de réservation");
-  await log(db, a.restaurant, null, "Demande de réservation publique", id);
-  return id;
-}
+export {
+  reservationSchema,
+  requestReservation,
+} from "@/features/reservations/service";

@@ -44,7 +44,7 @@ Le changement de profil via `/demo` conserve toutes les opérations. Nadia et Sl
 4. Sarah : servir chaque ligne → clôturer → confirmer le règlement déclaré. La table passe « À nettoyer », puis peut être marquée libre.
 5. Amine : stocks et mouvements ; 400 g de semoule, 300 g de poulet, 4 merguez, 200 g de pois chiches, 200 g de carottes, 8 g de thé, 16 g de menthe et 20 g de sucre ont été consommés pour cette commande.
 6. Nadia : indicateurs, commande réglée, journal d’activité.
-7. Site public `/reservations` : saisir une demande future puis la retrouver dans Réservations côté équipe.
+7. Site public `/reservations` : choisir le nombre de convives, un jour sur le calendrier, une heure, puis une table libre sur le plan de salle ; retrouver la demande dans Réservations côté équipe. Plan de salle → « Aménager la salle » modifie les tables vues par les clients.
 
 Le seed contient déjà des tickets aux tables 2 et 4. La table 8 est libre après réinitialisation. Les commandes historiques et leur stock consommé sont enregistrés dans la même base.
 

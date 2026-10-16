@@ -9,6 +9,12 @@ import {
   reservationSchema,
 } from "@/lib/actions";
 import { createOrder, orderSchema } from "@/features/orders/service";
+import {
+  availability,
+  calendar,
+  calendarQuery,
+  dayQuery,
+} from "@/features/reservations/service";
 import { seed } from "@/lib/database/seed";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -57,6 +63,16 @@ export async function GET(req: NextRequest) {
             "Referrer-Policy": "no-referrer",
           },
         },
+      );
+    }
+    if (endpoint === "calendar" || endpoint === "availability") {
+      const params = Object.fromEntries(req.nextUrl.searchParams);
+      const r = params.restaurant || "bernay";
+      return NextResponse.json(
+        endpoint === "calendar"
+          ? await calendar(db, r, calendarQuery.parse(params))
+          : await availability(db, r, dayQuery.parse(params)),
+        { headers: { "Cache-Control": "no-store" } },
       );
     }
     if (endpoint === "public") {

@@ -299,10 +299,15 @@ export function Management({
                                   value: r.table_id || "",
                                   options: [
                                     { value: "", label: "Non affectée" },
-                                    ...data.tables.map((t) => ({
-                                      value: t.id,
-                                      label: `Table ${t.number} · ${t.capacity} places`,
-                                    })),
+                                    ...data.tables
+                                      .filter(
+                                        (t) =>
+                                          !t.archived_at || t.id === r.table_id,
+                                      )
+                                      .map((t) => ({
+                                        value: t.id,
+                                        label: `Table ${t.number} · ${t.capacity} places`,
+                                      })),
                                   ],
                                   required: false,
                                 },

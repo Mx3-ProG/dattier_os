@@ -48,11 +48,22 @@ export async function seed(db: Transaction) {
     ["brick", "Feuille de brick", "unit", 40, 10, 0.3],
   ];
   for (const r of ["bernay", "atelier"]) {
-    for (let i = 1; i <= 12; i++)
+    for (let i = 1; i <= 12; i++) {
+      const capacity = i <= 2 ? 2 : i % 3 === 0 ? 6 : 4;
       await db.query(
-        "INSERT INTO dining_tables(id,restaurant_id,number,capacity) VALUES($1,$2,$3,$4)",
-        [`${r}-t${i}`, r, i, i % 3 === 0 ? 6 : 4],
+        "INSERT INTO dining_tables(id,restaurant_id,number,capacity,zone,shape,pos_x,pos_y) VALUES($1,$2,$3,$4,$5,$6,$7,$8)",
+        [
+          `${r}-t${i}`,
+          r,
+          i,
+          capacity,
+          i > 8 ? "Terrasse" : "Salle principale",
+          capacity <= 2 ? "round" : capacity >= 6 ? "rect" : "square",
+          14 + ((i - 1) % 4) * 24,
+          i > 8 ? 80 : 18 + Math.floor((i - 1) / 4) * 28,
+        ],
       );
+    }
     for (const [id, name, unit, qty, threshold, cost] of ingredients) {
       await db.query("INSERT INTO ingredients VALUES($1,$2,$3,$4,$5,$6)", [
         `${r}-${id}`,
@@ -271,6 +282,25 @@ export async function seed(db: Transaction) {
           ][i],
           2 + (i % 4),
           i % 3,
+        ],
+      );
+    // Tables déjà retenues demain (heure de Paris) : visibles sur le plan public.
+    for (const [n, table, guests, hour] of [
+      [0, 3, 5, "20:00"],
+      [1, 4, 4, "20:00"],
+      [2, 7, 3, "19:30"],
+      [3, 10, 4, "20:30"],
+      [4, 5, 2, "12:30"],
+    ] as const)
+      await db.query(
+        "INSERT INTO reservations(id,restaurant_id,name,contact,guests,starts_at,ends_at,table_id,status,note) VALUES($1,$2,$3,'demo@example.test',$4,((CURRENT_DATE+1)::timestamp+$5::time) AT TIME ZONE 'Europe/Paris',((CURRENT_DATE+1)::timestamp+$5::time+interval '2 hours') AT TIME ZONE 'Europe/Paris',$6,'confirmed','Réservation fictive')",
+        [
+          `${r}-booked-${n}`,
+          r,
+          ["Inès R.", "Hugo L.", "Nora B.", "Paul V.", "Léa M."][n],
+          guests,
+          hour,
+          `${r}-t${table}`,
         ],
       );
     await db.query(

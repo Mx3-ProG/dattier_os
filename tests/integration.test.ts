@@ -18,6 +18,21 @@ import {
   reservationSchema,
 } from "../src/lib/actions";
 import { snapshot, menu } from "../src/lib/snapshot";
+import {
+  booking,
+  parisDate,
+  parisToUtc,
+} from "../src/features/reservations/service";
+/** Premier jour ouvert à au moins `ahead` jours d’aujourd’hui (heure de Paris). */
+const openDay = (ahead: number) => {
+  for (let n = ahead; ; n++) {
+    const d = parisDate(Date.now() + n * 86400000);
+    if (
+      !booking.closedWeekdays.includes(new Date(`${d}T12:00:00Z`).getUTCDay())
+    )
+      return d;
+  }
+};
 import { scope, type Actor } from "../src/lib/auth/session";
 let db: PGlite;
 const sarah: Actor = { id: "sarah", name: "Sarah", role: "WAITER" },
@@ -229,7 +244,7 @@ test("réception partielle, correction inventaire et stock expiré exclu", async
   );
 });
 test("réservation publique et conflit de table", async () => {
-  const start = new Date(Date.now() + 86400000 * 5).toISOString();
+  const start = new Date(parisToUtc(openDay(5), "19:30")).toISOString();
   const res = reservationSchema.parse({
     restaurant: "bernay",
     name: "Test fictif",

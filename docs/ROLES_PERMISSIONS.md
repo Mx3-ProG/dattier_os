@@ -14,6 +14,8 @@ Source centrale : `src/lib/permissions.ts`. Les contrôles sont exécutés côt�
 | PURCHASING | Fournisseurs, commandes et réceptions |
 | ACCOUNTANT | Rapports financiers et dépenses |
 
+La permission `floor` (aménagement du plan de salle : ajouter, modifier les places/l’état, déplacer, archiver, supprimer une table) est accordée à SUPER_ADMIN, OWNER, MANAGER, WAITER et BARTENDER. Une table occupée ne peut ni changer d’état manuellement ni être archivée ; une table avec historique ne peut qu’être archivée ; réduire les places est refusé si une réservation à venir dépasse la nouvelle capacité.
+
 Tous les profils peuvent consulter les notifications de leur établissement et pointer leur propre service. Les confirmations de réservation ne sont pas publiques. Le public ne peut demander qu’une réservation ou une commande à confirmer. Les profils publics de `/demo` ne sont disponibles que lorsque la démo locale est activée.
 
 Les jetons ne contiennent aucun rôle choisi par le navigateur ; le serveur relit le profil et son affectation. La définition du seed attribue explicitement SUPER_ADMIN à l’identifiant `slimane` : aucune règle sur le prénom ou l’adresse électronique n’existe en production, dont l’authentification reste à implémenter.

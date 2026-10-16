@@ -23,7 +23,8 @@ export type Permission =
   | "customers"
   | "settings"
   | "audit"
-  | "reservations";
+  | "reservations"
+  | "floor";
 const grants: Record<Role, Permission[]> = {
   SUPER_ADMIN: [
     "catalog",
@@ -39,6 +40,7 @@ const grants: Record<Role, Permission[]> = {
     "settings",
     "audit",
     "reservations",
+    "floor",
   ],
   OWNER: [
     "catalog",
@@ -54,6 +56,7 @@ const grants: Record<Role, Permission[]> = {
     "settings",
     "audit",
     "reservations",
+    "floor",
   ],
   MANAGER: [
     "catalog",
@@ -67,10 +70,11 @@ const grants: Record<Role, Permission[]> = {
     "customers",
     "audit",
     "reservations",
+    "floor",
   ],
-  WAITER: ["orders", "payments", "reservations"],
+  WAITER: ["orders", "payments", "reservations", "floor"],
   CHEF: ["kitchen", "stock", "orders"],
-  BARTENDER: ["bar", "stock", "orders"],
+  BARTENDER: ["bar", "stock", "orders", "floor"],
   STOCK_MANAGER: ["stock", "purchases"],
   PURCHASING: ["purchases"],
   ACCOUNTANT: ["finance"],
