@@ -20,6 +20,7 @@ import {
   rolesOf,
 } from "./permissions";
 import { emit } from "@/features/events/service";
+import { describeAction } from "@/features/events/history";
 import {
   markRead,
   notificationActionSchemas,
@@ -152,6 +153,17 @@ export async function perform(
   user: Actor,
   a: z.infer<typeof actionSchema>,
 ) {
+  const history = await describeAction(db, r, user, a);
+  const result = await run(db, r, user, a);
+  if (history) await emit(db, r, { actor: user.id, ...history });
+  return result;
+}
+async function run(
+  db: DB,
+  r: string,
+  user: Actor,
+  a: z.infer<typeof actionSchema>,
+) {
   switch (a.action) {
     case "createProduct":
       return createProduct(db, r, user, a);
@@ -268,9 +280,14 @@ export async function perform(
         !hasRole(user, ["OWNER", "SUPER_ADMIN", "MANAGER", "STOCK_MANAGER"])
       )
         throw new Error("Correction d’inventaire non autorisée.");
-      const lot = await one<{ quantity: number; reserved: number }>(
+      const lot = await one<{
+        quantity: number;
+        reserved: number;
+        name: string;
+        unit: string;
+      }>(
         db,
-        "SELECT l.quantity::float,l.reserved::float FROM stock_lots l JOIN ingredients i ON i.id=l.ingredient_id WHERE l.id=$1 AND i.restaurant_id=$2 FOR UPDATE",
+        "SELECT l.quantity::float,l.reserved::float,i.name,i.unit FROM stock_lots l JOIN ingredients i ON i.id=l.ingredient_id WHERE l.id=$1 AND i.restaurant_id=$2 FOR UPDATE",
         [a.id, r],
       );
       const next = a.kind === "waste" ? lot.quantity - a.quantity : a.quantity;
@@ -290,15 +307,25 @@ export async function perform(
         user.id,
         a.id,
       );
-      if (a.kind === "inventory" && next !== lot.quantity)
-        await emit(db, r, {
-          type: "stock.inventory_gap",
-          module: "stock",
-          actor: user.id,
-          objectId: a.id,
-          summary: `Écart d’inventaire de ${next - lot.quantity > 0 ? "+" : ""}${Math.round((next - lot.quantity) * 100) / 100} sur un lot · ${a.reason}`,
-          data: { before: lot.quantity, after: next },
-        });
+      const delta = Math.round((next - lot.quantity) * 100) / 100;
+      await emit(db, r, {
+        type:
+          a.kind === "waste"
+            ? "stock.waste"
+            : delta
+              ? "stock.inventory_gap"
+              : "stock.counted",
+        module: "stocks",
+        actor: user.id,
+        objectId: a.id,
+        summary:
+          a.kind === "waste"
+            ? `Perte déclarée : ${a.quantity} ${lot.unit} de ${lot.name} · ${a.reason}`
+            : delta
+              ? `Écart d’inventaire sur ${lot.name} : ${delta > 0 ? "+" : ""}${delta} ${lot.unit} (${lot.quantity} → ${next}) · ${a.reason}`
+              : `Inventaire confirmé sans écart : ${lot.name} · ${next} ${lot.unit}`,
+        data: { before: lot.quantity, after: next },
+      });
       break;
     }
     case "supplier":
@@ -378,7 +405,7 @@ export async function perform(
       );
       await emit(db, r, {
         type: "purchase.received",
-        module: "purchases",
+        module: "deliveries",
         actor: user.id,
         objectId: a.id,
         summary: "Livraison réceptionnée · stocks actualisés",
@@ -486,7 +513,7 @@ export async function perform(
         usual.count >= 3 && a.amount > 3 * (usual.average ?? Infinity);
       await emit(db, r, {
         type: unusual ? "finance.unusual_expense" : "expense.created",
-        module: "finance",
+        module: "expenses",
         actor: user.id,
         objectId: expense,
         summary: unusual

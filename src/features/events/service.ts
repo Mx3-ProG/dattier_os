@@ -1,6 +1,7 @@
 import { randomUUID as uuid } from "node:crypto";
 import { rows, type DB } from "@/lib/database/db";
 import type { Permission } from "@/lib/permissions";
+import { category, type CategoryId } from "./categories";
 import {
   isNotificationType,
   notificationCatalog,
@@ -13,12 +14,13 @@ import {
  */
 export type DomainEvent = {
   type: string;
-  module: string;
+  /** Rubrique d’activité (identifiant de module, cf. `categories.ts`). */
+  module: CategoryId;
   summary: string;
   actor?: string | null;
   objectId?: string | null;
   data?: Record<string, unknown>;
-  /** Visibilité dans l’historique ; par défaut celle du catalogue de notifications. */
+  /** Visibilité ; par défaut celle du catalogue de notifications, sinon de la rubrique. */
   permissions?: Permission[] | null;
   notification?: {
     /** Notification réservée à ce profil. */
@@ -26,6 +28,8 @@ export type DomainEvent = {
     /** Une seule notification par clé et par établissement. */
     dedupKey?: string;
     priority?: Priority;
+    /** Destinataires plus restreints que la visibilité de l’événement dans l’historique. */
+    permissions?: Permission[];
   };
 };
 /** Retourne l’identifiant de l’événement, ou `null` s’il était déjà notifié (clé de dédoublonnage). */
@@ -46,7 +50,11 @@ export async function emit(db: DB, r: string, e: DomainEvent) {
     return null;
   const id = uuid();
   const permissions =
-    e.permissions !== undefined ? e.permissions : (kind?.permissions ?? null);
+    e.permissions !== undefined
+      ? e.permissions
+      : kind && "permissions" in kind
+        ? kind.permissions
+        : category(e.module).permissions;
   await db.query(
     "INSERT INTO domain_events(id,restaurant_id,type,module,actor,object_id,summary,data,permissions) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9)",
     [
@@ -70,9 +78,11 @@ export async function emit(db: DB, r: string, e: DomainEvent) {
         e.summary,
         e.type,
         e.notification?.priority ?? kind.priority,
-        kind.module,
+        e.module,
         e.objectId ?? null,
-        kind.permissions,
+        e.notification?.recipient
+          ? null
+          : (e.notification?.permissions ?? permissions),
         e.notification?.recipient ?? null,
         id,
         dedup,

@@ -6,7 +6,7 @@ async function profile(page: Page, name: string) {
   await expect(page).toHaveURL(/dashboard/);
   await expect(page.locator(".sidebar-profile")).toContainText(name);
 }
-test("centre de notifications : filtrage par rôle, ouverture du module, préférences", async ({
+test("notifications rangées par rubrique, préférences et historique par métier", async ({
   page,
 }) => {
   await profile(page, "Nadia");
@@ -15,29 +15,33 @@ test("centre de notifications : filtrage par rôle, ouverture du module, préfé
     data: { confirm: "RESET DEMO" },
   });
   expect(reset.ok()).toBeTruthy();
-  await profile(page, "Leïla");
-  await page.getByRole("button", { name: /^Notifications/ }).click();
-  const panel = page.getByRole("region", { name: "Centre de notifications" });
-  await expect(panel).toBeVisible();
-  await expect(panel).not.toContainText("Nouvelle commande");
-  await profile(page, "Sarah");
-  await page
-    .getByRole("button", { name: /^Notifications \(\d+ non lues\)/ })
-    .click();
-  await panel
+  // La cuisine : la cloche ouvre la page, rangée par rubrique.
+  await profile(page, "Karim");
+  await page.locator(".notification-button").click();
+  await expect(page.locator(".breadcrumb")).toContainText("Notifications");
+  const kitchen = page.getByRole("region", { name: "Cuisine", exact: true });
+  await expect(kitchen).toContainText("Nouvelle commande · Table");
+  await expect(
+    page.getByRole("region", { name: "Bar", exact: true }),
+  ).toHaveCount(0);
+  await kitchen
     .getByRole("button", { name: /Nouvelle commande/ })
     .first()
     .click();
-  await expect(page.locator(".breadcrumb")).toContainText("Commandes");
-  await page.getByRole("button", { name: /^Notifications/ }).click();
-  await panel.getByRole("tab", { name: "Préférences" }).click();
-  await panel.getByRole("checkbox", { name: /Nouvelle commande/ }).uncheck();
-  await panel.getByRole("tab", { name: "Toutes" }).click();
-  await expect(panel).not.toContainText("Nouvelle commande");
-  await panel.getByRole("tab", { name: "Préférences" }).click();
-  await panel.getByRole("checkbox", { name: /Nouvelle commande/ }).check();
-  await panel.getByRole("tab", { name: "Toutes" }).click();
-  await expect(panel).toContainText("Nouvelle commande");
+  await expect(page.locator(".breadcrumb")).toContainText("Cuisine");
+  // Préférences : sourdine d’un type, alerte critique verrouillée.
+  await page.locator(".notification-button").click();
+  await page.getByRole("button", { name: "Préférences" }).click();
+  const prefs = page.getByRole("region", {
+    name: "Préférences de notification",
+  });
+  await expect(
+    prefs.getByRole("checkbox", { name: /Rupture de stock/ }),
+  ).toBeDisabled();
+  await prefs.getByRole("checkbox", { name: /Nouvelle commande/ }).uncheck();
+  await expect(kitchen).toHaveCount(0);
+  await prefs.getByRole("checkbox", { name: /Nouvelle commande/ }).check();
+  await expect(kitchen).toBeVisible();
   const forged = await page.request.post("/api/v1/action", {
     headers: { origin },
     data: {
@@ -48,4 +52,36 @@ test("centre de notifications : filtrage par rôle, ouverture du module, préfé
     },
   });
   expect(forged.status()).toBe(400);
+  // Historique : le stock ne voit pas la salle ; le serveur ne voit pas les stocks.
+  await profile(page, "Amine");
+  const waste = await page.request.post("/api/v1/action", {
+    headers: { origin },
+    data: {
+      action: "stock",
+      id: "bernay-menthe-lot",
+      quantity: 10,
+      reason: "Menthe fanée",
+      kind: "waste",
+      restaurant: "bernay",
+    },
+  });
+  expect(waste.ok()).toBeTruthy();
+  await page.getByRole("button", { name: "Historique", exact: true }).click();
+  await expect(page.locator(".history-list").first()).toContainText(
+    "Perte déclarée : 10 g de Menthe fraîche · Menthe fanée",
+  );
+  await expect(page.locator(".history-list").first()).toContainText("Amine");
+  await expect(
+    page.getByRole("combobox", { name: "Rubrique" }).locator("option"),
+  ).not.toContainText(["Cuisine"]);
+  await profile(page, "Sarah");
+  await page.getByRole("button", { name: "Historique", exact: true }).click();
+  await expect(page.locator(".history-category").first()).toBeVisible();
+  await expect(
+    page.locator(".history-category", { hasText: "Stocks" }),
+  ).toHaveCount(0);
+  const forbidden = await page.request.get(
+    "/api/v1/history?restaurant=atelier",
+  );
+  expect(forbidden.status()).toBe(403);
 });

@@ -1,6 +1,6 @@
 # Pilotage opérationnel — audit et plan (proposition, non implémentée)
 
-Statut : plan validé le 15 octobre 2026 ; le chantier parallèle (rôles personnalisés, comptabilité, audit, taxes) n’a pas commencé. **Étapes 0 et 1 livrées** (socle + notifications, voir `NOTIFICATIONS.md`). Écart assumé : les notifications sont créées dans la transaction de l’événement (atomique) plutôt que par un dispatcher après commit ; le dispatcher arrivera avec les automatisations. Version initiale de l’audit : Audit réalisé le 15 octobre 2026 sur `d2a408c` (branche `claude/intelligent-notification-center-503c67`). Tests de référence : `npm test` 15/15, `tsc --noEmit` OK.
+Statut : plan validé le 15 octobre 2026 ; le chantier parallèle (rôles personnalisés, comptabilité, audit, taxes) n’a pas commencé. **Étapes 0, 1 et 4 livrées** (socle, notifications rangées par rubrique, historique opérationnel ; voir `NOTIFICATIONS.md`). Écart assumé : les notifications sont créées dans la transaction de l’événement (atomique) plutôt que par un dispatcher après commit ; le dispatcher arrivera avec les automatisations. Version initiale de l’audit : Audit réalisé le 15 octobre 2026 sur `d2a408c` (branche `claude/intelligent-notification-center-503c67`). Tests de référence : `npm test` 15/15, `tsc --noEmit` OK.
 
 ## 0. Constat bloquant : le chantier parallèle est introuvable
 

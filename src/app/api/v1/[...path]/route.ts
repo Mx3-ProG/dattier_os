@@ -12,6 +12,7 @@ import { createOrder, orderSchema } from "@/features/orders/service";
 import { seed } from "@/lib/database/seed";
 import { hasRole } from "@/lib/permissions";
 import { runSweep } from "@/features/notifications/service";
+import { listHistory } from "@/features/events/history";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 function fail(e: unknown) {
@@ -72,7 +73,20 @@ export async function GET(req: NextRequest) {
       });
     }
     const user = await actor();
-    const r = req.nextUrl.searchParams.get("restaurant") || "bernay";
+    const q = req.nextUrl.searchParams;
+    const r = q.get("restaurant") || "bernay";
+    if (endpoint === "history")
+      return NextResponse.json(
+        await db.transaction(async (tx) =>
+          listHistory(tx, r, await scope(tx, user, r), {
+            category: q.get("category") || undefined,
+            before: q.get("before") || undefined,
+            days: Number(q.get("days")) || undefined,
+            query: q.get("q")?.slice(0, 100) || undefined,
+          }),
+        ),
+        { headers: { "Cache-Control": "no-store" } },
+      );
     await db.transaction((tx) => scope(tx, user, r));
     await runSweep(db, r);
     return NextResponse.json(

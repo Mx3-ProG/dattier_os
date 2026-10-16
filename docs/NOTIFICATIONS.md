@@ -1,53 +1,69 @@
-# Événements métier et centre de notifications
+# Notifications, historique opérationnel et rubriques
+
+## Rubriques
+
+Toute l’activité est rangée par rubrique, alignée sur les modules de l’espace de travail (`src/features/events/categories.ts`) : Cuisine, Bar, Commandes & encaissements, Plan de salle, Réservations, Stocks & inventaire, Recettes, Fournisseurs, Livraisons, Équipe & planning, Présences, Finances & rapports, Dépenses, Clients & fidélité, La carte, Établissement, Général.
+
+Chaque rubrique fixe :
+
+- sa **visibilité** par défaut : au moins une des permissions de la rubrique (ex. Cuisine = `kitchen` ou `orders`, donc cuisine, salle et direction ; Stocks = `stock` ou `purchases`) ;
+- le **module ouvert au clic**, avec un repli si le profil n’a pas accès au module (ex. un serveur qui clique une notification Cuisine arrive dans Commandes).
 
 ## Événements (`domain_events`)
 
-`emit()` (`src/features/events/service.ts`) écrit un événement typé dans la transaction de l’opération : un rollback n’en laisse aucune trace. Champs : type, module, auteur, objet, résumé, données JSON, permissions de visibilité. C’est le socle de l’historique opérationnel et des automatisations à venir (`processed_at` est réservé au futur dispatcher). `audit_logs` reste le journal de sécurité, alimenté par `log()` comme avant.
+`emit()` (`src/features/events/service.ts`) écrit un événement dans la transaction de l’opération : un rollback n’en laisse aucune trace. Champs : type, rubrique (`module`), auteur, objet, résumé lisible, données, permissions de visibilité.
 
-Si le type figure dans le catalogue de notifications, `emit()` crée aussi la notification correspondante. Les événements hors catalogue (ex. `expense.created`) sont seulement historisés.
+Sources :
 
-## Catalogue
+- services métier : commande créée (un événement par poste, cuisine et bar), chaque changement d’état d’une ligne, règlement, réception, pertes et inventaires, dépenses, planning, réservation publique ;
+- toutes les autres actions du poste de travail via `describeAction()` (`src/features/events/history.ts`) : produits, carte, recettes, codes promo, clients, fidélité, tables, réservations, fournisseurs, commandes fournisseurs, pointages, établissement. Le libellé est calculé **avant** l’action (un produit supprimé garde son nom) et l’événement n’est émis que si l’action réussit.
 
-`src/features/notifications/catalog.ts` définit pour chaque type : libellé, groupe, permissions requises (au moins une ; `null` = tout l’établissement), priorité par défaut, module ouvert au clic.
+`audit_logs` reste le journal de sécurité (module « Journal d’audit », permission `audit`), distinct de l’historique.
 
-| Type | Visible avec | Priorité | Source |
+## Centre de notifications (page « Notifications »)
+
+La cloche ouvre la page. Les notifications des **7 derniers jours** y sont rangées par rubrique, de la plus récente à la plus ancienne, avec : priorité, résumé, auteur (« Par Sarah ») ou « Automatique », date. Filtres : rubrique, non lues seulement. Clic = lue + ouverture du module. Au-delà de 7 jours, elles quittent le centre et restent consultables dans l’Historique.
+
+Règles de diffusion (filtrage serveur, `listNotifications`) :
+
+- permissions de la rubrique, ou destinataires plus restreints : une nouvelle commande ne notifie que le poste qui la prépare (`kitchen` ou `bar`) ;
+- destinataire nominatif (planning : l’employé concerné uniquement) ;
+- un profil n’est jamais notifié de sa propre action (elle reste dans l’historique) ;
+- préférences de sourdine par type, sauf alertes critiques ;
+- `read` ne peut marquer que des notifications visibles.
+
+| Type | Rubrique | Priorité | Source |
 | --- | --- | --- | --- |
-| `order.created` | orders, kitchen, bar | normale | création de commande personnel |
-| `order.pending` | orders | haute | demande QR / à emporter |
-| `order.ready` | orders | haute | plat ou boisson prêt |
-| `order.late` | orders, kitchen, bar | haute | calculée : commande active non prête après 20 min |
-| `menu.unavailable` | orders, kitchen, bar, catalog | haute | calculée : produit actif sans portion disponible |
-| `reservation.requested` | reservations | normale | demande publique |
-| `stock.low` / `stock.out` | stock, purchases | haute / critique | calculées : disponible ≤ seuil / ≤ 0 |
-| `stock.expiring` | stock | normale | calculée : lot disponible expirant sous 2 jours |
-| `stock.inventory_gap` | stock | normale | correction d’inventaire modifiant la quantité |
-| `purchase.received` | stock, purchases | normale | réception fournisseur |
-| `finance.unusual_expense` | finance | haute | dépense > 3 × moyenne des 90 derniers jours (≥ 3 dépenses) |
-| `team.shift` | employé concerné uniquement | normale | créneau ajouté ou supprimé |
-| `system.info` | tous | normale | messages existants avant la migration 3 |
+| `order.created` | Cuisine / Bar | normale | commande du personnel, une par poste |
+| `order.pending` | Commandes | haute | demande QR / à emporter |
+| `order.ready` | Cuisine / Bar | haute | plat ou boisson prêt |
+| `order.late` | Cuisine / Bar | haute | calculée : lignes non prêtes après 20 min |
+| `menu.unavailable` | La carte | haute | calculée : produit actif sans portion (visible salle, cuisine, bar, carte) |
+| `reservation.requested` | Réservations | normale | demande publique |
+| `stock.low` / `stock.out` | Stocks | haute / critique | calculées : disponible ≤ seuil / ≤ 0 |
+| `stock.expiring` | Stocks | normale | calculée : lot expirant sous 2 jours |
+| `stock.inventory_gap` | Stocks | normale | correction d’inventaire avec écart |
+| `purchase.received` | Livraisons | normale | réception fournisseur |
+| `finance.unusual_expense` | Dépenses | haute | dépense > 3 × moyenne des 90 derniers jours |
+| `team.shift` | Équipe & planning | normale | créneau ajouté ou supprimé (employé concerné) |
+| `system.info` | Général | normale | messages antérieurs à la migration 3 |
 
-Les seuils sont dans `alertSettings` (catalogue). Les montants n’apparaissent que dans des notifications réservées à la permission `finance`.
+Les alertes calculées (`sweep()`) sont idempotentes (`dedup_key`) et exécutées dans leur propre transaction après chaque action et au plus toutes les 30 s lors du polling. Seuils : `alertSettings` (catalogue).
 
-## Alertes calculées
+## Historique (page « Historique »)
 
-`sweep()` détecte les situations d’état (stocks, péremptions, retards, indisponibilités). Il est idempotent grâce à `dedup_key` (unique par établissement) : une alerte par ingrédient et par jour, par lot, par commande, par produit et par jour. `runSweep()` l’exécute dans sa propre transaction après chaque action (une erreur d’alerte n’annule jamais l’opération) et au plus toutes les 30 s lors du polling, uniquement pour un établissement auquel l’utilisateur appartient.
+`GET /api/v1/history?restaurant=&category=&days=&q=&before=` (`listHistory`). Chaque profil voit les événements des rubriques couvertes par ses permissions effectives, plus ses propres actions (ex. ses pointages). Un serveur voit Cuisine, Bar, Commandes, Plan de salle, Réservations ; la cuisine voit Cuisine, Commandes, Stocks, Recettes ; la comptabilité voit Finances, Dépenses et les encaissements ; propriétaire et super admin voient tout. Les montants encaissés ne sont visibles qu’avec `payments` ou `finance`.
 
-## Lecture et sécurité
-
-Le filtrage est fait côté serveur (`listNotifications`) : établissement, destinataire, recoupement avec les permissions effectives, préférences. `read` (avec ou sans `id`) ne peut marquer que des notifications visibles ; un identifiant forgé est ignoré.
+Filtres : rubrique, période (aujourd’hui, 7, 30, 90 jours, tout), recherche dans le résumé et le nom de l’auteur. Regroupement par jour, auteur sur chaque ligne. Pagination « Afficher plus ancien » par curseur exact (date en microsecondes + identifiant), stable même quand plusieurs événements partagent le même instant.
 
 ## Préférences
 
-`notification_preferences` : sourdine par profil, établissement et type. Les types de priorité critique ne peuvent pas être désactivés (refus serveur) et une notification critique s’affiche toujours.
-
-## Interface
-
-Cloche avec compteur de non lues, onglets Toutes / Non lues / Préférences, étiquette de priorité, clic = lu + ouverture du module si le profil y a accès, « Tout marquer comme lu ». Temps réel : polling existant de 3 s.
+`notification_preferences` : sourdine par profil, établissement et type, depuis le bouton « Préférences » de la page. Les alertes critiques ne peuvent pas être désactivées.
 
 ## Permissions effectives
 
-`scope()` renvoie désormais `roles` (toutes les affectations de l’établissement) et un rôle principal déterministe (`primaryRole`, ordre de `roles`). `can`, `requirePermission`, `hasRole` et `permissionsOf` travaillent sur l’union des rôles. Les appels existants passant un rôle seul restent valides.
+`scope()` renvoie toutes les affectations du profil dans l’établissement (`roles`) et un rôle principal déterministe. `can`, `requirePermission`, `hasRole` et `permissionsOf` travaillent sur l’union des rôles.
 
 ## Migrations
 
-`src/lib/database/migrate.ts` applique dans l’ordre toute migration listée dans `migrations` et absente de `schema_versions`. Ajouter une migration = ajouter un fichier et une ligne dans cette liste.
+`src/lib/database/migrate.ts` applique dans l’ordre chaque migration de sa liste absente de `schema_versions`. `004_activity_categories.sql` reclasse les événements et notifications existants dans les rubriques.

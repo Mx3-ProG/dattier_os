@@ -93,6 +93,7 @@ export type Notice = {
   priority: "low" | "normal" | "high" | "critical";
   module: string | null;
   object_id: string | null;
+  actor_name: string | null;
 };
 export type Supplier = {
   id: string;

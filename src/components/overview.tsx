@@ -250,8 +250,11 @@ export function Overview({
       </div>
       <div className="section-heading">
         <h2>Dernières nouvelles</h2>
-        <button className="text-button" onClick={() => navigate("activity")}>
-          Journal d’activité →
+        <button
+          className="text-button"
+          onClick={() => navigate("notifications")}
+        >
+          Toutes les notifications →
         </button>
       </div>
       <div className="three-grid">

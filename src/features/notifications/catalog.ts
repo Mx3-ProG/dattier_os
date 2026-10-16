@@ -1,116 +1,105 @@
 import type { Permission } from "@/lib/permissions";
+import type { CategoryId } from "@/features/events/categories";
 /**
- * Catalogue des notifications : qui peut les voir (au moins une des
- * permissions, `null` = tout l’établissement), priorité par défaut et module
- * de l’espace de travail ouvert au clic. Importable côté client (aucune
- * dépendance serveur) pour l’écran de préférences.
+ * Catalogue des notifications : priorité par défaut et rubriques où elles
+ * apparaissent. La visibilité est celle de la rubrique de l’événement
+ * (voir `events/categories.ts`), sauf `permissions` explicites ou
+ * destinataire nominatif. Importable côté client (écran de préférences).
  */
 export type Priority = "low" | "normal" | "high" | "critical";
 export type NotificationKind = {
   label: string;
   group: "Cuisine & salle" | "Stocks" | "Finances" | "Équipe" | "Général";
-  permissions: Permission[] | null;
+  /** Remplace la visibilité de la rubrique (au moins une des permissions). */
+  permissions?: Permission[];
   priority: Priority;
-  module: string | null;
+  categories: CategoryId[];
 };
 export const notificationCatalog = {
   "system.info": {
     label: "Informations générales",
     group: "Général",
-    permissions: null,
     priority: "normal",
-    module: null,
+    categories: ["general"],
   },
   "order.created": {
     label: "Nouvelle commande",
     group: "Cuisine & salle",
-    permissions: ["orders", "kitchen", "bar"],
     priority: "normal",
-    module: "orders",
+    categories: ["kitchen", "bar"],
   },
   "order.pending": {
     label: "Demande de commande à confirmer",
     group: "Cuisine & salle",
-    permissions: ["orders"],
     priority: "high",
-    module: "orders",
+    categories: ["orders"],
   },
   "order.ready": {
     label: "Préparation prête à servir",
     group: "Cuisine & salle",
-    permissions: ["orders"],
     priority: "high",
-    module: "orders",
+    categories: ["kitchen", "bar"],
   },
   "order.late": {
     label: "Commande en retard",
     group: "Cuisine & salle",
-    permissions: ["orders", "kitchen", "bar"],
     priority: "high",
-    module: "orders",
+    categories: ["kitchen", "bar"],
   },
   "menu.unavailable": {
     label: "Produit indisponible (stock insuffisant)",
     group: "Cuisine & salle",
     permissions: ["orders", "kitchen", "bar", "catalog"],
     priority: "high",
-    module: "menu",
+    categories: ["menu"],
   },
   "reservation.requested": {
     label: "Demande de réservation",
     group: "Cuisine & salle",
-    permissions: ["reservations"],
     priority: "normal",
-    module: "reservations",
+    categories: ["reservations"],
   },
   "stock.low": {
     label: "Stock faible",
     group: "Stocks",
-    permissions: ["stock", "purchases"],
     priority: "high",
-    module: "stocks",
+    categories: ["stocks"],
   },
   "stock.out": {
     label: "Rupture de stock",
     group: "Stocks",
-    permissions: ["stock", "purchases"],
     priority: "critical",
-    module: "stocks",
+    categories: ["stocks"],
   },
   "stock.expiring": {
     label: "Lot proche de sa date limite",
     group: "Stocks",
-    permissions: ["stock"],
     priority: "normal",
-    module: "stocks",
+    categories: ["stocks"],
   },
   "stock.inventory_gap": {
     label: "Écart d’inventaire",
     group: "Stocks",
-    permissions: ["stock"],
     priority: "normal",
-    module: "stocks",
+    categories: ["stocks"],
   },
   "purchase.received": {
     label: "Livraison réceptionnée",
     group: "Stocks",
-    permissions: ["stock", "purchases"],
     priority: "normal",
-    module: "deliveries",
+    categories: ["deliveries"],
   },
   "finance.unusual_expense": {
     label: "Dépense inhabituelle",
     group: "Finances",
-    permissions: ["finance"],
     priority: "high",
-    module: "expenses",
+    categories: ["expenses"],
   },
   "team.shift": {
     label: "Modification de votre planning",
     group: "Équipe",
-    permissions: null,
     priority: "normal",
-    module: "attendance",
+    categories: ["team"],
   },
 } satisfies Record<string, NotificationKind>;
 export type NotificationType = keyof typeof notificationCatalog;

@@ -57,7 +57,7 @@ test("migration 003 : notifications existantes conservées et visibles par tous"
   );
   assert.deepEqual(
     versions.map((v) => v.version),
-    [1, 2, 3],
+    [1, 2, 3, 4],
   );
 });
 
@@ -92,8 +92,24 @@ test("commandes : destinataires filtrés par permission", async () => {
       await scope(tx, profile("sarah"), "bernay"),
     ),
   );
-  assert.ok((await types("karim")).includes("order.created"));
-  assert.ok((await types("sarah")).includes("order.created"));
+  const kitchen = (
+    await listNotifications(db, "bernay", await as("karim"))
+  ).items.find((n) => n.type === "order.created" && n.object_id === id);
+  assert.equal(kitchen?.module, "kitchen");
+  assert.match(kitchen!.message, /Table 8 · 1 × /);
+  assert.ok((await types("lina")).includes("order.created"));
+  assert.ok(
+    !(await listNotifications(db, "bernay", await as("youssef"))).items.some(
+      (n) => n.object_id === id,
+    ),
+    "le bar ne reçoit pas les plats",
+  );
+  assert.ok(
+    !(await listNotifications(db, "bernay", await as("sarah"))).items.some(
+      (n) => n.object_id === id && n.type === "order.created",
+    ),
+    "pas de notification pour sa propre action",
+  );
   assert.ok(!(await types("ines")).includes("order.created"));
   assert.ok(!(await types("leila")).includes("order.created"));
   const item = await one<{ id: string }>(
@@ -109,6 +125,7 @@ test("commandes : destinataires filtrés par permission", async () => {
     changeItem(tx, "bernay", item.id, "ready", karim),
   );
   assert.ok((await types("sarah")).includes("order.ready"));
+  assert.ok(!(await types("karim")).includes("order.ready"));
   assert.ok(!(await types("amine")).includes("order.ready"));
   const event = await one<{ type: string; actor: string }>(
     db,
@@ -151,9 +168,11 @@ test("dépense inhabituelle réservée aux profils finance", async () => {
     await act("leila", { action: "expense", label: "Courses", amount: 1000 });
   assert.ok(!(await types("leila")).includes("finance.unusual_expense"));
   await act("leila", { action: "expense", label: "Four", amount: 90000 });
-  const leila = await listNotifications(db, "bernay", await as("leila"));
-  const alert = leila.items.find((n) => n.type === "finance.unusual_expense");
+  const nadia = await listNotifications(db, "bernay", await as("nadia"));
+  const alert = nadia.items.find((n) => n.type === "finance.unusual_expense");
   assert.ok(alert && alert.priority === "high" && alert.module === "expenses");
+  assert.equal(alert.actor_name, "Leïla");
+  assert.ok(!(await types("leila")).includes("finance.unusual_expense"));
   assert.ok(!(await types("lina")).includes("finance.unusual_expense"));
   assert.ok(!(await types("sarah")).includes("finance.unusual_expense"));
 });
@@ -176,7 +195,8 @@ test("alertes calculées : stock faible, rupture, écart d’inventaire, sans do
   await db.transaction((tx) => sweep(tx, "bernay"));
   await db.transaction((tx) => sweep(tx, "bernay"));
   const amine = await types("amine");
-  assert.ok(amine.includes("stock.inventory_gap"));
+  assert.ok((await types("lina")).includes("stock.inventory_gap"));
+  assert.ok(!amine.includes("stock.inventory_gap"));
   assert.equal(amine.filter((t) => t === "stock.low").length, 1);
   assert.ok(amine.includes("stock.out"));
   assert.ok((await types("ines")).includes("stock.low"));
@@ -196,7 +216,7 @@ test("retard de commande et lot proche de la date limite", async () => {
   await db.transaction((tx) => sweep(tx, "bernay"));
   assert.ok((await types("karim")).includes("order.late"));
   assert.ok((await types("amine")).includes("stock.expiring"));
-  assert.ok(!(await types("ines")).includes("stock.expiring"));
+  assert.ok(!(await types("sarah")).includes("stock.expiring"));
 });
 
 test("planning : notification réservée à l’employé concerné", async () => {
@@ -215,8 +235,8 @@ test("planning : notification réservée à l’employé concerné", async () =>
 });
 
 test("lu unitaire, lu global et notifications invisibles intouchables", async () => {
-  const leila = await listNotifications(db, "bernay", await as("leila"));
-  const secret = leila.items.find((n) => n.type === "finance.unusual_expense")!;
+  const nadia = await listNotifications(db, "bernay", await as("nadia"));
+  const secret = nadia.items.find((n) => n.type === "finance.unusual_expense")!;
   await act("sarah", { action: "read", id: secret.id });
   assert.equal(
     (
@@ -249,7 +269,7 @@ test("préférences : sourdine par type, critique toujours affiché", async () =
     muted: true,
   });
   assert.ok(!(await types("karim")).includes("order.created"));
-  assert.ok((await types("sarah")).includes("order.created"));
+  assert.ok((await types("lina")).includes("order.created"));
   await assert.rejects(
     act("amine", {
       action: "notificationPreference",

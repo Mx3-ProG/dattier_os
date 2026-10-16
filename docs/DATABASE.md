@@ -1,6 +1,6 @@
 # Données
 
-Migration PostgreSQL versionnée : `database/migrations/001_core.sql`. Migration additive `002_catalog_promotions.sql` : archivage des produits, codes nominatifs, client/remise liés aux déclarations. Migration additive `003_operations_notifications.sql` : journal `domain_events`, colonnes de type/priorité/visibilité/dédoublonnage sur `notifications` (lignes existantes conservées, visibles par tous), `notification_preferences`. Versions enregistrées dans `schema_versions`. Seed transactionnel : `src/lib/database/seed.ts`. L’initialisation est automatique et atomique à la première requête.
+Migration PostgreSQL versionnée : `database/migrations/001_core.sql`. Migration additive `002_catalog_promotions.sql` : archivage des produits, codes nominatifs, client/remise liés aux déclarations. Migration additive `003_operations_notifications.sql` : journal `domain_events`, colonnes de type/priorité/visibilité/dédoublonnage sur `notifications` (lignes existantes conservées, visibles par tous), `notification_preferences`. Migration `004_activity_categories.sql` : `module` des événements et notifications = rubrique d’activité, reclassement des lignes existantes. Versions enregistrées dans `schema_versions`. Seed transactionnel : `src/lib/database/seed.ts`. L’initialisation est automatique et atomique à la première requête.
 
 ## Relations
 

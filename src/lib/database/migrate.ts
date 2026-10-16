@@ -9,6 +9,7 @@ import type { PGlite, Transaction } from "@electric-sql/pglite";
 export const migrations = [
   { version: 2, file: "002_catalog_promotions.sql" },
   { version: 3, file: "003_operations_notifications.sql" },
+  { version: 4, file: "004_activity_categories.sql" },
 ] as const;
 const done = new WeakSet<PGlite>();
 /** Applique dans `tx` les migrations absentes de `schema_versions`. */

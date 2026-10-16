@@ -3,6 +3,7 @@ import { one, rows, type DB } from "@/lib/database/db";
 import type { Actor } from "@/lib/auth/session";
 import { permissionsOf } from "@/lib/permissions";
 import { emit } from "@/features/events/service";
+import { notificationRetentionDays } from "@/features/events/categories";
 import {
   alertSettings,
   isNotificationType,
@@ -19,11 +20,14 @@ export const notificationActionSchemas = [
 ] as const;
 /**
  * Filtre serveur de visibilité ($1 établissement, $2 profil, $3 permissions
- * effectives) : destinataire, permissions, préférences. Le critique ignore les
- * mises en sourdine.
+ * effectives) : 7 derniers jours (au-delà : historique), destinataire,
+ * permissions, préférences, hors actions du profil lui-même (elles restent
+ * dans l’historique). Le critique ignore les mises en sourdine.
  */
 const visible = `n.restaurant_id=$1
+ AND n.created_at>now()-interval '${notificationRetentionDays} days'
  AND (n.recipient IS NULL OR n.recipient=$2)
+ AND NOT EXISTS(SELECT 1 FROM domain_events ev WHERE ev.id=n.event_id AND ev.actor=$2)
  AND (n.permissions IS NULL OR n.permissions && $3::text[])
  AND (n.priority='critical' OR NOT EXISTS(SELECT 1 FROM notification_preferences np WHERE np.profile_id=$2 AND np.restaurant_id=$1 AND np.type=n.type AND np.muted))`;
 const params = (r: string, user: Actor) => [r, user.id, permissionsOf(user)];
@@ -31,11 +35,11 @@ export async function listNotifications(
   db: DB,
   r: string,
   user: Actor,
-  limit = 50,
+  limit = 200,
 ) {
   const items = await rows<Notice>(
     db,
-    `SELECT n.id,n.message,n.created_at,n.type,n.priority,n.module,n.object_id,EXISTS(SELECT 1 FROM notification_reads nr WHERE nr.notification_id=n.id AND nr.profile_id=$2) AS read FROM notifications n WHERE ${visible} ORDER BY n.created_at DESC LIMIT ${Math.min(Math.max(1, limit), 200)}`,
+    `SELECT n.id,n.message,n.created_at,n.type,n.priority,n.module,n.object_id,p.name AS actor_name,EXISTS(SELECT 1 FROM notification_reads nr WHERE nr.notification_id=n.id AND nr.profile_id=$2) AS read FROM notifications n LEFT JOIN domain_events e ON e.id=n.event_id LEFT JOIN profiles p ON p.id=e.actor WHERE ${visible} ORDER BY n.created_at DESC LIMIT ${Math.min(Math.max(1, limit), 200)}`,
     params(r, user),
   );
   const { unread } = await one<{ unread: number }>(
@@ -100,7 +104,7 @@ export async function sweep(db: DB, r: string) {
     if (!out && i.available > i.threshold) continue;
     await emit(db, r, {
       type: out ? "stock.out" : "stock.low",
-      module: "stock",
+      module: "stocks",
       objectId: i.id,
       summary: out
         ? `Rupture : ${i.name}`
@@ -123,23 +127,29 @@ export async function sweep(db: DB, r: string) {
   for (const l of lots)
     await emit(db, r, {
       type: "stock.expiring",
-      module: "stock",
+      module: "stocks",
       objectId: l.id,
       summary: `Lot de ${l.name} à utiliser avant le ${l.expires_on.split("-").reverse().join("/")}`,
       notification: { dedupKey: `stock.expiring:${l.id}` },
     });
-  const late = await rows<{ id: string; table_number: number | null }>(
+  const late = await rows<{
+    id: string;
+    station: "kitchen" | "bar";
+    table_number: number | null;
+    names: string;
+  }>(
     db,
-    "SELECT o.id,t.number AS table_number FROM orders o LEFT JOIN table_sessions s ON s.id=o.session_id LEFT JOIN dining_tables t ON t.id=s.table_id WHERE o.restaurant_id=$1 AND o.status='active' AND o.created_at<now()-make_interval(mins=>$2::int) AND EXISTS(SELECT 1 FROM order_items i WHERE i.order_id=o.id AND i.status IN ('waiting','preparing'))",
+    "SELECT o.id,i.station,t.number AS table_number,string_agg(i.quantity||' × '||i.name,', ' ORDER BY i.name) AS names FROM orders o JOIN order_items i ON i.order_id=o.id AND i.status IN ('waiting','preparing') LEFT JOIN table_sessions s ON s.id=o.session_id LEFT JOIN dining_tables t ON t.id=s.table_id WHERE o.restaurant_id=$1 AND o.status='active' AND o.created_at<now()-make_interval(mins=>$2::int) GROUP BY o.id,i.station,t.number",
     [r, alertSettings.lateMinutes],
   );
   for (const o of late)
     await emit(db, r, {
       type: "order.late",
-      module: "orders",
+      module: o.station,
       objectId: o.id,
-      summary: `Commande en attente depuis plus de ${alertSettings.lateMinutes} min · ${o.table_number ? `table ${o.table_number}` : `#${o.id.slice(0, 6)}`}`,
-      notification: { dedupKey: `order.late:${o.id}` },
+      summary: `En retard (+${alertSettings.lateMinutes} min) · ${o.table_number ? `Table ${o.table_number}` : `#${o.id.slice(0, 6)}`} · ${o.names}`,
+      data: { station: o.station },
+      notification: { dedupKey: `order.late:${o.id}:${o.station}` },
     });
   const unavailable = await rows<{ id: string; name: string }>(
     db,
@@ -149,7 +159,7 @@ export async function sweep(db: DB, r: string) {
   for (const m of unavailable)
     await emit(db, r, {
       type: "menu.unavailable",
-      module: "catalog",
+      module: "menu",
       objectId: m.id,
       summary: `${m.name} ne peut plus être préparé : ingrédients insuffisants`,
       notification: { dedupKey: `menu.unavailable:${m.id}:${today}` },
