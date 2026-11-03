@@ -4,11 +4,11 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { ArrowUpRight, Leaf, Menu, X } from "lucide-react";
-import { fullNav, isActive, primaryNav } from "./navigation";
+import { fullNav, isActive, primaryNav, sitePath } from "./navigation";
 
 export function Brand({ tagline }: { tagline: string }) {
   return (
-    <Link className="public-brand" href="/">
+    <Link className="public-brand" href={sitePath("/")}>
       <Leaf aria-hidden />
       <span>
         le dattier<small>{tagline}</small>
@@ -49,7 +49,7 @@ export function SiteHeader() {
         ))}
       </nav>
       <div className="public-header-actions">
-        <Link className="btn primary" href="/reservations">
+        <Link className="btn primary" href={sitePath("/reservations")}>
           <span>
             Réserver<span className="hide-sm"> une table</span>
           </span>
@@ -90,7 +90,7 @@ export function SiteHeader() {
               </nav>
               <Link
                 className="btn primary"
-                href="/reservations"
+                href={sitePath("/reservations")}
                 onClick={() => setOpen(false)}
               >
                 Réserver une table <ArrowUpRight size={16} aria-hidden />

@@ -90,7 +90,7 @@ test("parcours complet, réservations publiques, responsive et accès serveur", 
     fullPage: true,
   });
   const other = await context.newPage();
-  await other.goto("/reservations");
+  await other.goto("/site-demo/reservations");
   await other.locator(".slot:not([disabled])").first().click();
   await other.locator(".map-table.free").first().click();
   await expect(other.locator(".map-table.selected")).toHaveCount(1);
@@ -119,7 +119,7 @@ test("parcours complet, réservations publiques, responsive et accès serveur", 
     animations: "disabled",
     fullPage: true,
   });
-  await page.goto("/");
+  await page.goto("/site-demo");
   await expect(page.getByRole("heading", { level: 1 })).toContainText(
     "Le goût du partage",
   );

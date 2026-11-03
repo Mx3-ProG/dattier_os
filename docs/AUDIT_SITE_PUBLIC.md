@@ -18,7 +18,7 @@ Périmètre : site vitrine public uniquement. Le CRM (`/dashboard`), l’authent
 | Animations | Aucune bibliothèque ; transitions CSS minimales |
 | Tests | `node --test` (15 tests domaine/intégration), Playwright (3 parcours E2E dont réservation publique et responsive 390 px) |
 
-Routage public : une seule route attrape-tout `src/app/[[...page]]/page.tsx` qui accepte une liste fermée de pages (`""`, `histoire`, `carte`, `reservations`, `commander`, `galerie`, `avis`, `contact`, `compte`, `mentions-legales`, `confidentialite`, `cookies`, `qr`) et rend `PublicSite`, un composant client unique qui interroge `/api/v1/public` toutes les 5 s.
+Routage public : une seule route attrape-tout `src/app/site-demo/[[...page]]/page.tsx` (préfixe `/site-demo`, `/` étant la page de présentation de Dattier OS) qui accepte une liste fermée de pages (`""`, `histoire`, `carte`, `reservations`, `commander`, `galerie`, `avis`, `contact`, `compte`, `mentions-legales`, `confidentialite`, `cookies`, `qr`) et rend `PublicSite`, un composant client unique qui interroge `/api/v1/public` toutes les 5 s.
 
 ### 1.2 Homepage, header, footer, navigation (état initial)
 

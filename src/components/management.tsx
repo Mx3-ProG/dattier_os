@@ -222,7 +222,7 @@ export function Management({
       <>
         <div className="section-heading">
           <h2>Les prochaines tablées</h2>
-          <Link href="/reservations" target="_blank">
+          <Link href="/site-demo/reservations" target="_blank">
             Ouvrir le formulaire public ↗
           </Link>
         </div>

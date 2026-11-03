@@ -70,7 +70,7 @@ export function Demo() {
         <br />
         Aucun paiement réel ni message externe envoyé.
       </small>
-      <Link href="/">Découvrir le site du restaurant →</Link>
+      <Link href="/site-demo">Découvrir le site du restaurant →</Link>
     </main>
   );
 }

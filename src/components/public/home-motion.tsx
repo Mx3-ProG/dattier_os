@@ -1,5 +1,6 @@
 "use client";
 import Link from "next/link";
+import { sitePath } from "./navigation";
 import { useEffect, useRef, useState } from "react";
 import { ArrowUpRight, Pause, Play, Users } from "lucide-react";
 
@@ -49,7 +50,9 @@ export function HeroVideo() {
           onPlay={() => setPlaying(true)}
           onPause={() => setPlaying(false)}
           onLoadedData={(e) =>
-            setPlaceholder(e.currentTarget.currentSrc.endsWith(HERO_PLACEHOLDER))
+            setPlaceholder(
+              e.currentTarget.currentSrc.endsWith(HERO_PLACEHOLDER),
+            )
           }
         >
           <source src={HERO_VIDEO} type="video/mp4" />
@@ -97,8 +100,14 @@ export function useHeroMotion() {
     };
     const onPointer = (e: PointerEvent) => {
       const r = el.getBoundingClientRect();
-      el.style.setProperty("--mx", `${((e.clientX - r.left) / r.width) * 100}%`);
-      el.style.setProperty("--my", `${((e.clientY - r.top) / r.height) * 100}%`);
+      el.style.setProperty(
+        "--mx",
+        `${((e.clientX - r.left) / r.width) * 100}%`,
+      );
+      el.style.setProperty(
+        "--my",
+        `${((e.clientY - r.top) / r.height) * 100}%`,
+      );
     };
     onScroll();
     window.addEventListener("scroll", onScroll, { passive: true });
@@ -136,7 +145,10 @@ export function QuickBooking() {
           </button>
         ))}
       </div>
-      <Link className="btn primary" href={`/reservations?couverts=${guests}`}>
+      <Link
+        className="btn primary"
+        href={`${sitePath("/reservations")}?couverts=${guests}`}
+      >
         Voir les tables libres <ArrowUpRight size={17} aria-hidden />
       </Link>
       <small>Calendrier, créneau, puis votre table sur le plan.</small>

@@ -61,7 +61,7 @@ export function PlatformHome() {
           Commandes, équipes, stocks, sites et clients dans votre propre espace.
         </p>
         <div className="actions">
-          <Link href="/">Site public</Link>
+          <Link href="/">Présentation</Link>
           <Link href="/demo">Démonstration locale</Link>
           <Link href="/source">Code source et licence</Link>
           {data && (

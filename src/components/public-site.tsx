@@ -1,5 +1,6 @@
 "use client";
 import Link from "next/link";
+import { sitePath } from "./public/navigation";
 import { useEffect, useRef, useState } from "react";
 import { Leaf, MapPin, Phone, Minus, Plus } from "lucide-react";
 import type { MenuItem, Restaurant } from "@/lib/types";
@@ -275,7 +276,7 @@ export function PublicSite({ route }: { route: string }) {
               L’histoire de l’équipe, ses origines et ses engagements seront
               ajoutés après validation par le restaurant.
             </p>
-            <Link href="/carte" className="btn primary">
+            <Link href={sitePath("/carte")} className="btn primary">
               Explorer la carte
             </Link>
           </section>
@@ -319,7 +320,7 @@ export function PublicSite({ route }: { route: string }) {
                 }[route]
               }
             </p>
-            <Link className="btn secondary" href="/reservations">
+            <Link className="btn secondary" href={sitePath("/reservations")}>
               Accéder aux réservations
             </Link>
           </section>
