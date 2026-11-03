@@ -177,7 +177,7 @@ export async function perform(
     case "pay":
       return pay(db, r, a.id, a.method, user, a.customer, a.promo);
     case "confirmOrder": {
-      requirePermission(user.role, "orders");
+      requirePermission(user.roles ?? user.role, "orders");
       const o = await one<{ status: string; session_id: string | null }>(
         db,
         "SELECT status,session_id FROM orders WHERE id=$1 AND restaurant_id=$2 FOR UPDATE",
@@ -212,7 +212,7 @@ export async function perform(
     case "tableLifecycle":
       return tableLifecycle(db, r, user, a.id, a.operation);
     case "table": {
-      requirePermission(user.role, "orders");
+      requirePermission(user.roles ?? user.role, "orders");
       const t = await one<{ status: string }>(
         db,
         "SELECT status FROM dining_tables WHERE id=$1 AND restaurant_id=$2",
@@ -227,7 +227,7 @@ export async function perform(
       break;
     }
     case "reservation": {
-      requirePermission(user.role, "reservations");
+      requirePermission(user.roles ?? user.role, "reservations");
       const res = await one<{
         status: string;
         table_id: string | null;
@@ -275,7 +275,7 @@ export async function perform(
       break;
     }
     case "stock": {
-      requirePermission(user.role, "stock");
+      requirePermission(user.roles ?? user.role, "stock");
       if (
         a.kind === "inventory" &&
         !["OWNER", "SUPER_ADMIN", "MANAGER", "STOCK_MANAGER"].includes(
@@ -308,7 +308,7 @@ export async function perform(
       break;
     }
     case "supplier":
-      requirePermission(user.role, "purchases");
+      requirePermission(user.roles ?? user.role, "purchases");
       await db.query("INSERT INTO suppliers VALUES($1,$2,$3,$4,2)", [
         uuid(),
         r,
@@ -317,7 +317,7 @@ export async function perform(
       ]);
       break;
     case "purchase":
-      requirePermission(user.role, "purchases");
+      requirePermission(user.roles ?? user.role, "purchases");
       await one(
         db,
         "SELECT id FROM suppliers WHERE id=$1 AND restaurant_id=$2",
@@ -334,7 +334,7 @@ export async function perform(
       );
       break;
     case "receive": {
-      requirePermission(user.role, "purchases");
+      requirePermission(user.roles ?? user.role, "purchases");
       const p = await one<{
         ingredient_id: string;
         quantity: number;
@@ -386,7 +386,7 @@ export async function perform(
       break;
     }
     case "shift": {
-      requirePermission(user.role, "team");
+      requirePermission(user.roles ?? user.role, "team");
       await one(
         db,
         "SELECT profile_id FROM memberships WHERE profile_id=$1 AND restaurant_id=$2",
@@ -414,7 +414,7 @@ export async function perform(
       break;
     }
     case "deleteShift":
-      requirePermission(user.role, "team");
+      requirePermission(user.roles ?? user.role, "team");
       await db.query("DELETE FROM shifts WHERE id=$1 AND restaurant_id=$2", [
         a.id,
         r,
@@ -447,7 +447,7 @@ export async function perform(
       break;
     }
     case "expense":
-      requirePermission(user.role, "finance");
+      requirePermission(user.roles ?? user.role, "finance");
       await db.query("INSERT INTO expenses VALUES($1,$2,$3,$4,now())", [
         uuid(),
         r,
@@ -456,20 +456,17 @@ export async function perform(
       ]);
       break;
     case "customer":
-      requirePermission(user.role, "customers");
-      await db.query("INSERT INTO customers VALUES($1,$2,$3,$4,$5,0)", [
-        uuid(),
-        r,
-        a.name,
-        a.contact,
-        a.consent,
-      ]);
+      requirePermission(user.roles ?? user.role, "customers");
+      await db.query(
+        "INSERT INTO customers(id,restaurant_id,name,contact,consent,points) VALUES($1,$2,$3,$4,$5,0)",
+        [uuid(), r, a.name, a.contact, a.consent],
+      );
       break;
     case "loyalty": {
-      requirePermission(user.role, "customers");
+      requirePermission(user.roles ?? user.role, "customers");
       const c = await one<{ points: number; consent: boolean }>(
         db,
-        "SELECT * FROM customers WHERE id=$1 AND restaurant_id=$2 FOR UPDATE",
+        "SELECT *,coalesce(app.customer_points(id),points) AS points FROM customers WHERE id=$1 AND restaurant_id=$2 FOR UPDATE",
         [a.id, r],
       );
       if (!c.consent || c.points + a.points < 0)
@@ -485,14 +482,14 @@ export async function perform(
       break;
     }
     case "menu":
-      requirePermission(user.role, "catalog");
+      requirePermission(user.roles ?? user.role, "catalog");
       await db.query(
         "UPDATE menu_items SET name=$3,price=$4,enabled=$5,description=$6 WHERE id=$1 AND restaurant_id=$2",
         [a.id, r, a.name, a.price, a.enabled, a.description],
       );
       break;
     case "recipe":
-      requirePermission(user.role, "catalog");
+      requirePermission(user.roles ?? user.role, "catalog");
       await one(
         db,
         "SELECT id FROM menu_items WHERE id=$1 AND restaurant_id=$2",
@@ -515,7 +512,7 @@ export async function perform(
       );
       break;
     case "restaurant":
-      requirePermission(user.role, "settings");
+      requirePermission(user.roles ?? user.role, "settings");
       await db.query(
         "UPDATE restaurants SET name=$2,address=$3,phone=$4,goal=$5 WHERE id=$1",
         [r, a.name, a.address, a.phone, a.goal],
@@ -526,10 +523,10 @@ export async function perform(
         throw new Error("Accès refusé.");
       {
         const rid = uuid();
-        await db.query("INSERT INTO restaurants(id,name) VALUES($1,$2)", [
-          rid,
-          a.name,
-        ]);
+        await db.query(
+          "INSERT INTO restaurants(id,name,organization_id) SELECT $1,$2,organization_id FROM restaurants WHERE id=$3",
+          [rid, a.name, r],
+        );
         await db.query("INSERT INTO memberships VALUES($1,$2,$3)", [
           user.id,
           rid,

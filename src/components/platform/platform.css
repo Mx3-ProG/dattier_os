@@ -1,0 +1,181 @@
+.platform {
+  --ink: #163e32;
+  --line: #dce3dc;
+  max-width: 1160px;
+  margin: 0 auto;
+  padding: 32px 20px 80px;
+  color: var(--ink);
+  font-family: Arial, sans-serif;
+  background: #f8faf7;
+  min-height: 100vh;
+}
+.platform * {
+  box-sizing: border-box;
+  min-width: 0;
+}
+.platform header {
+  padding: 20px 0 28px;
+}
+.platform h1 {
+  font-size: clamp(28px, 5vw, 44px);
+  line-height: 1.1;
+  margin: 20px 0;
+}
+.platform h2 {
+  font-size: 23px;
+}
+.platform p {
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+}
+.platform section,
+.platform article {
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 24px;
+  background: white;
+  margin: 18px 0;
+}
+.platform article {
+  padding: 16px;
+  background: #fafcf9;
+}
+.platform label {
+  display: grid;
+  gap: 8px;
+  margin: 16px 0;
+  font-weight: 600;
+}
+.platform input,
+.platform textarea,
+.platform select {
+  display: block;
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #91a49a;
+  border-radius: 7px;
+  background: #fff;
+  color: #183c30;
+  font: inherit;
+}
+.platform textarea {
+  min-height: 110px;
+}
+.platform button,
+.platform .button {
+  display: inline-block;
+  background: #184d3b;
+  color: white;
+  border: 0;
+  border-radius: 7px;
+  padding: 12px 18px;
+  cursor: pointer;
+  font: inherit;
+  text-decoration: none;
+  min-height: 44px;
+}
+.platform button:disabled {
+  opacity: 0.55;
+  cursor: wait;
+}
+.platform a {
+  color: #1a6144;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  overflow-wrap: anywhere;
+}
+.platform .actions {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+.platform .grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr));
+  gap: 20px;
+}
+.platform .error {
+  padding: 16px;
+  border: 1px solid #bb3838;
+  background: #fff3f2;
+  color: #8c2121;
+  border-radius: 8px;
+}
+.platform .success {
+  padding: 16px;
+  background: #e6f6e9;
+  border-radius: 8px;
+}
+.platform small {
+  display: block;
+  line-height: 1.5;
+}
+.platform nav {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.platform pre {
+  overflow: auto;
+  max-height: 350px;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.platform :focus-visible {
+  outline: 3px solid #b38422;
+  outline-offset: 3px;
+}
+.platform .muted {
+  color: #52675b;
+}
+.platform table {
+  width: 100%;
+  border-collapse: collapse;
+}
+.platform th,
+.platform td {
+  text-align: left;
+  padding: 12px;
+  border-bottom: 1px solid var(--line);
+}
+.platform .scroll {
+  max-height: 480px;
+  overflow: auto;
+}
+.platform .scroll th {
+  position: sticky;
+  top: 0;
+  background: #fff;
+}
+.platform .badge {
+  border-radius: 20px;
+  background: #edf3e9;
+  padding: 5px 12px;
+  display: inline-block;
+}
+.platform input[type="checkbox"] {
+  width: auto;
+  display: inline-block;
+  margin-right: 8px;
+}
+.platform .inline {
+  display: block;
+}
+@media (max-width: 600px) {
+  .platform {
+    padding: 18px 12px 60px;
+  }
+  .platform section {
+    padding: 18px;
+  }
+  .platform .actions > * {
+    flex: 1 1 auto;
+    text-align: center;
+  }
+}
+.platform .button,
+.platform button {
+  background: var(--brand, #184d3b);
+  color: var(--brand-ink, #fff);
+}

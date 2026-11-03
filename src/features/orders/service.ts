@@ -1,5 +1,6 @@
+import { mirrorAudit } from "@/features/ops-security/events";
 import { redeemPromo } from "@/features/loyalty/service";
-import { randomUUID as uuid } from "node:crypto";
+import { createHash, randomUUID as uuid } from "node:crypto";
 import { z } from "zod";
 import { one, rows, type DB } from "@/lib/database/db";
 import type { Actor } from "@/lib/auth/session";
@@ -37,6 +38,7 @@ export async function log(
     action,
     object,
   ]);
+  await mirrorAudit(db, r, actor, action, object);
 }
 export async function notify(db: DB, r: string, message: string) {
   await db.query("INSERT INTO notifications VALUES($1,$2,$3,now())", [
@@ -67,6 +69,7 @@ export async function reserve(
   menu: string,
   quantity: number,
   actor: string | null,
+  choices: string[] = [],
 ) {
   await one(
     db,
@@ -75,8 +78,8 @@ export async function reserve(
   );
   const recipe = await rows<{ ingredient_id: string; quantity: number }>(
     db,
-    "SELECT ingredient_id,quantity::float FROM recipe_ingredients WHERE menu_id=$1",
-    [menu],
+    "SELECT ingredient_id,sum(quantity)::float AS quantity FROM (SELECT ingredient_id,quantity FROM recipe_ingredients WHERE menu_id=$1 UNION ALL SELECT ingredient_id,quantity FROM option_recipes WHERE menu_id=$1 AND choice_id=ANY($2::text[])) recipe GROUP BY ingredient_id ORDER BY ingredient_id",
+    [menu, choices],
   );
   if (!recipe.length) throw new Error("Recette non configurée.");
   for (const ingredient of recipe) {
@@ -121,17 +124,29 @@ export async function createOrder(
 ) {
   if (input.channel === "staff") {
     if (!user) throw new Error("Connexion requise.");
-    requirePermission(user.role, "orders");
+    requirePermission(user.roles ?? user.role, "orders");
   } else if (!input.customer.trim() || !input.contact.trim())
     throw new Error("Nom et coordonnées requis.");
-  const prior = await rows<{ id: string; restaurant_id: string }>(
+  await one(db, "SELECT id FROM restaurants WHERE id=$1 FOR UPDATE", [
+    input.restaurant,
+  ]);
+  const fingerprint = createHash("sha256")
+    .update(JSON.stringify(input))
+    .digest("hex");
+  const prior = await rows<{
+    id: string;
+    restaurant_id: string;
+    request_hash: string | null;
+  }>(
     db,
-    "SELECT id,restaurant_id FROM orders WHERE idempotency_key=$1",
-    [input.key],
+    "SELECT id,restaurant_id,request_hash FROM orders WHERE idempotency_key=$1 AND restaurant_id=$2",
+    [input.key, input.restaurant],
   );
   if (prior.length) {
     if (prior[0].restaurant_id !== input.restaurant)
       throw new Error("Clé déjà utilisée.");
+    if (prior[0].request_hash && prior[0].request_hash !== fingerprint)
+      throw new Error("Clé déjà utilisée pour une autre commande.");
     return prior[0].id;
   }
   if (input.channel === "takeaway" && input.table)
@@ -188,6 +203,10 @@ export async function createOrder(
       input.key,
     ],
   );
+  await db.query("UPDATE orders SET request_hash=$2 WHERE id=$1", [
+    id,
+    fingerprint,
+  ]);
   for (const item of input.items) {
     const menu = await one<{ name: string; price: number; station: string }>(
       db,
@@ -364,12 +383,22 @@ export async function pay(
   customer?: string,
   promo?: string,
 ) {
-  requirePermission(user.role, "payments");
+  requirePermission(user.roles ?? user.role, "payments");
   const order = await one<{ session_id: string | null; status: string }>(
     db,
     "SELECT * FROM orders WHERE id=$1 AND restaurant_id=$2 FOR UPDATE",
     [orderId, r],
   );
+  if (
+    (
+      await rows(db, "SELECT order_id FROM shop_orders WHERE order_id=$1", [
+        orderId,
+      ])
+    ).length
+  )
+    throw new Error(
+      "Utilisez le règlement de la boutique pour cette commande.",
+    );
   if (order.status === "paid") return;
   if (order.status !== "active") throw new Error("Commande non réglable.");
   const items = await rows<{ status: string; price: number; quantity: number }>(

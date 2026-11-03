@@ -1,4 +1,5 @@
-import { type DB, rows, one } from "./database/db";
+import { registerPresence } from "@/features/ops-security/presence";
+import { type DB, rows, one, demoEnabled } from "./database/db";
 import { type Actor, scope } from "./auth/session";
 import { can } from "./permissions";
 import type { Snapshot, MenuItem, Restaurant, Order, Item } from "./types";
@@ -20,7 +21,9 @@ export async function snapshot(
   r: string,
 ): Promise<Snapshot> {
   user = await scope(db, user, r);
-  const allowed = (p: Parameters<typeof can>[1]) => can(user.role, p);
+  await registerPresence(db, r, user);
+  const allowed = (p: Parameters<typeof can>[1]) =>
+    can(user.roles ?? user.role, p);
   const restaurants = await rows<Restaurant>(
     db,
     "SELECT DISTINCT r.* FROM restaurants r JOIN memberships m ON m.restaurant_id=r.id WHERE m.profile_id=$1 ORDER BY r.id",
@@ -40,13 +43,21 @@ export async function snapshot(
   const items = orders.length
     ? await rows<Item>(
         db,
-        `SELECT i.id,i.order_id,i.name,i.price,i.quantity,i.station,i.status,i.note ${allowed("finance") ? ",i.material_cost::float" : ""} FROM order_items i JOIN orders o ON o.id=i.order_id WHERE o.restaurant_id=$1`,
-        [r],
+        `SELECT i.id,i.order_id,i.name,i.price,i.quantity,i.station,i.status,i.note ${allowed("finance") ? ",i.material_cost::float" : ""} FROM order_items i JOIN orders o ON o.id=i.order_id WHERE o.restaurant_id=$1 AND o.id=ANY($2::text[])`,
+        [r, orders.map((o) => o.id)],
       )
     : [];
   for (const order of orders)
     order.items = items.filter((i) => i.order_id === order.id);
   return {
+    demo: demoEnabled(),
+    categories: (
+      await rows<{ category: string }>(
+        db,
+        "SELECT jsonb_array_elements_text(config->'categories') AS category FROM shop_settings WHERE restaurant_id=$1",
+        [r],
+      )
+    ).map((x) => x.category),
     now: new Date().toISOString(),
     user,
     restaurants,
@@ -150,7 +161,11 @@ export async function snapshot(
         )
       : [],
     customers: allowed("customers")
-      ? await rows(db, "SELECT * FROM customers WHERE restaurant_id=$1", [r])
+      ? await rows(
+          db,
+          "SELECT *,coalesce(app.customer_points(id),points) AS points FROM customers WHERE restaurant_id=$1",
+          [r],
+        )
       : [],
     expenses: allowed("finance")
       ? await rows(

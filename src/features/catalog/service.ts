@@ -7,7 +7,7 @@ import { log } from "@/features/orders/service";
 export const productSchema = z.object({
   action: z.literal("createProduct"),
   name: z.string().trim().min(1).max(150),
-  category: z.enum(["Entrées", "Plats", "Desserts", "Boissons"]),
+  category: z.string().trim().min(1).max(60),
   price: z.coerce.number().int().min(0).max(100000),
   station: z.enum(["kitchen", "bar"]),
   description: z.string().max(500).default(""),
@@ -27,7 +27,7 @@ export async function createProduct(
   user: Actor,
   a: z.infer<typeof productSchema>,
 ) {
-  requirePermission(user.role, "catalog");
+  requirePermission(user.roles ?? user.role, "catalog");
   if (new Set(a.ingredients.map((i) => i.id)).size !== a.ingredients.length)
     throw new Error("Chaque ingrédient doit apparaître une seule fois.");
   for (const i of a.ingredients)
@@ -35,6 +35,15 @@ export async function createProduct(
       db,
       "SELECT id FROM ingredients WHERE id=$1 AND restaurant_id=$2",
       [i.id, r],
+    );
+  const config = await rows(
+    db,
+    "SELECT restaurant_id FROM shop_settings WHERE restaurant_id=$1 AND config->'categories' ? $2",
+    [r, a.category],
+  );
+  if (!config.length)
+    throw new Error(
+      "Ajoutez d’abord cette catégorie dans les réglages boutique.",
     );
   const id = randomUUID();
   await db.query(
@@ -57,7 +66,7 @@ export async function lifecycle(
   id: string,
   operation: "archive" | "restore" | "delete",
 ) {
-  requirePermission(user.role, "catalog");
+  requirePermission(user.roles ?? user.role, "catalog");
   await one(
     db,
     "SELECT id FROM menu_items WHERE id=$1 AND restaurant_id=$2 FOR UPDATE",

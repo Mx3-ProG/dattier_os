@@ -1,7 +1,7 @@
 "use client";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState, useRef } from "react";
 import {
   LayoutDashboard,
   UtensilsCrossed,
@@ -26,6 +26,7 @@ import {
   ChevronDown,
   ArrowUpRight,
   Leaf,
+  ShieldCheck,
 } from "lucide-react";
 import { can, type Permission, roleLabels } from "@/lib/permissions";
 import type { Snapshot } from "@/lib/types";
@@ -164,6 +165,20 @@ const modules = [
     icon: Settings,
     permission: "settings",
   },
+  {
+    id: "site",
+    name: "Mon site web",
+    group: "CONFIGURATION",
+    icon: Globe,
+    permission: "website",
+  },
+  {
+    id: "security",
+    name: "Sécurité opérationnelle",
+    group: "CONFIGURATION",
+    icon: ShieldCheck,
+    permission: "security",
+  },
 ] as const;
 export function Workspace() {
   const router = useRouter();
@@ -174,13 +189,18 @@ export function Workspace() {
     [mobile, setMobile] = useState(false),
     [notifications, setNotifications] = useState(false),
     [updated, setUpdated] = useState("");
+  const cursor = useRef(0);
+  useEffect(() => {
+    const r = new URLSearchParams(window.location.search).get("restaurant");
+    if (r) setRestaurant(r);
+  }, []);
   const load = useCallback(async () => {
     const r = await fetch(
       `/api/v1/state?restaurant=${encodeURIComponent(restaurant)}`,
     );
     const d = await r.json();
     if (r.status === 401) {
-      router.push("/demo");
+      router.push("/platform");
       return;
     }
     if (!r.ok) throw new Error(d.error);
@@ -194,12 +214,29 @@ export function Workspace() {
         if (alive) setError(e.message);
       });
     void refresh();
-    const timer = setInterval(refresh, 3000);
+    cursor.current = 0;
+    const timer = setInterval(() => {
+      void fetch(
+        `/api/restaurants/${encodeURIComponent(restaurant)}/events?after=${cursor.current}`,
+      )
+        .then((r) => {
+          if (!r.ok) throw new Error("Synchronisation indisponible.");
+          return r.json();
+        })
+        .then((d) => {
+          const changed = d.cursor !== cursor.current;
+          cursor.current = d.cursor;
+          if (changed || d.events.length) refresh();
+        })
+        .catch(() => refresh());
+    }, 5000);
+    const fallback = setInterval(refresh, 30000);
     return () => {
       alive = false;
       clearInterval(timer);
+      clearInterval(fallback);
     };
-  }, [load]);
+  }, [load, restaurant]);
   async function act(action: Record<string, unknown>) {
     try {
       const r = await fetch("/api/v1/action", {
@@ -218,7 +255,9 @@ export function Workspace() {
   }
   const allowed = data
     ? modules.filter(
-        (m) => !m.permission || can(data.user.role, m.permission as Permission),
+        (m) =>
+          !m.permission ||
+          can(data.user.roles ?? data.user.role, m.permission as Permission),
       )
     : [];
   const current =
@@ -234,6 +273,10 @@ export function Workspace() {
     ) ||
     allowed[0];
   const navigate = (s: string) => {
+    if (["site", "security"].includes(s)) {
+      router.push(`/restaurant/${restaurant}/${s}`);
+      return;
+    }
     setModule(s);
     setMobile(false);
   };
@@ -243,7 +286,7 @@ export function Workspace() {
         <Leaf />
         <h1>DATTIER OS</h1>
         <p>{error || "Votre restaurant se prépare…"}</p>
-        <Link href="/demo">Choisir un profil</Link>
+        <Link href="/platform">Mes restaurants et connexion</Link>
       </main>
     );
   return (
@@ -294,14 +337,17 @@ export function Workspace() {
             </div>
           ))}
         </nav>
-        <Link href="/" target="_blank" className="public-link">
+        <Link href={`/r/${restaurant}`} target="_blank" className="public-link">
           <Globe size={17} /> Voir le site public <ArrowUpRight size={16} />
         </Link>
-        <Link href="/demo" className="sidebar-profile">
+        <Link href={`/restaurant/${restaurant}`} className="sidebar-profile">
           <span className="avatar">{data.user.name.slice(0, 2)}</span>
           <div>
             <b>{data.user.name}</b>
-            <small>{roleLabels[data.user.role]} · démo</small>
+            <small>
+              {roleLabels[data.user.role]}
+              {data.demo ? " · démo" : ""}
+            </small>
           </div>
           <ChevronDown size={16} />
         </Link>
@@ -351,11 +397,21 @@ export function Workspace() {
             </Link>
           </div>
         </header>
-        <div className="demo-banner">
-          <span>ESPACE DÉMONSTRATION</span> Données fictives · opérations
-          locales · aucun encaissement réel{" "}
-          <Link href="/demo">Changer de profil →</Link>
-        </div>
+        {data.demo ? (
+          <div className="demo-banner">
+            <span>ESPACE DÉMONSTRATION</span> Données fictives · opérations
+            locales · aucun encaissement réel{" "}
+            <Link href="/demo">Changer de profil →</Link>
+          </div>
+        ) : (
+          <div className="demo-banner">
+            <span>{data.restaurant.name}</span>
+            <Link href={`/restaurant/${restaurant}`}>
+              Administrer le restaurant
+            </Link>
+            <Link href="/platform">Mes restaurants</Link>
+          </div>
+        )}
         {notifications && (
           <section className="notification-panel card">
             <div className="section-heading">
@@ -425,7 +481,11 @@ export function Workspace() {
         </main>
         <footer className="workspace-footer">
           DATTIER OS <span>Un service bien orchestré.</span>
-          <small>V0 locale · données fictives</small>
+          <small>
+            {data.demo
+              ? "Démonstration · données fictives"
+              : "Dattier OS · commandes et stocks partagés"}
+          </small>
         </footer>
       </div>
     </div>

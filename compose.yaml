@@ -1,0 +1,123 @@
+name: dattier
+services:
+  postgres:
+    image: postgres:16-bookworm
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: dattier_migrator
+      POSTGRES_DB: dattier
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?required}
+      APP_DB_PASSWORD: ${APP_DB_PASSWORD:?required}
+      WORKER_DB_PASSWORD: ${WORKER_DB_PASSWORD:?required}
+      IDENTITY_DB_PASSWORD: ${IDENTITY_DB_PASSWORD:?required}
+    volumes:
+      - postgres:/var/lib/postgresql/data
+      - ./infra/postgres/init.sh:/docker-entrypoint-initdb.d/init.sh:ro
+    healthcheck:
+      test: [CMD-SHELL, "pg_isready -U dattier_migrator -d dattier"]
+      interval: 5s
+      retries: 20
+  migrate:
+    image: ${DATTIER_IMAGE:-dattier-os:local}
+    build: .
+    command: [node, --import, tsx, scripts/migrate.ts]
+    environment:
+      MIGRATION_DATABASE_URL: postgresql://dattier_migrator:${POSTGRES_PASSWORD}@postgres:5432/dattier
+    depends_on:
+      postgres: { condition: service_healthy }
+    restart: "no"
+  app:
+    image: ${DATTIER_IMAGE:-dattier-os:local}
+    pull_policy: never
+    restart: unless-stopped
+    ports: ["127.0.0.1:3000:3000"]
+    environment:
+      DATTIER_DEMO: "false"
+      DATABASE_URL: postgresql://dattier_web:${APP_DB_PASSWORD}@postgres:5432/dattier
+      APP_URL: ${APP_URL}
+      OIDC_ISSUER: ${IDENTITY_URL}/realms/dattier
+      OIDC_CLIENT_ID: dattier
+      OIDC_BACKCHANNEL_ORIGIN: http://keycloak:8080
+      SESSION_SECRET: ${SESSION_SECRET:?required}
+      INTEGRATION_ENCRYPTION_KEY: ${INTEGRATION_ENCRYPTION_KEY:-}
+      SOURCE_URL: ${SOURCE_URL}
+      S3_ENDPOINT: http://storage:3900
+      S3_BUCKET: ${S3_BUCKET}
+      S3_REGION: garage
+      S3_PATH_STYLE: "true"
+      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
+    depends_on:
+      migrate: { condition: service_completed_successfully }
+      keycloak: { condition: service_started }
+    healthcheck:
+      test:
+        [
+          CMD,
+          node,
+          -e,
+          'fetch("http://127.0.0.1:3000/api/health").then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))',
+        ]
+      interval: 30s
+      retries: 3
+  worker:
+    image: ${DATTIER_IMAGE:-dattier-os:local}
+    pull_policy: never
+    command: [node, --import, tsx, scripts/worker.ts]
+    restart: unless-stopped
+    environment:
+      DATTIER_DEMO: "false"
+      WORKER_DATABASE_URL: postgresql://dattier_jobs:${WORKER_DB_PASSWORD}@postgres:5432/dattier
+      APP_URL: ${APP_URL}
+      OIDC_ISSUER: ${IDENTITY_URL}/realms/dattier
+      OIDC_CLIENT_ID: dattier
+      OIDC_BACKCHANNEL_ORIGIN: http://keycloak:8080
+      SESSION_SECRET: ${SESSION_SECRET:?required}
+      INTEGRATION_ENCRYPTION_KEY: ${INTEGRATION_ENCRYPTION_KEY:-}
+      SOURCE_URL: ${SOURCE_URL}
+      S3_ENDPOINT: http://storage:3900
+      S3_BUCKET: ${S3_BUCKET}
+      S3_REGION: garage
+      S3_PATH_STYLE: "true"
+      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
+    depends_on:
+      migrate: { condition: service_completed_successfully }
+  keycloak:
+    image: quay.io/keycloak/keycloak:26.8.1
+    command: [start, --import-realm]
+    restart: unless-stopped
+    environment:
+      KC_DB: postgres
+      KC_DB_URL: jdbc:postgresql://postgres:5432/dattier_identity
+      KC_DB_USERNAME: dattier_identity
+      KC_DB_PASSWORD: ${IDENTITY_DB_PASSWORD}
+      KC_BOOTSTRAP_ADMIN_USERNAME: ${KEYCLOAK_ADMIN:?required}
+      KC_BOOTSTRAP_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD:?required}
+      KC_HOSTNAME: ${IDENTITY_URL:?required}
+      KC_HTTP_ENABLED: "true"
+      KC_PROXY_HEADERS: xforwarded
+      APP_URL: ${APP_URL:?required}
+    ports: ["127.0.0.1:8080:8080"]
+    volumes:
+      [
+        "./infra/keycloak/realm.json:/opt/keycloak/data/import/dattier-realm.json:ro",
+      ]
+    depends_on:
+      postgres: { condition: service_healthy }
+  storage:
+    image: dxflrs/garage:v2.5.0
+    command: [/garage, server, --single-node, --default-bucket]
+    restart: unless-stopped
+    environment:
+      GARAGE_RPC_SECRET: ${GARAGE_RPC_SECRET:?required}
+      GARAGE_DEFAULT_ACCESS_KEY: ${AWS_ACCESS_KEY_ID:?required}
+      GARAGE_DEFAULT_SECRET_KEY: ${AWS_SECRET_ACCESS_KEY:?required}
+      GARAGE_DEFAULT_BUCKET: ${S3_BUCKET:?required}
+    volumes:
+      - media:/var/lib/garage
+      - ./infra/garage/garage.toml:/etc/garage.toml:ro
+
+volumes:
+  postgres:
+  media:

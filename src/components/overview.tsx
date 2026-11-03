@@ -75,7 +75,9 @@ export function Overview({
           {
             title: "CA déclaré aujourd’hui",
             value: money(revenue),
-            detail: "Règlements déclarés · démo",
+            detail: data.demo
+              ? "Règlements déclarés · démo"
+              : "Règlements déclarés",
             icon: Wallet,
           },
           {
@@ -114,7 +116,11 @@ export function Overview({
           <div className="section-heading">
             <div>
               <h2>Le rythme des ventes</h2>
-              <p>Règlements déclarés · historique de démonstration</p>
+              <p>
+                {data.demo
+                  ? "Règlements déclarés · historique de démonstration"
+                  : "Historique des règlements déclarés"}
+              </p>
             </div>
             <span className="pill">14 jours</span>
           </div>
@@ -182,9 +188,7 @@ export function Overview({
             <span>{money(revenue)}</span>
             <b>{money(data.restaurant.goal)}</b>
           </div>
-          <p className="muted">
-            Objectif fictif, modifiable dans les paramètres.
-          </p>
+          <p className="muted">Objectif modifiable dans les paramètres.</p>
         </section>
         <section className="card">
           <div className="section-heading">
@@ -215,7 +219,8 @@ export function Overview({
               <UtensilsCrossed />
               <h3>Prêt pour les premières tablées.</h3>
               <p>
-                Ouvrez la table 8 pour commencer le parcours de démonstration.
+                Ouvrez une table depuis le plan de salle pour commencer le
+                service.
               </p>
               <button
                 className="text-button"

@@ -1,0 +1,6 @@
+{
+  "checkedAt": "2026-11-03T01:52:37.695Z",
+  "scope": "Tracked and untracked non-ignored working files and reachable Git blobs under 2 MB; pattern matching, not a guarantee of rights or absence of secrets.",
+  "textObjectsScanned": 386,
+  "findings": []
+}

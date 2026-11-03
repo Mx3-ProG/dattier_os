@@ -1,13 +1,15 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import "./fonts.css";
 import "./public-site.css";
 export const metadata: Metadata = {
   title: "DATTIER OS · Le restaurant, en harmonie",
-  description: "Démonstration locale du système opérationnel du Dattier Hefsi.",
+  description:
+    "Le système ouvert pour gérer les commandes, stocks, équipes et clients de vos restaurants.",
   robots: { index: false, follow: false },
   openGraph: {
-    title: "Le Dattier Hefsi",
-    description: "Cuisine tunisienne et maghrébine · démonstration",
+    title: "Dattier OS",
+    description: "Le système ouvert pour les restaurateurs",
   },
 };
 export default function Layout({ children }: { children: React.ReactNode }) {

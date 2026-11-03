@@ -1,4 +1,4 @@
-import type { Transaction } from "@electric-sql/pglite";
+import type { DB } from "./types";
 import {
   createOrder,
   changeItem,
@@ -6,9 +6,9 @@ import {
   reserve,
 } from "../../features/orders/service";
 import { rows } from "./db";
-export async function seed(db: Transaction) {
+export async function seed(db: DB) {
   await db.query(
-    "INSERT INTO restaurants VALUES ('bernay','Le Dattier Hefsi','29 Rue du Général Leclerc, 27300 Bernay','02 32 46 12 11',150000),('atelier','L’Atelier — établissement fictif','Établissement de démonstration','',90000)",
+    "INSERT INTO restaurants(id,name,address,phone,goal) VALUES ('bernay','Le Dattier Hefsi','29 Rue du Général Leclerc, 27300 Bernay','02 32 46 12 11',150000),('atelier','L’Atelier — établissement fictif','Établissement de démonstration','',90000)",
   );
   const people = [
     ["slimane", "Slimane", "SUPER_ADMIN"],
@@ -22,7 +22,11 @@ export async function seed(db: Transaction) {
     ["leila", "Leïla", "ACCOUNTANT"],
   ];
   for (const [id, name, role] of people) {
-    await db.query("INSERT INTO profiles VALUES ($1,$2,$3)", [id, name, role]);
+    await db.query("INSERT INTO profiles(id,name,role) VALUES ($1,$2,$3)", [
+      id,
+      name,
+      role,
+    ]);
     for (const r of role === "OWNER" || role === "SUPER_ADMIN"
       ? ["bernay", "atelier"]
       : ["bernay"])
@@ -32,6 +36,9 @@ export async function seed(db: Transaction) {
         role,
       ]);
   }
+  await db.query(
+    "INSERT INTO organization_memberships VALUES('legacy','nadia','OWNER'),('legacy','slimane','OWNER') ON CONFLICT DO NOTHING",
+  );
   const ingredients: [string, string, string, number, number, number][] = [
     ["semoule", "Semoule", "g", 40000, 2000, 0.0018],
     ["poulet", "Poulet", "g", 40000, 2500, 0.008],
@@ -304,7 +311,7 @@ export async function seed(db: Transaction) {
         ],
       );
     await db.query(
-      "INSERT INTO customers VALUES($1,$2,'Camille — fictif','camille@example.test',true,40)",
+      "INSERT INTO customers(id,restaurant_id,name,contact,consent,points) VALUES($1,$2,'Camille — fictif','camille@example.test',true,40)",
       [`${r}-customer`, r],
     );
     await db.query(

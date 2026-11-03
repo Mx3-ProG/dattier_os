@@ -29,7 +29,6 @@ type Availability = {
   services: { id: string; name: string; slots: Slot[] }[];
 };
 
-const RESTAURANT = "bernay";
 const todayParis = () =>
   new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Paris" }).format(
     new Date(),
@@ -67,7 +66,10 @@ async function getJson<T>(url: string): Promise<T> {
   return d;
 }
 
-export function Booking() {
+export function Booking({
+  restaurant = "bernay",
+}: { restaurant?: string } = {}) {
+  const RESTAURANT = restaurant;
   const [guests, setGuests] = useState(2),
     [month, setMonth] = useState(() => todayParis().slice(0, 7)),
     [cal, setCal] = useState<Calendar | null>(null),
@@ -114,7 +116,7 @@ export function Booking() {
     return () => {
       live = false;
     };
-  }, [month, guests]);
+  }, [month, guests, RESTAURANT]);
 
   useEffect(() => {
     if (!date) return;
@@ -132,7 +134,7 @@ export function Booking() {
       live = false;
       clearInterval(t);
     };
-  }, [date, guests, reload]);
+  }, [date, guests, reload, RESTAURANT]);
 
   const slot = useMemo(
     () =>

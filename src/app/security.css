@@ -1,0 +1,304 @@
+/* Security Center. Reuses the team palette (team-theme.css): pink #e83e91,
+   turquoise #00b8c8, ink #26201f, muted #76616b. Light theme only, like the CRM. */
+.security-center .security-metrics {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+.security-center .security-unavailable {
+  font-size: 17px;
+  color: #76616b;
+}
+.security-center .security-mode {
+  white-space: normal;
+  text-align: center;
+}
+.security-center .security-mode.active {
+  background: #daf4f2;
+  border-color: #b5e6e2;
+  color: #00646e;
+}
+.security-center h3 {
+  margin-bottom: 12px;
+}
+.security-detail h4 {
+  margin: 20px 0 8px;
+  font-size: 13px;
+}
+.security-health {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: 12px;
+}
+.security-health li {
+  display: grid;
+  grid-template-columns: 10px minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: center;
+}
+.security-health li > div {
+  display: grid;
+  gap: 2px;
+}
+.security-health small {
+  color: #76616b;
+  font-size: 11px;
+}
+.security-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #d9cbd2;
+}
+.security-dot.ok {
+  background: #00b8c8;
+}
+.security-dot.degraded {
+  background: #f0a43a;
+}
+.security-dot.down {
+  background: #c4234f;
+}
+.security-center .badge.security-health-ok {
+  background: #daf4f2;
+  color: #00646e;
+}
+.security-center .badge.security-health-degraded {
+  background: #fff1dc;
+  color: #8a4b00;
+}
+.security-center .badge.security-health-down {
+  background: #ffe9ee;
+  color: #a82148;
+}
+/* Severity: neutral → turquoise → pink → amber → red. Text always carries the level. */
+.badge.security-severity.sev-1 {
+  background: #f3eef1;
+  color: #76616b;
+}
+.badge.security-severity.sev-2 {
+  background: #daf4f2;
+  color: #00646e;
+}
+.badge.security-severity.sev-3 {
+  background: #fff0f6;
+  color: #a71f5d;
+}
+.badge.security-severity.sev-4 {
+  background: #fff1dc;
+  color: #8a4b00;
+}
+.badge.security-severity.sev-5 {
+  background: #ffe9ee;
+  color: #a82148;
+}
+.badge.security-severity.sev-6 {
+  background: #a82148;
+  color: #fff;
+}
+.badge.security-resolution.res-auto_resolved,
+.badge.security-resolution.res-manually_resolved,
+.badge.security-remediation.succeeded {
+  background: #daf4f2;
+  color: #00646e;
+}
+.badge.security-resolution.res-intervention_required,
+.badge.security-remediation.abandoned,
+.badge.security-remediation.awaiting_approval {
+  background: #ffe9ee;
+  color: #a82148;
+}
+.badge.security-resolution.res-auto_fixing,
+.badge.security-resolution.res-analyzing,
+.badge.security-remediation.running,
+.badge.security-remediation.scheduled {
+  background: #ffd6e7;
+  color: #93204f;
+}
+.security-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 6px;
+}
+.security-filters {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+  gap: 14px;
+  margin-bottom: 18px;
+  align-items: end;
+}
+.security-filters label {
+  display: grid;
+  gap: 6px;
+  font-size: 11px;
+  color: #76616b;
+}
+.security-filter-actions {
+  display: flex;
+  gap: 8px;
+}
+.security-table td {
+  vertical-align: top;
+  white-space: normal;
+}
+.security-table td:nth-child(4) {
+  min-width: 260px;
+}
+.security-table td:first-child,
+.security-table td:nth-child(2) {
+  white-space: nowrap;
+}
+.security-open {
+  text-align: left;
+  padding: 0;
+  font: inherit;
+  line-height: 1.4;
+}
+.security-cards {
+  display: grid;
+  gap: 16px;
+}
+.security-cards .actions,
+.security-mode-card .actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  margin-top: 12px;
+}
+.security-mode-card {
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
+  align-items: center;
+  margin-bottom: 18px;
+}
+.security-note {
+  min-width: 200px;
+  flex: 1;
+}
+.security-proposal {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 12px;
+  margin: 14px 0;
+  padding: 14px;
+  border-radius: 10px;
+  background: #fff9f5;
+  border: 1px solid #f0d8e2;
+}
+.security-proposal dt,
+.security-detail dt {
+  font-size: 10px;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  color: #76616b;
+}
+.security-proposal dd,
+.security-detail dd {
+  margin: 3px 0 0;
+  font-size: 13px;
+  overflow-wrap: anywhere;
+}
+.security-detail dl {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 12px;
+  margin: 16px 0;
+}
+.security-detail .security-badges {
+  margin-bottom: 8px;
+}
+.security-message {
+  font-size: 15px;
+  color: #26201f !important;
+}
+.security-pre {
+  max-height: 260px;
+  overflow: auto;
+  font-size: 11px;
+  background: #fff9f5;
+  border: 1px solid #f0d8e2;
+  border-radius: 8px;
+  padding: 12px;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.security-list {
+  padding-left: 18px;
+  display: grid;
+  gap: 6px;
+  font-size: 13px;
+}
+.security-timeline > div.current b {
+  color: #a71f5d;
+}
+.timeline-dot.sev-dot-4 {
+  background: #f0a43a !important;
+}
+.timeline-dot.sev-dot-5,
+.timeline-dot.sev-dot-6 {
+  background: #c4234f !important;
+}
+@media (max-width: 1150px) {
+  .security-center .security-metrics {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (max-width: 850px) {
+  .security-mode-card {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .security-center .two-grid {
+    grid-template-columns: 1fr;
+  }
+}
+@media (max-width: 580px) {
+  .security-center .security-metrics {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+  }
+  .security-center .security-metrics .metric {
+    padding: 14px;
+  }
+  .security-center .security-metrics .metric strong {
+    font-size: 19px;
+    overflow-wrap: anywhere;
+  }
+  .security-health li {
+    grid-template-columns: 10px minmax(0, 1fr);
+  }
+  .security-health li > .badge {
+    grid-column: 2;
+    justify-self: start;
+  }
+}
+.operations-security-page {
+  max-width: 1480px;
+  margin: 0 auto;
+  padding: 24px 28px 70px;
+}
+.operations-security-page > header {
+  margin-bottom: 24px;
+}
+.operations-security-page > header h1 {
+  font-size: 32px;
+  margin: 16px 0;
+}
+.operations-security-page > header a {
+  color: #184d3b;
+  text-decoration: underline;
+}
+.operations-security-page .security-center {
+  min-width: 0;
+}
+@media (max-width: 700px) {
+  .operations-security-page {
+    padding: 16px 12px 50px;
+  }
+  .operations-security-page > header h1 {
+    font-size: 26px;
+  }
+}

@@ -155,7 +155,7 @@ export function Dining({ data, act }: { data: Snapshot; act: Act }) {
   const [selected, setSelected] = useState<Table | null>(null),
     [view, setView] = useState<"service" | "layout">("service");
   const tables = data.tables.filter((t) => !t.archived_at);
-  const canLayout = can(data.user.role, "floor");
+  const canLayout = can(data.user.roles ?? data.user.role, "floor");
   // Prochaine réservation de la table dans les 12 heures, heure de Paris.
   const nextBooking = (t: Table) =>
     data.reservations
@@ -404,11 +404,12 @@ export function OrderList({
                     .reduce((s, i) => s + i.price * i.quantity, 0),
                 )}
               </strong>
-              {o.status === "active" && can(data.user.role, "payments") && (
-                <Button variant="secondary" onClick={() => setPayment(o.id)}>
-                  Clôturer / déclarer le règlement
-                </Button>
-              )}
+              {o.status === "active" &&
+                can(data.user.roles ?? data.user.role, "payments") && (
+                  <Button variant="secondary" onClick={() => setPayment(o.id)}>
+                    Clôturer / déclarer le règlement
+                  </Button>
+                )}
               {o.status === "pending" && (
                 <div className="actions">
                   <Button
@@ -551,7 +552,10 @@ export function Kds({
               ? "Le coup de feu, sous contrôle."
               : "Chaque boisson à son rythme."}
           </h2>
-          <p>Les commandes se synchronisent toutes les 3 secondes.</p>
+          <p>
+            Les commandes se synchronisent environ toutes les 5 secondes avec
+            une connexion active.
+          </p>
         </div>
         <label className="check">
           <input

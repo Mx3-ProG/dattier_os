@@ -31,7 +31,7 @@ export async function saveTable(
   user: Actor,
   a: z.infer<typeof tableSchema>,
 ) {
-  requirePermission(user.role, "floor");
+  requirePermission(user.roles ?? user.role, "floor");
   const taken = await rows(
     db,
     "SELECT id FROM dining_tables WHERE restaurant_id=$1 AND number=$2 AND id<>$3",
@@ -90,7 +90,7 @@ export async function moveTable(
   x: number,
   y: number,
 ) {
-  requirePermission(user.role, "floor");
+  requirePermission(user.roles ?? user.role, "floor");
   await one(
     db,
     "UPDATE dining_tables SET pos_x=$3,pos_y=$4 WHERE id=$1 AND restaurant_id=$2 RETURNING id",
@@ -105,7 +105,7 @@ export async function tableLifecycle(
   id: string,
   operation: "archive" | "restore" | "delete",
 ) {
-  requirePermission(user.role, "floor");
+  requirePermission(user.roles ?? user.role, "floor");
   const t = await one<{ number: number; status: string }>(
     db,
     "SELECT number,status FROM dining_tables WHERE id=$1 AND restaurant_id=$2 FOR UPDATE",

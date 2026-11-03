@@ -85,11 +85,33 @@ export function Modal({
   title,
   children,
   close,
+  description = "Les modifications sont partagées avec votre équipe.",
+  footer,
+  page = false,
 }: {
   title: string;
   children: React.ReactNode;
   close: () => void;
+  description?: string;
+  footer?: React.ReactNode;
+  page?: boolean;
 }) {
+  if (page)
+    return (
+      <section className="modal-page" aria-labelledby="checkout-title">
+        <header>
+          <div>
+            <h1 id="checkout-title">{title}</h1>
+            <p className="muted">{description}</p>
+          </div>
+          <button aria-label="Fermer" onClick={close}>
+            <X />
+          </button>
+        </header>
+        <div className="modal-page-content">{children}</div>
+        {footer && <div className="modal-page-footer">{footer}</div>}
+      </section>
+    );
   return (
     <Dialog.Root
       open
@@ -99,7 +121,9 @@ export function Modal({
     >
       <Dialog.Portal>
         <Dialog.Overlay className="overlay" />
-        <Dialog.Content className="modal">
+        <Dialog.Content
+          className={`modal ${footer ? "modal-with-footer" : ""}`}
+        >
           <header>
             <Dialog.Title>{title}</Dialog.Title>
             <Dialog.Close aria-label="Fermer">
@@ -107,10 +131,10 @@ export function Modal({
             </Dialog.Close>
           </header>
           <Dialog.Description className="muted">
-            Données de démonstration · les modifications sont partagées avec
-            votre équipe.
+            {description}
           </Dialog.Description>
-          {children}
+          {footer ? <div className="modal-scroll">{children}</div> : children}
+          {footer && <div className="modal-footer">{footer}</div>}
         </Dialog.Content>
       </Dialog.Portal>
     </Dialog.Root>

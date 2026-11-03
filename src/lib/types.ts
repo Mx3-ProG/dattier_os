@@ -164,6 +164,8 @@ export type Promo = {
   expired: boolean;
 };
 export type Snapshot = {
+  demo: boolean;
+  categories: string[];
   promos: Promo[];
   checkoutCustomers: { id: string; name: string }[];
   now: string;

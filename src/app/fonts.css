@@ -1,0 +1,50 @@
+@font-face {
+  font-family: "Dattier Playfair";
+  src: url("/fonts/playfair.ttf") format("truetype");
+  font-weight: 400 900;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Dattier Fraunces";
+  src: url("/fonts/fraunces.ttf") format("truetype");
+  font-weight: 100 900;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Dattier DM Serif";
+  src: url("/fonts/dmserifdisplay.ttf") format("truetype");
+  font-weight: 400;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Dattier Poppins";
+  src: url("/fonts/poppins.ttf") format("truetype");
+  font-weight: 400;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Dattier Poppins";
+  src: url("/fonts/poppins-bold.ttf") format("truetype");
+  font-weight: 700;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Dattier Nunito";
+  src: url("/fonts/nunito.ttf") format("truetype");
+  font-weight: 200 1000;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Dattier Inter";
+  src: url("/fonts/inter.ttf") format("truetype");
+  font-weight: 100 900;
+  font-display: swap;
+}
+:root {
+  --font-playfair: "Dattier Playfair";
+  --font-fraunces: "Dattier Fraunces";
+  --font-dm-serif: "Dattier DM Serif";
+  --font-poppins: "Dattier Poppins";
+  --font-nunito: "Dattier Nunito";
+  --font-inter: "Dattier Inter";
+}

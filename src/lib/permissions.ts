@@ -11,6 +11,8 @@ export const roles = [
 ] as const;
 export type Role = (typeof roles)[number];
 export type Permission =
+  | "security"
+  | "website"
   | "catalog"
   | "payments"
   | "orders"
@@ -27,6 +29,8 @@ export type Permission =
   | "floor";
 const grants: Record<Role, Permission[]> = {
   SUPER_ADMIN: [
+    "security",
+    "website",
     "catalog",
     "payments",
     "orders",
@@ -43,6 +47,8 @@ const grants: Record<Role, Permission[]> = {
     "floor",
   ],
   OWNER: [
+    "security",
+    "website",
     "catalog",
     "payments",
     "orders",
@@ -59,6 +65,7 @@ const grants: Record<Role, Permission[]> = {
     "floor",
   ],
   MANAGER: [
+    "website",
     "catalog",
     "payments",
     "orders",
@@ -79,9 +86,14 @@ const grants: Record<Role, Permission[]> = {
   PURCHASING: ["purchases"],
   ACCOUNTANT: ["finance"],
 };
-export const can = (role: Role, permission: Permission) =>
-  grants[role]?.includes(permission) ?? false;
-export function requirePermission(role: Role, permission: Permission) {
+export const can = (role: Role | readonly Role[], permission: Permission) =>
+  (Array.isArray(role) ? role : [role]).some((r) =>
+    grants[r as Role]?.includes(permission),
+  );
+export function requirePermission(
+  role: Role | readonly Role[],
+  permission: Permission,
+) {
   if (!can(role, permission)) throw new Error("Accès refusé pour ce profil.");
 }
 export const roleLabels: Record<Role, string> = {

@@ -1,0 +1,25 @@
+{
+  "currency": "EUR",
+  "status": "illustrative_assumptions_not_provider_quotes",
+  "monthlyPriceExTax": 25,
+  "supportMinutesPerRestaurant": 5,
+  "supportHourlyCost": 30,
+  "variableInfrastructurePerRestaurant": 0.45,
+  "scenarios": [
+    { "restaurants": 100, "fixedMonthlyInfrastructure": 250 },
+    { "restaurants": 500, "fixedMonthlyInfrastructure": 600 },
+    { "restaurants": 1000, "fixedMonthlyInfrastructure": 1000 },
+    { "restaurants": 10000, "fixedMonthlyInfrastructure": 8000 }
+  ],
+  "exclusions": [
+    "sales_tax",
+    "merchant_payment_fees",
+    "payroll_accounting_delivery_providers",
+    "onboarding",
+    "engineering",
+    "insurance",
+    "certification",
+    "outage_recovery",
+    "additional_support"
+  ]
+}

@@ -469,7 +469,7 @@ export function Management({
           </table>
         </div>
         <p className="muted">
-          Les commandes sont enregistrées localement. Aucun bon n’est envoyé au
+          Les commandes sont enregistrées. Aucun bon n’est envoyé au
           fournisseur.
         </p>
       </>
@@ -513,7 +513,10 @@ export function Management({
                 <span className="avatar">{p.name.slice(0, 2)}</span>
                 <div>
                   <h3>{p.name}</h3>
-                  <small>{roleLabels[p.role]} · profil fictif</small>
+                  <small>
+                    {roleLabels[p.role]}
+                    {data.demo ? " · profil fictif" : ""}
+                  </small>
                 </div>
               </article>
             ))}
@@ -671,34 +674,38 @@ export function Management({
             </Button>
             <p className="muted">
               Un nouvel établissement démarre vide. La création de sa carte, de
-              ses stocks et de ses tables nécessite encore une initialisation
-              technique.
+              ses stocks et de ses tables se fait depuis les modules du
+              restaurant.
             </p>
-            <h3>Démonstration</h3>
-            <p>
-              La réinitialisation restaure les deux établissements fictifs et
-              déconnecte les profils.
-            </p>
-            <Button
-              variant="danger"
-              onClick={async () => {
-                if (
-                  confirm(
-                    "Réinitialiser toutes les données de démonstration ? Cette action supprime les modifications locales.",
-                  )
-                ) {
-                  const r = await fetch("/api/v1/reset", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ confirm: "RESET DEMO" }),
-                  });
-                  if (r.ok) router.push("/demo");
-                  else alert((await r.json()).error);
-                }
-              }}
-            >
-              Réinitialiser les données de démonstration
-            </Button>
+            {data.demo && (
+              <>
+                <h3>Démonstration</h3>
+                <p>
+                  La réinitialisation restaure les deux établissements fictifs
+                  et déconnecte les profils.
+                </p>
+                <Button
+                  variant="danger"
+                  onClick={async () => {
+                    if (
+                      confirm(
+                        "Réinitialiser toutes les données de démonstration ? Cette action supprime les modifications locales.",
+                      )
+                    ) {
+                      const r = await fetch("/api/v1/reset", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ confirm: "RESET DEMO" }),
+                      });
+                      if (r.ok) router.push("/demo");
+                      else alert((await r.json()).error);
+                    }
+                  }}
+                >
+                  Réinitialiser les données de démonstration
+                </Button>
+              </>
+            )}
           </div>
         </div>
       </>

@@ -5,7 +5,7 @@ import type { Snapshot } from "@/lib/types";
 import { money } from "@/lib/domain";
 import { Button } from "./ui/button";
 import { Form, Modal, type Act, type Field } from "./forms";
-const fields: Field[] = [
+const defaultFields: Field[] = [
   { name: "name", label: "Nom du produit" },
   {
     name: "category",
@@ -32,7 +32,7 @@ const fields: Field[] = [
   },
   {
     name: "description",
-    label: "Description de démonstration",
+    label: "Description",
     required: false,
   },
 ];
@@ -44,6 +44,14 @@ export function Catalog({ data, act }: { data: Snapshot; act: Act }) {
     [lines, setLines] = useState([
       { id: data.ingredients[0]?.id || "", quantity: "1" },
     ]);
+  const fields = defaultFields.map((field) =>
+    field.name === "category"
+      ? {
+          ...field,
+          options: data.categories.map((value) => ({ value, label: value })),
+        }
+      : field,
+  );
   const product = data.menu.find((m) => m.id === edit);
   const [error, setError] = useState("");
   async function change(id: string, operation: string) {

@@ -1,5 +1,18 @@
+import { recordFailure } from "@/features/ops-security/http";
+import {
+  withRequestContext,
+  requestContext,
+} from "@/features/ops-security/context";
+import { withDatabaseContext } from "@/lib/database/context";
+import { assertOrigin, readBody } from "@/features/platform/http";
 import { NextRequest, NextResponse } from "next/server";
-import { getDb, demoEnabled, rows, one } from "@/lib/database/db";
+import {
+  getDb,
+  demoEnabled,
+  productionEnabled,
+  rows,
+  one,
+} from "@/lib/database/db";
 import { actor, login, scope } from "@/lib/auth/session";
 import { snapshot, menu } from "@/lib/snapshot";
 import {
@@ -18,7 +31,11 @@ import {
 import { seed } from "@/lib/database/seed";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
-function fail(e: unknown) {
+async function fail(e: unknown) {
+  await recordFailure(e, {
+    endpoint: requestContext()?.route || "/api/v1",
+    status: 400,
+  });
   const message = e instanceof Error ? e.message : "Opération impossible";
   const safe =
     message.includes("query:") || message.includes("constraint")
@@ -35,18 +52,21 @@ function fail(e: unknown) {
     },
   );
 }
-export async function GET(req: NextRequest) {
+async function handleGet(req: NextRequest) {
   try {
-    if (!demoEnabled())
+    if (!demoEnabled() && !productionEnabled())
       return NextResponse.json(
         { error: "Installation locale uniquement." },
         { status: 503 },
       );
     const endpoint = req.nextUrl.pathname.split("/").at(-1),
       db = await getDb();
-    if (endpoint === "profiles")
+    if (endpoint === "profiles" && demoEnabled())
       return NextResponse.json(
-        await rows(db, "SELECT * FROM profiles ORDER BY id"),
+        await rows(
+          db,
+          "SELECT p.* FROM profiles p WHERE EXISTS(SELECT 1 FROM memberships m WHERE m.profile_id=p.id) ORDER BY p.id",
+        ),
       );
     if (endpoint === "reward") {
       const token = req.nextUrl.searchParams.get("token") || "";
@@ -80,7 +100,8 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({
         restaurants: await rows(
           db,
-          "SELECT id,name,address,phone FROM restaurants ORDER BY id",
+          "SELECT id,name,address,phone FROM restaurants WHERE id=$1 ORDER BY id",
+          [r],
         ),
         menu: await menu(db, r),
       });
@@ -95,28 +116,18 @@ export async function GET(req: NextRequest) {
     return fail(e);
   }
 }
-export async function POST(req: NextRequest) {
+async function handlePost(req: NextRequest) {
   try {
-    if (!demoEnabled())
+    if (!demoEnabled() && !productionEnabled())
       return NextResponse.json(
         { error: "Mode démonstration désactivé." },
         { status: 503 },
       );
-    if (
-      !req.headers.get("origin") ||
-      new URL(req.headers.get("origin")!).host !== req.headers.get("host") ||
-      !["localhost", "127.0.0.1", "[::1]"].includes(
-        new URL(req.headers.get("origin")!).hostname,
-      )
-    )
-      return NextResponse.json(
-        { error: "Origine non autorisée." },
-        { status: 403 },
-      );
+    await assertOrigin(req);
     if (Number(req.headers.get("content-length") || 0) > 50000)
       throw new Error("Requête trop volumineuse.");
     const endpoint = req.nextUrl.pathname.split("/").at(-1),
-      body = await req.json(),
+      body = await readBody(req),
       db = await getDb();
     if (endpoint === "login") {
       if (typeof body.id !== "string") throw new Error("Profil invalide.");
@@ -137,6 +148,7 @@ export async function POST(req: NextRequest) {
     }
     const user = await actor();
     if (endpoint === "reset") {
+      if (!demoEnabled()) throw new Error("Réinitialisation non autorisée.");
       if (
         !["OWNER", "SUPER_ADMIN"].includes(user.role) ||
         body.confirm !== "RESET DEMO"
@@ -159,3 +171,55 @@ export async function POST(req: NextRequest) {
     return fail(e);
   }
 }
+
+async function routeGET(req: NextRequest) {
+  try {
+    const endpoint = req.nextUrl.pathname.split("/").at(-1);
+    const publicEndpoint = [
+      "public",
+      "calendar",
+      "availability",
+      "reward",
+    ].includes(endpoint || "");
+    const user =
+      publicEndpoint || (endpoint === "profiles" && demoEnabled())
+        ? undefined
+        : await actor();
+    return await withDatabaseContext(
+      {
+        userId: user?.id,
+        restaurantId: req.nextUrl.searchParams.get("restaurant") || "bernay",
+        public: publicEndpoint,
+      },
+      () => handleGet(req),
+    );
+  } catch (e) {
+    return fail(e);
+  }
+}
+async function routePOST(req: NextRequest) {
+  try {
+    const endpoint = req.nextUrl.pathname.split("/").at(-1);
+    const body = await readBody(req.clone());
+    const publicEndpoint = ["reservation", "public-order"].includes(
+      endpoint || "",
+    );
+    const user =
+      publicEndpoint || endpoint === "login" ? undefined : await actor();
+    return await withDatabaseContext(
+      {
+        userId: user?.id,
+        restaurantId:
+          typeof body.restaurant === "string" ? body.restaurant : "bernay",
+        public: publicEndpoint,
+      },
+      () => handlePost(req),
+    );
+  } catch (e) {
+    return fail(e);
+  }
+}
+
+export const GET = withRequestContext("/api/v1/[...path]", routeGET);
+
+export const POST = withRequestContext("/api/v1/[...path]", routePOST);

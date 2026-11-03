@@ -1,0 +1,214 @@
+/* Sections added from the CMS. Built on the storefront's classes and variables
+   (donuts.css) so they follow the theme; original sections are untouched. */
+.site-text {
+  max-width: 860px;
+}
+.site-text.is-center {
+  margin-inline: auto;
+  text-align: center;
+}
+.site-text p,
+.site-text-image p,
+.site-faq p {
+  color: var(--site-muted, #6d5c5b);
+  line-height: 1.65;
+  max-width: 68ch;
+}
+.site-text.is-center p {
+  margin-inline: auto;
+}
+.site-text-image {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: clamp(24px, 5vw, 70px);
+  align-items: center;
+}
+.site-text-image.is-left > img {
+  order: -1;
+}
+.site-text-image > img {
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+  border-radius: 22px;
+}
+.site-text-image .donut-button {
+  margin-top: 12px;
+}
+.site-gallery {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 14px;
+  margin-top: 26px;
+}
+.site-gallery button {
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: zoom-in;
+  border-radius: 16px;
+  overflow: hidden;
+}
+.site-gallery img {
+  display: block;
+  width: 100%;
+  aspect-ratio: 1;
+  object-fit: cover;
+  transition: transform 0.3s;
+}
+.site-gallery button:hover img {
+  transform: scale(1.04);
+}
+.site-lightbox {
+  position: fixed;
+  inset: 0;
+  z-index: 90;
+  display: grid;
+  place-items: center;
+  gap: 16px;
+  padding: 24px;
+  background: #26201fe6;
+}
+.site-lightbox img {
+  max-width: min(1100px, 100%);
+  max-height: 78vh;
+  border-radius: 14px;
+}
+.site-video-frame {
+  position: relative;
+  aspect-ratio: 16 / 9;
+  max-width: 1000px;
+  margin-top: 22px;
+  border-radius: 22px;
+  overflow: hidden;
+  background: var(--site-ink, #26201f);
+}
+.site-video-frame video,
+.site-video-frame iframe {
+  width: 100%;
+  height: 100%;
+  border: 0;
+  display: block;
+}
+.site-video-gate,
+.site-video-empty {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  gap: 10px;
+  padding: 20px;
+  text-align: center;
+  color: #fff;
+  background: center / cover no-repeat;
+}
+.site-video-gate p,
+.site-video-gate strong {
+  color: #fff;
+  text-shadow: 0 1px 8px #0008;
+}
+.site-video-caption {
+  margin-top: 10px;
+  font-size: 13px;
+  color: var(--site-muted, #6d5c5b);
+}
+.site-faq > div {
+  display: grid;
+  gap: 10px;
+  margin-top: 22px;
+  max-width: 860px;
+}
+.site-faq details {
+  border: 1px solid #ead8d0;
+  border-radius: 14px;
+  padding: 16px 20px;
+  background: #fffdfb;
+}
+.site-faq summary {
+  cursor: pointer;
+  font-weight: 800;
+}
+.site-cta {
+  text-align: center;
+  border-radius: 28px;
+  margin-block: 30px;
+}
+.site-cta.tone-pink {
+  background: var(--pink, #e83e91);
+}
+.site-cta.tone-pink h2,
+.site-cta.tone-pink p,
+.site-cta.tone-dark h2,
+.site-cta.tone-dark p {
+  color: #fff;
+}
+.site-cta.tone-dark {
+  background: var(--site-ink, #26201f);
+}
+.site-cta.tone-light {
+  background: #fff0f7;
+}
+.site-cta p {
+  margin: 12px auto 22px;
+  max-width: 60ch;
+}
+.site-promo {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: 10px 18px;
+  padding: 16px 20px;
+  background: var(--site-accent, #f5b8d0);
+  font-weight: 800;
+  text-align: center;
+}
+.site-categories .donut-categories a {
+  text-decoration: none;
+}
+.site-hours .donut-hours {
+  max-width: 520px;
+}
+.donut-legal-identity {
+  display: grid;
+  gap: 10px;
+  margin: 0 0 24px;
+  padding: 18px 20px;
+  border: 1px solid #ead8d0;
+  border-radius: 14px;
+  background: #fffdfb;
+}
+.donut-legal-identity dt {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--site-muted, #6d5c5b);
+}
+.donut-legal-identity dd {
+  margin: 2px 0 0;
+}
+/* Editor preview: hover and selection outlines (only with ?cms=…). */
+.donut-site.is-cms-preview [data-cms-section] {
+  cursor: pointer;
+  outline-offset: -3px;
+}
+/* The consent banner would cover the page being edited; visitors still get it. */
+.donut-site.is-cms-preview .donut-cookie-banner {
+  display: none;
+}
+.donut-site.is-cms-preview [data-cms-section]:hover {
+  outline: 2px dashed #00b8c8;
+}
+.donut-site.is-cms-preview [data-cms-section].is-cms-selected {
+  outline: 3px solid #e83e91;
+}
+@media (max-width: 850px) {
+  .site-text-image {
+    grid-template-columns: 1fr;
+  }
+  .site-text-image.is-left > img {
+    order: 0;
+  }
+}
