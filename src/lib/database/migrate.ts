@@ -17,6 +17,7 @@ const migrations: [number, string][] = [
   [14, "014_runtime_observability.sql"],
   [15, "015_security_references.sql"],
   [16, "016_security_worker_bootstrap.sql"],
+  [17, "017_tenancy_plans.sql"],
 ];
 /** Applies every additive migration not yet recorded, inside the caller's transaction. */
 export async function applyMigrations(tx: DB) {

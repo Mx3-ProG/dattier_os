@@ -33,9 +33,8 @@ export function website(SHOP: string) {
     requirePermission(scoped.roles ?? scoped.role, "website");
     return {
       user: scoped,
-      role: (scoped.roles ?? [scoped.role]).some((r) =>
-        ["OWNER", "SUPER_ADMIN"].includes(r),
-      )
+      // Only the platform super admin bypasses the editor locks; owners edit their own site.
+      role: (scoped.roles ?? [scoped.role]).includes("SUPER_ADMIN")
         ? "SUPER_ADMIN"
         : "OWNER",
     };

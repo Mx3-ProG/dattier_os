@@ -13,7 +13,7 @@ import {
   rows,
   one,
 } from "@/lib/database/db";
-import { actor, login, scope } from "@/lib/auth/session";
+import { actor, isPlatformAdmin, login, scope } from "@/lib/auth/session";
 import { snapshot, menu } from "@/lib/snapshot";
 import {
   actionSchema,
@@ -65,7 +65,7 @@ async function handleGet(req: NextRequest) {
       return NextResponse.json(
         await rows(
           db,
-          "SELECT p.* FROM profiles p WHERE EXISTS(SELECT 1 FROM memberships m WHERE m.profile_id=p.id) ORDER BY p.id",
+          "SELECT p.* FROM profiles p WHERE EXISTS(SELECT 1 FROM memberships m WHERE m.profile_id=p.id) OR EXISTS(SELECT 1 FROM platform_admins a WHERE a.profile_id=p.id) ORDER BY p.id",
         ),
       );
     if (endpoint === "reward") {
@@ -149,10 +149,12 @@ async function handlePost(req: NextRequest) {
     const user = await actor();
     if (endpoint === "reset") {
       if (!demoEnabled()) throw new Error("Réinitialisation non autorisée.");
-      if (
-        !["OWNER", "SUPER_ADMIN"].includes(user.role) ||
-        body.confirm !== "RESET DEMO"
-      )
+      // Resetting wipes every structure: platform administrators only.
+      if (!(await isPlatformAdmin(db, user.id)))
+        throw new Error(
+          "Réinitialisation réservée au Super Admin : accès refusé.",
+        );
+      if (body.confirm !== "RESET DEMO")
         throw new Error("Confirmation de réinitialisation requise.");
       await db.transaction(async (tx) => {
         await tx.exec("TRUNCATE restaurants,profiles CASCADE");

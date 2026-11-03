@@ -102,6 +102,10 @@ test("rôles cumulés et suspension vérifiés côté serveur", async () => {
   await db.query("UPDATE profiles SET status='active' WHERE id='other'");
 });
 test("initialisation multi-restaurant sans recopier les comptes et stocks de démo", async () => {
+  // Several establishments in one organization require the Premium plan.
+  await db.query(
+    "UPDATE organizations SET plan='premium' WHERE id='other-org'",
+  );
   const result = (await asUser("other", "other-r", (tx) =>
     platformPerform(
       tx,

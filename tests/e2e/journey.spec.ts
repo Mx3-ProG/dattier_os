@@ -11,7 +11,7 @@ test("parcours complet, réservations publiques, responsive et accès serveur", 
 }) => {
   const errors: string[] = [];
   page.on("pageerror", (e) => errors.push(e.message));
-  await profile(page, "Nadia");
+  await profile(page, "Slimane");
   const reset = await page.request.post("/api/v1/reset", {
     headers: { origin: process.env.E2E_URL || "http://127.0.0.1:3000" },
     data: { confirm: "RESET DEMO" },
@@ -90,7 +90,7 @@ test("parcours complet, réservations publiques, responsive et accès serveur", 
     fullPage: true,
   });
   const other = await context.newPage();
-  await other.goto("/reservations");
+  await other.goto("/site-demo/reservations");
   await other.locator(".slot:not([disabled])").first().click();
   await other.locator(".map-table.free").first().click();
   await expect(other.locator(".map-table.selected")).toHaveCount(1);
@@ -119,7 +119,7 @@ test("parcours complet, réservations publiques, responsive et accès serveur", 
     animations: "disabled",
     fullPage: true,
   });
-  await page.goto("/");
+  await page.goto("/site-demo");
   await expect(page.getByRole("heading", { level: 1 })).toContainText(
     "Le goût du partage",
   );

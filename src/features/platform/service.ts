@@ -1,7 +1,7 @@
 import { randomUUID, randomBytes, createHash } from "node:crypto";
 import { z } from "zod";
 import { rows, one, type DB } from "@/lib/database/db";
-import { scope, type Actor } from "@/lib/auth/session";
+import { isPlatformAdmin, scope, type Actor } from "@/lib/auth/session";
 import { roles } from "@/lib/permissions";
 import { log } from "@/features/orders/service";
 const text = z.string().trim().min(2).max(150),
@@ -71,18 +71,30 @@ export async function initializeRestaurant(db: DB, r: string) {
     [r],
   );
 }
+/** Establishments allowed per organization: Essentiel = 1, Premium = several (mirrors app.plan_quota). */
+export const planQuota = (plan: string) => (plan === "premium" ? 10 : 1);
 export async function overview(db: DB, user: Actor) {
+  const platformAdmin = await isPlatformAdmin(db, user.id);
+  const organizations = await rows<{ plan: string; restaurant_count: number }>(
+    db,
+    platformAdmin
+      ? "SELECT o.*,'PLATFORM' AS role,(SELECT count(*)::int FROM restaurants r WHERE r.organization_id=o.id) AS restaurant_count FROM organizations o ORDER BY o.name"
+      : "SELECT o.*,m.role,(SELECT count(*)::int FROM restaurants r WHERE r.organization_id=o.id) AS restaurant_count FROM organizations o JOIN organization_memberships m ON m.organization_id=o.id WHERE m.profile_id=$1 ORDER BY o.name",
+    platformAdmin ? [] : [user.id],
+  );
   return {
     user,
-    organizations: await rows(
-      db,
-      "SELECT o.*,m.role FROM organizations o JOIN organization_memberships m ON m.organization_id=o.id WHERE m.profile_id=$1 ORDER BY o.name",
-      [user.id],
-    ),
+    platformAdmin,
+    organizations: organizations.map((o) => ({
+      ...o,
+      quota: planQuota(o.plan),
+    })),
     restaurants: await rows(
       db,
-      "SELECT DISTINCT r.* FROM restaurants r LEFT JOIN memberships m ON m.restaurant_id=r.id LEFT JOIN organization_memberships om ON om.organization_id=r.organization_id WHERE m.profile_id=$1 OR (om.profile_id=$1 AND om.role IN ('OWNER','ADMIN')) ORDER BY r.name",
-      [user.id],
+      platformAdmin
+        ? "SELECT r.* FROM restaurants r ORDER BY r.name"
+        : "SELECT DISTINCT r.* FROM restaurants r LEFT JOIN memberships m ON m.restaurant_id=r.id LEFT JOIN organization_memberships om ON om.organization_id=r.organization_id WHERE m.profile_id=$1 OR (om.profile_id=$1 AND om.role IN ('OWNER','ADMIN')) ORDER BY r.name",
+      platformAdmin ? [] : [user.id],
     ),
   };
 }

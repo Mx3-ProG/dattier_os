@@ -2,7 +2,7 @@ import Link from "next/link";
 import { Fragment } from "react";
 import { ArrowUpRight, ChevronDown, MapPin, Phone } from "lucide-react";
 import type { MenuItem, Restaurant } from "@/lib/types";
-import { homeAnchors } from "./navigation";
+import { homeAnchors, sitePath } from "./navigation";
 import {
   HeroVideo,
   QuickBooking,
@@ -75,10 +75,10 @@ export function HomeIntro({ restaurant }: { restaurant?: Restaurant }) {
             entre traditions généreuses et plaisirs simples.
           </p>
           <div className="actions">
-            <Link className="btn light" href="/reservations">
+            <Link className="btn light" href={sitePath("/reservations")}>
               Réserver une table <ArrowUpRight size={17} aria-hidden />
             </Link>
-            <Link className="btn ghost" href="/carte">
+            <Link className="btn ghost" href={sitePath("/carte")}>
               Découvrir notre carte
             </Link>
           </div>
@@ -159,7 +159,7 @@ export function HomeStory() {
           Un couscous à partager, les parfums d’un tajine, un thé à la menthe
           pour prolonger l’instant. Bienvenue au Dattier Hefsi.
         </p>
-        <Link href="/histoire" className="text-button">
+        <Link href={sitePath("/histoire")} className="text-button">
           Découvrir la maison →
         </Link>
         <p className="muted">
@@ -233,11 +233,7 @@ export function HomeMenuPreview({ menu }: { menu?: MenuItem[] }) {
         {menuCategories.map((c, i) => {
           const items = menu?.filter((m) => m.category === c) || [];
           return (
-            <li
-              key={c}
-              data-reveal
-              style={{ "--d": i } as React.CSSProperties}
-            >
+            <li key={c} data-reveal style={{ "--d": i } as React.CSSProperties}>
               <h3>{c}</h3>
               {menu ? (
                 <p>
@@ -255,10 +251,10 @@ export function HomeMenuPreview({ menu }: { menu?: MenuItem[] }) {
         })}
       </ul>
       <div className="actions">
-        <Link className="btn primary" href="/carte">
+        <Link className="btn primary" href={sitePath("/carte")}>
           Voir toute la carte <ArrowUpRight size={17} aria-hidden />
         </Link>
-        <Link className="btn outline" href="/commander">
+        <Link className="btn outline" href={sitePath("/commander")}>
           Commander à emporter
         </Link>
       </div>
@@ -290,7 +286,7 @@ export function HomeReviews() {
         liste des plateformes d’avis à afficher et accord sur leurs conditions
         d’utilisation.
       </MissingContent>
-      <Link href="/avis" className="text-button">
+      <Link href={sitePath("/avis")} className="text-button">
         En savoir plus →
       </Link>
     </section>
@@ -309,10 +305,10 @@ export function HomeReservation() {
         Les bons moments <em>se réservent.</em>
       </Heading>
       <p>
-        Choisissez votre jour et votre heure sur le calendrier, puis votre
-        table directement sur le plan de la salle. L’équipe confirme ensuite.
+        Choisissez votre jour et votre heure sur le calendrier, puis votre table
+        directement sur le plan de la salle. L’équipe confirme ensuite.
       </p>
-      <Link className="btn light" href="/reservations">
+      <Link className="btn light" href={sitePath("/reservations")}>
         Choisir ma table <ArrowUpRight size={17} aria-hidden />
       </Link>
     </section>
@@ -414,7 +410,7 @@ export function HomePracticalInfo({ restaurant }: { restaurant?: Restaurant }) {
           <dd>Horaires à confirmer auprès de l’établissement.</dd>
         </div>
       </dl>
-      <Link href="/contact" className="text-button">
+      <Link href={sitePath("/contact")} className="text-button">
         Toutes les informations de contact →
       </Link>
     </section>
