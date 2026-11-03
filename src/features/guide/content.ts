@@ -187,7 +187,7 @@ export const chapters: Chapter[] = [
     icon: "UtensilsCrossed",
     permission: ["orders"],
     summary:
-      "Comprendre l’état des tables, les réservations à venir et l’aménagement de la salle.",
+      "Comprendre l’état des tables, les réservations à venir et l’aménagement de la salle, zone par zone.",
     minutes: 2,
     steps: [
       {
@@ -200,15 +200,15 @@ export const chapters: Chapter[] = [
         module: "dining",
         target: ".table-grid",
         title: "Les tables, par zone",
-        body: "Chaque carte indique le numéro, le nombre de places et l’état. Si une réservation arrive dans les 12 prochaines heures, l’heure et le nombre de personnes s’affichent.",
+        body: "Les tables sont rangées par zone (salle principale, terrasse, étage…), dans l’ordre choisi à l’aménagement. Chaque carte indique le numéro, le nombre de places et l’état. Si une réservation arrive dans les 12 prochaines heures, l’heure et le nombre de personnes s’affichent.",
       },
       {
         module: "dining",
         target: ".view-tabs",
         title: "Aménager la salle",
-        body: "Ajoutez, déplacez ou archivez des tables, choisissez leur zone, leur forme et leur capacité, et décidez si elles sont proposées à la réservation en ligne. Le plan vu par vos clients se met à jour aussitôt.",
+        body: "Créez vos zones, chacune avec son propre plan. Ajoutez, glissez, tournez ou archivez des tables, choisissez leur forme et leur capacité, et décidez si elles sont proposées à la réservation en ligne. Le plan vu par vos clients se met à jour aussitôt, tables tournées comprises.",
         fallback:
-          "L’aménagement de la salle est réservé aux profils Propriétaire, Manager, Salle et Bar.",
+          "Le propriétaire décide, membre par membre, qui peut modifier le plan de salle (Administration › Équipe). Votre profil n’a pas ce droit pour l’instant.",
       },
       {
         module: "dining",
@@ -233,9 +233,25 @@ export const chapters: Chapter[] = [
           title: "Aménager la salle",
           steps: [
             "Plan de salle › onglet « Aménager la salle ».",
-            "Ajoutez une table : numéro, nombre de places, zone, forme (carrée, ronde, rectangulaire), nom affiché facultatif.",
+            "Créez vos zones avec « + Zone » (terrasse, étage, bar…), puis renommez-les, réordonnez-les avec les flèches ou supprimez-les. Chaque zone a son propre plan.",
+            "Ajoutez une table : numéro, nombre de places, zone, forme (carrée, ronde, rectangulaire), rotation, nom affiché facultatif.",
             "Choisissez « Réservation en ligne » : proposée aux clients ou masquée (réservée au personnel).",
-            "Glissez la table sur le plan pour la placer.",
+            "Glissez la table sur le plan pour la placer ; tirez sa poignée ronde pour la tourner par pas de 15° (Maj pour un réglage au degré près), ou utilisez la touche R au clavier.",
+          ],
+        },
+        {
+          title: "Qui peut modifier le plan",
+          points: [
+            "Le propriétaire et l’administrateur de l’organisation peuvent toujours modifier le plan.",
+            "Les profils Manager, Salle et Bar le peuvent par défaut ; le propriétaire retire ou rend ce droit membre par membre dans Administration › Équipe (« Peut modifier le plan de salle »).",
+            "Le droit est vérifié par le serveur : un membre sans droit ne peut ni ajouter, ni déplacer, ni tourner une table, ni gérer les zones, même en appelant l’API directement. Il continue le service normalement.",
+          ],
+        },
+        {
+          title: "Nombre de tables selon l’offre",
+          points: [
+            "Offre Essentiel : 50 tables actives au maximum, toutes zones confondues. Les tables archivées ne comptent pas.",
+            "Offre Premium : pas de plafond de tables par structure.",
           ],
         },
         {
@@ -244,6 +260,7 @@ export const chapters: Chapter[] = [
             "Une table occupée ne peut ni changer d’état manuellement ni être archivée.",
             "Une table qui a un historique de commandes ne peut être qu’archivée, pas supprimée.",
             "Réduire le nombre de places est refusé si une réservation à venir dépasse la nouvelle capacité.",
+            "Une zone qui contient des tables avec un historique ne peut pas être supprimée : déplacez ces tables dans une autre zone ou archivez-les d’abord. Les tables sans historique disparaissent avec la zone, et il reste toujours au moins une zone.",
           ],
         },
       ],
