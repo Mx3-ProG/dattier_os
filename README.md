@@ -12,7 +12,7 @@ npm ci
 npm run dev
 ```
 
-La démonstration est sur `/demo`, le poste de travail sur `/dashboard`. Les données sont fictives et conservées dans un dossier explicitement nommé `demo`. Un seul processus peut ouvrir ce dossier. [Guide de la démonstration](docs/LOCAL_DEMO.md).
+La démonstration est sur `/demo`, le poste de travail sur `/dashboard`, le guide d’utilisation complet sur `/guide`. Dans le poste, le bouton « Guide » ouvre la visite interactive (15 parcours adaptés au rôle, contenu partagé avec `/guide` dans `src/features/guide/content.ts`) ; `/dashboard?tour=all` ou `?tour=<parcours>` la lance directement. Les données sont fictives et conservées dans un dossier explicitement nommé `demo`. Un seul processus peut ouvrir ce dossier. [Guide de la démonstration](docs/LOCAL_DEMO.md).
 
 ## Nouvelle plateforme
 

@@ -75,7 +75,8 @@ export async function seed(db: DB) {
     for (let i = 1; i <= 12; i++) {
       const capacity = i <= 2 ? 2 : i % 3 === 0 ? 6 : 4;
       await db.query(
-        "INSERT INTO dining_tables(id,restaurant_id,number,capacity,zone,shape,pos_x,pos_y) VALUES($1,$2,$3,$4,$5,$6,$7,$8)",
+        // La zone est créée d’après son nom (déclencheur table_zone) ; la terrasse a son propre plan.
+        "INSERT INTO dining_tables(id,restaurant_id,number,capacity,zone,shape,pos_x,pos_y,rotation) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9)",
         [
           `${r}-t${i}`,
           r,
@@ -84,7 +85,9 @@ export async function seed(db: DB) {
           i > 8 ? "Terrasse" : "Salle principale",
           capacity <= 2 ? "round" : capacity >= 6 ? "rect" : "square",
           14 + ((i - 1) % 4) * 24,
-          i > 8 ? 80 : 18 + Math.floor((i - 1) / 4) * 28,
+          i > 8 ? 45 : 26 + Math.floor((i - 1) / 4) * 44,
+          // Deux tables de terrasse posées en biais.
+          i === 10 || i === 11 ? 45 : 0,
         ],
       );
     }

@@ -18,15 +18,23 @@ Source centrale : `src/lib/permissions.ts`. Les contrôles sont exécutés côt�
 
 Chaque structure (établissement) appartient à une seule organisation cliente. Un propriétaire, son équipe et son site ne voient et ne modifient que les structures de leur organisation : contrôle applicatif (`scope`) et politiques RLS en base (`app.has_restaurant`).
 
-- Offre **Essentiel** : une structure par organisation.
-- Offre **Premium** (`organizations.plan='premium'`) : jusqu’à 10 structures dans la même organisation.
+- Offre **Essentiel** : une structure par organisation, 50 tables actives au plan de salle.
+- Offre **Premium** (`organizations.plan='premium'`) : jusqu’à 10 structures dans la même organisation, sans plafond de tables.
 - Un compte propriétaire ne peut posséder des structures que dans une seule organisation (pas de contournement en créant une seconde organisation).
 - Ces règles sont imposées par des déclencheurs SQL (migration `017_tenancy_plans.sql`), quel que soit le chemin de création.
 - Seul le Super Admin plateforme a une vue transverse ; le rôle `SUPER_ADMIN` ne peut pas être attribué à un membre de structure.
 
 Démo : Nadia (Premium, Le Dattier + L’Atelier), Hugo (Essentiel, Le Bistrot de Hugo), Slimane (Super Admin plateforme).
 
-La permission `floor` (aménagement du plan de salle : ajouter, modifier les places/l’état, déplacer, archiver, supprimer une table) est accordée à SUPER_ADMIN, OWNER, MANAGER, WAITER et BARTENDER. Une table occupée ne peut ni changer d’état manuellement ni être archivée ; une table avec historique ne peut qu’être archivée ; réduire les places est refusé si une réservation à venir dépasse la nouvelle capacité.
+La permission `floor` donne accès au plan de salle (SUPER_ADMIN, OWNER, MANAGER, WAITER, BARTENDER). Le **droit de modifier le plan** (créer, renommer, réordonner, supprimer des zones ; ajouter, modifier, déplacer, tourner, archiver, supprimer une table) se décide membre par membre :
+
+- OWNER, SUPER_ADMIN et l’administrateur de l’organisation l’ont toujours ;
+- MANAGER, WAITER et BARTENDER l’ont par défaut ; le propriétaire le retire ou le rend dans Administration › Équipe (« Peut modifier le plan de salle »), stocké dans `floor_layout_access` ;
+- le contrôle est fait par le serveur (`src/features/floor/access.ts`, appelé par chaque action d’aménagement) et la politique RLS de `floor_layout_access` n’autorise que le propriétaire ou l’administrateur à écrire ce droit. Un membre sans droit continue le service (états des tables, commandes).
+
+Règles du plan : une table occupée ne peut ni changer d’état manuellement ni être archivée ; une table avec historique ne peut qu’être archivée ; réduire les places est refusé si une réservation à venir dépasse la nouvelle capacité ; une zone qui contient des tables avec historique ne peut pas être supprimée sans déplacer ou archiver ces tables (les tables sans historique partent avec la zone) ; il reste toujours au moins une zone. L’angle des tables (0–359°, sens horaire) est enregistré et affiché sur le plan public de réservation, chaises comprises.
+
+Plafond de tables (migration `020_floor_architect.sql`, déclencheur SQL `table_quota` doublé d’un message côté serveur) : **50 tables actives par structure en offre Essentiel**, toutes zones confondues (les tables archivées ne comptent pas, restaurer une table compte). **L’offre Premium ne prévoyait rien sur les tables** (seulement jusqu’à 10 structures) : elle est sans plafond de tables, les numéros restant limités à 1–999.
 
 Tous les profils peuvent consulter les notifications de leur établissement et pointer leur propre service. Les confirmations de réservation ne sont pas publiques. Le public ne peut demander qu’une réservation ou une commande à confirmer. Les profils publics de `/demo` ne sont disponibles que lorsque la démo locale est activée.
 

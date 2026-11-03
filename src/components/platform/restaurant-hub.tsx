@@ -6,6 +6,7 @@ import "./platform.css";
 import { ShopSettings } from "./shop-settings";
 import { LoyaltyPanel } from "./loyalty-panel";
 import type { Settings } from "@/features/commerce/schema";
+import { can, roleLabels, type Role } from "@/lib/permissions";
 type Member = { id: string; name: string; email: string; role: string };
 type ShopOrder = {
   order_id: string;
@@ -125,6 +126,10 @@ export function RestaurantHub({ restaurant }: { restaurant: string }) {
     }
   }
   const members = (data?.members || []) as Member[];
+  const floorLayout = (data?.floorLayout || []) as {
+    profile_id: string;
+    allowed: boolean;
+  }[];
   return (
     <main className="platform">
       <header>
@@ -236,9 +241,41 @@ export function RestaurantHub({ restaurant }: { restaurant: string }) {
                         {m.email} ·{" "}
                         {members
                           .filter((x) => x.id === id)
-                          .map((x) => x.role)
+                          .map((x) => roleLabels[x.role as Role] ?? x.role)
                           .join(", ")}
                       </p>
+                      {(() => {
+                        const memberRoles = members
+                          .filter((x) => x.id === id)
+                          .map((x) => x.role as Role);
+                        // Le propriétaire garde toujours ce droit ; les rôles sans accès à la salle ne l’ont pas.
+                        if (
+                          memberRoles.includes("OWNER") ||
+                          !can(memberRoles, "floor")
+                        )
+                          return null;
+                        const allowed =
+                          floorLayout.find((f) => f.profile_id === id)
+                            ?.allowed ?? true;
+                        return (
+                          <label className="inline">
+                            <input
+                              type="checkbox"
+                              checked={allowed}
+                              disabled={busy}
+                              onChange={(e) =>
+                                perform({
+                                  action: "floorLayout",
+                                  profile: id,
+                                  allowed: e.target.checked,
+                                })
+                              }
+                            />
+                            Peut modifier le plan de salle (zones, ajout,
+                            déplacement et rotation des tables)
+                          </label>
+                        );
+                      })()}
                       <button
                         disabled={busy}
                         onClick={() =>
