@@ -26,8 +26,10 @@ export async function snapshot(
     can(user.roles ?? user.role, p);
   const restaurants = await rows<Restaurant>(
     db,
-    "SELECT DISTINCT r.* FROM restaurants r JOIN memberships m ON m.restaurant_id=r.id WHERE m.profile_id=$1 ORDER BY r.id",
-    [user.id],
+    user.role === "SUPER_ADMIN"
+      ? "SELECT r.* FROM restaurants r ORDER BY r.id"
+      : "SELECT DISTINCT r.* FROM restaurants r JOIN memberships m ON m.restaurant_id=r.id WHERE m.profile_id=$1 ORDER BY r.id",
+    user.role === "SUPER_ADMIN" ? [] : [user.id],
   );
   const orders =
     allowed("orders") ||
@@ -61,7 +63,11 @@ export async function snapshot(
     now: new Date().toISOString(),
     user,
     restaurants,
-    restaurant: await one(db, "SELECT * FROM restaurants WHERE id=$1", [r]),
+    restaurant: await one(
+      db,
+      "SELECT r.*,o.plan,(SELECT count(*)::int FROM restaurants x WHERE x.organization_id=r.organization_id) AS organization_restaurants FROM restaurants r JOIN organizations o ON o.id=r.organization_id WHERE r.id=$1",
+      [r],
+    ),
     menu: await menu(db, r, allowed("finance"), allowed("catalog")),
     tables:
       allowed("orders") || allowed("reservations")

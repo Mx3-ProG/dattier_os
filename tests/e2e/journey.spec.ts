@@ -11,7 +11,7 @@ test("parcours complet, réservations publiques, responsive et accès serveur", 
 }) => {
   const errors: string[] = [];
   page.on("pageerror", (e) => errors.push(e.message));
-  await profile(page, "Nadia");
+  await profile(page, "Slimane");
   const reset = await page.request.post("/api/v1/reset", {
     headers: { origin: process.env.E2E_URL || "http://127.0.0.1:3000" },
     data: { confirm: "RESET DEMO" },

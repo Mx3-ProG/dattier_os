@@ -27,9 +27,12 @@ export async function seed(db: DB) {
       name,
       role,
     ]);
-    for (const r of role === "OWNER" || role === "SUPER_ADMIN"
-      ? ["bernay", "atelier"]
-      : ["bernay"])
+    // The super admin is a platform administrator, not a member of any structure.
+    if (role === "SUPER_ADMIN") {
+      await db.query("INSERT INTO platform_admins VALUES ($1)", [id]);
+      continue;
+    }
+    for (const r of role === "OWNER" ? ["bernay", "atelier"] : ["bernay"])
       await db.query("INSERT INTO memberships VALUES ($1,$2,$3)", [
         id,
         r,
@@ -37,8 +40,22 @@ export async function seed(db: DB) {
       ]);
   }
   await db.query(
-    "INSERT INTO organization_memberships VALUES('legacy','nadia','OWNER'),('legacy','slimane','OWNER') ON CONFLICT DO NOTHING",
+    "INSERT INTO organization_memberships VALUES('legacy','nadia','OWNER') ON CONFLICT DO NOTHING",
   );
+  // A second, independent customer on the Essentiel plan: one structure, its own team.
+  await db.query(
+    "INSERT INTO organizations(id,name,plan) VALUES('bistrot-org','Le Bistrot de Hugo — client fictif','essentiel')",
+  );
+  await db.query(
+    "INSERT INTO restaurants(id,name,address,phone,goal,organization_id) VALUES('bistrot','Le Bistrot de Hugo — structure fictive','Structure de démonstration indépendante','',60000,'bistrot-org')",
+  );
+  await db.query(
+    "INSERT INTO profiles(id,name,role) VALUES('hugo','Hugo','OWNER')",
+  );
+  await db.query(
+    "INSERT INTO organization_memberships VALUES('bistrot-org','hugo','OWNER')",
+  );
+  await db.query("INSERT INTO memberships VALUES('hugo','bistrot','OWNER')");
   const ingredients: [string, string, string, number, number, number][] = [
     ["semoule", "Semoule", "g", 40000, 2000, 0.0018],
     ["poulet", "Poulet", "g", 40000, 2500, 0.008],

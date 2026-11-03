@@ -4,7 +4,7 @@ Source centrale : `src/lib/permissions.ts`. Les contrôles sont exécutés côt�
 
 | Rôle | Accès |
 | --- | --- |
-| SUPER_ADMIN | Toutes les fonctions locales, distinct du propriétaire |
+| SUPER_ADMIN | Administrateur de la plateforme (table `platform_admins`) : vue sur toutes les structures, seul à pouvoir réinitialiser la démo et à lever les verrous du Studio. N’est membre d’aucune structure. |
 | OWNER | Opérations, finances, configuration et établissements autorisés |
 | MANAGER | Opérations, carte/recettes, équipe, achats, clients et codes promo, audit ; pas de coûts ni finances |
 | WAITER | Tables, commandes, service, déclarations de règlement, réservations |
@@ -13,6 +13,18 @@ Source centrale : `src/lib/permissions.ts`. Les contrôles sont exécutés côt�
 | STOCK_MANAGER | Stocks, inventaires, pertes, achats |
 | PURCHASING | Fournisseurs, commandes et réceptions |
 | ACCOUNTANT | Rapports financiers et dépenses |
+
+## Isolation des structures (SaaS)
+
+Chaque structure (établissement) appartient à une seule organisation cliente. Un propriétaire, son équipe et son site ne voient et ne modifient que les structures de leur organisation : contrôle applicatif (`scope`) et politiques RLS en base (`app.has_restaurant`).
+
+- Offre **Essentiel** : une structure par organisation.
+- Offre **Premium** (`organizations.plan='premium'`) : jusqu’à 10 structures dans la même organisation.
+- Un compte propriétaire ne peut posséder des structures que dans une seule organisation (pas de contournement en créant une seconde organisation).
+- Ces règles sont imposées par des déclencheurs SQL (migration `017_tenancy_plans.sql`), quel que soit le chemin de création.
+- Seul le Super Admin plateforme a une vue transverse ; le rôle `SUPER_ADMIN` ne peut pas être attribué à un membre de structure.
+
+Démo : Nadia (Premium, Le Dattier + L’Atelier), Hugo (Essentiel, Le Bistrot de Hugo), Slimane (Super Admin plateforme).
 
 La permission `floor` (aménagement du plan de salle : ajouter, modifier les places/l’état, déplacer, archiver, supprimer une table) est accordée à SUPER_ADMIN, OWNER, MANAGER, WAITER et BARTENDER. Une table occupée ne peut ni changer d’état manuellement ni être archivée ; une table avec historique ne peut qu’être archivée ; réduire les places est refusé si une réservation à venir dépasse la nouvelle capacité.
 

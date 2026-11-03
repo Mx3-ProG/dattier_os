@@ -11,9 +11,10 @@ test("manager : cycle produit, code client et règlement ; cuisine et bar : renf
     product = `Plat test ${suffix}`,
     client = `Client test ${suffix}`,
     code = `FIDE-${suffix}`;
-  await profile(page, "Nadia");
+  await profile(page, "Slimane");
   const reset=await page.request.post("/api/v1/reset",{headers:{origin:process.env.E2E_URL||"http://127.0.0.1:3000"},data:{confirm:"RESET DEMO"}});
   expect(reset.ok()).toBeTruthy();
+  await profile(page, "Nadia");
   await profile(page, "Lina");
   await page.getByRole("button", { name: "La carte", exact: true }).click();
   async function create(name: string) {

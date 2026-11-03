@@ -660,24 +660,43 @@ export function Management({
             {data.restaurants.map((r) => (
               <p key={r.id}>{r.name}</p>
             ))}
-            <Button
-              variant="secondary"
-              onClick={() =>
-                edit(
-                  "Ajouter un établissement",
-                  [{ name: "name", label: "Nom" }],
-                  (v) => act({ action: "addRestaurant", ...v }),
-                )
-              }
-            >
-              Ajouter un établissement
-            </Button>
             <p className="muted">
-              Un nouvel établissement démarre vide. La création de sa carte, de
-              ses stocks et de ses tables se fait depuis les modules du
-              restaurant.
+              Offre{" "}
+              {data.restaurant.plan === "premium" ? "Premium" : "Essentiel"} :{" "}
+              {data.restaurant.organization_restaurants ?? 1} /{" "}
+              {data.restaurant.plan === "premium" ? 10 : 1} structure
+              {data.restaurant.plan === "premium" ? "s" : ""} utilisée
+              {data.restaurant.plan === "premium" ? "s" : ""}.
             </p>
-            {data.demo && (
+            {data.restaurant.plan === "premium" ||
+            data.user.role === "SUPER_ADMIN" ? (
+              <>
+                <Button
+                  variant="secondary"
+                  onClick={() =>
+                    edit(
+                      "Ajouter un établissement",
+                      [{ name: "name", label: "Nom" }],
+                      (v) => act({ action: "addRestaurant", ...v }),
+                    )
+                  }
+                >
+                  Ajouter un établissement
+                </Button>
+                <p className="muted">
+                  Un nouvel établissement démarre vide. La création de sa carte,
+                  de ses stocks et de ses tables se fait depuis les modules du
+                  restaurant.
+                </p>
+              </>
+            ) : (
+              <p className="muted">
+                L’offre Essentiel comprend une structure. Passez à l’offre
+                Premium pour gérer plusieurs établissements depuis le même
+                compte.
+              </p>
+            )}
+            {data.demo && data.user.role === "SUPER_ADMIN" && (
               <>
                 <h3>Démonstration</h3>
                 <p>

@@ -5,6 +5,9 @@ export type Restaurant = {
   address: string;
   phone: string;
   goal: number;
+  organization_id?: string;
+  plan?: "essentiel" | "premium";
+  organization_restaurants?: number;
 };
 export type MenuItem = {
   id: string;

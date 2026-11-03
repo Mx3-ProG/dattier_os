@@ -527,11 +527,12 @@ export async function perform(
           "INSERT INTO restaurants(id,name,organization_id) SELECT $1,$2,organization_id FROM restaurants WHERE id=$3",
           [rid, a.name, r],
         );
-        await db.query("INSERT INTO memberships VALUES($1,$2,$3)", [
-          user.id,
-          rid,
-          user.role,
-        ]);
+        // The quota triggers refuse a second structure outside the Premium plan.
+        if (user.role === "OWNER")
+          await db.query("INSERT INTO memberships VALUES($1,$2,'OWNER')", [
+            user.id,
+            rid,
+          ]);
         break;
       }
   }

@@ -49,7 +49,25 @@ export async function actor(): Promise<Actor> {
   bindActor(user.id, hash(token));
   return { ...user, authIssuedAt: user.auth_issued_at };
 }
+/** Platform administrators (table platform_admins) are the only accounts with a view on every structure. */
+export async function isPlatformAdmin(db: DB, profileId: string) {
+  return (
+    await rows<{ allowed: boolean }>(
+      db,
+      "SELECT EXISTS(SELECT 1 FROM platform_admins a JOIN profiles p ON p.id=a.profile_id WHERE a.profile_id=$1 AND p.status='active') AS allowed",
+      [profileId],
+    )
+  )[0].allowed;
+}
 export async function scope(db: DB, user: Actor, r: string) {
+  if (await isPlatformAdmin(db, user.id)) {
+    await one(db, "SELECT id FROM restaurants WHERE id=$1", [r]);
+    return {
+      ...user,
+      role: "SUPER_ADMIN" as Role,
+      roles: ["SUPER_ADMIN"] as Role[],
+    };
+  }
   const revoked = await rows<{ not_before: string }>(
     db,
     "SELECT not_before FROM restaurant_session_revocations WHERE restaurant_id=$1 AND profile_id=$2",
