@@ -619,6 +619,8 @@ import { createElement } from "react";
 import { renderToString } from "react-dom/server";
 import { CookieConsent } from "../src/components/cms-site/cookie-consent";
 import { TenantSiteProvider } from "../src/components/cms-site/context";
+import type { FC, ReactNode } from "react";
+const Provider = TenantSiteProvider as FC<{ restaurant: string; children?: ReactNode }>;
 
 const llms = (t: Tenant, config = t.config) =>
   buildLlmsTxt({
@@ -691,20 +693,22 @@ test("GEO JSON-LD : date de mise à jour du site", () => {
 
 test("Performance : bandeau cookies dans le HTML serveur, masqué avant affichage si choix connu", () => {
   const html = renderToString(
-    createElement(TenantSiteProvider, {
-      restaurant: "sushi",
-      children: createElement(CookieConsent, { onChange: () => {} }),
-    }),
+    createElement(
+      Provider,
+      { restaurant: "sushi" },
+      createElement(CookieConsent, { onChange: () => {} }),
+    ),
   );
   assert.match(html, /<aside class="donut-cookie-banner"/);
   assert.match(html, /<script>try\{var v=JSON\.parse\(localStorage\.getItem\("dattier-cookie-consent:sushi"\)/);
   assert.match(html, /previousElementSibling\.hidden=true/);
   // A tenant id cannot break out of the inline script.
   const evil = renderToString(
-    createElement(TenantSiteProvider, {
-      restaurant: "x</script><script>alert(1)",
-      children: createElement(CookieConsent, { onChange: () => {} }),
-    }),
+    createElement(
+      Provider,
+      { restaurant: "x</script><script>alert(1)" },
+      createElement(CookieConsent, { onChange: () => {} }),
+    ),
   );
   assert.ok(!evil.includes("</script><script>alert(1)"));
 });
@@ -720,4 +724,228 @@ test("Performance : polices WOFF2 servies en premier, plus légères que les TTF
     for (const u of urls) assert.ok(existsSync("public" + u), u);
     assert.ok(statSync("public" + urls[0]).size < statSync("public" + urls[1]).size);
   }
+});
+
+/* ───────────────────────── P3: automation & dashboard ───────────────────────── */
+
+import { auditSite, type AuditInput } from "../src/features/seo/audit";
+import { effectiveTitle } from "../src/features/seo/meta";
+import { adminState, adminPerform } from "../src/features/platform/admin";
+import type { seoState, seoPerform } from "../src/features/seo/admin";
+type Actor = Parameters<typeof adminState>[2];
+/** The real admin module (scope + permission), typed for the "seo" module. */
+const seoGet = (tx: DB, r: string, user: Actor) =>
+  adminState(tx, r, user, "seo") as ReturnType<typeof seoState>;
+const seoPost = (tx: DB, r: string, user: Actor, body: unknown) =>
+  adminPerform(tx, r, user, "seo", body) as ReturnType<typeof seoPerform>;
+
+const auditOf = (t: Tenant, patch: Partial<AuditInput> = {}) =>
+  auditSite({
+    restaurant: t.id,
+    config: t.config,
+    context: { name: t.name, phone: t.phone, address: t.address, description: t.config.branding.description },
+    settings: t.settings,
+    products: t.products,
+    primaryHost: t.host,
+    domains: [],
+    publishedAt: "2026-11-02T09:00:00Z",
+    platformUrl: PLATFORM,
+    ...patch,
+  });
+const byId = (r: ReturnType<typeof auditSite>, id: string) => r.checks.find((c) => c.id === id);
+
+test("CMS : la configuration par défaut ne partage aucun objet entre pages ni entre restaurants", () => {
+  const a = defaultConfig(), b = defaultConfig();
+  a.pages.carte.seo.title = "Carte de A";
+  assert.equal(a.pages.contact.seo.title, "");
+  assert.equal(b.pages.carte.seo.title, "");
+  a.theme.colors.primary = "#000000";
+  assert.notEqual(b.theme.colors.primary, "#000000");
+});
+
+test("SEO titres : une page sans titre propre n’hérite plus du titre de l’accueil", () => {
+  const c = defaultConfig();
+  c.seo.title = "Accueil du site";
+  c.seo.shareName = "Chez Nous";
+  assert.equal(effectiveTitle(c, "home", {}), "Accueil du site");
+  assert.equal(effectiveTitle(c, "carte", {}), "La carte · Chez Nous");
+  c.pages.carte.seo.title = "Notre carte";
+  assert.equal(effectiveTitle(c, "carte", {}), "Notre carte");
+});
+
+test("SEO audit : contrôles factuels, sans score ni donnée inventée", () => {
+  const [tajine, sushi] = tenants;
+  const r = auditOf(sushi);
+  assert.equal(r.version, 1);
+  assert.ok(!("score" in r), "aucune note globale");
+  assert.equal(r.canonicalBase, "https://www.sushi-kaze.test");
+  assert.equal(
+    r.counts.ok + r.counts.info + r.counts.warning + r.counts.error,
+    r.checks.length,
+  );
+  assert.equal(byId(r, "titles-unique")?.status, "ok");
+  assert.equal(byId(r, "domain")?.status, "ok");
+  assert.equal(byId(r, "business-info")?.status, "ok");
+  // Default logo is an SVG: social networks will not show it.
+  assert.equal(byId(r, "share-image")?.status, "warning");
+  assert.equal(byId(r, "indexing")?.status, "ok");
+  assert.equal(byId(r, "perf-fonts")?.status, "ok");
+
+  // Duplicate titles are blocking.
+  const dup = structuredClone(sushi.config);
+  dup.pages.carte.seo.title = "Même titre";
+  dup.pages.contact.seo.title = "Même titre";
+  const d = byId(auditOf(sushi, { config: dup }), "titles-unique")!;
+  assert.equal(d.status, "error");
+  assert.match(d.detail, /« Même titre » : Nous trouver, La carte$/);
+
+  // Indexing off: says what is missing to turn it on, and titles are still checked.
+  const off = structuredClone(sushi.config);
+  off.seo.noIndex = true;
+  off.pages.carte.seo.title = off.pages.contact.seo.title = "Pareil";
+  assert.equal(byId(auditOf(sushi, { config: off }), "titles-unique")?.status, "error");
+  const idx = byId(auditOf(sushi, { config: off }), "indexing")!;
+  assert.equal(idx.status, "warning");
+  assert.match(idx.fix!, /exploitant, e-mail de contact, hébergeur/);
+
+  // Never published, pending domain, broken redirect, empty FAQ answer, missing practical info, heavy fonts.
+  const messy = structuredClone(tajine.config);
+  messy.seo.redirects = [{ from: "/old", to: "/nulle-part", permanent: true }];
+  messy.theme.fonts = { heading: "playfair", body: "inter", button: "fraunces" };
+  const m = auditOf(tajine, {
+    config: messy,
+    publishedAt: null,
+    domains: [{ hostname: "tajine.test", verified: false }],
+    context: { name: tajine.name },
+    settings: { ...tajine.settings, hours: [] },
+  });
+  assert.equal(byId(m, "published")?.status, "error");
+  assert.equal(byId(m, "domain-pending")?.detail, "tajine.test");
+  assert.match(byId(m, "redirects-target")!.detail, /\/old → \/nulle-part/);
+  assert.match(byId(m, "faq-empty")!.detail, /Vide/);
+  assert.match(byId(m, "business-info")!.detail, /adresse, téléphone, horaires/);
+  assert.equal(byId(m, "perf-fonts")?.status, "warning");
+  // 32-character description: too short to present the business.
+  assert.equal(byId(m, "geo-description")?.status, "warning");
+
+  // Online-only business: no premises, so no practical-info check.
+  const online = structuredClone(sushi.config);
+  online.business = { type: "Organization", cuisines: [], priceRange: "", sameAs: [], areaServed: [], geo: null };
+  assert.equal(byId(auditOf(sushi, { config: online, context: { name: "x" } }), "business-info"), undefined);
+  // The report of one restaurant never mentions another.
+  const text = JSON.stringify(auditOf(sushi));
+  for (const o of tenants.filter((t) => t.id !== "sushi"))
+    for (const leak of [o.name, o.phone, o.address, o.products[0].name])
+      assert.ok(!text.includes(leak), leak);
+});
+
+/** Member context (authenticated staff) under the application role. */
+const member = <T>(user: string, r: string, fn: (tx: DB) => Promise<T>) =>
+  db.transaction(async (tx) => {
+    await tx.exec("SET LOCAL ROLE dattier_app");
+    await tx.query(
+      "SELECT set_config('app.user_id',$1,true),set_config('app.restaurant_id',$2,true),set_config('app.public','false',true)",
+      [user, r],
+    );
+    return fn(tx);
+  });
+type JobRow = { dedupe_key: string; status: string; trigger: string };
+const seoJobs = async (r: string) =>
+  (
+    await db.query<JobRow>(
+      "SELECT dedupe_key,status,payload->>'trigger' AS trigger FROM outbox_jobs WHERE restaurant_id=$1 AND kind='seo_audit' ORDER BY dedupe_key",
+      [r],
+    )
+  ).rows;
+
+test("SEO automatisation : événements métier → une analyse regroupée, reprise sans doublon", async () => {
+  // Creation of the restaurants (seed) already queued one audit each.
+  assert.deepEqual(
+    (await seoJobs("atelier")).map((j) => j.dedupe_key),
+    ["auto"],
+  );
+  // A catalogue change by the application role coalesces into the same pending job.
+  await member("nadia", "bernay", (tx) =>
+    tx.query("UPDATE menu_items SET description=description||'' WHERE restaurant_id='bernay'"),
+  );
+  let jobs = await seoJobs("bernay");
+  assert.equal(jobs.length, 1);
+  assert.equal(jobs[0].status, "pending");
+  assert.equal(jobs[0].trigger, "catalogue");
+  // While an audit runs, a change queues one follow-up instead of being lost.
+  await db.query("UPDATE outbox_jobs SET status='running' WHERE restaurant_id='bernay' AND kind='seo_audit' AND dedupe_key='auto'");
+  await db.query("UPDATE shop_settings SET config=config WHERE restaurant_id='bernay'");
+  await db.query("UPDATE shop_settings SET config=config WHERE restaurant_id='bernay'");
+  jobs = await seoJobs("bernay");
+  assert.deepEqual(jobs.map((j) => [j.dedupe_key, j.status, j.trigger]), [
+    ["auto", "running", "catalogue"],
+    ["auto-next", "pending", "réglages boutique"],
+  ]);
+  // A finished job is reused for the next event (no unbounded growth).
+  await db.query("UPDATE outbox_jobs SET status='done' WHERE restaurant_id='bernay' AND kind='seo_audit'");
+  await db.query("UPDATE restaurant_domains SET verified_at=verified_at WHERE hostname='bernay-a.test'");
+  jobs = await seoJobs("bernay");
+  assert.equal(jobs.length, 2);
+  assert.deepEqual(jobs.find((j) => j.dedupe_key === "auto"), { dedupe_key: "auto", status: "pending", trigger: "domaine" });
+  // Publication triggers it too; other restaurants are untouched.
+  const before = JSON.stringify(await seoJobs("atelier"));
+  await db.query("UPDATE outbox_jobs SET status='done' WHERE restaurant_id='bernay' AND kind='seo_audit'");
+  const v = (await db.query<{ id: string }>("SELECT published_version_id AS id FROM restaurant_cms WHERE restaurant_id='bernay'")).rows[0].id;
+  await db.query("UPDATE restaurant_cms SET published_version_id=NULL WHERE restaurant_id='bernay'");
+  await db.query("UPDATE restaurant_cms SET published_version_id=$1 WHERE restaurant_id='bernay'", [v]);
+  assert.equal((await seoJobs("bernay")).find((j) => j.dedupe_key === "auto")?.trigger, "publication");
+  assert.equal(JSON.stringify(await seoJobs("atelier")), before);
+});
+
+test("SEO tableau de bord : analyse, historique, observations IA, droits et isolation", async () => {
+  const owner = { id: "nadia", name: "Nadia", role: "OWNER" as const };
+  const chef = { id: "karim", name: "Karim", role: "CHEF" as const };
+  // Manual audit through the real admin module.
+  const run = await member("nadia", "bernay", (tx) => seoPost(tx, "bernay", owner, { action: "audit" }));
+  assert.ok(run.id);
+  const state = await member("nadia", "bernay", (tx) => seoGet(tx, "bernay", owner));
+  assert.equal(state.latest?.id, run.id);
+  assert.equal(state.latest?.trigger, "manuel (Nadia)");
+  // Publication date exposed as ISO 8601 whatever the driver returns.
+  assert.match(state.latest!.report.publishedAt!, /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/);
+  assert.equal(byId(state.latest!.report, "published")?.detail.slice(0, 31), `Version en ligne publiée le ${state.latest!.report.publishedAt!.slice(0, 4)}`.slice(0, 31));
+  // Canonical host from the database; protocol of the platform (http here, APP_URL is unset).
+  assert.match(state.latest!.report.canonicalBase, /^https?:\/\/bernay-b\.test$/);
+  assert.deepEqual(state.integrations, { searchConsole: false, bingWebmaster: false, fieldData: false });
+  // Without the website permission: refused.
+  await assert.rejects(member("karim", "bernay", (tx) => seoGet(tx, "bernay", chef)));
+  await assert.rejects(member("karim", "bernay", (tx) => seoPost(tx, "bernay", chef, { action: "audit" })));
+
+  // Reports: never readable in a visitor context, never writable for another restaurant.
+  const visible = await visitor("bernay", (tx) => tx.query("SELECT id FROM seo_audits"));
+  assert.equal(visible.rows.length, 0);
+  await assert.rejects(
+    visitor("atelier", (tx) => tx.query("SELECT app.record_seo_audit('bernay','x','{}'::jsonb)")),
+    /non autorisé/,
+  );
+  // History is bounded.
+  for (let i = 0; i < 22; i++)
+    await member("nadia", "bernay", (tx) => tx.query("SELECT app.record_seo_audit('bernay','test','{}'::jsonb)"));
+  assert.equal((await db.query<{ n: number }>("SELECT count(*)::int AS n FROM seo_audits WHERE restaurant_id='bernay'")).rows[0].n, 20);
+
+  // AI observations: entered by the team, dated, never in the future, scoped to the restaurant.
+  await member("nadia", "bernay", (tx) =>
+    seoPost(tx, "bernay", owner, { action: "observe", observedOn: "2026-11-01", assistant: "Perplexity", query: "couscous Bernay", cited: true, evidence: "Cité avec lien vers le site" }),
+  );
+  await assert.rejects(
+    member("nadia", "bernay", (tx) =>
+      seoPost(tx, "bernay", owner, { action: "observe", observedOn: "2999-01-01", assistant: "X", query: "q", cited: false }),
+    ),
+    /futur/,
+  );
+  const obs = await member("nadia", "bernay", (tx) => seoGet(tx, "bernay", owner));
+  assert.equal(obs.observations.length, 1);
+  assert.equal((obs.observations[0] as { created_by: string }).created_by, "Nadia");
+  const other = await member("nadia", "atelier", (tx) => seoGet(tx, "atelier", owner));
+  assert.equal(other.observations.length, 0);
+  assert.equal(other.latest, null);
+  // Deleting from another restaurant's context does nothing.
+  const id = (obs.observations[0] as { id: string }).id;
+  await member("nadia", "atelier", (tx) => seoPost(tx, "atelier", owner, { action: "deleteObservation", id }));
+  assert.equal((await member("nadia", "bernay", (tx) => seoGet(tx, "bernay", owner))).observations.length, 1);
 });

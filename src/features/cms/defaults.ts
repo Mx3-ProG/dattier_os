@@ -144,7 +144,8 @@ const page = (
   title,
   slug,
   visible: true,
-  seo: emptySeo,
+  // A fresh object per page: shared references would leak edits between pages and between restaurants.
+  seo: { ...emptySeo },
   sections,
 });
 

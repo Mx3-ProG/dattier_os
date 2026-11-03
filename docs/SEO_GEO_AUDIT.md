@@ -152,3 +152,72 @@ Thème par défaut (polices système) avant P2 : LCP 688 ms (`/`) et 1 796 ms (`
 Tests : 52/52 unitaires (22 SEO/GEO/performance) ; E2E 5/5 sur le build de production — y compris « PWA hors ligne », qui n’échoue que sous `next dev` (service worker), pas en production.
 
 Non traité : le JavaScript de la vitrine (223 Ko, composant client unique de 2 000 lignes) — le découper serait le prochain gain, mais c’est une refonte au-delà de ce lot ; pas de modèles de pages éditoriales supplémentaires (la section FAQ existante et `FAQPage` couvrent le besoin immédiat).
+
+## 8. Lot P3 — réalisé (3 novembre 2026)
+
+| Point | Statut | Fichiers |
+| --- | --- | --- |
+| Automatisation événementielle | Implémenté + testé. Déclencheurs PostgreSQL (transactionnels : un événement annulé ne déclenche rien, aucun chemin d’écriture ne peut l’oublier) sur la création d’établissement, la publication / restauration du site, les produits (ajout, modification, archivage, suppression), les réglages boutique (horaires, adresse) et les domaines. Ils programment un job `seo_audit` dans la file `outbox_jobs` existante (bail, reprise après échec avec attente exponentielle, 5 tentatives). Regroupement : au plus un job en attente + un job de suite si une analyse est en cours, avec 20 s d’anti-rebond ; aucun événement perdu, aucune croissance illimitée. | `019_seo_automation.sql`, `scripts/worker.ts` |
+| Analyse SEO/GEO | Implémenté + testé. ~20 contrôles factuels sur les données publiées : publication, indexation (et ce qui manque pour l’activer), domaines, langue, titres en double ou trop longs, descriptions, image de partage, redirections cassées ou inactives, informations pratiques, type d’activité, carte, FAQ, présentation de l’activité, profils officiels, robots IA, llms.txt, poids des polices. **Aucun score global**, aucune estimation de classement ou de citation. Rapports écrits uniquement via `app.record_seo_audit` (contexte de l’établissement vérifié), 20 derniers conservés, jamais lisibles en contexte visiteur. | `src/features/seo/audit.ts` |
+| Tableau de bord « SEO & visibilité IA » | Implémenté + testé + vérifié dans le navigateur (desktop et 390 px). Onglet dans l’administration du restaurant, permission `website` (super-admin, propriétaire, manager). Sections : dernière analyse et tâches programmées, recommandations (priorité, nouveau / toujours ouvert / résolu par rapport à l’analyse précédente), configuration, santé technique, données structurées, GEO, performance, visibilité organique, visibilité IA, historique. | `src/features/seo/admin.ts`, `src/components/platform/seo-dashboard.tsx`, `src/app/restaurant/[restaurant]/seo/` |
+| Visibilité organique | Affichée « Non disponible » : Search Console et Bing Webmaster ne sont pas connectés. Rien n’est estimé. | — |
+| Visibilité IA | Journal d’observations saisies par l’équipe (date, assistant, question, cité ou non, preuve), avec méthode et avertissement de non-représentativité. Jamais généré automatiquement. | `seo_ai_observations` |
+
+Corrections trouvées pendant ce lot :
+- **Titres en double** (défaut du lot P0) : une page sans titre propre héritait du titre de l’accueil. Elle reçoit désormais « Page · Nom du site », comme l’aperçu du Studio (`src/features/seo/meta.ts`).
+- **Objet partagé dans la configuration par défaut** : toutes les pages de toutes les configurations par défaut partageaient le même objet `seo` en mémoire. Aucun code actuel ne le modifiait, mais une modification aurait touché toutes les pages et tous les établissements sans site publié. Corrigé (`defaults.ts`) et couvert par un test.
+- Date de publication normalisée en ISO 8601 quel que soit le pilote (PGlite renvoyait un `Date`).
+
+Tests : 57/57 unitaires (27 SEO/GEO/performance/automatisation) ; E2E 5/5 sur le build de production.
+
+**Déploiement** : la migration 019 et le nouveau `scripts/worker.ts` doivent être déployés ensemble. Un ancien worker marquerait les jobs `seo_audit` en échec (« Connecteur indisponible »), ce que le centre de sécurité signale. En mode démo il n’y a pas de worker : les analyses automatiques restent « programmées », le bouton « Lancer l’analyse maintenant » fonctionne.
+
+## 9. Bilan du moteur SEO/GEO
+
+### Architecture
+
+```
+Requête ─► src/proxy.ts ── domaine personnalisé ? ─► app.resolve_domain() ─► réécriture /r/{id}/…
+               │                                   └─ domaine secondaire ─► 308 vers le principal
+               └─ en-tête interne x-dattier-site (jamais accepté du client) ─► <html lang>
+
+/r/{id}/[[...page]]   métadonnées (canonical depuis app.primary_domain), JSON-LD, catalogue SSR, redirections
+/r/{id}/sitemap.xml   /r/{id}/robots.txt   /r/{id}/llms.txt      (servis à la racine d’un domaine propre)
+/sitemap.xml          index plateforme : /sitemap-platform.xml + sites sous /r/{id} (app.platform_sites)
+
+src/features/seo/     urls · robots · sitemap · jsonld · locale · meta · llms · audit · admin · server
+                      (fonctions pures testées ; accès base limité à server.ts, audit.ts, admin.ts)
+
+Écritures métier ─► déclencheurs SQL ─► outbox_jobs(seo_audit) ─► worker ─► app.record_seo_audit ─► tableau de bord
+```
+
+Toute la configuration par établissement vit dans le JSON versionné du Studio (champs facultatifs, schéma v1 compatible) ; l’isolation repose sur la RLS existante et sur des fonctions `SECURITY DEFINER` qui n’exposent que des données publiques (nom d’hôte vérifié, liste des sites indexables).
+
+### Migrations (toutes additives)
+
+| N° | Contenu |
+| --- | --- |
+| 017 | `restaurant_domains.is_primary`, index unique partiel, `app.primary_domain()` |
+| 018 | `app.platform_sites()` |
+| 019 | `seo_audits`, `seo_ai_observations`, `app.record_seo_audit()`, `app.queue_seo_audit()`, déclencheurs |
+
+### Intégrations externes restant à connecter
+
+- Google Search Console et Bing Webmaster Tools (impressions, clics, positions ; soumission du sitemap). Nécessite OAuth par établissement et le stockage chiffré des jetons (le module `integration_connections` existant peut servir de base).
+- Données terrain Core Web Vitals (API CrUX, ou mesure RUM avec `web-vitals`) pour remplacer les mesures de laboratoire.
+- Validation Google Rich Results Test sur une URL publique réelle.
+
+### Limites connues
+
+- Devise des prix fixée à l’euro ; pas de hreflang (aucun modèle de traduction) ; pas de statut 410.
+- Les liens `sameAs` sont déclarés par le propriétaire, non vérifiés.
+- La redirection des domaines secondaires et l’ensemble du rendu sur un vrai domaine n’ont pas été testés de bout en bout (PostgreSQL + DNS nécessaires).
+- Invalidation de cache : les pages publiques sont rendues à chaque requête, il n’y a donc rien à invalider aujourd’hui ; sitemap, robots.txt et llms.txt ont un `s-maxage` de 5 minutes avec `Vary: Host`. Si un CDN ou de l’ISR est ajouté, la clé de cache devra inclure l’hôte et l’invalidation se brancher sur le job `seo_audit`.
+- Assistant éditorial (génération de titres, descriptions, FAQ par IA) non réalisé : il demande un fournisseur de modèle, un circuit brouillon → validation, et la garantie de ne s’appuyer que sur des données vérifiées.
+
+### Recommandations
+
+1. Connecter Search Console / Bing (plus forte valeur ajoutée restante).
+2. Découper le composant vitrine (`store.tsx`, 223 Ko de JS) pour réduire le JavaScript des pages publiques.
+3. Mesurer les Core Web Vitals réels avant toute autre optimisation de performance.
+4. Assistant éditorial avec validation obligatoire avant publication.

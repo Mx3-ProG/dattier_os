@@ -8,6 +8,7 @@ import {
   archiveSecurity,
   scanSecurity,
 } from "../src/features/platform/security-jobs";
+import { runSeoAudit } from "../src/features/seo/audit";
 const url = process.env.WORKER_DATABASE_URL;
 if (!url) throw new Error("WORKER_DATABASE_URL requis.");
 const db = new PostgresDatabase(url),
@@ -48,6 +49,16 @@ async function run(job: Job) {
             await tx.exec("SET LOCAL ROLE dattier_worker");
             await operationsTick(nestedDatabase(tx));
             await scanSecurity(tx, job.restaurant_id);
+          });
+        } else if (job.kind === "seo_audit") {
+          // Reads only the restaurant's published data, as the application role.
+          await db.transaction(async (tx) => {
+            await tx.exec("SET LOCAL ROLE dattier_app");
+            await runSeoAudit(
+              tx,
+              job.restaurant_id,
+              String(job.payload.trigger || "automatique").slice(0, 60),
+            );
           });
         } else
           throw new Error("Connecteur indisponible : traitement désactivé.");

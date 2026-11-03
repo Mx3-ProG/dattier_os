@@ -39,7 +39,10 @@ export async function seoFacts(db: DB, restaurant: string) {
   );
   return {
     primaryHost: domain?.host ?? null,
-    publishedAt: published ? String(published.published_at) : null,
+    // Drivers return a Date (PGlite) or a string (pg): always expose ISO 8601.
+    publishedAt: published
+      ? new Date(published.published_at).toISOString()
+      : null,
   };
 }
 

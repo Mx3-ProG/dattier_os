@@ -10,6 +10,7 @@ import { siteState, sitePerform } from "@/features/site/service";
 import { platformPerform } from "./service";
 import { log } from "@/features/orders/service";
 import { inventoryPerform, inventoryState } from "./inventory";
+import { seoPerform, seoState } from "@/features/seo/admin";
 export async function adminState(
   db: DB,
   r: string,
@@ -19,6 +20,7 @@ export async function adminState(
 ) {
   user = await scope(db, user, r);
   if (module === "site") return siteState(db, r, user);
+  if (module === "seo") return seoState(db, r, user);
   if (module === "shop") {
     requirePermission(user.roles ?? user.role, "orders");
     return {
@@ -134,6 +136,7 @@ export async function adminPerform(
 ) {
   user = await scope(db, user, r);
   if (module === "site") return sitePerform(db, r, user, raw);
+  if (module === "seo") return seoPerform(db, r, user, raw);
   if (module === "team")
     return platformPerform(db, user, { ...(raw as object), restaurant: r });
   if (module === "loyalty") {

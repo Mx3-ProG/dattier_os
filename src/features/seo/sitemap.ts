@@ -5,12 +5,15 @@ import { pageUrl } from "./urls";
 export const SITEMAP_MAX_URLS = 50000;
 export type SitemapEntry = { loc: string; lastmod?: string };
 
-/** Pages a search engine may index: visible, public, not excluded by the owner. */
-export function indexablePages(config: SiteConfig) {
-  if (config.seo.noIndex !== false) return [];
+/** Public pages meant for search engines, whether or not site-wide indexing is on yet. */
+export function publicPages(config: SiteConfig) {
   return Object.entries(config.pages)
     .filter(([, p]) => p.visible && p.kind !== "protected" && !p.seo.noIndex)
     .map(([key]) => key);
+}
+/** Pages a search engine may index: visible, public, not excluded by the owner. */
+export function indexablePages(config: SiteConfig) {
+  return config.seo.noIndex === false ? publicPages(config) : [];
 }
 
 export function sitemapEntries(input: {

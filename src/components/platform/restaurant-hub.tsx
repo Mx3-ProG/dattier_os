@@ -31,6 +31,7 @@ const tabs = [
   ["loyalty", "Fidélité"],
   ["site", "Mon site"],
   ["domains", "Domaines"],
+  ["seo", "SEO & visibilité IA"],
   ["inventory", "Stocks et achats"],
   ["security", "Sécurité"],
   ["reconciliation", "Conflits hors ligne"],
@@ -147,7 +148,7 @@ export function RestaurantHub({ restaurant }: { restaurant: string }) {
             aria-pressed={tab === id}
             disabled={busy}
             onClick={() => {
-              if (["site", "security"].includes(id)) {
+              if (["site", "security", "seo"].includes(id)) {
                 router.push(`/restaurant/${restaurant}/${id}`);
                 return;
               }

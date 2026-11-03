@@ -12,6 +12,7 @@ import { seoFacts, platformUrl } from "@/features/seo/server";
 import { siteUrls, pageUrl, absoluteMedia } from "@/features/seo/urls";
 import { buildJsonLd, serializeJsonLd } from "@/features/seo/jsonld";
 import { findRedirect, siteLocale } from "@/features/seo/locale";
+import { effectiveTitle, effectiveDescription } from "@/features/seo/meta";
 import { DonutStore } from "@/components/cms-site/store";
 import { TenantSiteProvider } from "@/components/cms-site/context";
 import "@/app/donuts.css";
@@ -102,11 +103,8 @@ async function load(props: Props) {
 export async function generateMetadata(props: Props): Promise<Metadata> {
   const { config, context, key, preview, urls } = await load(props),
     page = config.pages[key];
-  const title = plain(page.seo.title || config.seo.title, context),
-    description = plain(
-      page.seo.description || config.seo.description,
-      context,
-    );
+  const title = effectiveTitle(config, key, context),
+    description = effectiveDescription(config, key, context);
   const origin = new URL(urls.canonicalBase).origin;
   const image = absoluteMedia(
     origin,
