@@ -106,3 +106,18 @@ Ordre recommandé : P0 dans un premier lot testable, puis P1, puis le reste. Auc
 Tests : `tests/seo.test.ts` (8 tests, 3 restaurants fictifs + base PGlite avec RLS) ; suite complète 42/42. E2E Playwright : 4/5 ; l’échec « PWA : redémarrage hors ligne » est préexistant (reproduit à l’identique sur le code d’origine, sous `next dev`).
 
 Non vérifié : rendu en mode production avec un vrai domaine (nécessite PostgreSQL + DNS) ; validation Google Rich Results Test (nécessite une URL publique).
+
+## 6. Lot P1 — réalisé (3 novembre 2026)
+
+| Point | Statut | Fichiers |
+| --- | --- | --- |
+| Langue et pays par site | Implémenté + testé + vérifié en local. `seo.locale` (BCP 47 + ISO 3166, facultatif, défaut fr/FR). `<html lang>` posé par le layout racine à partir de l’en-tête interne `x-dattier-site`, que seul le proxy positionne (tout en-tête client du même nom est retiré). `og:locale` et `inLanguage` suivent. | `src/features/seo/locale.ts`, `src/app/layout.tsx`, `src/proxy.ts`, `siteLanguage()` |
+| Identité de l’établissement | Implémenté + testé. `business` facultatif : type schema.org (restauration, commerce, établissement local ou activité en ligne), cuisines, gamme de prix, profils officiels `sameAs` (https), zones desservies, coordonnées GPS. Activité en ligne → ni adresse, ni horaires, ni position ; types non alimentaires → ni `hasMenu` ni `servesCuisine`. | `schema.ts`, `jsonld.ts` |
+| Robots IA | Interface ajoutée (recherche / entraînement) dans Studio › Référencement. | `site-editor/seo-identity.tsx` |
+| Redirections | Implémenté + testé + vérifié (308 permanente / 307 temporaire). Une seule étape, uniquement pour une adresse qui n’existe plus, cible interne ou https ; `//`, `javascript:`, `http:` et boucles refusés. Saisie « /ancienne -> /nouvelle » ou « ~> ». | `locale.ts`, route tenant, `seo-identity.tsx` |
+| Domaines secondaires | Implémenté (non testé automatiquement : nécessite PostgreSQL + domaine) : un domaine vérifié non principal redirige en 308 vers le domaine principal (hors `/api/`). | `src/proxy.ts` |
+| Sitemap de la plateforme | Implémenté + testé. `/sitemap.xml` devient un index : pages de la plateforme (`/sitemap-platform.xml`) + sitemaps des sites publiés sous `/r/{id}` (indexation activée, sans domaine propre, organisation active) via `app.platform_sites()` (migration 018, additive). | `018_seo_platform_sites.sql`, `src/app/sitemap.xml/`, `src/app/sitemap-platform.xml/` |
+
+Tests : `tests/seo.test.ts` 14 tests ; suite complète 48/48. E2E : 4/5 (échec PWA préexistant, inchangé).
+
+Limites connues : devise des prix fixée à l’euro (`money()` et JSON-LD) ; pas de hreflang (aucun modèle de traduction) ; pas de 410 (Next ne permet pas ce statut depuis une page : une page supprimée renvoie 404, ou une redirection si elle est configurée) ; les liens `sameAs` sont déclarés par le propriétaire, leur propriété n’est pas vérifiée.

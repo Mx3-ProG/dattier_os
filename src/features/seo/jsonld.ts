@@ -2,6 +2,18 @@ import type { SiteConfig } from "@/features/cms/schema";
 import type { Product, Settings } from "@/features/commerce/schema";
 import { plain, type PlaceholderContext } from "@/features/cms/text";
 import { absoluteMedia, pageUrl } from "./urls";
+import { siteLocale } from "./locale";
+
+/** Schema.org types that accept hasMenu, servesCuisine and acceptsReservations. */
+const FOOD_TYPES = new Set([
+  "Restaurant",
+  "FastFoodRestaurant",
+  "CafeOrCoffeeShop",
+  "Bakery",
+  "BarOrPub",
+  "IceCreamShop",
+  "FoodEstablishment",
+]);
 
 /**
  * Schema.org JSON-LD for a restaurant site.
@@ -49,20 +61,29 @@ export function buildJsonLd(input: JsonLdInput): Node | null {
   const page = config.pages[pageKey];
   if (!page) return null;
   const origin = new URL(canonicalBase).origin;
-  const lang = input.language || "fr";
+  const lang = input.language || siteLocale(config).language;
   const currency = input.currency || "EUR";
   const name = context.name || plain(config.seo.shareName, context);
   const businessId = `${canonicalBase}/#business`;
   const websiteId = `${canonicalBase}/#website`;
   const graph: Node[] = [];
 
+  const identity = config.business;
+  const type = identity?.type ?? "Restaurant";
+  const food = FOOD_TYPES.has(type);
+  // Online-only organisation: no premises, so no address, hours or position.
+  const physical = type !== "Organization";
   const business = (): Node => {
-    const hours = settings?.hours ?? [];
-    const sameAs = [settings?.googleBusinessUrl].filter(
-      (u): u is string => !!u && /^https:\/\//.test(u),
-    );
+    const hours = physical ? (settings?.hours ?? []) : [];
+    const sameAs = [
+      ...new Set(
+        [settings?.googleBusinessUrl, ...(identity?.sameAs ?? [])].filter(
+          (u): u is string => !!u && /^https:\/\//.test(u),
+        ),
+      ),
+    ];
     return compact({
-      "@type": "Restaurant",
+      "@type": type,
       "@id": businessId,
       name,
       url: `${canonicalBase}/`,
@@ -73,17 +94,28 @@ export function buildJsonLd(input: JsonLdInput): Node | null {
         undefined,
       telephone: context.phone || undefined,
       email: config.branding.email || undefined,
-      address: context.address || undefined,
+      address: (physical && context.address) || undefined,
+      geo:
+        physical && identity?.geo
+          ? {
+              "@type": "GeoCoordinates",
+              latitude: identity.geo.latitude,
+              longitude: identity.geo.longitude,
+            }
+          : undefined,
+      areaServed: identity?.areaServed.filter(Boolean),
+      servesCuisine: food ? identity?.cuisines.filter(Boolean) : undefined,
+      priceRange: identity?.priceRange || undefined,
       openingHoursSpecification: hours.map((h) => ({
         "@type": "OpeningHoursSpecification",
         dayOfWeek: `https://schema.org/${DAYS[h.day]}`,
         opens: h.open,
         closes: h.close,
       })),
-      hasMenu: visiblePage(config, "carte")
+      hasMenu: food && visiblePage(config, "carte")
         ? pageUrl(canonicalBase, "carte")
         : undefined,
-      acceptsReservations: visiblePage(config, "reservations")
+      acceptsReservations: food && visiblePage(config, "reservations")
         ? true
         : undefined,
       sameAs,

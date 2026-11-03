@@ -1,4 +1,7 @@
 import type { Metadata } from "next";
+import { headers } from "next/headers";
+import { SITE_HEADER, DEFAULT_LOCALE } from "@/features/seo/locale";
+import { siteLanguage } from "@/features/seo/server";
 import "./globals.css";
 import "./fonts.css";
 import "./public-site.css";
@@ -12,9 +15,16 @@ export const metadata: Metadata = {
     description: "Le système ouvert pour les restaurateurs",
   },
 };
-export default function Layout({ children }: { children: React.ReactNode }) {
+export default async function Layout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  // Restaurant sites declare their own language; the platform stays French.
+  const site = (await headers()).get(SITE_HEADER);
+  const lang = site ? await siteLanguage(site) : DEFAULT_LOCALE.language;
   return (
-    <html lang="fr">
+    <html lang={lang}>
       <body>{children}</body>
     </html>
   );

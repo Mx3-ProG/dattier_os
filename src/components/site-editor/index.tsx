@@ -28,6 +28,7 @@ import {
 import { Button } from "../ui/button";
 import { Modal } from "../forms";
 import { Field, ImageField } from "./fields";
+import { SeoIdentityFields } from "./seo-identity";
 import {
   registry,
   pageKindLabels,
@@ -1732,6 +1733,7 @@ function SeoPanel({
           })
         }
       />
+      <SeoIdentityFields config={config} update={update} />
     </div>
   );
 }

@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { cache } from "react";
 import { headers } from "next/headers";
-import { notFound } from "next/navigation";
+import { notFound, permanentRedirect, redirect } from "next/navigation";
 import { getDb, demoEnabled, one } from "@/lib/database/db";
 import { withDatabaseContext } from "@/lib/database/context";
 import { actor } from "@/lib/auth/session";
@@ -11,6 +11,7 @@ import { commerce } from "@/features/commerce/service";
 import { seoFacts, platformUrl } from "@/features/seo/server";
 import { siteUrls, pageUrl, absoluteMedia } from "@/features/seo/urls";
 import { buildJsonLd, serializeJsonLd } from "@/features/seo/jsonld";
+import { findRedirect, siteLocale } from "@/features/seo/locale";
 import { DonutStore } from "@/components/cms-site/store";
 import { TenantSiteProvider } from "@/components/cms-site/context";
 import "@/app/donuts.css";
@@ -41,19 +42,37 @@ const loadSite = cache(
             : await cms.getPublishedConfig(db);
           const route = raw === "account" ? "compte" : raw;
           const key = route || "home";
+          const facts = await seoFacts(db, restaurant);
+          const urls = siteUrls({
+            restaurant,
+            platformUrl: platformUrl(`http://${host || "127.0.0.1:3000"}`),
+            primaryHost: facts.primaryHost,
+            requestHost: host,
+            demo: demoEnabled(),
+          });
           if (
             !config.pages[key] ||
             (!preview &&
               config.pages[key].kind === "custom" &&
               !config.pages[key].visible)
-          )
+          ) {
+            // Former address of a renamed or removed page: one configured hop.
+            const target = preview ? null : findRedirect(config, raw);
+            if (target)
+              return {
+                redirect: target.to.startsWith("/")
+                  ? urls.servedBase + target.to
+                  : target.to,
+                permanent: target.permanent,
+              } as const;
             notFound();
+          }
           // Public catalogue rendered server-side so menus and prices are in the HTML.
           const catalog = await commerce(restaurant)
             .catalog(db)
             .catch(() => null);
-          const facts = await seoFacts(db, restaurant);
           return {
+            redirect: null,
             restaurant,
             route,
             key,
@@ -61,13 +80,7 @@ const loadSite = cache(
             catalog,
             context: await cms.placeholderContext(db, config),
             preview,
-            urls: siteUrls({
-              restaurant,
-              platformUrl: platformUrl(`http://${host || "127.0.0.1:3000"}`),
-              primaryHost: facts.primaryHost,
-              requestHost: host,
-              demo: demoEnabled(),
-            }),
+            urls,
           };
         }),
     );
@@ -78,7 +91,12 @@ async function load(props: Props) {
     query = await props.searchParams;
   const mode = typeof query.cms === "string" ? query.cms : "";
   const host = (await headers()).get("host") || "";
-  return loadSite(restaurant, page?.join("/") || "", mode, host);
+  const data = await loadSite(restaurant, page?.join("/") || "", mode, host);
+  if (data.redirect !== null) {
+    if (data.permanent) permanentRedirect(data.redirect);
+    redirect(data.redirect);
+  }
+  return data;
 }
 export async function generateMetadata(props: Props): Promise<Metadata> {
   const { config, context, key, preview, urls } = await load(props),
@@ -94,6 +112,7 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
     page.seo.ogImage || config.seo.ogImage || config.branding.logo.src,
   );
   const canonical = pageUrl(urls.canonicalBase, key);
+  const locale = siteLocale(config);
   const indexable =
     !demoEnabled() &&
     !preview &&
@@ -109,7 +128,7 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
     openGraph: {
       type: "website",
       url: canonical,
-      locale: "fr_FR",
+      ...(locale.ogLocale ? { locale: locale.ogLocale } : {}),
       title,
       description,
       siteName: plain(config.seo.shareName, context),
@@ -136,6 +155,7 @@ export default async function Page(props: Props) {
         settings: data.catalog?.settings ?? null,
         products: data.catalog?.products ?? [],
       });
+  // <html lang> is set by the root layout from the same setting (see src/app/layout.tsx).
   return (
     <TenantSiteProvider
       restaurant={data.restaurant}

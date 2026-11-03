@@ -449,3 +449,164 @@ test("SEO domaine principal : vérifié uniquement, unique, isolé", async () =>
     true,
   );
 });
+
+/* ───────────────────────── P1: locale, identity, redirects ───────────────────────── */
+
+import { siteLocale, findRedirect, safeLanguage, SITE_HEADER } from "../src/features/seo/locale";
+import { redirectSchema, businessSchema } from "../src/features/cms/schema";
+import { platformSites } from "../src/features/seo/server";
+import { renderSitemapIndex } from "../src/features/seo/sitemap";
+import { NextRequest } from "next/server";
+import { proxy } from "../src/proxy";
+
+test("SEO langue : défaut historique fr/FR, langues et pays déclarés", () => {
+  const c = defaultConfig();
+  assert.deepEqual(siteLocale(c), { language: "fr", country: "FR", ogLocale: "fr_FR" });
+  c.seo.locale = { language: "en-GB", country: "GB" };
+  assert.equal(siteLocale(c).ogLocale, "en_GB");
+  c.seo.locale = { language: "de", country: "CH" };
+  assert.deepEqual(siteLocale(c), { language: "de", country: "CH", ogLocale: "de_CH" });
+  c.seo.locale = { language: "es", country: "" };
+  assert.equal(siteLocale(c).ogLocale, undefined);
+  assert.ok(siteConfigSchema.safeParse(c).success);
+  c.seo.locale = { language: "english", country: "" };
+  assert.ok(!siteConfigSchema.safeParse(c).success);
+  assert.equal(safeLanguage("en-US"), "en-US");
+  assert.equal(safeLanguage('fr" onload="x'), "fr");
+  assert.equal(safeLanguage(null), "fr");
+});
+
+test("SEO redirections : validation, sens permanent/temporaire, pas de boucle", () => {
+  const ok = (r: unknown) => redirectSchema.safeParse(r).success;
+  assert.ok(ok({ from: "/ancienne-carte", to: "/carte", permanent: true }));
+  assert.ok(ok({ from: "/promo", to: "https://exemple.test/x", permanent: false }));
+  for (const bad of [
+    { from: "/a", to: "//evil.test", permanent: true },
+    { from: "/a", to: "javascript:alert(1)", permanent: true },
+    { from: "/a", to: "http://insecure.test", permanent: true },
+    { from: "/", to: "/carte", permanent: true },
+    { from: "/a", to: "/a", permanent: true },
+    { from: "a", to: "/b", permanent: true },
+  ])
+    assert.ok(!ok(bad), JSON.stringify(bad));
+  const c = defaultConfig();
+  c.seo.redirects = [
+    { from: "/ancienne-carte", to: "/carte", permanent: true },
+    { from: "/promo", to: "/commander", permanent: false },
+  ];
+  assert.ok(siteConfigSchema.safeParse(c).success);
+  assert.equal(findRedirect(c, "ancienne-carte")?.to, "/carte");
+  assert.equal(findRedirect(c, "ancienne-carte/")?.permanent, true);
+  assert.equal(findRedirect(c, "promo")?.permanent, false);
+  assert.equal(findRedirect(c, "inconnue"), null);
+});
+
+test("SEO identité : type d’activité, cuisines, profils, zone, coordonnées", () => {
+  const [tajine] = tenants;
+  const config = structuredClone(tajine.config);
+  config.seo.locale = { language: "en", country: "GB" };
+  config.business = {
+    type: "CafeOrCoffeeShop",
+    cuisines: ["Marocaine", "Thé"],
+    priceRange: "€€",
+    sameAs: [
+      "https://www.instagram.com/tajine",
+      "https://maps.google.com/?cid=tajine",
+    ],
+    areaServed: ["Paris"],
+    geo: { latitude: 48.85, longitude: 2.35 },
+  };
+  assert.ok(businessSchema.safeParse(config.business).success);
+  assert.ok(
+    !businessSchema.safeParse({ ...config.business, sameAs: ["http://x.test"] }).success,
+  );
+  const build = (c: SiteConfig, pageKey = "home") =>
+    buildJsonLd({
+      pageKey,
+      config: c,
+      context: { name: tajine.name, phone: tajine.phone, address: tajine.address },
+      canonicalBase: `${PLATFORM}/r/tajine`,
+      settings: tajine.settings,
+      products: tajine.products,
+    })!;
+  const graph = build(config)["@graph"] as Record<string, unknown>[];
+  assert.equal(graph[0].inLanguage, "en");
+  const b = graph[1];
+  assert.equal(b["@type"], "CafeOrCoffeeShop");
+  assert.deepEqual(b.servesCuisine, ["Marocaine", "Thé"]);
+  assert.equal(b.priceRange, "€€");
+  assert.deepEqual(b.areaServed, ["Paris"]);
+  assert.deepEqual(b.geo, { "@type": "GeoCoordinates", latitude: 48.85, longitude: 2.35 });
+  // Google Business link from shop settings is merged once, never duplicated.
+  assert.deepEqual(b.sameAs, [
+    "https://maps.google.com/?cid=tajine",
+    "https://www.instagram.com/tajine",
+  ]);
+  const menu = build(config, "carte")["@graph"] as Record<string, unknown>[];
+  assert.equal(menu[0].inLanguage, "en");
+
+  // Online only: no premises, so no address, hours or position.
+  config.business.type = "Organization";
+  const org = (build(config)["@graph"] as Record<string, unknown>[])[1];
+  for (const k of ["address", "openingHoursSpecification", "geo", "hasMenu", "servesCuisine", "acceptsReservations"])
+    assert.ok(!(k in org), k);
+  assert.equal(org.telephone, tajine.phone);
+  // A shop is not a food establishment: no menu or cuisine properties.
+  config.business.type = "Store";
+  const store = (build(config)["@graph"] as Record<string, unknown>[])[1];
+  assert.ok(!("hasMenu" in store) && !("servesCuisine" in store));
+  assert.equal(store.address, tajine.address);
+});
+
+test("SEO sitemap plateforme : index valide", () => {
+  const xml = renderSitemapIndex([
+    { loc: `${PLATFORM}/sitemap-platform.xml` },
+    { loc: `${PLATFORM}/r/a/sitemap.xml`, lastmod: "2026-11-01T00:00:00.000Z" },
+  ]);
+  assert.match(xml, /<sitemapindex xmlns="http:\/\/www\.sitemaps\.org\/schemas\/sitemap\/0\.9">/);
+  assert.equal(xml.match(/<sitemap>/g)?.length, 2);
+});
+
+test("SEO sitemap plateforme : sites publiés, indexables, sans domaine propre", async () => {
+  const publish = async (r: string, noIndex: boolean) => {
+    const config = defaultConfig();
+    config.seo.noIndex = noIndex;
+    const id = crypto.randomUUID();
+    await db.query(
+      "INSERT INTO cms_versions(id,restaurant_id,number,schema_version,config) VALUES($1,$2,(SELECT coalesce(max(number),0)+1 FROM cms_versions WHERE restaurant_id=$2),1,$3)",
+      [id, r, JSON.stringify(config)],
+    );
+    await db.query("UPDATE restaurant_cms SET published_version_id=$1 WHERE restaurant_id=$2", [id, r]);
+  };
+  const list = () =>
+    visitor("atelier", async (tx) => (await platformSites(tx)).map((s) => s.restaurant_id));
+  await publish("atelier", true);
+  await publish("bernay", false);
+  // Not indexable: absent. Bernay has its own verified domain: absent.
+  assert.deepEqual(await list(), []);
+  await publish("atelier", false);
+  assert.deepEqual(await list(), ["atelier"]);
+  await db.query("UPDATE restaurant_domains SET verified_at=now() WHERE hostname='atelier.test'");
+  assert.deepEqual(await list(), []);
+  await db.query("UPDATE restaurant_domains SET verified_at=NULL WHERE hostname='atelier.test'");
+  await db.query("UPDATE organizations SET status='suspended' WHERE id='legacy'");
+  assert.deepEqual(await list(), []);
+  await db.query("UPDATE organizations SET status='active' WHERE id='legacy'");
+  assert.deepEqual(await list(), ["atelier"]);
+});
+
+test("SEO proxy : en-tête de site posé par le proxy, jamais par le client", async () => {
+  assert.ok(!process.env.DATABASE_URL, "test hors production");
+  const site = async (path: string) => {
+    const res = await proxy(
+      new NextRequest(`http://127.0.0.1:3000${path}`, {
+        headers: { [SITE_HEADER]: "usurpation" },
+      }),
+    );
+    return res.headers.get(`x-middleware-request-${SITE_HEADER}`);
+  };
+  assert.equal(await site("/r/bernay/carte"), "bernay");
+  assert.equal(await site("/r/bernay"), "bernay");
+  assert.equal(await site("/"), null);
+  assert.equal(await site("/restaurant/bernay"), null);
+});
