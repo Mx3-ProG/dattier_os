@@ -1,7 +1,12 @@
 // Source unique des liens du site public : header, menu mobile et footer.
-// Chaque cible est une route existante de src/app/[[...page]]/page.tsx
+// Chaque cible est une route existante de src/app/site-demo/[[...page]]/page.tsx
 // ou une ancre d'une section de l'accueil (voir home-sections.tsx).
 export type NavLink = { href: string; label: string };
+
+// Le site de démonstration vit sous /site-demo : « / » présente Dattier OS.
+export const siteBase = "/site-demo";
+export const sitePath = (path = "") =>
+  path === "" || path === "/" ? siteBase : `${siteBase}${path}`;
 
 export const homeAnchors = {
   specialites: "specialites",
@@ -14,39 +19,39 @@ export const homeAnchors = {
 } as const;
 
 export const primaryNav: NavLink[] = [
-  { href: "/histoire", label: "Notre histoire" },
-  { href: "/carte", label: "Notre carte" },
-  { href: `/#${homeAnchors.specialites}`, label: "Nos spécialités" },
-  { href: "/avis", label: "Avis clients" },
-  { href: "/commander", label: "À emporter" },
-  { href: "/contact", label: "Contact" },
+  { href: sitePath("/histoire"), label: "Notre histoire" },
+  { href: sitePath("/carte"), label: "Notre carte" },
+  { href: `${siteBase}#${homeAnchors.specialites}`, label: "Nos spécialités" },
+  { href: sitePath("/avis"), label: "Avis clients" },
+  { href: sitePath("/commander"), label: "À emporter" },
+  { href: sitePath("/contact"), label: "Contact" },
 ];
 
 export const fullNav: NavLink[] = [
-  { href: "/", label: "Accueil" },
-  { href: "/histoire", label: "Notre histoire" },
-  { href: "/carte", label: "Notre carte" },
-  { href: `/#${homeAnchors.specialites}`, label: "Nos spécialités" },
-  { href: "/avis", label: "Avis clients" },
-  { href: "/reservations", label: "Réservation" },
-  { href: "/commander", label: "À emporter" },
-  { href: `/#${homeAnchors.infos}`, label: "Informations pratiques" },
-  { href: "/contact", label: "Contact" },
-  { href: `/#${homeAnchors.faq}`, label: "FAQ" },
+  { href: sitePath("/"), label: "Accueil" },
+  { href: sitePath("/histoire"), label: "Notre histoire" },
+  { href: sitePath("/carte"), label: "Notre carte" },
+  { href: `${siteBase}#${homeAnchors.specialites}`, label: "Nos spécialités" },
+  { href: sitePath("/avis"), label: "Avis clients" },
+  { href: sitePath("/reservations"), label: "Réservation" },
+  { href: sitePath("/commander"), label: "À emporter" },
+  { href: `${siteBase}#${homeAnchors.infos}`, label: "Informations pratiques" },
+  { href: sitePath("/contact"), label: "Contact" },
+  { href: `${siteBase}#${homeAnchors.faq}`, label: "FAQ" },
 ];
 
 export const secondaryNav: NavLink[] = [
-  { href: "/galerie", label: "Galerie" },
-  { href: "/compte", label: "Compte client" },
+  { href: sitePath("/galerie"), label: "Galerie" },
+  { href: sitePath("/compte"), label: "Compte client" },
 ];
 
 export const legalNav: NavLink[] = [
-  { href: "/mentions-legales", label: "Mentions légales" },
-  { href: "/confidentialite", label: "Confidentialité" },
-  { href: "/cookies", label: "Cookies" },
+  { href: sitePath("/mentions-legales"), label: "Mentions légales" },
+  { href: sitePath("/confidentialite"), label: "Confidentialité" },
+  { href: sitePath("/cookies"), label: "Cookies" },
 ];
 
 export function isActive(pathname: string, href: string) {
   if (href.includes("#")) return false;
-  return href === "/" ? pathname === "/" : pathname.startsWith(href);
+  return href === siteBase ? pathname === siteBase : pathname.startsWith(href);
 }
