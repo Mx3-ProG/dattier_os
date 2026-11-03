@@ -1,42 +1,56 @@
 @font-face {
   font-family: "Dattier Playfair";
-  src: url("/fonts/playfair.ttf") format("truetype");
+  src:
+    url("/fonts/playfair.woff2") format("woff2"),
+    url("/fonts/playfair.ttf") format("truetype");
   font-weight: 400 900;
   font-display: swap;
 }
 @font-face {
   font-family: "Dattier Fraunces";
-  src: url("/fonts/fraunces.ttf") format("truetype");
+  src:
+    url("/fonts/fraunces.woff2") format("woff2"),
+    url("/fonts/fraunces.ttf") format("truetype");
   font-weight: 100 900;
   font-display: swap;
 }
 @font-face {
   font-family: "Dattier DM Serif";
-  src: url("/fonts/dmserifdisplay.ttf") format("truetype");
+  src:
+    url("/fonts/dmserifdisplay.woff2") format("woff2"),
+    url("/fonts/dmserifdisplay.ttf") format("truetype");
   font-weight: 400;
   font-display: swap;
 }
 @font-face {
   font-family: "Dattier Poppins";
-  src: url("/fonts/poppins.ttf") format("truetype");
+  src:
+    url("/fonts/poppins.woff2") format("woff2"),
+    url("/fonts/poppins.ttf") format("truetype");
   font-weight: 400;
   font-display: swap;
 }
 @font-face {
   font-family: "Dattier Poppins";
-  src: url("/fonts/poppins-bold.ttf") format("truetype");
+  src:
+    url("/fonts/poppins-bold.woff2") format("woff2"),
+    url("/fonts/poppins-bold.ttf") format("truetype");
   font-weight: 700;
   font-display: swap;
 }
 @font-face {
   font-family: "Dattier Nunito";
-  src: url("/fonts/nunito.ttf") format("truetype");
+  src:
+    url("/fonts/nunito.woff2") format("woff2"),
+    url("/fonts/nunito.ttf") format("truetype");
   font-weight: 200 1000;
   font-display: swap;
 }
 @font-face {
   font-family: "Dattier Inter";
-  src: url("/fonts/inter.ttf") format("truetype");
+  src:
+    url("/fonts/inter.woff2") format("woff2"),
+    url("/fonts/inter.ttf") format("truetype");
   font-weight: 100 900;
   font-display: swap;
 }

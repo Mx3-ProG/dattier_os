@@ -62,49 +62,16 @@ export function CookieConsent({
     setSettings(false);
   }
 
-  if (!ready) return null;
+  // The banner is part of the server HTML (first paint, not a late LCP element);
+  // a returning visitor's stored choice hides it before display, then React takes over.
+  const hideIfChosen = `try{var v=JSON.parse(localStorage.getItem(${JSON.stringify(STORAGE_KEY).replaceAll("<", "\\u003c")})||"null");if(v&&v.version===1&&typeof v.externalMedia==="boolean")document.currentScript.previousElementSibling.hidden=true}catch(e){}`;
   return (
     <>
-      {!consent && !settings && (
-        <aside
-          className="donut-cookie-banner"
-          role="region"
-          aria-labelledby="cookie-title"
-        >
-          <div>
-            <ShieldCheck aria-hidden="true" />
-            <span>
-              <strong id="cookie-title">
-                Vos choix, sans miettes cachées.
-              </strong>
-              <small>
-                Le panier, vos préférences et la session privée du compte
-                utilisent uniquement le stockage strictement nécessaire. Google
-                Maps ne se charge qu’avec votre accord. Aucun cookie
-                publicitaire n’est installé.
-              </small>
-              <Link href="/cookies">En savoir plus</Link>
-            </span>
-          </div>
-          <div className="donut-cookie-actions">
-            <button
-              className="donut-button outline"
-              onClick={() => save(false)}
-            >
-              Tout refuser
-            </button>
-            <button
-              className="donut-button dark"
-              onClick={() => setSettings(true)}
-            >
-              <Settings2 size={17} /> Personnaliser
-            </button>
-            <button className="donut-button" onClick={() => save(true)}>
-              Tout accepter
-            </button>
-          </div>
-        </aside>
+      {(!ready || (!consent && !settings)) && (
+        <Banner save={save} customize={() => setSettings(true)} />
       )}
+      {!ready && <script dangerouslySetInnerHTML={{ __html: hideIfChosen }} />}
+
       {settings && (
         <div className="donut-cookie-overlay" role="presentation">
           <section
@@ -158,6 +125,48 @@ export function CookieConsent({
         </div>
       )}
     </>
+  );
+}
+
+function Banner({
+  save,
+  customize,
+}: {
+  save: (externalMedia: boolean) => void;
+  customize: () => void;
+}) {
+  return (
+    <aside
+      className="donut-cookie-banner"
+      role="region"
+      aria-labelledby="cookie-title"
+      suppressHydrationWarning
+    >
+      <div>
+        <ShieldCheck aria-hidden="true" />
+        <span>
+          <strong id="cookie-title">Vos choix, sans miettes cachées.</strong>
+          <small>
+            Le panier, vos préférences et la session privée du compte utilisent
+            uniquement le stockage strictement nécessaire. Google Maps ne se
+            charge qu’avec votre accord. Aucun cookie publicitaire n’est
+            installé.
+          </small>
+          <Link href="/cookies">En savoir plus</Link>
+        </span>
+      </div>
+      <div className="donut-cookie-actions">
+        <button className="donut-button outline" onClick={() => save(false)}>
+          Tout refuser
+        </button>
+        <button className="donut-button dark" onClick={customize}>
+          <Settings2 size={17} /> Personnaliser
+        </button>
+        <button className="donut-button" onClick={() => save(true)}>
+          Tout accepter
+        </button>
+      </div>
+    </aside>
   );
 }
 

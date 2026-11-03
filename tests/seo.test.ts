@@ -610,3 +610,114 @@ test("SEO proxy : en-tête de site posé par le proxy, jamais par le client", as
   assert.equal(await site("/"), null);
   assert.equal(await site("/restaurant/bernay"), null);
 });
+
+/* ───────────────────────── P2: performance & GEO ───────────────────────── */
+
+import { buildLlmsTxt, llmsEnabled } from "../src/features/seo/llms";
+import { existsSync, statSync } from "node:fs";
+import { createElement } from "react";
+import { renderToString } from "react-dom/server";
+import { CookieConsent } from "../src/components/cms-site/cookie-consent";
+import { TenantSiteProvider } from "../src/components/cms-site/context";
+
+const llms = (t: Tenant, config = t.config) =>
+  buildLlmsTxt({
+    config,
+    context: { name: t.name, phone: t.phone, address: t.address, opening_hours: "lun. 12:00–14:30" },
+    canonicalBase: urlsFor(t, t.host ?? "app.dattier.test").canonicalBase,
+    settings: t.settings,
+    products: t.products,
+    publishedAt: "2026-11-02T09:00:00Z",
+  });
+
+test("GEO llms.txt : facultatif, contenu publié seulement, sans fuite", () => {
+  const [tajine, sushi] = tenants;
+  // Opt-in, and only for an indexable site.
+  assert.equal(llmsEnabled(tajine.config), false);
+  const on = structuredClone(tajine.config);
+  on.seo.llmsTxt = true;
+  assert.equal(llmsEnabled(on), true);
+  on.seo.noIndex = true;
+  assert.equal(llmsEnabled(on), false);
+
+  const txt = llms(sushi);
+  assert.match(txt, /^# Sushi Kaze\n\n> Description propre à Sushi Kaze\n/);
+  assert.match(txt, /- Adresse : 2 rue B, Lyon/);
+  assert.match(txt, /- Horaires : lun\. 12:00–14:30/);
+  assert.match(txt, /- \[[^\]]+\]\(https:\/\/www\.sushi-kaze\.test\/carte\)/);
+  assert.match(txt, /- Maki saumon — 14,50\s€: Spécialité de Sushi Kaze/);
+  assert.match(txt, /- Maki saumon épuisé — 9,00\s€ \(indisponible actuellement\)/);
+  assert.match(txt, /Dernière mise à jour du site : 2026-11-02/);
+  for (const hidden of ["/checkout", "/compte", "/suivi"])
+    assert.ok(!txt.includes(hidden), hidden);
+  for (const other of tenants.filter((o) => o.id !== "sushi"))
+    for (const leak of [other.name, other.phone, other.address, other.products[0].name])
+      assert.ok(!txt.includes(leak), leak);
+
+  // English site: English labels and number format.
+  const en = structuredClone(sushi.config);
+  en.seo.locale = { language: "en", country: "GB" };
+  const enTxt = llms(sushi, en);
+  assert.match(enTxt, /- Address: 2 rue B, Lyon/);
+  assert.match(enTxt, /€14\.50/);
+  // Online only: no address or hours.
+  const online = structuredClone(sushi.config);
+  online.business = { type: "Organization", cuisines: [], priceRange: "", sameAs: [], areaServed: [], geo: null };
+  const onlineTxt = llms(sushi, online);
+  assert.ok(!onlineTxt.includes("Adresse") && !onlineTxt.includes("Horaires"));
+  // Hidden menu page: no menu section.
+  const noMenu = structuredClone(sushi.config);
+  noMenu.pages.carte.visible = false;
+  assert.ok(!llms(sushi, noMenu).includes("## Carte"));
+  // Markdown injection from owner-entered text is neutralised.
+  const evil = { ...sushi, name: "Evil](https://x.test)\n# Fake" };
+  const evilTxt = llms(evil);
+  assert.ok(!evilTxt.includes("](https://x.test)") && !evilTxt.includes("\n# Fake"));
+});
+
+test("GEO JSON-LD : date de mise à jour du site", () => {
+  const [tajine] = tenants;
+  const data = buildJsonLd({
+    pageKey: "home",
+    config: tajine.config,
+    context: { name: tajine.name },
+    canonicalBase: `${PLATFORM}/r/tajine`,
+    settings: null,
+    products: [],
+    dateModified: "2026-11-02T09:00:00Z",
+  })!;
+  assert.equal((data["@graph"] as Record<string, unknown>[])[0].dateModified, "2026-11-02T09:00:00.000Z");
+});
+
+test("Performance : bandeau cookies dans le HTML serveur, masqué avant affichage si choix connu", () => {
+  const html = renderToString(
+    createElement(TenantSiteProvider, {
+      restaurant: "sushi",
+      children: createElement(CookieConsent, { onChange: () => {} }),
+    }),
+  );
+  assert.match(html, /<aside class="donut-cookie-banner"/);
+  assert.match(html, /<script>try\{var v=JSON\.parse\(localStorage\.getItem\("dattier-cookie-consent:sushi"\)/);
+  assert.match(html, /previousElementSibling\.hidden=true/);
+  // A tenant id cannot break out of the inline script.
+  const evil = renderToString(
+    createElement(TenantSiteProvider, {
+      restaurant: "x</script><script>alert(1)",
+      children: createElement(CookieConsent, { onChange: () => {} }),
+    }),
+  );
+  assert.ok(!evil.includes("</script><script>alert(1)"));
+});
+
+test("Performance : polices WOFF2 servies en premier, plus légères que les TTF", async () => {
+  const css = await readFile("src/app/fonts.css", "utf8");
+  const faces = css.split("@font-face").slice(1);
+  assert.ok(faces.length >= 7);
+  for (const face of faces) {
+    const urls = [...face.matchAll(/url\("([^"]+)"\)/g)].map((m) => m[1]);
+    assert.ok(urls[0].endsWith(".woff2"), urls[0]);
+    assert.match(face, /font-display: swap/);
+    for (const u of urls) assert.ok(existsSync("public" + u), u);
+    assert.ok(statSync("public" + urls[0]).size < statSync("public" + urls[1]).size);
+  }
+});

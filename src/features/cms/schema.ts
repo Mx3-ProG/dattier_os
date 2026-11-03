@@ -360,6 +360,8 @@ export const siteConfigSchema = z.object({
       .optional(),
     /** Site language (BCP 47) and main country (ISO 3166). Absent = fr / FR. */
     locale: localeSchema.optional(),
+    /** Publish /llms.txt (optional summary for AI tools; absent = not published). */
+    llmsTxt: z.boolean().optional(),
     /** Redirects of former addresses (after a page is renamed or removed). */
     redirects: z.array(redirectSchema).max(100).optional(),
   }),

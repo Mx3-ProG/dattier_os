@@ -121,3 +121,34 @@ Non vérifié : rendu en mode production avec un vrai domaine (nécessite Postgr
 Tests : `tests/seo.test.ts` 14 tests ; suite complète 48/48. E2E : 4/5 (échec PWA préexistant, inchangé).
 
 Limites connues : devise des prix fixée à l’euro (`money()` et JSON-LD) ; pas de hreflang (aucun modèle de traduction) ; pas de 410 (Next ne permet pas ce statut depuis une page : une page supprimée renvoie 404, ou une redirection si elle est configurée) ; les liens `sameAs` sont déclarés par le propriétaire, leur propriété n’est pas vérifiée.
+
+## 7. Lot P2 — réalisé (3 novembre 2026)
+
+### Mesures (laboratoire, avant / après)
+
+Méthode : build de production (`next build` + `next start`, mode démo), Playwright/Chromium, mobile 412×823, réseau 4G lente simulée (150 ms, 1,6 Mbit/s), processeur ralenti ×4, médiane de 5 chargements à froid (première visite, sans consentement enregistré). Ce sont des mesures de laboratoire : les seuils Core Web Vitals s’évaluent au 75e centile des visites réelles, non disponibles ici.
+
+| Page | Mesure | Avant | Après |
+| --- | --- | --- | --- |
+| `/carte` (thème Playfair + Inter) | LCP | 2 244 ms | **644 ms** |
+| `/` (thème Playfair + Inter) | LCP | 672 ms | 692 ms (inchangé, bruit de mesure) |
+| toutes | Polices transférées | 581 Ko (TTF, gzip) | **447 Ko** (WOFF2) |
+| toutes | CLS | 0,002–0,009 | 0,002–0,009 |
+| toutes | Temps bloquant (tâches > 50 ms) | 10–19 ms | 16–20 ms |
+| toutes | JavaScript | 223 Ko | 223 Ko |
+
+Thème par défaut (polices système) avant P2 : LCP 688 ms (`/`) et 1 796 ms (`/carte`), aucune police téléchargée.
+
+### Changements
+
+| Point | Statut | Fichiers |
+| --- | --- | --- |
+| LCP tardif dû au bandeau cookies | Corrigé + testé + mesuré. Le bandeau était rendu après hydratation et devenait l’élément LCP (1,8–2,2 s). Il fait désormais partie du HTML serveur ; un script en ligne le masque avant affichage si un choix est déjà enregistré (vérifié : aucun flash pour un visiteur connu, aucune erreur d’hydratation). | `cookie-consent.tsx` |
+| Polices WOFF2 | Fait + testé. 7 polices converties (−60 % sur disque, −23 % transféré car le TTF était déjà compressé par le serveur). TTF conservés en repli. `font-display: swap` était déjà en place. | `public/fonts/*.woff2`, `fonts.css`, `THIRD_PARTY_NOTICES.md` |
+| Images | Déjà correctes pour l’essentiel (héros en `fetchPriority="high"`, listes en `lazy` avec dimensions). Ajout de `lazy`/`async` sur 3 images sous la ligne de flottaison. | `store.tsx` |
+| llms.txt par site | Implémenté + testé. Désactivé par défaut, publié seulement si l’indexation est active et sur l’hôte canonique ; reprend uniquement les informations, pages et prix déjà publiés ; texte saisi neutralisé (pas d’injection Markdown). Interrupteur dans Studio › Référencement avec mention honnête (« proposition, pas un standard »). | `src/features/seo/llms.ts`, `src/app/r/[restaurant]/llms.txt/` |
+| Fraîcheur | « Site mis à jour le … » visible en pied de page et `dateModified` dans le JSON-LD `WebSite`, d’après la date de publication. | `store.tsx`, `jsonld.ts` |
+
+Tests : 52/52 unitaires (22 SEO/GEO/performance) ; E2E 5/5 sur le build de production — y compris « PWA hors ligne », qui n’échoue que sous `next dev` (service worker), pas en production.
+
+Non traité : le JavaScript de la vitrine (223 Ko, composant client unique de 2 000 lignes) — le découper serait le prochain gain, mais c’est une refonte au-delà de ce lot ; pas de modèles de pages éditoriales supplémentaires (la section FAQ existante et `FAQPage` couvrent le besoin immédiat).

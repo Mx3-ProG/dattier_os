@@ -32,6 +32,8 @@ export type JsonLdInput = {
   products: Product[];
   language?: string;
   currency?: string;
+  /** Publication date of the live version (ISO). */
+  dateModified?: string | null;
 };
 type Node = Record<string, unknown>;
 const DAYS = [
@@ -112,12 +114,12 @@ export function buildJsonLd(input: JsonLdInput): Node | null {
         opens: h.open,
         closes: h.close,
       })),
-      hasMenu: food && visiblePage(config, "carte")
-        ? pageUrl(canonicalBase, "carte")
-        : undefined,
-      acceptsReservations: food && visiblePage(config, "reservations")
-        ? true
-        : undefined,
+      hasMenu:
+        food && visiblePage(config, "carte")
+          ? pageUrl(canonicalBase, "carte")
+          : undefined,
+      acceptsReservations:
+        food && visiblePage(config, "reservations") ? true : undefined,
       sameAs,
     });
   };
@@ -130,6 +132,9 @@ export function buildJsonLd(input: JsonLdInput): Node | null {
         url: `${canonicalBase}/`,
         name,
         inLanguage: lang,
+        dateModified: input.dateModified
+          ? new Date(input.dateModified).toISOString()
+          : undefined,
         publisher: { "@id": businessId },
       }),
       business(),

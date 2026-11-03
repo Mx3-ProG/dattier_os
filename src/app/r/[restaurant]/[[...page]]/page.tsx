@@ -81,6 +81,7 @@ const loadSite = cache(
             context: await cms.placeholderContext(db, config),
             preview,
             urls,
+            publishedAt: facts.publishedAt,
           };
         }),
     );
@@ -135,7 +136,10 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
       ...(image ? { images: [image] } : {}),
     },
     twitter: {
-      card: page.seo.ogImage || config.seo.ogImage ? "summary_large_image" : "summary",
+      card:
+        page.seo.ogImage || config.seo.ogImage
+          ? "summary_large_image"
+          : "summary",
       title,
       description,
       ...(image ? { images: [image] } : {}),
@@ -154,6 +158,7 @@ export default async function Page(props: Props) {
         canonicalBase: data.urls.canonicalBase,
         settings: data.catalog?.settings ?? null,
         products: data.catalog?.products ?? [],
+        dateModified: data.publishedAt,
       });
   // <html lang> is set by the root layout from the same setting (see src/app/layout.tsx).
   return (
@@ -175,6 +180,7 @@ export default async function Page(props: Props) {
         context={data.context}
         preview={data.preview}
         initialData={data.catalog}
+        updatedAt={data.publishedAt}
       />
     </TenantSiteProvider>
   );

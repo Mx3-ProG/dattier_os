@@ -108,6 +108,7 @@ export function DonutStore({
   context,
   preview = false,
   initialData = null,
+  updatedAt = null,
 }: {
   route: string;
   config: SiteConfig;
@@ -116,6 +117,8 @@ export function DonutStore({
   preview?: boolean;
   /** Catalogue loaded on the server so products are present in the initial HTML. */
   initialData?: Data | null;
+  /** Publication date of the live version, shown so visitors and machines know how fresh the site is. */
+  updatedAt?: string | null;
 }) {
   const nextRouter = useRouter();
   const { request: fetch, shopPost, href, restaurant, demo } = useTenantSite();
@@ -671,6 +674,8 @@ export function DonutStore({
           >
             <div className="donut-about-art">
               <img
+                loading="lazy"
+                decoding="async"
                 src={p.image.src}
                 width="320"
                 height="320"
@@ -727,6 +732,8 @@ export function DonutStore({
                   {Array.from({ length: 6 }, (_, layer) => (
                     <img
                       key={layer}
+                      loading="lazy"
+                      decoding="async"
                       className={`donut-burger-layer layer-${layer + 1}`}
                       src="/cms/restaurant.svg"
                       alt=""
@@ -1383,6 +1390,8 @@ export function DonutStore({
           <div className="donut-footer-top">
             <Link href="/" className="donut-brand">
               <img
+                loading="lazy"
+                decoding="async"
                 src={branding.logo.src}
                 width="70"
                 height="70"
@@ -1412,6 +1421,21 @@ export function DonutStore({
             <Link href="/demo">Espace équipe ↗</Link>
           </div>
           {footer.notice && <p>{r(footer.notice)}</p>}
+          {updatedAt && !preview && (
+            <p className="donut-updated">
+              <small>
+                Site mis à jour le{" "}
+                <time dateTime={new Date(updatedAt).toISOString()}>
+                  {new Date(updatedAt).toLocaleDateString("fr-FR", {
+                    timeZone: "Europe/Paris",
+                    day: "numeric",
+                    month: "long",
+                    year: "numeric",
+                  })}
+                </time>
+              </small>
+            </p>
+          )}
         </footer>
       )}
       <CookieConsent onChange={setExternalMediaAllowed} />

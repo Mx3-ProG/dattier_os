@@ -169,7 +169,8 @@ export function SeoIdentityFields({
         value={business.cuisines}
         onCommit={(lines) => {
           if (lines.length > 8) return "8 cuisines au maximum.";
-          if (lines.some((l) => l.length > 60)) return "60 caractères au maximum par ligne.";
+          if (lines.some((l) => l.length > 60))
+            return "60 caractères au maximum par ligne.";
           setBusiness({ cuisines: lines });
           return null;
         }}
@@ -179,7 +180,9 @@ export function SeoIdentityFields({
         <input
           value={business.priceRange}
           maxLength={10}
-          onChange={(e) => setBusiness({ priceRange: e.target.value }, "biz.price")}
+          onChange={(e) =>
+            setBusiness({ priceRange: e.target.value }, "biz.price")
+          }
         />
       </label>
       <LinesField
@@ -187,7 +190,9 @@ export function SeoIdentityFields({
         help="Réseaux sociaux et annuaires dont vous êtes propriétaire. Le lien Google Business des réglages boutique est ajouté automatiquement."
         value={business.sameAs}
         onCommit={(lines) => {
-          const bad = lines.find((l) => !/^https:\/\/\S+$/.test(l) || l.length > 300);
+          const bad = lines.find(
+            (l) => !/^https:\/\/\S+$/.test(l) || l.length > 300,
+          );
           if (bad) return `Adresse https attendue : ${bad}`;
           if (lines.length > 10) return "10 profils au maximum.";
           setBusiness({ sameAs: lines });
@@ -200,7 +205,8 @@ export function SeoIdentityFields({
         value={business.areaServed}
         onCommit={(lines) => {
           if (lines.length > 10) return "10 zones au maximum.";
-          if (lines.some((l) => l.length > 80)) return "80 caractères au maximum par ligne.";
+          if (lines.some((l) => l.length > 80))
+            return "80 caractères au maximum par ligne.";
           setBusiness({ areaServed: lines });
           return null;
         }}
@@ -242,8 +248,8 @@ export function SeoIdentityFields({
             }, "seo.ai.search")
           }
         />
-        Autoriser les robots de recherche des IA (réponses et citations : ChatGPT
-        Search, Claude, Perplexity)
+        Autoriser les robots de recherche des IA (réponses et citations :
+        ChatGPT Search, Claude, Perplexity)
       </label>
       <label className="site-field">
         <input
@@ -255,9 +261,27 @@ export function SeoIdentityFields({
             }, "seo.ai.training")
           }
         />
-        Autoriser la collecte pour l’entraînement des modèles (GPTBot, ClaudeBot,
-        Google-Extended, CCBot…)
+        Autoriser la collecte pour l’entraînement des modèles (GPTBot,
+        ClaudeBot, Google-Extended, CCBot…)
       </label>
+      <label className="site-field">
+        <input
+          type="checkbox"
+          checked={config.seo.llmsTxt === true}
+          onChange={(e) =>
+            update((c) => {
+              c.seo.llmsTxt = e.target.checked;
+            }, "seo.llms")
+          }
+        />
+        Publier un résumé llms.txt (facultatif)
+      </label>
+      <p className="muted">
+        Fichier texte /llms.txt reprenant les informations, les pages et la
+        carte déjà publiées, pour les outils d’IA qui le consultent. C’est une
+        proposition, pas un standard : il ne garantit ni indexation ni citation.
+        Publié seulement si l’indexation du site est activée.
+      </p>
 
       <h4>Redirections</h4>
       <LinesField
@@ -268,7 +292,13 @@ export function SeoIdentityFields({
           const parsed: { from: string; to: string; permanent: boolean }[] = [];
           for (const line of lines) {
             const m = line.match(/^(\S+)\s*(->|~>)\s*(\S+)$/);
-            const r = m && redirectSchema.safeParse({ from: m[1], to: m[3], permanent: m[2] === "->" });
+            const r =
+              m &&
+              redirectSchema.safeParse({
+                from: m[1],
+                to: m[3],
+                permanent: m[2] === "->",
+              });
             if (!r || !r.success)
               return `Ligne invalide : ${line}${r && !r.success ? ` (${r.error.issues[0].message})` : ""}`;
             parsed.push(r.data);
