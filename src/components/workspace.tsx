@@ -27,6 +27,7 @@ import {
   ArrowUpRight,
   Leaf,
   ShieldCheck,
+  GraduationCap,
 } from "lucide-react";
 import { can, type Permission, roleLabels } from "@/lib/permissions";
 import type { Snapshot } from "@/lib/types";
@@ -38,6 +39,7 @@ const Overview = dynamic(() => import("./overview").then((m) => m.Overview), {
 });
 const Finance = dynamic(() => import("./overview").then((m) => m.Finance));
 import { dateTime } from "@/lib/domain";
+import { Tutorial } from "./tutorial/tour";
 const modules = [
   {
     id: "overview",
@@ -188,6 +190,7 @@ export function Workspace() {
     [error, setError] = useState(""),
     [mobile, setMobile] = useState(false),
     [notifications, setNotifications] = useState(false),
+    [guide, setGuide] = useState(false),
     [updated, setUpdated] = useState("");
   const cursor = useRef(0);
   useEffect(() => {
@@ -298,7 +301,7 @@ export function Workspace() {
           </span>
           DATTIER <span>OS</span>
         </Link>
-        <div className="restaurant-switch">
+        <div className="restaurant-switch" data-tour="restaurant-switch">
           <small>VOTRE ÉTABLISSEMENT</small>
           <select
             aria-label="Établissement"
@@ -315,7 +318,7 @@ export function Workspace() {
             ))}
           </select>
         </div>
-        <nav>
+        <nav data-tour="nav">
           {allowed.map((m, i) => (
             <div key={m.id}>
               {(i === 0 || allowed[i - 1].group !== m.group) && (
@@ -323,6 +326,7 @@ export function Workspace() {
               )}
               <button
                 className={current?.id === m.id ? "active" : ""}
+                data-tour={`nav-${m.id}`}
                 onClick={() => navigate(m.id)}
               >
                 <m.icon size={18} />
@@ -337,10 +341,19 @@ export function Workspace() {
             </div>
           ))}
         </nav>
-        <Link href={`/r/${restaurant}`} target="_blank" className="public-link">
+        <Link
+          href={`/r/${restaurant}`}
+          target="_blank"
+          className="public-link"
+          data-tour="public-link"
+        >
           <Globe size={17} /> Voir le site public <ArrowUpRight size={16} />
         </Link>
-        <Link href={`/restaurant/${restaurant}`} className="sidebar-profile">
+        <Link
+          href={`/restaurant/${restaurant}`}
+          className="sidebar-profile"
+          data-tour="profile"
+        >
           <span className="avatar">{data.user.name.slice(0, 2)}</span>
           <div>
             <b>{data.user.name}</b>
@@ -374,7 +387,7 @@ export function Workspace() {
             </span>
           </div>
           <div className="topbar-actions">
-            <span className="live">
+            <span className="live" data-tour="live">
               <i /> Synchro {updated}
             </span>
             <span className="date">
@@ -385,7 +398,16 @@ export function Workspace() {
               })}
             </span>
             <button
+              className="guide-button"
+              data-tour="guide-button"
+              aria-label="Guide et visite guidée"
+              onClick={() => setGuide(true)}
+            >
+              <GraduationCap size={16} /> <span>Guide</span>
+            </button>
+            <button
               className="icon-button notification-button"
+              data-tour="notifications"
               aria-label="Notifications"
               onClick={() => setNotifications(!notifications)}
             >
@@ -398,13 +420,13 @@ export function Workspace() {
           </div>
         </header>
         {data.demo ? (
-          <div className="demo-banner">
+          <div className="demo-banner" data-tour="banner">
             <span>ESPACE DÉMONSTRATION</span> Données fictives · opérations
             locales · aucun encaissement réel{" "}
             <Link href="/demo">Changer de profil →</Link>
           </div>
         ) : (
-          <div className="demo-banner">
+          <div className="demo-banner" data-tour="banner">
             <span>{data.restaurant.name}</span>
             <Link href={`/restaurant/${restaurant}`}>
               Administrer le restaurant
@@ -488,6 +510,14 @@ export function Workspace() {
           </small>
         </footer>
       </div>
+      <Tutorial
+        data={data}
+        restaurant={restaurant}
+        modules={allowed.map((m) => m.id)}
+        navigate={navigate}
+        open={guide}
+        setOpen={setGuide}
+      />
     </div>
   );
 }
