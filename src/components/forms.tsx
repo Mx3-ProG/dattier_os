@@ -123,6 +123,14 @@ export function Modal({
         <Dialog.Overlay className="overlay" />
         <Dialog.Content
           className={`modal ${footer ? "modal-with-footer" : ""}`}
+          // La visite guidée se superpose aux fenêtres : ses clics ne les ferment pas.
+          onInteractOutside={(e) => {
+            if (
+              e.target instanceof Element &&
+              e.target.closest("[data-tour-layer]")
+            )
+              e.preventDefault();
+          }}
         >
           <header>
             <Dialog.Title>{title}</Dialog.Title>

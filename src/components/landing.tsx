@@ -545,6 +545,7 @@ export function Landing({
         <nav aria-label="Liens utiles">
           {demo && <Link href="/demo">Démonstration</Link>}
           {demo && <Link href="/site-demo">Exemple de site restaurant</Link>}
+          <Link href="/guide">Guide d’utilisation</Link>
           <Link href="/platform">Espace client</Link>
           <Link href="/source">Code source et licence</Link>
         </nav>
