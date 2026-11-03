@@ -539,7 +539,89 @@
   color: var(--l-muted);
 }
 
+.landing-outcome-grid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 16px;
+}
+.landing-outcome-grid .landing-card {
+  display: flex;
+  flex-direction: column;
+}
+.landing-because {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  margin-top: auto;
+  padding-top: 10px;
+  border-top: 1px solid var(--l-line);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--l-green);
+}
+.landing-because svg {
+  flex: none;
+  margin-top: 2px;
+}
+.landing-client {
+  background: var(--l-sand);
+}
+.landing-client-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 420px), 1fr));
+  gap: 16px;
+}
+.landing-client-card {
+  display: grid;
+  gap: 18px;
+  justify-items: start;
+  padding: clamp(20px, 3vw, 28px);
+  border-radius: 20px;
+  background: var(--l-surface);
+  border: 1px solid var(--l-line);
+}
+.landing-client-card h3 {
+  font-size: 22px;
+}
+.landing-shortcuts {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+  width: 100%;
+}
+.landing-client-list .landing-shortcuts {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+.landing-shortcuts a {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 48px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: 1px solid var(--l-line);
+  background: var(--l-bg);
+  color: var(--l-ink);
+  font-weight: 600;
+  font-size: 15px;
+  text-decoration: none;
+  transition:
+    border-color 0.2s var(--l-ease),
+    transform 0.2s var(--l-ease);
+}
+.landing-shortcuts a:hover {
+  border-color: var(--l-green);
+  transform: translateY(-1px);
+}
+.landing-shortcuts svg {
+  color: var(--l-accent);
+  flex: none;
+}
+
 @media (max-width: 1080px) {
+  .landing-outcome-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
   .landing-modules,
   .landing-guarantees {
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -558,7 +640,16 @@
     grid-template-columns: 1fr;
   }
 }
+@media (max-width: 720px) {
+  .landing-outcome-grid,
+  .landing-shortcuts {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
 @media (max-width: 560px) {
+  .landing-outcome-grid,
+  .landing-shortcuts,
+  .landing-client-list .landing-shortcuts,
   .landing-modules,
   .landing-guarantees {
     grid-template-columns: 1fr;

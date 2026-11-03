@@ -2,6 +2,14 @@ import Link from "next/link";
 import {
   ArrowUpRight,
   Boxes,
+  Clock,
+  Eye,
+  HeartHandshake,
+  LayoutDashboard,
+  PenLine,
+  Smile,
+  Sparkles,
+  UserCog,
   Building2,
   CalendarDays,
   Check,
@@ -56,6 +64,40 @@ const modules = [
     icon: ShoppingBag,
     title: "Boutique & clients",
     text: "Commande en ligne, espace client et fidélité, rattachés à votre établissement.",
+  },
+];
+
+// Ce que l'outil change au quotidien : le ressenti d'abord, la fonction qui le permet ensuite.
+const outcomes = [
+  {
+    icon: Smile,
+    feeling: "Des services plus sereins",
+    text: "Fini les bons perdus et les allers-retours en cuisine : chacun sait quoi faire, au bon moment.",
+    because: "Commandes envoyées directement en cuisine et au bar",
+  },
+  {
+    icon: Clock,
+    feeling: "Du temps rendu",
+    text: "Moins de ressaisie, moins de tableurs le soir. Vous passez ce temps en salle, ou chez vous.",
+    because: "Une saisie unique, à jour partout",
+  },
+  {
+    icon: HeartHandshake,
+    feeling: "Une équipe alignée",
+    text: "La salle, la cuisine et le bar regardent la même information. Moins de tensions, plus de coups de main.",
+    because: "Un poste et des accès par métier",
+  },
+  {
+    icon: Sparkles,
+    feeling: "Une vitrine dont vous êtes fier",
+    text: "Un site à votre image, que vous modifiez vous-même, sans dépendre d’une agence.",
+    because: "Studio de site, réservation et boutique intégrés",
+  },
+  {
+    icon: Eye,
+    feeling: "Tout sous contrôle",
+    text: "Ventes, stocks, réservations : vous savez où vous en êtes, sans attendre la fin du mois.",
+    because: "Tableau de bord et historique en temps réel",
   },
 ];
 
@@ -140,7 +182,83 @@ function Cta({ demo, inverse }: { demo: boolean; inverse?: boolean }) {
   );
 }
 
-export function Landing({ demo }: { demo: boolean }) {
+export type Account = {
+  name: string;
+  restaurants: { id: string; name: string }[];
+};
+
+// Raccourcis de l'espace client : tableau de bord, équipe, studio du site, site publié.
+const shortcuts = (id: string) => [
+  {
+    icon: LayoutDashboard,
+    label: "Tableau de bord",
+    href: `/dashboard?restaurant=${id}`,
+  },
+  { icon: UserCog, label: "Équipe et accès", href: `/restaurant/${id}` },
+  { icon: PenLine, label: "Modifier mon site", href: `/restaurant/${id}/site` },
+  { icon: Globe, label: "Voir mon site", href: `/r/${id}` },
+];
+
+function ClientSpace({ account }: { account: Account | null }) {
+  return (
+    <section className="landing-section landing-client" id="espace-client">
+      <div className="landing-heading">
+        <span className="landing-eyebrow">Déjà client ?</span>
+        <h2>
+          {account
+            ? `Bonjour ${account.name}, votre espace vous attend.`
+            : "Retrouvez votre espace en un clic."}
+        </h2>
+        <p>
+          Tableau de bord, équipe et accès, modification et publication de votre
+          site : tout se pilote depuis votre espace client.
+        </p>
+      </div>
+      {account && account.restaurants.length ? (
+        <div className="landing-client-list">
+          {account.restaurants.map((r) => (
+            <article key={r.id} className="landing-client-card">
+              <h3>{r.name}</h3>
+              <div className="landing-shortcuts">
+                {shortcuts(r.id).map((s) => (
+                  <Link key={s.label} href={s.href}>
+                    <s.icon size={18} aria-hidden /> {s.label}
+                  </Link>
+                ))}
+              </div>
+            </article>
+          ))}
+        </div>
+      ) : (
+        <div className="landing-client-card">
+          <div className="landing-shortcuts">
+            {[
+              { icon: LayoutDashboard, label: "Tableau de bord" },
+              { icon: UserCog, label: "Équipe et accès" },
+              { icon: PenLine, label: "Modifier mon site" },
+              { icon: Globe, label: "Voir mon site" },
+            ].map((s) => (
+              <Link key={s.label} href="/platform">
+                <s.icon size={18} aria-hidden /> {s.label}
+              </Link>
+            ))}
+          </div>
+          <Link className="landing-btn primary" href="/platform">
+            Se connecter à mon espace <ArrowUpRight size={16} aria-hidden />
+          </Link>
+        </div>
+      )}
+    </section>
+  );
+}
+
+export function Landing({
+  demo,
+  account = null,
+}: {
+  demo: boolean;
+  account?: Account | null;
+}) {
   return (
     <div className="landing">
       <a className="skip-link" href="#contenu">
@@ -155,9 +273,13 @@ export function Landing({ demo }: { demo: boolean }) {
           <a href="#isolation">Vos données</a>
           <a href="#offres">Offres</a>
           <a href="#questions">Questions</a>
+          <a href="#espace-client">Espace client</a>
         </nav>
-        <Link className="landing-btn primary small" href="/platform">
-          Se connecter
+        <Link
+          className="landing-btn primary small"
+          href={account ? "#espace-client" : "/platform"}
+        >
+          {account ? "Mon espace" : "Se connecter"}
         </Link>
       </header>
 
@@ -222,6 +344,30 @@ export function Landing({ demo }: { demo: boolean }) {
             <div className="landing-board-foot">
               <CalendarDays size={15} /> Réservation reçue depuis le site
             </div>
+          </div>
+        </section>
+
+        <section className="landing-section landing-outcomes">
+          <div className="landing-heading">
+            <span className="landing-eyebrow">Ce que ça change pour vous</span>
+            <h2>Moins de stress, plus de restaurant.</h2>
+            <p>
+              Un logiciel ne vaut que par ce qu’il vous rend : du calme pendant
+              le coup de feu, du temps après la fermeture, et la fierté d’un
+              établissement qui tourne.
+            </p>
+          </div>
+          <div className="landing-outcome-grid">
+            {outcomes.map((o) => (
+              <article key={o.feeling} className="landing-card">
+                <o.icon size={22} aria-hidden />
+                <h3>{o.feeling}</h3>
+                <p>{o.text}</p>
+                <span className="landing-because">
+                  <Check size={14} aria-hidden /> {o.because}
+                </span>
+              </article>
+            ))}
           </div>
         </section>
 
@@ -376,6 +522,8 @@ export function Landing({ demo }: { demo: boolean }) {
             ))}
           </div>
         </section>
+
+        <ClientSpace account={account} />
 
         <section className="landing-final">
           <h2>Votre prochain service, dans un seul outil.</h2>
