@@ -2,6 +2,8 @@ import { registerPresence } from "@/features/ops-security/presence";
 import { type DB, rows, one, demoEnabled } from "./database/db";
 import { type Actor, scope } from "./auth/session";
 import { can } from "./permissions";
+import { canArrange } from "@/features/floor/access";
+import { tableQuota } from "@/features/floor/service";
 import type { Snapshot, MenuItem, Restaurant, Order, Item } from "./types";
 export async function menu(
   db: DB,
@@ -77,6 +79,18 @@ export async function snapshot(
             [r],
           )
         : [],
+    zones:
+      allowed("orders") || allowed("reservations")
+        ? await rows(
+            db,
+            "SELECT id,name,position FROM floor_zones WHERE restaurant_id=$1 ORDER BY position,created_at",
+            [r],
+          )
+        : [],
+    floorPlan: {
+      canArrange: await canArrange(db, r, user),
+      ...(await tableQuota(db, r)),
+    },
     orders,
     ingredients:
       allowed("stock") || allowed("purchases")

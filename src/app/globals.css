@@ -2019,6 +2019,7 @@ td .btn {
 }
 .floor-zone {
   position: absolute;
+  inset: 1.5%;
   border: 1.5px dashed #d3cbb3;
   border-radius: 16px;
   background: #faf7ef80;
@@ -2064,8 +2065,9 @@ td .btn {
   --t: #fbf9f2;
   --t-line: #cfc6ad;
   --chair: #d9d1b9;
+  --rot: 0deg;
   position: absolute;
-  transform: translate(-50%, -50%);
+  transform: translate(-50%, -50%) rotate(var(--rot));
   width: 12%;
   aspect-ratio: 1;
   padding: 0;
@@ -2111,6 +2113,12 @@ td .btn {
 .map-table.round .map-table-top {
   border-radius: 50%;
 }
+.map-table-text {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  transform: rotate(calc(-1 * var(--rot)));
+}
 .map-table-top b {
   font-size: clamp(12px, 1.7vw, 19px);
   font-weight: 650;
@@ -2129,7 +2137,85 @@ td .btn {
   transition: background 0.18s;
 }
 .map-table:not(:disabled):hover {
-  transform: translate(-50%, -50%) scale(1.06);
+  transform: translate(-50%, -50%) rotate(var(--rot)) scale(1.06);
+}
+.map-table.turning {
+  transition: none;
+  z-index: 3;
+}
+/* Poignée de rotation, au-dessus de la table : elle tourne avec elle. */
+.rotate-handle {
+  position: absolute;
+  z-index: 2;
+  left: 50%;
+  top: -42px;
+  width: 16px;
+  height: 16px;
+  margin-left: -8px;
+  border-radius: 50%;
+  border: 2px solid #3d5a47;
+  background: #fff;
+  cursor: grab;
+  opacity: 0.45;
+  touch-action: none;
+  transition: opacity 0.15s;
+}
+.rotate-handle::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 100%;
+  width: 2px;
+  height: 26px;
+  margin-left: -1px;
+  background: #3d5a47;
+}
+.map-table:hover .rotate-handle,
+.map-table:focus-visible .rotate-handle,
+.map-table.turning .rotate-handle {
+  opacity: 1;
+}
+.rotate-handle em {
+  position: absolute;
+  bottom: 22px;
+  left: 50%;
+  translate: -50% 0;
+  rotate: calc(-1 * var(--rot));
+  padding: 2px 6px;
+  border-radius: 6px;
+  background: #2f4034;
+  color: #fff;
+  font-size: 11px;
+  font-style: normal;
+  white-space: nowrap;
+}
+.zone-switch {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 0 0 12px;
+}
+.zone-switch button {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 6px;
+  padding: 7px 14px;
+  border-radius: 999px;
+  border: 1px solid #ddd6c3;
+  background: #fbf9f2;
+  color: #4b5446;
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+}
+.zone-switch button.active {
+  background: #344d3e;
+  border-color: #344d3e;
+  color: #fff;
+}
+.zone-switch small {
+  font-size: 11px;
+  opacity: 0.75;
 }
 .map-table:disabled {
   opacity: 1;
@@ -2152,7 +2238,7 @@ td .btn {
   --t-line: #243c2d;
   --chair: #ac6848;
   color: #fff;
-  transform: translate(-50%, -50%) scale(1.08);
+  transform: translate(-50%, -50%) rotate(var(--rot)) scale(1.08);
   z-index: 2;
 }
 .map-table.selected .map-table-top {
@@ -2297,4 +2383,38 @@ td .btn {
 }
 .floor-tables .actions {
   flex-wrap: nowrap;
+}
+/* Aménagement : barre des zones, plafond de tables. */
+.zone-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 16px;
+  margin-bottom: 10px;
+}
+.zone-bar .zone-switch {
+  margin: 0;
+}
+.zone-switch .zone-add {
+  border-style: dashed;
+  background: none;
+  align-items: center;
+}
+.zone-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.floor-quota {
+  margin: -6px 0 14px;
+  font-size: 13px;
+  color: var(--muted);
+}
+.floor-quota.full {
+  color: #9b3d2c;
+}
+.floor-help {
+  margin-top: 8px;
+  font-size: 12px;
 }

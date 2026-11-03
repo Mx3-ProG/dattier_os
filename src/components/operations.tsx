@@ -155,7 +155,15 @@ export function Dining({ data, act }: { data: Snapshot; act: Act }) {
   const [selected, setSelected] = useState<Table | null>(null),
     [view, setView] = useState<"service" | "layout">("service");
   const tables = data.tables.filter((t) => !t.archived_at);
-  const canLayout = can(data.user.roles ?? data.user.role, "floor");
+  // Droit d’aménager décidé par le propriétaire, membre par membre (vérifié côté serveur).
+  const canLayout = data.floorPlan.canArrange;
+  // Zones dans l’ordre du plan ; une table sans zone connue garde son ancien nom.
+  const zoneNames = [
+    ...new Set([
+      ...data.zones.map((z) => z.name),
+      ...tables.map((t) => t.zone),
+    ]),
+  ].filter((z) => tables.some((t) => t.zone === z));
   // Prochaine réservation de la table dans les 12 heures, heure de Paris.
   const nextBooking = (t: Table) =>
     data.reservations
@@ -209,7 +217,7 @@ export function Dining({ data, act }: { data: Snapshot; act: Act }) {
               <Badge key={s} status={s} />
             ))}
           </div>
-          {[...new Set(tables.map((t) => t.zone))].map((zone) => (
+          {zoneNames.map((zone) => (
             <div className="floor" key={zone}>
               <span className="floor-label">{zone.toUpperCase()}</span>
               <div className="table-grid">

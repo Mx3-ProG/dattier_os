@@ -123,6 +123,7 @@ const plans = [
     structures: "1 structure",
     features: [
       "Tous les modules : commandes, salle, réservations, stocks, équipe",
+      "Plan de salle jusqu’à 50 tables, en plusieurs zones",
       "Site web et boutique de l’établissement",
       "Accès de l’équipe par rôle et par poste",
       "Données isolées dans votre propre espace",
@@ -135,6 +136,7 @@ const plans = [
     features: [
       "Tout ce que contient l’offre Essentiel",
       "Plusieurs structures dans un même compte",
+      "Plan de salle sans plafond de tables",
       "Un site, une boutique et une équipe par structure",
       "Chaque structure reste cloisonnée des autres",
     ],

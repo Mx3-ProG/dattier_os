@@ -85,6 +85,7 @@ export type PublicTable = {
   shape: string;
   pos_x: number;
   pos_y: number;
+  rotation: number;
   status: string;
 };
 type Hold = { table_id: string; starts_at: string; ends_at: string };
@@ -92,7 +93,7 @@ type Hold = { table_id: string; starts_at: string; ends_at: string };
 async function load(db: DB, r: string, from: number, to: number) {
   const tables = await rows<PublicTable>(
     db,
-    "SELECT id,number,capacity,label,zone,shape,pos_x,pos_y,status FROM dining_tables WHERE restaurant_id=$1 AND bookable AND archived_at IS NULL ORDER BY number",
+    "SELECT t.id,t.number,t.capacity,t.label,t.zone,t.shape,t.pos_x,t.pos_y,t.rotation,t.status FROM dining_tables t LEFT JOIN floor_zones z ON z.id=t.zone_id WHERE t.restaurant_id=$1 AND t.bookable AND t.archived_at IS NULL ORDER BY z.position,t.number",
     [r],
   );
   const holds = await rows<Hold>(
@@ -208,6 +209,8 @@ export async function availability(
     open,
     group,
     durationMinutes: booking.durationMinutes,
+    /** Zones dans l’ordre du plan, chacune affichée sur son propre canevas. */
+    zones: [...new Set(data.tables.map((t) => t.zone))],
     tables: data.tables.map(({ status, ...t }) => ({
       ...t,
       unavailable: today && status === "unavailable",
