@@ -14,7 +14,7 @@ Source centrale : `src/lib/permissions.ts`. Les contrôles sont exécutés côt�
 | PURCHASING | Fournisseurs, commandes et réceptions |
 | ACCOUNTANT | Rapports financiers et dépenses |
 
-La permission `floor` (aménagement du plan de salle : ajouter, modifier les places/l’état, déplacer, archiver, supprimer une table) est accordée à SUPER_ADMIN, OWNER, MANAGER, WAITER et BARTENDER. Une table occupée ne peut ni changer d’état manuellement ni être archivée ; une table avec historique ne peut qu’être archivée ; réduire les places est refusé si une réservation à venir dépasse la nouvelle capacité.
+La permission `floor` donne accès au plan de salle. Le propriétaire peut gérer le droit d’aménagement de chaque membre. Le forfait Exploitation permet 50 tables actives par établissement.
 
 Tous les profils peuvent consulter les notifications de leur établissement et pointer leur propre service. Les confirmations de réservation ne sont pas publiques. Le public ne peut demander qu’une réservation ou une commande à confirmer. Les profils publics de `/demo` ne sont disponibles que lorsque la démo locale est activée.
 

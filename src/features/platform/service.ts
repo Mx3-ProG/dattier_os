@@ -4,6 +4,7 @@ import { rows, one, type DB } from "@/lib/database/db";
 import { scope, type Actor } from "@/lib/auth/session";
 import { roles } from "@/lib/permissions";
 import { log } from "@/features/orders/service";
+import { setLayoutAccess } from "@/features/floor/service";
 const text = z.string().trim().min(2).max(150),
   id = z.string().min(1).max(150);
 export const platformAction = z.discriminatedUnion("action", [
@@ -37,6 +38,12 @@ export const platformAction = z.discriminatedUnion("action", [
     restaurant: id,
     profile: id,
     roles: z.array(z.enum(roles).exclude(["SUPER_ADMIN"])).max(8),
+  }),
+  z.object({
+    action: z.literal("floorLayout"),
+    restaurant: id,
+    profile: id,
+    allowed: z.boolean(),
   }),
   z.object({
     action: z.literal("support"),
@@ -230,6 +237,10 @@ export async function platformPerform(db: DB, user: Actor, raw: unknown) {
         role,
       ]);
     await log(db, a.restaurant, user.id, "Affectations modifiées", a.profile);
+    return { updated: true };
+  }
+  if (a.action === "floorLayout") {
+    await setLayoutAccess(db, a.restaurant, user, a.profile, a.allowed);
     return { updated: true };
   }
   if (a.action === "support") {

@@ -9,7 +9,7 @@ import {
   Sparkles,
   Users,
 } from "lucide-react";
-import { FloorMap, type MapTable } from "../floor-map";
+import { FloorMap, ZoneSwitch, type MapTable } from "../floor-map";
 
 type Day = { date: string; status: string; free: number; total: number };
 type Calendar = { month: string; largest: number; group: boolean; days: Day[] };
@@ -25,6 +25,7 @@ type Availability = {
   open: boolean;
   group: boolean;
   durationMinutes: number;
+  zones: string[];
   tables: (MapTable & { unavailable: boolean })[];
   services: { id: string; name: string; slots: Slot[] }[];
 };
@@ -81,6 +82,7 @@ export function Booking({
     [day, setDay] = useState<Availability | null>(null),
     [time, setTime] = useState<string | null>(null),
     [table, setTable] = useState<string | null>(null),
+    [zone, setZone] = useState<string | null>(null),
     [error, setError] = useState(""),
     [busy, setBusy] = useState(false),
     [reload, setReload] = useState(0),
@@ -155,6 +157,10 @@ export function Booking({
   }, [day, date, time, slot, table]);
 
   const chosen = day?.tables.find((t) => t.id === table);
+  // Chaque zone a son canevas : la zone affichée suit la table choisie.
+  const zones = day?.zones ?? [],
+    shownZone =
+      zone && zones.includes(zone) ? zone : (chosen?.zone ?? zones[0] ?? "");
   const firstDay = cal
     ? (new Date(`${cal.month}-01T12:00:00Z`).getUTCDay() + 6) % 7
     : 0;
@@ -441,8 +447,25 @@ export function Booking({
               <li className="taken">Réservée</li>
               <li className="small">Trop petite</li>
             </ul>
+            <ZoneSwitch
+              zones={zones}
+              current={shownZone}
+              onChange={setZone}
+              note={
+                slot && !day?.group
+                  ? (z) => {
+                      const n = (day?.tables ?? []).filter(
+                        (t) => t.zone === z && slot.free.includes(t.id),
+                      ).length;
+                      return `${n} libre${n > 1 ? "s" : ""}`;
+                    }
+                  : undefined
+              }
+            />
             <FloorMap
-              tables={day?.tables ?? []}
+              tables={(day?.tables ?? []).filter((t) => t.zone === shownZone)}
+              zone={shownZone}
+              entry={shownZone === zones[0]}
               stateOf={stateOf}
               caption={caption}
               disabled={(t) =>

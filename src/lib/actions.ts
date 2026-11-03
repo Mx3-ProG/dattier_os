@@ -22,7 +22,12 @@ import {
   tableSchema,
   saveTable,
   moveTable,
+  rotateTable,
   tableLifecycle,
+  zoneSchemas,
+  saveZone,
+  moveZone,
+  deleteZone,
 } from "@/features/floor/service";
 import { randomUUID as uuid } from "node:crypto";
 import { z } from "zod";
@@ -75,6 +80,7 @@ export const actionSchema = z.discriminatedUnion("action", [
     status: z.enum(["free", "cleaning", "unavailable"]),
   }),
   tableSchema,
+  ...zoneSchemas,
   z.object({
     action: z.literal("moveTable"),
     id,
@@ -246,8 +252,16 @@ export async function perform(
       return saveTable(db, r, user, a);
     case "moveTable":
       return moveTable(db, r, user, a.id, a.x, a.y);
+    case "rotateTable":
+      return rotateTable(db, r, user, a.id, a.rotation);
     case "tableLifecycle":
       return tableLifecycle(db, r, user, a.id, a.operation);
+    case "saveZone":
+      return saveZone(db, r, user, a);
+    case "moveZone":
+      return moveZone(db, r, user, a.id, a.direction);
+    case "deleteZone":
+      return deleteZone(db, r, user, a.id);
     case "table": {
       requirePermission(user.roles ?? user.role, "orders");
       const t = await one<{ status: string }>(

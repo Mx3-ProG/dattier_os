@@ -79,12 +79,15 @@ export type Table = {
   status: string;
   label: string;
   zone: string;
+  zone_id: string | null;
   shape: "round" | "square" | "rect";
   pos_x: number;
   pos_y: number;
+  rotation: number;
   bookable: boolean;
   archived_at: string | null;
 };
+export type Zone = { id: string; name: string; position: number };
 export type Event = {
   id: string;
   action: string;
@@ -182,6 +185,14 @@ export type Snapshot = {
   restaurant: Restaurant;
   menu: MenuItem[];
   tables: Table[];
+  zones: Zone[];
+  /** Droit d’aménager du profil connecté et plafond de tables de l’offre. */
+  floorPlan: {
+    canArrange: boolean;
+    plan: number;
+    quota: number | null;
+    active: number;
+  };
   orders: Order[];
   ingredients: Ingredient[];
   lots: Lot[];

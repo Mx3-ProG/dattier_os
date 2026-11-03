@@ -49,6 +49,12 @@ export async function adminState(
         "SELECT p.id,p.name,p.email,m.role FROM memberships m JOIN profiles p ON p.id=m.profile_id WHERE m.restaurant_id=$1 ORDER BY p.name,m.role",
         [r],
       ),
+      // Décisions explicites sur le droit de modifier le plan de salle.
+      floorLayout: await rows(
+        db,
+        "SELECT profile_id,allowed FROM floor_layout_access WHERE restaurant_id=$1",
+        [r],
+      ),
       invitations: await rows(
         db,
         "SELECT id,email,roles,expires_at,accepted_at FROM invitations WHERE restaurant_id=$1 ORDER BY expires_at DESC LIMIT 100",
