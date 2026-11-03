@@ -107,12 +107,15 @@ export function DonutStore({
   config: initialConfig,
   context,
   preview = false,
+  initialData = null,
 }: {
   route: string;
   config: SiteConfig;
   context: PlaceholderContext;
   /** CMS preview inside the editor iframe: live config, click-to-select, no navigation. */
   preview?: boolean;
+  /** Catalogue loaded on the server so products are present in the initial HTML. */
+  initialData?: Data | null;
 }) {
   const nextRouter = useRouter();
   const { request: fetch, shopPost, href, restaurant, demo } = useTenantSite();
@@ -157,7 +160,7 @@ export function DonutStore({
       document.removeEventListener("click", onClick, true);
     };
   }, [preview]);
-  const [data, setData] = useState<Data | null>(null),
+  const [data, setData] = useState<Data | null>(initialData),
     [error, setError] = useState(""),
     [cart, setCart] = useState<Line[]>([]),
     [hydrated, setHydrated] = useState(false),

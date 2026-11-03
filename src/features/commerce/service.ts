@@ -83,7 +83,8 @@ export function commerce(SHOP: string) {
     const config = await settings(db);
     return {
       settings: config,
-      products: (await menu(db, SHOP))
+      // `menu()` selects m.*, which includes the commerce columns of Product.
+      products: ((await menu(db, SHOP)) as unknown as Product[])
         .filter((p) => p.enabled)
         .sort(
           (a, b) =>

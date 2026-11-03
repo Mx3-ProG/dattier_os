@@ -297,6 +297,10 @@ export const siteConfigSchema = z.object({
     ogImage: optionalMedia,
     favicon: optionalMedia,
     shareName: text(80),
+    /** robots.txt preferences for identified AI crawlers (absent = allowed). */
+    aiCrawlers: z
+      .object({ search: z.boolean(), training: z.boolean() })
+      .optional(),
   }),
   header: z.object({
     navMenu: text(40),

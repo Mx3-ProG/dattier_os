@@ -3,7 +3,8 @@ import { getDb, productionEnabled } from "@/lib/database/db";
 export async function proxy(req: NextRequest) {
   if (
     !productionEnabled() ||
-    ["/api/health", "/robots.txt"].includes(req.nextUrl.pathname)
+    // /robots.txt goes through: a restaurant domain gets its own (rewritten to /r/{id}/robots.txt).
+    req.nextUrl.pathname === "/api/health"
   )
     return NextResponse.next();
   const host = new URL(

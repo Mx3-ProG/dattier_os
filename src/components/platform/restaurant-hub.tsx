@@ -286,13 +286,28 @@ export function RestaurantHub({ restaurant }: { restaurant: string }) {
                   data.domains as {
                     hostname: string;
                     verified_at: string | null;
+                    is_primary?: boolean;
                   }[]
                 ).map((d) => (
                   <article key={d.hostname}>
                     <p>
                       {d.hostname} · {d.verified_at ? "Vérifié" : "À vérifier"}
+                      {d.is_primary ? " · Domaine principal (référencement)" : ""}
                     </p>
                     <div className="actions">
+                      {d.verified_at && !d.is_primary && (
+                        <button
+                          disabled={busy}
+                          onClick={() =>
+                            perform({
+                              action: "primaryDomain",
+                              hostname: d.hostname,
+                            })
+                          }
+                        >
+                          Définir comme principal
+                        </button>
+                      )}
                       <button
                         disabled={busy}
                         onClick={() =>
