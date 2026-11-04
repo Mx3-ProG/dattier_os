@@ -57,10 +57,15 @@ test("Studio : édition publiée, aperçus responsive et centre de sécurité", 
   ).toHaveValue(title);
   for (const width of [390, 768, 1440]) {
     await page.setViewportSize({ width, height: 1000 });
-    const toggle = page.getByRole("button", {
+    // Tablet: side-drawer toggle; phone: the bottom toolbar opens the sheet.
+    const drawer = page.getByRole("button", {
       name: "Panneau d’édition",
       exact: true,
     });
+    const dock = page
+      .getByRole("navigation", { name: "Outils du site" })
+      .getByRole("button", { name: "Sections", exact: true });
+    const toggle = (await dock.isVisible()) ? dock : drawer;
     if (await toggle.isVisible()) await toggle.click();
     await expect(
       page.getByRole("tab", { name: "Pages", exact: true }),

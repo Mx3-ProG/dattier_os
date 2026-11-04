@@ -24,6 +24,25 @@ import {
   Undo2,
   FileText,
   Palette,
+  Image as ImageIcon,
+  Images,
+  Type,
+  Star,
+  MapPin,
+  Video,
+  CircleHelp,
+  Megaphone,
+  Sparkles,
+  ShoppingBag,
+  Clock,
+  Scale,
+  LayoutGrid,
+  Columns2,
+  Store,
+  Ellipsis,
+  Maximize2,
+  Minimize2,
+  X,
 } from "lucide-react";
 import { Button } from "../ui/button";
 import { Modal } from "../forms";
@@ -94,6 +113,26 @@ const devices: Record<
   tablet: { width: 820, label: "Tablette", icon: Tablet },
   mobile: { width: 390, label: "Mobile", icon: Smartphone },
 };
+const sectionIcons: Partial<Record<SectionType, typeof Layers>> = {
+  hero: Sparkles,
+  marquee: Megaphone,
+  featuredProducts: ShoppingBag,
+  about: Store,
+  visit: MapPin,
+  reviews: Star,
+  map: MapPin,
+  gallery: Images,
+  textBlock: Type,
+  textImage: Columns2,
+  video: Video,
+  faq: CircleHelp,
+  cta: Megaphone,
+  promoBanner: Sparkles,
+  categories: LayoutGrid,
+  hours: Clock,
+  legal: Scale,
+};
+const PHONE = "(max-width: 760px)";
 const SPECIAL = {
   "site-header": "brand",
   "site-footer": "brand",
@@ -147,6 +186,7 @@ export function SiteEditor({
     [publishing, setPublishing] = useState(false),
     [creating, setCreating] = useState(false),
     [panels, setPanels] = useState<"none" | "left" | "right">("none"),
+    [expanded, setExpanded] = useState(false),
     [depth, setDepth] = useState({ undo: 0, redo: 0 });
   const configRef = useRef<SiteConfig | null>(null),
     past = useRef<SiteConfig[]>([]),
@@ -327,6 +367,29 @@ export function SiteEditor({
     return () => window.removeEventListener("keydown", keys);
   }, [save, undo, redo]);
 
+  /* ── Phone layout: mobile preview, Escape closes the open sheet ── */
+  useEffect(() => {
+    const query = window.matchMedia(PHONE);
+    const sync = () => {
+      if (query.matches) setDevice("mobile");
+    };
+    sync();
+    query.addEventListener("change", sync);
+    return () => query.removeEventListener("change", sync);
+  }, []);
+  useEffect(() => {
+    if (panels === "none") return;
+    const close = (e: KeyboardEvent) => {
+      if (e.key === "Escape" && !document.querySelector(".modal"))
+        setPanels("none");
+    };
+    window.addEventListener("keydown", close);
+    return () => window.removeEventListener("keydown", close);
+  }, [panels]);
+  useEffect(() => {
+    if (panels !== "right") setExpanded(false);
+  }, [panels]);
+
   /* ── Live preview (same-origin iframe running the real site) ── */
   const frame = useRef<HTMLIFrameElement>(null),
     stage = useRef<HTMLDivElement>(null),
@@ -415,7 +478,21 @@ export function SiteEditor({
   }, [page, isAdmin]);
 
   if (!meta || !config || !page)
-    return <p className="muted">{error || "Chargement de l’éditeur…"}</p>;
+    return error ? (
+      <p className="error" role="alert">
+        {error}
+      </p>
+    ) : (
+      <div className="site-skeleton" aria-busy="true">
+        <span className="sr-only">Chargement de l’éditeur…</span>
+        <div className="site-skeleton-bar" />
+        <div className="site-skeleton-body">
+          <div />
+          <div />
+          <div />
+        </div>
+      </div>
+    );
 
   const setSections = (mutate: (list: Section[]) => Section[], key?: string) =>
     update((c) => {
@@ -476,9 +553,49 @@ export function SiteEditor({
             : "Site d’origine, aucune publication",
           tone: "confirmed",
         };
+  const short = dirty
+    ? "Non enregistré"
+    : meta.unpublished
+      ? "Brouillon"
+      : "En ligne";
+  const openLeft = (t: Tab) => {
+    setTab(t);
+    setPanels(panels === "left" && tab === t ? "none" : "left");
+  };
+  const selectedIndex = section ? page.sections.indexOf(section) : -1;
+  const leftTabs = (
+    [
+      ["sections", "Sections", Layers],
+      ["library", "Ajouter", Plus],
+      ["pages", "Pages", FileText],
+      ["brand", "Identité", Palette],
+      ["theme", "Couleurs & polices", Palette],
+      ["seo", "Référencement", Search],
+      ["history", "Historique", History],
+      ...(isAdmin ? [["admin", "Réglages", Settings2]] : []),
+    ] as [Tab, string, typeof Layers][]
+  ).map(([id, label, Icon]) => ({ id, label, Icon }));
+  const dock: {
+    id: string;
+    label: string;
+    Icon: typeof Layers;
+    tabs: Tab[];
+  }[] = [
+    { id: "sections", label: "Sections", Icon: Layers, tabs: ["sections"] },
+    { id: "library", label: "Ajouter", Icon: Plus, tabs: ["library"] },
+    { id: "brand", label: "Style", Icon: Palette, tabs: ["brand", "theme"] },
+    {
+      id: "pages",
+      label: "Plus",
+      Icon: Ellipsis,
+      tabs: ["pages", "seo", "history", "admin"],
+    },
+  ];
 
   return (
-    <div className={`site-editor panels-${panels}`}>
+    <div
+      className={`site-editor panels-${panels}${expanded ? " is-expanded" : ""}`}
+    >
       <datalist id="site-internal-links">
         {Object.entries(config.pages)
           .filter(
@@ -529,8 +646,12 @@ export function SiteEditor({
               )}
             </select>
           </label>
-          <span className={`badge ${status.tone}`} role="status">
-            {status.label}
+          <span className={`site-status ${status.tone}`} role="status">
+            <i aria-hidden="true" />
+            <span className="site-status-long">{status.label}</span>
+            <span className="site-status-short" aria-hidden="true">
+              {short}
+            </span>
           </span>
         </div>
         <div
@@ -584,16 +705,19 @@ export function SiteEditor({
                 : "Aperçu du brouillon"
             }
           >
-            <ExternalLink size={16} /> Prévisualiser
+            <ExternalLink size={16} />
+            <span className="site-label">Prévisualiser</span>
           </a>
           <Button
             variant="secondary"
+            className="site-desktop-only"
             disabled={busy || !dirty}
             onClick={() => void save()}
           >
             Enregistrer
           </Button>
           <Button
+            className="site-desktop-only"
             disabled={busy || (!dirty && !meta.unpublished)}
             onClick={() => setPublishing(true)}
           >
@@ -609,7 +733,7 @@ export function SiteEditor({
         </div>
       </header>
       {error && (
-        <div className="error" role="alert">
+        <div className="error site-toast" role="alert">
           {error}
           <button aria-label="Fermer l’erreur" onClick={() => setError("")}>
             ×
@@ -617,7 +741,7 @@ export function SiteEditor({
         </div>
       )}
       {notice && !error && (
-        <div className="success" role="status">
+        <div className="success site-toast" role="status">
           {notice}
           <button aria-label="Fermer" onClick={() => setNotice("")}>
             ×
@@ -626,21 +750,26 @@ export function SiteEditor({
       )}
 
       <div className="site-workarea">
+        <button
+          className="site-scrim"
+          tabIndex={-1}
+          aria-hidden="true"
+          onClick={() => setPanels("none")}
+        />
         {/* ── Left panel ── */}
         <aside className="site-left card" aria-label="Panneau d’édition">
+          <div className="site-sheet-head">
+            <span className="site-handle" aria-hidden="true" />
+            <button
+              className="icon-button site-sheet-close"
+              aria-label="Fermer le panneau"
+              onClick={() => setPanels("none")}
+            >
+              <X size={18} />
+            </button>
+          </div>
           <div className="site-tabs" role="tablist">
-            {(
-              [
-                ["sections", "Sections", Layers],
-                ["library", "Ajouter", Plus],
-                ["pages", "Pages", FileText],
-                ["brand", "Identité", Palette],
-                ["theme", "Couleurs & polices", Palette],
-                ["seo", "Référencement", Search],
-                ["history", "Historique", History],
-                ...(isAdmin ? [["admin", "Réglages", Settings2]] : []),
-              ] as [Tab, string, typeof Layers][]
-            ).map(([id, label, Icon]) => (
+            {leftTabs.map(({ id, label, Icon }) => (
               <button
                 key={id}
                 role="tab"
@@ -780,6 +909,14 @@ export function SiteEditor({
                     Cette page n’a pas de section modifiable.
                   </p>
                 )}
+                {can.add && (
+                  <button
+                    className="site-add-inline"
+                    onClick={() => setTab("library")}
+                  >
+                    <Plus size={16} /> Ajouter une section
+                  </button>
+                )}
               </>
             )}
 
@@ -787,17 +924,24 @@ export function SiteEditor({
               (can.add ? (
                 <div className="site-library">
                   <p className="muted">
-                    La section est ajoutée après la section sélectionnée.
+                    {section
+                      ? `Ajoutée juste après « ${sectionLabel(section)} ».`
+                      : "Ajoutée en fin de page. Sélectionnez une section pour l’insérer après."}
                   </p>
                   {(Object.keys(registry) as SectionType[])
                     .filter((t) => registry[t].addable && allowed.includes(t))
-                    .map((t) => (
-                      <button key={t} onClick={() => addSection(t)}>
-                        <b>{registry[t].label}</b>
-                        <small>{registry[t].description}</small>
-                        <Plus size={16} />
-                      </button>
-                    ))}
+                    .map((t) => {
+                      const Icon = sectionIcons[t] ?? ImageIcon;
+                      return (
+                        <button key={t} onClick={() => addSection(t)}>
+                          <span className="site-library-icon">
+                            <Icon size={20} />
+                          </span>
+                          <b>{registry[t].label}</b>
+                          <small>{registry[t].description}</small>
+                        </button>
+                      );
+                    })}
                 </div>
               ) : (
                 <p className="muted">
@@ -952,7 +1096,7 @@ export function SiteEditor({
         </aside>
 
         {/* ── Preview ── */}
-        <div className="site-stage" ref={stage}>
+        <div className={`site-stage${ready ? " is-ready" : ""}`} ref={stage}>
           <div
             className="site-frame-wrap"
             style={{ width: width * scale, height: stageSize.height - 8 }}
@@ -968,6 +1112,7 @@ export function SiteEditor({
                 transform: `scale(${scale})`,
               }}
             />
+            <div className="site-frame-loading" aria-hidden="true" />
           </div>
           {dirty && (
             <p className="site-stage-note">
@@ -978,6 +1123,19 @@ export function SiteEditor({
 
         {/* ── Properties ── */}
         <aside className="site-right card" aria-label="Propriétés">
+          <div className="site-sheet-head">
+            <span className="site-handle" aria-hidden="true" />
+            <button
+              className="icon-button site-sheet-grow"
+              aria-label={
+                expanded ? "Réduire le panneau" : "Agrandir le panneau"
+              }
+              aria-pressed={expanded}
+              onClick={() => setExpanded(!expanded)}
+            >
+              {expanded ? <Minimize2 size={17} /> : <Maximize2 size={17} />}
+            </button>
+          </div>
           {section ? (
             <SectionProperties
               key={section.id}
@@ -996,7 +1154,36 @@ export function SiteEditor({
               }
               update={update}
               navigate={navigate}
-              close={() => setSelected(null)}
+              close={() => {
+                setSelected(null);
+                setPanels("none");
+              }}
+              move={
+                can.reorder
+                  ? {
+                      up:
+                        selectedIndex > 0
+                          ? () => move(selectedIndex, selectedIndex - 1)
+                          : null,
+                      down:
+                        selectedIndex < page.sections.length - 1
+                          ? () => move(selectedIndex, selectedIndex + 1)
+                          : null,
+                    }
+                  : null
+              }
+              toggle={
+                can.hide(section)
+                  ? () =>
+                      setSections((list) =>
+                        list.map((x) =>
+                          x.id === section.id
+                            ? { ...x, visible: !x.visible }
+                            : x,
+                        ),
+                      )
+                  : null
+              }
             />
           ) : (
             <div className="site-empty-props">
@@ -1009,6 +1196,41 @@ export function SiteEditor({
           )}
         </aside>
       </div>
+
+      {/* ── Phone toolbar ── */}
+      <nav className="site-dock" aria-label="Outils du site">
+        {dock.map(({ id, label, Icon, tabs }) => {
+          const active = panels === "left" && tabs.includes(tab);
+          return (
+            <button
+              key={id}
+              className={active ? "active" : ""}
+              aria-pressed={active}
+              onClick={() => (active ? setPanels("none") : openLeft(tabs[0]))}
+            >
+              <Icon size={20} />
+              <span>{label}</span>
+            </button>
+          );
+        })}
+        {dirty ? (
+          <Button
+            className="site-dock-main"
+            disabled={busy}
+            onClick={() => void save()}
+          >
+            {busy ? "…" : "Enregistrer"}
+          </Button>
+        ) : (
+          <Button
+            className="site-dock-main"
+            disabled={busy || !meta.unpublished}
+            onClick={() => setPublishing(true)}
+          >
+            Publier
+          </Button>
+        )}
+      </nav>
 
       {publishing && (
         <PublishDialog
@@ -1081,6 +1303,8 @@ function SectionProperties({
   update,
   navigate,
   close,
+  move,
+  toggle,
 }: {
   section: Section;
   page: string;
@@ -1092,22 +1316,55 @@ function SectionProperties({
   update: Update;
   navigate: (module: string) => void;
   close: () => void;
+  move: { up: (() => void) | null; down: (() => void) | null } | null;
+  toggle: (() => void) | null;
 }) {
   const def = section.type === "system" ? null : registry[section.type];
+  const Icon =
+    section.type === "system" ? Lock : (sectionIcons[section.type] ?? Layers);
   return (
     <div className="site-props">
       <div className="site-props-head">
+        <span className="site-props-icon" aria-hidden="true">
+          <Icon size={18} />
+        </span>
         <div>
           <span className="eyebrow">{config.pages[page].title}</span>
           <h3>{sectionLabel(section)}</h3>
         </div>
-        <button
-          className="icon-button"
-          aria-label="Fermer les propriétés"
-          onClick={close}
-        >
-          ×
-        </button>
+        <span className="site-row-actions">
+          {move && (
+            <>
+              <button
+                aria-label="Monter la section"
+                disabled={!move.up}
+                onClick={() => move.up?.()}
+              >
+                <ArrowUp size={16} />
+              </button>
+              <button
+                aria-label="Descendre la section"
+                disabled={!move.down}
+                onClick={() => move.down?.()}
+              >
+                <ArrowDown size={16} />
+              </button>
+            </>
+          )}
+          {toggle && (
+            <button
+              aria-label={
+                section.visible ? "Masquer la section" : "Afficher la section"
+              }
+              onClick={toggle}
+            >
+              {section.visible ? <Eye size={16} /> : <EyeOff size={16} />}
+            </button>
+          )}
+          <button aria-label="Fermer les propriétés" onClick={close}>
+            <X size={17} />
+          </button>
+        </span>
       </div>
       {section.lock > 1 && (
         <p className="site-lock-note">

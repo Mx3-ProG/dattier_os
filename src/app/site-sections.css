@@ -199,10 +199,10 @@
   display: none;
 }
 .donut-site.is-cms-preview [data-cms-section]:hover {
-  outline: 2px dashed #00b8c8;
+  outline: 2px dashed #9a6646;
 }
 .donut-site.is-cms-preview [data-cms-section].is-cms-selected {
-  outline: 3px solid #e83e91;
+  outline: 3px solid #344d3e;
 }
 @media (max-width: 850px) {
   .site-text-image {

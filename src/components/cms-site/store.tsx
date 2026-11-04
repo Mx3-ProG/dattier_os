@@ -1301,7 +1301,7 @@ export function DonutStore({
       )}
       {css && <style>{css}</style>}
       {preview && selectedSection && /^[a-z0-9-]+$/.test(selectedSection) && (
-        <style>{`[data-cms-section="${selectedSection}"]{outline:3px solid #e83e91;outline-offset:-3px}`}</style>
+        <style>{`[data-cms-section="${selectedSection}"]{outline:3px solid #344d3e;outline-offset:-3px}`}</style>
       )}
       <a className="donut-skip" href="#main">
         Aller au contenu
