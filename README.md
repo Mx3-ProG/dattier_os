@@ -2,7 +2,7 @@
 
 OS open source pour les restaurateurs : commandes, salle, cuisine, bar, stocks, achats, équipes, clients, fidélité, boutique et sites par établissement.
 
-**AGPL-3.0-only** · France en premier · installation auto-hébergeable. Une organisation peut gérer plusieurs restaurants et plusieurs rôles par utilisateur. L’abonnement hébergé de 20–30 € est une hypothèse économique, pas une offre activée.
+**Version 1.0.0** · **AGPL-3.0-only** · France en premier · installation auto-hébergeable. Une organisation peut gérer plusieurs restaurants et plusieurs rôles par utilisateur. L’abonnement hébergé de 20–30 € est une hypothèse économique, pas une offre activée.
 
 ## Essayer localement
 
@@ -20,7 +20,7 @@ La démonstration est sur `/demo`, le poste de travail sur `/dashboard`. Les don
 - `/restaurant/<id>` : équipe, boutique, avis, site, domaines, achats, inventaires et journal.
 - `/r/<id>` : vitrine, commande, réservations et espace client du restaurant.
 - `/offline?restaurant=<id>` : appareils, quotas de stock et tickets conservés sur chaque appareil.
-- `/source` : accès au code de la version distribuée.
+- `/source` : accès au code de la version distribuée, version en service et calendrier des mises à jour.
 
 L’authentification de production utilise OIDC/Keycloak. Les identités clients sont rattachées séparément à chaque organisation. Les profils de démonstration ne sont pas utilisables en production.
 
@@ -53,7 +53,7 @@ Les parcours locaux et les contrôles SQL sont vérifiables ; leur présence ne 
 
 Le mode hors ligne fonctionne par appareils indépendants : aucun transfert automatique de ticket pendant une coupure. Quotas et opérations locales doivent être réconciliés avant de retirer un appareil. Un navigateur effacé peut perdre ses opérations non synchronisées.
 
-[État détaillé](docs/platform/IMPLEMENTATION_STATUS.md) · [Hypothèses de coûts](docs/platform/COSTS.md) · [Contribuer](CONTRIBUTING.md) · [Sécurité](SECURITY.md) · [Notices tierces](THIRD_PARTY_NOTICES.md).
+[Versions et calendrier](docs/RELEASES.md) · [Journal des versions](CHANGELOG.md) · [État détaillé](docs/platform/IMPLEMENTATION_STATUS.md) · [Hypothèses de coûts](docs/platform/COSTS.md) · [Contribuer](CONTRIBUTING.md) · [Sécurité](SECURITY.md) · [Notices tierces](THIRD_PARTY_NOTICES.md).
 
 ### Studio du site et sécurité
 
