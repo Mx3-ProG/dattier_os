@@ -26,7 +26,9 @@ export function Demo() {
       });
       const d = await r.json();
       if (!r.ok) throw new Error(d.error);
-      router.push("/dashboard");
+      // Arriving from a protected page (/auth/login?returnTo=…): go back there.
+      const back = new URLSearchParams(location.search).get("returnTo");
+      router.push(back && /^\/(?!\/)/.test(back) ? back : "/dashboard");
     } catch (e) {
       setError((e as Error).message);
       setBusy(false);
