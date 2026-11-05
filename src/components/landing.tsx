@@ -1,142 +1,177 @@
 import Link from "next/link";
 import {
   ArrowUpRight,
-  Boxes,
+  Building2,
+  Check,
   Clock,
+  Code2,
   Eye,
+  Globe,
   HeartHandshake,
   LayoutDashboard,
+  Lock,
   PenLine,
+  ShieldCheck,
   Smile,
   Sparkles,
   UserCog,
-  Building2,
-  CalendarDays,
-  Check,
-  ChefHat,
-  Code2,
-  Globe,
-  LayoutGrid,
-  Lock,
-  ReceiptText,
-  ShieldCheck,
-  ShoppingBag,
-  Users,
   UtensilsCrossed,
 } from "lucide-react";
+import {
+  FloatingDock,
+  ModuleExplorer,
+  Reveal,
+  RotatingWord,
+  Secrets,
+  ServicePass,
+  type Module,
+} from "./landing-motion";
 
 // Page de présentation de Dattier OS. Uniquement des faits vérifiables dans
 // le code : modules existants, isolation par structure, quotas des offres
 // (database/migrations/017_tenancy_plans.sql). Ni témoignage, ni chiffre client.
 
-const modules = [
+const modules: Module[] = [
   {
-    icon: ReceiptText,
+    key: "commandes",
     title: "Commandes",
-    text: "Prise de commande en salle, à emporter et depuis le site. Les tickets partent directement en cuisine et au bar.",
+    text: "Prise de commande en salle, à emporter et depuis le site.",
+    detail: "Les tickets partent directement en cuisine et au bar.",
   },
   {
-    icon: LayoutGrid,
+    key: "salle",
     title: "Salle",
-    text: "Plan de salle à votre image, état des tables en direct et réaménagement en quelques gestes.",
+    text: "Un plan de salle à votre image et l’état des tables en direct.",
+    detail: "Réaménagez-le en quelques gestes, le soir même.",
   },
   {
-    icon: CalendarDays,
+    key: "reservations",
     title: "Réservations",
-    text: "Vos clients choisissent le jour, l’heure et leur table sur le plan. L’équipe retrouve la demande aussitôt.",
+    text: "Vos clients choisissent le jour, l’heure et leur table sur le plan.",
+    detail: "L’équipe retrouve la demande aussitôt.",
   },
   {
-    icon: Boxes,
+    key: "stocks",
     title: "Stocks & achats",
-    text: "Inventaires, achats et recettes. Un produit épuisé n’est plus proposé sur le site.",
+    text: "Inventaires, achats et recettes au même endroit.",
+    detail: "Un produit épuisé n’est plus proposé sur le site.",
   },
   {
-    icon: Users,
+    key: "equipe",
     title: "Équipe",
-    text: "Salle, cuisine, bar, direction : chacun son poste et ses accès, sur les mêmes données.",
+    text: "Salle, cuisine, bar, direction : chacun son poste et ses accès.",
+    detail: "Tout le monde travaille sur les mêmes données.",
   },
   {
-    icon: Globe,
+    key: "site",
     title: "Site web",
-    text: "Un studio pour composer votre vitrine : pages, identité, polices, référencement, publication et versions.",
+    text: "Un studio pour composer votre vitrine : pages, identité, polices.",
+    detail: "Référencement, publication et versions inclus.",
   },
   {
-    icon: ShoppingBag,
+    key: "boutique",
     title: "Boutique & clients",
-    text: "Commande en ligne, espace client et fidélité, rattachés à votre établissement.",
+    text: "Commande en ligne, espace client et fidélité.",
+    detail: "Le tout rattaché à votre établissement.",
   },
 ];
 
-// Ce que l'outil change au quotidien : le ressenti d'abord, la fonction qui le permet ensuite.
 const outcomes = [
   {
     icon: Smile,
-    feeling: "Des services plus sereins",
-    text: "Fini les bons perdus et les allers-retours en cuisine : chacun sait quoi faire, au bon moment.",
-    because: "Commandes envoyées directement en cuisine et au bar",
+    feeling: "Des services sereins",
+    text: "Fini les bons perdus : chacun sait quoi faire, au bon moment.",
+    because: "Commandes envoyées en cuisine et au bar",
   },
   {
     icon: Clock,
     feeling: "Du temps rendu",
-    text: "Moins de ressaisie, moins de tableurs le soir. Vous passez ce temps en salle, ou chez vous.",
+    text: "Moins de ressaisie, moins de tableurs le soir.",
     because: "Une saisie unique, à jour partout",
   },
   {
     icon: HeartHandshake,
     feeling: "Une équipe alignée",
-    text: "La salle, la cuisine et le bar regardent la même information. Moins de tensions, plus de coups de main.",
+    text: "Salle, cuisine et bar regardent la même information.",
     because: "Un poste et des accès par métier",
   },
   {
     icon: Sparkles,
-    feeling: "Une vitrine dont vous êtes fier",
-    text: "Un site à votre image, que vous modifiez vous-même, sans dépendre d’une agence.",
-    because: "Studio de site, réservation et boutique intégrés",
+    feeling: "Une vitrine qui vous ressemble",
+    text: "Un site que vous modifiez vous-même, sans agence.",
+    because: "Studio de site, réservation et boutique",
   },
   {
     icon: Eye,
     feeling: "Tout sous contrôle",
-    text: "Ventes, stocks, réservations : vous savez où vous en êtes, sans attendre la fin du mois.",
-    because: "Tableau de bord et historique en temps réel",
+    text: "Ventes, stocks, réservations : sans attendre la fin du mois.",
+    because: "Tableau de bord en temps réel",
   },
 ];
 
-const steps = [
+// Démarrer, servi comme un menu.
+const courses = [
   {
+    course: "Entrée",
     title: "Créez votre compte",
     text: "Un compte propriétaire, une organisation : votre espace est prêt.",
   },
   {
+    course: "Plat",
     title: "Ajoutez votre structure",
     text: "Nom, carte, plan de salle. La création est guidée pas à pas.",
   },
   {
+    course: "Dessert",
     title: "Ouvrez le service",
     text: "Invitez l’équipe, publiez votre site, prenez les premières commandes.",
+  },
+];
+
+const guarantees = [
+  {
+    icon: Lock,
+    title: "Cloisonnement en base",
+    text: "Appliqué par la base de données à chaque requête, pas seulement par l’affichage.",
+  },
+  {
+    icon: Building2,
+    title: "Une structure, un espace",
+    text: "Chaque adresse garde son équipe, sa carte, son site et ses clients.",
+  },
+  {
+    icon: ShieldCheck,
+    title: "Accès par rôle et journal",
+    text: "Chacun n’accède qu’à son rôle. Les actions sensibles sont tracées.",
+  },
+  {
+    icon: Code2,
+    title: "Open source",
+    text: "Code ouvert sous AGPL-3.0, vérifiable et auto-hébergeable.",
   },
 ];
 
 const plans = [
   {
     name: "Essentiel",
-    pitch: "Pour un établissement qui veut tout piloter au même endroit.",
+    pitch: "Un établissement, tout piloté au même endroit.",
     structures: "1 structure",
     features: [
-      "Tous les modules : commandes, salle, réservations, stocks, équipe",
-      "Site web et boutique de l’établissement",
-      "Accès de l’équipe par rôle et par poste",
-      "Données isolées dans votre propre espace",
+      "Tous les modules",
+      "Site web et boutique",
+      "Accès de l’équipe par rôle",
+      "Données isolées dans votre espace",
     ],
   },
   {
     name: "Premium",
-    pitch: "Pour les restaurateurs qui gèrent plusieurs adresses.",
+    pitch: "Pour les restaurateurs aux multiples adresses.",
     structures: "Jusqu’à 10 structures",
     features: [
-      "Tout ce que contient l’offre Essentiel",
-      "Plusieurs structures dans un même compte",
-      "Un site, une boutique et une équipe par structure",
-      "Chaque structure reste cloisonnée des autres",
+      "Tout l’Essentiel",
+      "Plusieurs structures, un compte",
+      "Un site, une boutique, une équipe par structure",
+      "Chaque structure cloisonnée des autres",
     ],
     featured: true,
   },
@@ -161,6 +196,17 @@ const faq = [
   },
 ];
 
+const ticker = [
+  "Table 4 · envoyée en cuisine",
+  "Réservation · 20h30 · 4 couverts",
+  "Inventaire du jour validé",
+  "À emporter · prête",
+  "Carte mise à jour sur le site",
+  "Table 7 · à encaisser",
+  "Nouveau client fidèle",
+  "Achat fournisseur à valider",
+];
+
 function Cta({ demo, inverse }: { demo: boolean; inverse?: boolean }) {
   return (
     <div className="landing-cta">
@@ -173,7 +219,7 @@ function Cta({ demo, inverse }: { demo: boolean; inverse?: boolean }) {
         </Link>
       )}
       <Link
-        className={`landing-btn ${demo ? "outline" : inverse ? "light" : "primary"}`}
+        className={`landing-btn ${demo ? (inverse ? "ghost" : "outline") : inverse ? "light" : "primary"}`}
         href="/platform"
       >
         Créer mon compte
@@ -187,7 +233,6 @@ export type Account = {
   restaurants: { id: string; name: string }[];
 };
 
-// Raccourcis de l'espace client : tableau de bord, équipe, studio du site, site publié.
 const shortcuts = (id: string) => [
   {
     icon: LayoutDashboard,
@@ -202,18 +247,14 @@ const shortcuts = (id: string) => [
 function ClientSpace({ account }: { account: Account | null }) {
   return (
     <section className="landing-section landing-client" id="espace-client">
-      <div className="landing-heading">
+      <Reveal className="landing-heading">
         <span className="landing-eyebrow">Déjà client ?</span>
         <h2>
           {account
             ? `Bonjour ${account.name}, votre espace vous attend.`
-            : "Retrouvez votre espace en un clic."}
+            : "Votre espace, en un clic."}
         </h2>
-        <p>
-          Tableau de bord, équipe et accès, modification et publication de votre
-          site : tout se pilote depuis votre espace client.
-        </p>
-      </div>
+      </Reveal>
       {account && account.restaurants.length ? (
         <div className="landing-client-list">
           {account.restaurants.map((r) => (
@@ -265,8 +306,11 @@ export function Landing({
         Aller au contenu
       </a>
       <header className="landing-header">
-        <Link href="/" className="landing-brand">
-          <UtensilsCrossed size={20} aria-hidden /> DATTIER <span>OS</span>
+        <Link href="/" className="landing-brand" title="Un, deux, trois…">
+          <span className="landing-brand-mark">
+            <UtensilsCrossed size={16} aria-hidden />
+          </span>
+          DATTIER <span>OS</span>
         </Link>
         <nav aria-label="Navigation principale">
           <a href="#modules">Modules</a>
@@ -286,233 +330,157 @@ export function Landing({
       <main id="contenu" tabIndex={-1}>
         <section className="landing-hero">
           <div className="landing-hero-copy">
-            <span className="landing-eyebrow">
-              Le logiciel de gestion des restaurateurs
+            <span className="landing-pill">
+              <span className="lx-live" aria-hidden /> Le logiciel des
+              restaurateurs
             </span>
             <h1>
-              Tout votre restaurant
-              <br /> dans <em>un seul</em> OS.
+              Tout votre <RotatingWord /> dans <em>un seul</em>&nbsp;OS.
             </h1>
             <p className="landing-lead">
-              Commandes, salle, réservations, stocks, équipe, site web et
-              boutique : un même outil pour la salle, la cuisine, le bar et la
-              direction. Une information saisie une fois est à jour partout.
+              Commandes, salle, réservations, stocks, équipe, site et boutique.
+              Une information saisie une fois est à jour partout.
             </p>
             <Cta demo={demo} />
-            <p className="landing-note">
-              Open source (AGPL-3.0) · Données cloisonnées par structure ·
-              Auto-hébergeable
-            </p>
+            <ul className="landing-tags" aria-label="En bref">
+              <li>Open source · AGPL-3.0</li>
+              <li>Données cloisonnées</li>
+              <li>Auto-hébergeable</li>
+            </ul>
           </div>
-          <div className="landing-board" aria-hidden>
-            <div className="landing-board-bar">
-              <span />
-              <span />
-              <span />
-              <strong>Service du soir</strong>
-            </div>
-            <div className="landing-board-cols">
-              {[
-                {
-                  icon: LayoutGrid,
-                  label: "Salle",
-                  items: ["Table 4 · envoyée", "Table 7 · à encaisser"],
-                },
-                {
-                  icon: ChefHat,
-                  label: "Cuisine",
-                  items: ["Table 4 · en préparation", "À emporter · prête"],
-                },
-                {
-                  icon: Boxes,
-                  label: "Stocks",
-                  items: ["Inventaire du jour", "Achat à valider"],
-                },
-              ].map((c) => (
-                <div className="landing-board-col" key={c.label}>
-                  <span className="landing-board-head">
-                    <c.icon size={15} /> {c.label}
-                  </span>
-                  {c.items.map((i) => (
-                    <span className="landing-ticket" key={i}>
-                      {i}
-                    </span>
-                  ))}
-                </div>
-              ))}
-            </div>
-            <div className="landing-board-foot">
-              <CalendarDays size={15} /> Réservation reçue depuis le site
-            </div>
-          </div>
+          <ServicePass />
         </section>
 
-        <section className="landing-section landing-outcomes">
-          <div className="landing-heading">
-            <span className="landing-eyebrow">Ce que ça change pour vous</span>
-            <h2>Moins de stress, plus de restaurant.</h2>
-            <p>
-              Un logiciel ne vaut que par ce qu’il vous rend : du calme pendant
-              le coup de feu, du temps après la fermeture, et la fierté d’un
-              établissement qui tourne.
-            </p>
+        <div className="landing-ticker" aria-hidden>
+          <div className="landing-ticker-track">
+            {[...ticker, ...ticker].map((t, i) => (
+              <span key={i}>
+                <UtensilsCrossed size={14} /> {t}
+              </span>
+            ))}
           </div>
-          <div className="landing-outcome-grid">
-            {outcomes.map((o) => (
-              <article key={o.feeling} className="landing-card">
-                <o.icon size={22} aria-hidden />
+        </div>
+
+        <section className="landing-section">
+          <Reveal className="landing-heading">
+            <span className="landing-eyebrow">Ce que ça change</span>
+            <h2>
+              Moins de stress, <em>plus de restaurant.</em>
+            </h2>
+          </Reveal>
+          <div className="landing-bento">
+            {outcomes.map((o, i) => (
+              <Reveal key={o.feeling} delay={i * 70} className="landing-tile">
+                <span className="landing-tile-icon">
+                  <o.icon size={22} aria-hidden />
+                </span>
                 <h3>{o.feeling}</h3>
                 <p>{o.text}</p>
                 <span className="landing-because">
                   <Check size={14} aria-hidden /> {o.because}
                 </span>
-              </article>
+              </Reveal>
             ))}
           </div>
         </section>
 
-        <section className="landing-section" id="modules">
-          <div className="landing-heading">
+        <section className="landing-section landing-modules-sec" id="modules">
+          <Reveal className="landing-heading">
             <span className="landing-eyebrow">Un seul OS</span>
-            <h2>Chaque métier du restaurant, enfin relié.</h2>
-            <p>
-              Fini les outils qui ne se parlent pas. Les modules partagent les
-              mêmes données, en temps réel, sans ressaisie.
-            </p>
-          </div>
-          <div className="landing-modules">
-            {modules.map((m) => (
-              <article key={m.title} className="landing-card">
-                <m.icon size={22} aria-hidden />
-                <h3>{m.title}</h3>
-                <p>{m.text}</p>
-              </article>
-            ))}
-          </div>
+            <h2>Chaque poste du restaurant, enfin relié.</h2>
+            <p>Touchez un module : ils partagent tous les mêmes données.</p>
+          </Reveal>
+          <Reveal>
+            <ModuleExplorer modules={modules} />
+          </Reveal>
         </section>
 
-        <section className="landing-section landing-simple">
-          <div className="landing-heading">
-            <span className="landing-eyebrow">
-              Simple dès le premier service
-            </span>
-            <h2>Trois étapes pour démarrer.</h2>
-          </div>
-          <ol className="landing-steps">
-            {steps.map((s, i) => (
-              <li key={s.title}>
-                <span className="landing-step-num">{i + 1}</span>
-                <h3>{s.title}</h3>
-                <p>{s.text}</p>
-              </li>
-            ))}
-          </ol>
-          <ul className="landing-benefits">
-            <li>
-              <Check size={18} aria-hidden /> Une saisie, à jour partout : la
-              carte, le site et la cuisine suivent les stocks.
-            </li>
-            <li>
-              <Check size={18} aria-hidden /> Chacun voit son poste : pas
-              d’écran surchargé pour le serveur ou le cuisinier.
-            </li>
-            <li>
-              <Check size={18} aria-hidden /> Sur ordinateur, tablette ou
-              téléphone, sans matériel imposé.
-            </li>
-          </ul>
+        <section className="landing-section landing-menu-sec">
+          <Reveal className="landing-menu">
+            <div className="landing-menu-head">
+              <span className="landing-eyebrow">Menu du jour</span>
+              <h2>Démarrer, en trois services.</h2>
+            </div>
+            <ol>
+              {courses.map((c) => (
+                <li key={c.course}>
+                  <span className="landing-course">{c.course}</span>
+                  <span className="landing-menu-line">
+                    <strong>{c.title}</strong>
+                    <i aria-hidden />
+                    <em>inclus</em>
+                  </span>
+                  <p>{c.text}</p>
+                </li>
+              ))}
+            </ol>
+            <p className="landing-menu-foot">
+              Ordinateur, tablette ou téléphone · sans matériel imposé
+            </p>
+          </Reveal>
         </section>
 
         <section className="landing-section landing-isolation" id="isolation">
-          <div className="landing-heading">
-            <span className="landing-eyebrow">
-              Vos données restent les vôtres
-            </span>
+          <Reveal className="landing-heading">
+            <span className="landing-eyebrow">Vos données restent les vôtres</span>
             <h2>Chaque structure ne voit que ses données.</h2>
-            <p>
-              Votre restaurant a son propre espace. Commandes, clients, stocks
-              et équipe ne sont jamais visibles depuis un autre établissement.
-            </p>
-          </div>
+          </Reveal>
           <div className="landing-guarantees">
-            <article>
-              <Lock size={22} aria-hidden />
-              <h3>Cloisonnement en base</h3>
-              <p>
-                L’isolation est appliquée par la base de données elle-même, à
-                chaque requête, et pas seulement par l’affichage.
-              </p>
-            </article>
-            <article>
-              <Building2 size={22} aria-hidden />
-              <h3>Une structure, un espace</h3>
-              <p>
-                Même avec plusieurs adresses, chaque structure garde son équipe,
-                sa carte, son site et ses clients.
-              </p>
-            </article>
-            <article>
-              <ShieldCheck size={22} aria-hidden />
-              <h3>Accès par rôle et journal</h3>
-              <p>
-                Chacun n’accède qu’à ce que son rôle permet. Les actions
-                sensibles sont tracées dans un journal d’activité.
-              </p>
-            </article>
-            <article>
-              <Code2 size={22} aria-hidden />
-              <h3>Open source</h3>
-              <p>
-                Code ouvert sous AGPL-3.0, vérifiable et auto-hébergeable sur
-                votre propre serveur.
-              </p>
-            </article>
+            {guarantees.map((g, i) => (
+              <Reveal key={g.title} delay={i * 80}>
+                <article>
+                  <g.icon size={22} aria-hidden />
+                  <h3>{g.title}</h3>
+                  <p>{g.text}</p>
+                </article>
+              </Reveal>
+            ))}
           </div>
         </section>
 
         <section className="landing-section" id="offres">
-          <div className="landing-heading">
+          <Reveal className="landing-heading">
             <span className="landing-eyebrow">Offres</span>
             <h2>Une adresse ou plusieurs, le même OS.</h2>
-            <p>
-              Les deux offres donnent accès à tous les modules. Elles ne
-              diffèrent que par le nombre de structures gérées.
-            </p>
-          </div>
+            <p>Tous les modules dans les deux. Seul le nombre de structures change.</p>
+          </Reveal>
           <div className="landing-plans">
-            {plans.map((p) => (
-              <article
-                key={p.name}
-                className="landing-plan"
-                data-featured={p.featured || undefined}
-              >
-                <span className="landing-eyebrow">Offre</span>
-                <h3>{p.name}</h3>
-                <strong className="landing-plan-quota">{p.structures}</strong>
-                <p>{p.pitch}</p>
-                <ul>
-                  {p.features.map((f) => (
-                    <li key={f}>
-                      <Check size={16} aria-hidden /> {f}
-                    </li>
-                  ))}
-                </ul>
-                <Link
-                  className={`landing-btn ${p.featured ? "light" : "primary"}`}
-                  href="/platform"
+            {plans.map((p, i) => (
+              <Reveal key={p.name} delay={i * 100}>
+                <article
+                  className="landing-plan"
+                  data-featured={p.featured || undefined}
                 >
-                  Choisir {p.name}
-                </Link>
-              </article>
+                  {p.featured && (
+                    <span className="landing-plan-badge">Multi-adresses</span>
+                  )}
+                  <h3>{p.name}</h3>
+                  <strong className="landing-plan-quota">{p.structures}</strong>
+                  <p>{p.pitch}</p>
+                  <ul>
+                    {p.features.map((f) => (
+                      <li key={f}>
+                        <Check size={16} aria-hidden /> {f}
+                      </li>
+                    ))}
+                  </ul>
+                  <Link
+                    className={`landing-btn ${p.featured ? "light" : "primary"}`}
+                    href="/platform"
+                  >
+                    Choisir {p.name} <ArrowUpRight size={16} aria-hidden />
+                  </Link>
+                </article>
+              </Reveal>
             ))}
           </div>
         </section>
 
         <section className="landing-section" id="questions">
-          <div className="landing-heading">
+          <Reveal className="landing-heading">
             <span className="landing-eyebrow">Questions</span>
             <h2>Avant de vous lancer.</h2>
-          </div>
+          </Reveal>
           <div className="landing-faq">
             {faq.map((f) => (
               <details key={f.q}>
@@ -526,6 +494,8 @@ export function Landing({
         <ClientSpace account={account} />
 
         <section className="landing-final">
+          <span className="lx-shape lx-shape-a" aria-hidden />
+          <span className="lx-shape lx-shape-c" aria-hidden />
           <h2>Votre prochain service, dans un seul outil.</h2>
           <p>
             {demo
@@ -538,7 +508,10 @@ export function Landing({
 
       <footer className="landing-footer">
         <span className="landing-brand">
-          <UtensilsCrossed size={18} aria-hidden /> DATTIER <span>OS</span>
+          <span className="landing-brand-mark">
+            <UtensilsCrossed size={16} aria-hidden />
+          </span>
+          DATTIER <span>OS</span>
         </span>
         <nav aria-label="Liens utiles">
           {demo && <Link href="/demo">Démonstration</Link>}
@@ -546,8 +519,16 @@ export function Landing({
           <Link href="/platform">Espace client</Link>
           <Link href="/source">Code source et licence</Link>
         </nav>
-        <small>© Dattier OS · Logiciel libre sous licence AGPL-3.0</small>
+        <small>
+          © Dattier OS · Logiciel libre sous licence AGPL-3.0 ·{" "}
+          <span className="landing-hint">↑↑↓↓←→←→ B A</span>
+        </small>
       </footer>
+
+      <FloatingDock
+        plans={plans.map((p) => ({ name: p.name, quota: p.structures }))}
+      />
+      <Secrets />
     </div>
   );
 }
