@@ -1,4 +1,5 @@
 "use client";
+import { UtensilsLoader } from "@/components/brand/utensils";
 import { useCallback, useEffect, useState } from "react";
 import {
   Activity,
@@ -207,8 +208,13 @@ export function SecurityCenter({ restaurant }: { restaurant: string }) {
   }
 
   if (!data)
-    return (
-      <p className="muted">{error || "Chargement du centre de sécurité…"}</p>
+    return error ? (
+      <p className="muted">{error}</p>
+    ) : (
+      <UtensilsLoader
+        label="Chargement du centre de sécurité"
+        fullscreen={false}
+      />
     );
   const admin = data.platformAdmin;
   const open = incidents.filter(

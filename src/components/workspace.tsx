@@ -1,4 +1,5 @@
 "use client";
+import { UtensilsLoader } from "@/components/brand/utensils";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useCallback, useEffect, useState, useRef } from "react";
@@ -34,7 +35,9 @@ import { Dining, Kds, OrderList } from "./operations";
 import { Management } from "./management";
 import dynamic from "next/dynamic";
 const Overview = dynamic(() => import("./overview").then((m) => m.Overview), {
-  loading: () => <p>Chargement du tableau de bord…</p>,
+  loading: () => (
+    <UtensilsLoader label="Chargement du tableau de bord" fullscreen={false} />
+  ),
 });
 const Finance = dynamic(() => import("./overview").then((m) => m.Finance));
 import { dateTime } from "@/lib/domain";
@@ -280,6 +283,8 @@ export function Workspace() {
     setModule(s);
     setMobile(false);
   };
+  if (!data && !error)
+    return <UtensilsLoader label="Votre restaurant se prépare" />;
   if (!data)
     return (
       <main className="loading">
