@@ -23,7 +23,17 @@ import {
   ShoppingBag,
   Users,
   UtensilsCrossed,
+  RefreshCw,
+  Rocket,
+  Wallet,
 } from "lucide-react";
+import {
+  CURRENT_VERSION,
+  current,
+  daysUntil,
+  formatDate,
+  releases,
+} from "@/lib/releases";
 
 // Page de présentation de Dattier OS. Uniquement des faits vérifiables dans
 // le code : modules existants, isolation par structure, quotas des offres
@@ -101,6 +111,98 @@ const outcomes = [
   },
 ];
 
+// Engagement de maintenance : calendrier réel tiré de src/lib/releases.ts.
+const promises = [
+  {
+    icon: Code2,
+    title: "Libre",
+    text: "Code ouvert, sans enfermement : vos données et votre outil restent les vôtres.",
+  },
+  {
+    icon: Wallet,
+    title: "Accessible",
+    text: "Un seul abonnement remplace la pile d’outils séparés, sans matériel imposé.",
+  },
+  {
+    icon: Rocket,
+    title: "Toujours à jour",
+    text: "Les dernières technologies du web, mises à niveau tous les six mois.",
+  },
+  {
+    icon: RefreshCw,
+    title: "Maintenu",
+    text: "Correctifs chaque mois si besoin, failles de sécurité corrigées sans attendre.",
+  },
+];
+
+function Roadmap() {
+  const upcoming = releases.filter((r) => !r.released).slice(0, 3);
+  const nextRelease = upcoming[0];
+  return (
+    <section className="landing-section landing-roadmap" id="mises-a-jour">
+      <div className="landing-heading">
+        <span className="landing-eyebrow">Maintenu dans la durée</span>
+        <h2>Un outil libre, qui ne vieillit pas.</h2>
+        <p>
+          Nous avons créé Dattier OS pour que chaque restaurateur accède
+          rapidement, simplement et à moindre coût à tous les outils numériques
+          de son métier. Et pour qu’ils restent à jour : une mise à jour
+          importante tous les six mois, à dates annoncées.
+        </p>
+      </div>
+      <div className="landing-roadmap-grid">
+        <ul className="landing-promises">
+          {promises.map((p) => (
+            <li key={p.title}>
+              <p.icon size={20} aria-hidden />
+              <div>
+                <h3>{p.title}</h3>
+                <p>{p.text}</p>
+              </div>
+            </li>
+          ))}
+        </ul>
+        <div className="landing-releases">
+          <div className="landing-releases-head">
+            <span>Feuille de route</span>
+            {nextRelease && (
+              <strong>
+                Prochaine mise à jour dans {daysUntil(nextRelease.date)} jours
+              </strong>
+            )}
+          </div>
+          <ol>
+            <li data-current>
+              <span className="landing-release-v">v{CURRENT_VERSION}</span>
+              <span className="landing-release-copy">
+                <strong>{current.title}</strong>
+                <small>En service depuis le {formatDate(current.date)}</small>
+              </span>
+              <span className="landing-release-tag">Actuelle</span>
+            </li>
+            {upcoming.map((r) => (
+              <li key={r.version}>
+                <span className="landing-release-v">v{r.version}</span>
+                <span className="landing-release-copy">
+                  <strong>{r.title}</strong>
+                  <small>
+                    <time dateTime={r.date}>{formatDate(r.date)}</time>
+                  </small>
+                </span>
+                <span className="landing-release-tag">Prévue</span>
+              </li>
+            ))}
+          </ol>
+          <Link className="landing-releases-link" href="/source#calendrier">
+            Calendrier complet et politique de maintenance{" "}
+            <ArrowUpRight size={15} aria-hidden />
+          </Link>
+        </div>
+      </div>
+    </section>
+  );
+}
+
 const steps = [
   {
     title: "Créez votre compte",
@@ -154,6 +256,10 @@ const faq = [
   {
     q: "J’ouvre une deuxième adresse, que se passe-t-il ?",
     a: "L’offre Essentiel couvre une structure. Avec Premium, vous ajoutez vos autres établissements au même compte, chacun gardant ses données.",
+  },
+  {
+    q: "Le logiciel est-il mis à jour ?",
+    a: "Oui. Une mise à jour importante sort tous les six mois, le premier mardi de mai et de novembre, avec des correctifs entre les deux. Le calendrier est public sur la page Code source.",
   },
   {
     q: "Le code est-il ouvert ?",
@@ -271,6 +377,7 @@ export function Landing({
         <nav aria-label="Navigation principale">
           <a href="#modules">Modules</a>
           <a href="#isolation">Vos données</a>
+          <a href="#mises-a-jour">Mises à jour</a>
           <a href="#offres">Offres</a>
           <a href="#questions">Questions</a>
           <a href="#espace-client">Espace client</a>
@@ -470,6 +577,8 @@ export function Landing({
           </div>
         </section>
 
+        <Roadmap />
+
         <section className="landing-section" id="offres">
           <div className="landing-heading">
             <span className="landing-eyebrow">Offres</span>
@@ -544,9 +653,12 @@ export function Landing({
           {demo && <Link href="/demo">Démonstration</Link>}
           {demo && <Link href="/site-demo">Exemple de site restaurant</Link>}
           <Link href="/platform">Espace client</Link>
-          <Link href="/source">Code source et licence</Link>
+          <Link href="/source">Code source, versions et licence</Link>
         </nav>
-        <small>© Dattier OS · Logiciel libre sous licence AGPL-3.0</small>
+        <small>
+          © Dattier OS · v{CURRENT_VERSION} · Logiciel libre sous licence
+          AGPL-3.0
+        </small>
       </footer>
     </div>
   );
