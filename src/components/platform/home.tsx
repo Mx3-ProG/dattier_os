@@ -1,4 +1,5 @@
 "use client";
+import { UtensilsLoader } from "@/components/brand/utensils";
 import { type Plan } from "@/features/platform/pricing";
 import { referralPricing, type PaidPlan } from "@/features/platform/referrals";
 import { ReferralPanel } from "./referral-panel";
@@ -265,7 +266,7 @@ export function PlatformHome() {
             </div>
           </section>
         ) : (
-          <p className="platform-loading" role="status">Chargement de votre espace…</p>
+          <UtensilsLoader label="Chargement de votre espace" fullscreen={false} />
         )
       )}
       </div>

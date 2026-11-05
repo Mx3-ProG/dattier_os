@@ -1,4 +1,5 @@
 "use client";
+import { UtensilsLoader } from "@/components/brand/utensils";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useCallback, useEffect, useState, useRef } from "react";
@@ -328,6 +329,7 @@ export function Workspace() {
     }))
     .filter((tab) => tab.items.length > 0);
   const openSheet = dock.find((tab) => tab.id === dockSheet);
+  if (!data && !error) return <UtensilsLoader label="Votre restaurant se prépare" />;
   if (!data)
     return (
       <main className="loading">

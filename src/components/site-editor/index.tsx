@@ -1,4 +1,5 @@
 "use client";
+import { UtensilsLoader } from "@/components/brand/utensils";
 import { useTenantSite } from "../cms-site/context";
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -490,9 +491,7 @@ export function SiteEditor({
         </div>
       </section>
     ) : (
-      <p className="muted" role="status">
-        Chargement de l’éditeur…
-      </p>
+      <UtensilsLoader label="Chargement de l’éditeur" fullscreen={false} />
     );
 
   const setSections = (mutate: (list: Section[]) => Section[], key?: string) =>

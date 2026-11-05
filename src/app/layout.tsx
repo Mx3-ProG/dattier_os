@@ -8,6 +8,8 @@ import "./globals.css";
 import "./fonts.css";
 import "./public-site.css";
 export const metadata: Metadata = {
+  metadataBase: new URL(process.env.APP_URL || "https://atacuisine.vercel.app"),
+  applicationName: "atacuisine",
   title: "atacuisine · Le restaurant, en harmonie",
   description:
     "Le système ouvert pour gérer les commandes, stocks, équipes et clients de vos restaurants.",

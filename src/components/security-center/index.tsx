@@ -1,4 +1,5 @@
 "use client";
+import { UtensilsLoader } from "@/components/brand/utensils";
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import {
@@ -225,7 +226,7 @@ export function SecurityCenter({ restaurant }: { restaurant: string }) {
         </div>
       </section>
     ) : (
-      <p className="muted" role="status">Chargement du centre de sécurité…</p>
+      <UtensilsLoader label="Chargement du centre de sécurité" fullscreen={false} />
     );
   const admin = data.platformAdmin;
   const open = incidents.filter(

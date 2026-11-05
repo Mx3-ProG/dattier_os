@@ -1,4 +1,5 @@
 "use client";
+import { UtensilsLoader } from "@/components/brand/utensils";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, useEffect, useCallback, useMemo } from "react";
@@ -196,7 +197,7 @@ export function RestaurantHub({
             </div>
           </section>
         ) : (
-          <p role="status">Chargement…</p>
+          <UtensilsLoader fullscreen={false} />
         )
       ) : (
         <>
