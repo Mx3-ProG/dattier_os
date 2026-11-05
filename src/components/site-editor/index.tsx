@@ -1,4 +1,5 @@
 "use client";
+import { UtensilsLoader } from "@/components/brand/utensils";
 import { useTenantSite } from "../cms-site/context";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
@@ -415,7 +416,11 @@ export function SiteEditor({
   }, [page, isAdmin]);
 
   if (!meta || !config || !page)
-    return <p className="muted">{error || "Chargement de l’éditeur…"}</p>;
+    return error ? (
+      <p className="muted">{error}</p>
+    ) : (
+      <UtensilsLoader label="Chargement de l’éditeur" fullscreen={false} />
+    );
 
   const setSections = (mutate: (list: Section[]) => Section[], key?: string) =>
     update((c) => {

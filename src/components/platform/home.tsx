@@ -1,4 +1,5 @@
 "use client";
+import { UtensilsLoader } from "@/components/brand/utensils";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, useEffect, useCallback } from "react";
@@ -194,7 +195,7 @@ export function PlatformHome() {
           </section>
         </>
       ) : (
-        <p role="status">Chargement de votre espace…</p>
+        <UtensilsLoader label="Chargement de votre espace" fullscreen={false} />
       )}
     </main>
   );
