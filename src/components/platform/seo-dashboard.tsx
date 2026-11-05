@@ -305,7 +305,7 @@ export function SeoDashboard({ restaurant }: { restaurant: string }) {
         <p>
           <b>Non disponible.</b> Impressions, clics, taux de clic et positions
           proviennent de Google Search Console et de Bing Webmaster Tools, qui
-          ne sont pas connectés à Dattier OS. Aucune estimation n’est affichée.
+          ne sont pas connectés à atacuisine. Aucune estimation n’est affichée.
         </p>
         <p className="muted">
           Vous pouvez déjà déclarer votre site dans ces outils et y soumettre

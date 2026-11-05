@@ -1,4 +1,4 @@
-/* Page de présentation de Dattier OS (/). Palette du site public
+/* Page de présentation d’atacuisine (/). Palette du site public
    (public-site.css) et polices locales de fonts.css ; ne cible que .landing. */
 .landing {
   --l-bg: #f8f5ed;
@@ -391,7 +391,7 @@
 
 .landing-plans {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 20px;
   max-width: 960px;
 }

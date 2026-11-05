@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { SecurityCenter } from "@/components/security-center";
 import "@/app/security.css";
+import "@/components/platform/platform.css";
 export default async function Page({
   params,
 }: {
@@ -8,7 +9,7 @@ export default async function Page({
 }) {
   const { restaurant } = await params;
   return (
-    <main className="operations-security-page">
+    <main className="operations-security-page platform-chrome">
       <header>
         <Link href={`/restaurant/${restaurant}`}>
           ← Administration du restaurant

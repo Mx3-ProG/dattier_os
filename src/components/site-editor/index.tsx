@@ -1,5 +1,6 @@
 "use client";
 import { useTenantSite } from "../cms-site/context";
+import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   ArrowDown,
@@ -416,7 +417,36 @@ export function SiteEditor({
   }, [page, isAdmin]);
 
   if (!meta || !config || !page)
-    return <p className="muted">{error || "Chargement de l’éditeur…"}</p>;
+    return error ? (
+      <section className="site-editor-gate" role="alert">
+        <span>Édition du site</span>
+        <h2>
+          {error.includes("Accès refusé")
+            ? "Votre profil ne permet pas de modifier le site"
+            : "L’éditeur n’a pas pu se charger"}
+        </h2>
+        <p>{error}</p>
+        <div className="actions">
+          <button
+            type="button"
+            onClick={() => {
+              setError("");
+              void loadMeta().catch((e) => setError((e as Error).message));
+            }}
+          >
+            Réessayer
+          </button>
+          <Link href={`/restaurant/${restaurant}`}>
+            Retour à l’administration
+          </Link>
+          <Link href={`/dashboard?restaurant=${restaurant}`}>
+            Ouvrir le poste de travail
+          </Link>
+        </div>
+      </section>
+    ) : (
+      <p className="muted" role="status">Chargement de l’éditeur…</p>
+    );
 
   const setSections = (mutate: (list: Section[]) => Section[], key?: string) =>
     update((c) => {

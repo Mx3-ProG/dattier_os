@@ -603,7 +603,7 @@ export function Storefront({
         <p>
           {catalog?.site.address} · {catalog?.site.phone}
         </p>
-        <Link href="/source">Propulsé par Dattier OS · code source</Link>
+        <Link href="/source">Propulsé par atacuisine · code source</Link>
       </footer>
     </main>
   );

@@ -12,23 +12,32 @@ const Context = createContext<{
   demo: boolean;
   platformOrigin: string;
   preview: boolean;
-}>({ restaurant: "", demo: false, platformOrigin: "", preview: false });
+  shopEnabled: boolean;
+}>({
+  restaurant: "",
+  demo: false,
+  platformOrigin: "",
+  preview: false,
+  shopEnabled: true,
+});
 export function TenantSiteProvider({
   restaurant,
   demo = false,
   platformOrigin = "",
   preview = false,
+  shopEnabled = true,
   children,
 }: {
   restaurant: string;
   demo?: boolean;
   platformOrigin?: string;
   preview?: boolean;
+  shopEnabled?: boolean;
   children: ReactNode;
 }) {
   const value = useMemo(
-    () => ({ restaurant, demo, platformOrigin, preview }),
-    [restaurant, demo, platformOrigin, preview],
+    () => ({ restaurant, demo, platformOrigin, preview, shopEnabled }),
+    [restaurant, demo, platformOrigin, preview, shopEnabled],
   );
   return <Context.Provider value={value}>{children}</Context.Provider>;
 }
@@ -37,6 +46,11 @@ export function useTenantSite() {
   return useMemo(() => {
     const base = `/r/${encodeURIComponent(context.restaurant)}`;
     function href(path: string) {
+      if (
+        !context.shopEnabled &&
+        /^\/(commander|checkout|panier)([?#]|$)/.test(path)
+      )
+        path = "/carte";
       if (
         !path.startsWith("/") ||
         path.startsWith("//") ||

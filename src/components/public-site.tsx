@@ -67,7 +67,7 @@ export function PublicSite({ route }: { route: string }) {
       </a>
       <div className="public-demo">
         Site de démonstration · Prix, recettes et disponibilités fictifs ·{" "}
-        <Link href="/demo">Entrer dans DATTIER OS ↗</Link>
+        <Link href="/demo">Entrer dans atacuisine ↗</Link>
       </div>
       <SiteHeader />
       <main id="contenu" tabIndex={-1}>

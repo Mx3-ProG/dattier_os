@@ -1,3 +1,12 @@
+import {
+  availability,
+  calendar,
+  calendarQuery,
+  dayQuery,
+  requestReservation,
+  reservationSchema,
+} from "@/features/reservations/service";
+import { requirePlan } from "@/features/platform/entitlements";
 import { withRequestContext } from "@/features/ops-security/context";
 import { logout } from "@/lib/auth/oidc";
 import { claimReward } from "@/features/commerce/rewards";
@@ -30,6 +39,12 @@ async function routeGET(req: NextRequest, c: Context) {
           await (
             await getDb()
           ).transaction(async (db) => {
+            await requirePlan(db, restaurant, action === "receipt" ? 39 : 69);
+            const params = Object.fromEntries(req.nextUrl.searchParams);
+            if (action === "calendar")
+              return calendar(db, restaurant, calendarQuery.parse(params));
+            if (action === "availability")
+              return availability(db, restaurant, dayQuery.parse(params));
             const shop = commerce(restaurant);
             if (action === "catalog")
               return {
@@ -94,6 +109,14 @@ async function routePOST(req: NextRequest, c: Context) {
               await logout();
               return { ok: true };
             }
+            await requirePlan(db, restaurant, action === "checkout" ? 99 : 69);
+            if (action === "reservation")
+              return {
+                id: await requestReservation(
+                  db,
+                  reservationSchema.parse({ ...body, restaurant }),
+                ),
+              };
             if (action === "checkout") {
               if (body.payment !== "counter")
                 throw new Error("Paiement en ligne non raccordé.");

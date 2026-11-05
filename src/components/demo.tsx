@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 import { ArrowUpRight, UtensilsCrossed } from "lucide-react";
 import type { Actor } from "@/lib/auth/session";
 import { roleLabels } from "@/lib/permissions";
-export function Demo() {
+export function Demo({ returnTo = "/dashboard" }: { returnTo?: string }) {
   const router = useRouter();
   const [profiles, setProfiles] = useState<Actor[]>([]),
     [error, setError] = useState(""),
@@ -26,7 +26,7 @@ export function Demo() {
       });
       const d = await r.json();
       if (!r.ok) throw new Error(d.error);
-      router.push("/dashboard");
+      router.push(returnTo);
     } catch (e) {
       setError((e as Error).message);
       setBusy(false);
@@ -35,7 +35,7 @@ export function Demo() {
   return (
     <main className="demo">
       <Link href="/" className="brand">
-        <UtensilsCrossed /> DATTIER <span>OS</span>
+        <UtensilsCrossed /> atacuisine
       </Link>
       <div className="eyebrow">UN RESTAURANT. UNE ÉQUIPE. UN MÊME OUTIL.</div>
       <h1>Entrez dans les coulisses.</h1>

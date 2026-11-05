@@ -10,6 +10,8 @@ import { commerce } from "../src/features/commerce/service";
 import { offlinePerform } from "../src/features/offline/service";
 import { scope } from "../src/lib/auth/session";
 import { can } from "../src/lib/permissions";
+import { monthlyPrice } from "../src/features/platform/pricing";
+import { requirePlan } from "../src/features/platform/entitlements";
 import { randomUUID } from "node:crypto";
 let db: PGlite;
 const user = { id: "nadia", name: "Nadia", role: "OWNER" as const };
@@ -102,6 +104,19 @@ test("rôles cumulés et suspension vérifiés côté serveur", async () => {
   await db.query("UPDATE profiles SET status='active' WHERE id='other'");
 });
 test("initialisation multi-restaurant sans recopier les comptes et stocks de démo", async () => {
+  const owner = { id: "other", name: "Other", role: "OWNER" } as const;
+  const add = () =>
+    asUser("other", "other-r", (tx) =>
+      platformPerform(tx, owner, {
+        action: "restaurant",
+        organization: "other-org",
+        name: "Deuxième restaurant",
+      }),
+    );
+  await assert.rejects(add(), /avant activation/);
+  await db.query("SELECT app.configure_organization_plan('other-org',39,1)");
+  await assert.rejects(add(), /Quota/);
+  await db.query("SELECT app.configure_organization_plan('other-org',69,2)");
   const result = (await asUser("other", "other-r", (tx) =>
     platformPerform(
       tx,
@@ -114,6 +129,40 @@ test("initialisation multi-restaurant sans recopier les comptes et stocks de dé
     ),
   )) as { restaurant: string };
   assert.ok(result.restaurant);
+  await assert.rejects(add(), /Quota/);
+  for (const plan of [39, 69, 99] as const) {
+    await db.query("SELECT app.configure_organization_plan('other-org',$1,2)", [
+      plan,
+    ]);
+    assert.equal(monthlyPrice(plan, 2), plan + 39);
+    for (const restaurant of ["other-r", result.restaurant]) {
+      assert.equal(
+        await asUser("other", restaurant, (tx) =>
+          requirePlan(tx, restaurant, 39),
+        ),
+        plan,
+      );
+      if (plan < 99)
+        await assert.rejects(
+          asUser("other", restaurant, (tx) => requirePlan(tx, restaurant, 99)),
+          /non autorisé/,
+        );
+    }
+  }
+  await assert.rejects(
+    db.query("SELECT app.configure_organization_plan('other-org',99,1)"),
+    /Sélectionnez/,
+  );
+  await db.query(
+    "SELECT app.configure_organization_plan('other-org',99,1,ARRAY[$1])",
+    [result.restaurant],
+  );
+  await assert.rejects(
+    asUser("other", result.restaurant, (tx) =>
+      requirePlan(tx, result.restaurant, 39),
+    ),
+    /non autorisé/,
+  );
   assert.equal(
     (
       await one<{ count: number }>(

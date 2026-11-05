@@ -1,3 +1,4 @@
+import { requirePlan } from "@/features/platform/entitlements";
 import { withRequestContext } from "@/features/ops-security/context";
 import { NextRequest, NextResponse } from "next/server";
 import { withDatabaseContext } from "@/lib/database/context";
@@ -14,7 +15,10 @@ async function routeGET(
       async () => {
         const result = await (
           await getDb()
-        ).transaction((db) => readAsset(db, restaurant, asset));
+        ).transaction(async (db) => {
+          await requirePlan(db, restaurant, 69);
+          return readAsset(db, restaurant, asset);
+        });
         if (!result?.body) return new NextResponse(null, { status: 404 });
         return new NextResponse(Buffer.from(result.body), {
           headers: {

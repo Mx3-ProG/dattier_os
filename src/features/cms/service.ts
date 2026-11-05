@@ -1,3 +1,4 @@
+import { requirePlan } from "@/features/platform/entitlements";
 import { randomUUID } from "node:crypto";
 
 import { z } from "zod";
@@ -30,6 +31,7 @@ export function website(SHOP: string) {
   /** Server-side gate: membership of the shop, then the `website` permission. */
   async function siteScope(db: DB, user: Actor): Promise<SiteScope> {
     const scoped = await scope(db, user, SHOP);
+    await requirePlan(db, SHOP, 69);
     requirePermission(scoped.roles ?? scoped.role, "website");
     return {
       user: scoped,
@@ -48,7 +50,17 @@ export function website(SHOP: string) {
     const version = (raw as { schemaVersion?: number } | null)?.schemaVersion;
     if (version !== SCHEMA_VERSION)
       throw new Error(`Version de configuration inconnue : ${version}.`);
-    return siteConfigSchema.parse(raw) as SiteConfig;
+    const config = siteConfigSchema.parse(raw) as SiteConfig;
+    if (
+      config.footer.credit === "{{restaurant.name}} · propulsé par DATTIER OS"
+    )
+      config.footer.credit = defaultConfig().footer.credit;
+    if (
+      config.seo.description ===
+      "Cuisine, rencontres et convivialité. Démonstration e-commerce locale propulsée par DATTIER OS."
+    )
+      config.seo.description = defaultConfig().seo.description;
+    return config;
   }
   type CmsRow = {
     draft: unknown;

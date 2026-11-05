@@ -69,18 +69,38 @@ try {
     rolbypassrls: false,
     owns: false,
   });
-  const r = (await app("qa-other", "qa-other-r", (tx) =>
-    platformPerform(
-      tx,
-      { id: "qa-other", name: "QA", role: "OWNER" },
-      {
-        action: "restaurant",
-        organization: "qa-other-org",
-        name: "Restaurant B",
-      },
+  const addRestaurant = (name: string) =>
+    app("qa-other", "qa-other-r", (tx) =>
+      platformPerform(
+        tx,
+        { id: "qa-other", name: "QA", role: "OWNER" },
+        {
+          action: "restaurant",
+          organization: "qa-other-org",
+          name,
+        },
+      ),
+    );
+  await assert.rejects(addRestaurant("En attente"), /avant activation/);
+  await db.query("SELECT app.configure_organization_plan('qa-other-org',69,2)");
+  await assert.rejects(
+    app("qa-other", "qa-other-r", (tx) =>
+      tx.query("SELECT app.configure_organization_plan('qa-other-org',99,3)"),
     ),
-  )) as { restaurant: string };
-  assert.ok(r.restaurant);
+    /permission denied/,
+  );
+  const results = await Promise.allSettled([
+    addRestaurant("Restaurant B"),
+    addRestaurant("Restaurant C"),
+  ]);
+  assert.equal(
+    results.filter((result) => result.status === "fulfilled").length,
+    1,
+  );
+  assert.match(
+    String(results.find((result) => result.status === "rejected")?.reason),
+    /Quota/,
+  );
   const device = (await app("nadia", "bernay", (tx) =>
     offlinePerform(tx, "bernay", user, {
       action: "register",

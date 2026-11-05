@@ -24,7 +24,7 @@ try {
  REVOKE ALL ON schema_versions FROM dattier_app;
  GRANT USAGE,SELECT ON ALL SEQUENCES IN SCHEMA public TO dattier_app;
  GRANT EXECUTE ON ALL FUNCTIONS IN SCHEMA app TO dattier_app;
- REVOKE EXECUTE ON FUNCTION app.claim_jobs(text) FROM dattier_app;
+ REVOKE EXECUTE ON FUNCTION app.claim_jobs(text),app.configure_organization_plan(text,integer,integer,text[]) FROM dattier_app;
  DO $$ BEGIN IF NOT EXISTS(SELECT FROM pg_roles WHERE rolname='dattier_worker') THEN CREATE ROLE dattier_worker NOLOGIN NOSUPERUSER NOCREATEDB NOCREATEROLE NOBYPASSRLS; END IF; END $$;
  GRANT dattier_app TO dattier_worker;
  GRANT EXECUTE ON FUNCTION app.claim_jobs(text) TO dattier_worker;

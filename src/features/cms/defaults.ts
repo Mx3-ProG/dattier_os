@@ -166,7 +166,7 @@ export function defaultConfig(): SiteConfig {
       noIndex: true,
       title: "{{restaurant.name}} · Cuisine et convivialité",
       description:
-        "Cuisine, rencontres et convivialité. Démonstration e-commerce locale propulsée par DATTIER OS.",
+        "Cuisine, rencontres et convivialité. Démonstration e-commerce locale propulsée par atacuisine.",
       ogImage: "",
       favicon: "",
       shareName: "{{restaurant.name}}",
@@ -181,7 +181,7 @@ export function defaultConfig(): SiteConfig {
     footer: {
       tagline: "Un peu, beaucoup,\npassionnément gourmand.",
       cta: "À tout de suite ?",
-      credit: "{{restaurant.name}} · propulsé par DATTIER OS",
+      credit: "{{restaurant.name}} · propulsé par atacuisine",
       notice: "Disponibilités et prix confirmés lors de la commande.",
     },
     legal: {

@@ -1,3 +1,4 @@
+import { restaurantPlan } from "@/features/platform/entitlements";
 import { registerPresence } from "@/features/ops-security/presence";
 import { type DB, rows, one, demoEnabled } from "./database/db";
 import { type Actor, scope } from "./auth/session";
@@ -22,7 +23,9 @@ export async function snapshot(
 ): Promise<Snapshot> {
   user = await scope(db, user, r);
   await registerPresence(db, r, user);
+  const plan = await restaurantPlan(db, r);
   const allowed = (p: Parameters<typeof can>[1]) =>
+    (plan >= 69 || !["finance", "customers", "website"].includes(p)) &&
     can(user.roles ?? user.role, p);
   const restaurants = await rows<Restaurant>(
     db,
@@ -146,6 +149,7 @@ export async function snapshot(
       `SELECT t.*,p.name FROM time_entries t JOIN profiles p ON p.id=t.profile_id WHERE restaurant_id=$1 ${allowed("team") ? "" : "AND profile_id=$2"} ORDER BY created_at DESC LIMIT 50`,
       allowed("team") ? [r] : [r, user.id],
     ),
+    plan,
     promos: allowed("customers")
       ? await rows(
           db,
@@ -153,13 +157,14 @@ export async function snapshot(
           [r],
         )
       : [],
-    checkoutCustomers: allowed("payments")
-      ? await rows(
-          db,
-          "SELECT id,name FROM customers WHERE restaurant_id=$1 ORDER BY name",
-          [r],
-        )
-      : [],
+    checkoutCustomers:
+      plan >= 69 && allowed("payments")
+        ? await rows(
+            db,
+            "SELECT id,name FROM customers WHERE restaurant_id=$1 ORDER BY name",
+            [r],
+          )
+        : [],
     customers: allowed("customers")
       ? await rows(
           db,

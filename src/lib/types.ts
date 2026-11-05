@@ -164,6 +164,7 @@ export type Promo = {
   expired: boolean;
 };
 export type Snapshot = {
+  plan: import("@/features/platform/pricing").Plan;
   demo: boolean;
   categories: string[];
   promos: Promo[];

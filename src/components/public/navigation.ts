@@ -3,7 +3,7 @@
 // ou une ancre d'une section de l'accueil (voir home-sections.tsx).
 export type NavLink = { href: string; label: string };
 
-// Le site de démonstration vit sous /site-demo : « / » présente Dattier OS.
+// Le site de démonstration vit sous /site-demo : « / » présente atacuisine.
 export const siteBase = "/site-demo";
 export const sitePath = (path = "") =>
   path === "" || path === "/" ? siteBase : `${siteBase}${path}`;

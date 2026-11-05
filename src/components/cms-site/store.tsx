@@ -121,7 +121,14 @@ export function DonutStore({
   updatedAt?: string | null;
 }) {
   const nextRouter = useRouter();
-  const { request: fetch, shopPost, href, restaurant, demo } = useTenantSite();
+  const {
+    request: fetch,
+    shopPost,
+    href,
+    restaurant,
+    demo,
+    shopEnabled,
+  } = useTenantSite();
   const router = { push: (path: string) => nextRouter.push(href(path)) };
   const [config, setConfig] = useState(initialConfig),
     [selectedSection, setSelectedSection] = useState<string | null>(null);
@@ -294,6 +301,7 @@ export function DonutStore({
       0,
     );
   function select(p: Product) {
+    if (!shopEnabled) return;
     setError("");
     setProduct(p);
     setPurchaseMode(p.category === "Menus" ? "solo" : purchaseIntent);
@@ -303,6 +311,7 @@ export function DonutStore({
     setNote("");
   }
   function addLines(lines: Line[], message: string) {
+    if (!shopEnabled) return;
     setCart((current) => {
       const next = current.map((line) => ({ ...line }));
       for (const line of lines) {
@@ -570,8 +579,12 @@ export function DonutStore({
                   .slice(0, fp.limit && category === "Tout" ? fp.limit : 100)
                   .map((p, i) => (
                     <article
-                      role="button"
-                      tabIndex={p.enabled && p.portions > 0 ? 0 : -1}
+                      role={shopEnabled ? "button" : undefined}
+                      tabIndex={
+                        shopEnabled && p.enabled && p.portions > 0
+                          ? 0
+                          : undefined
+                      }
                       className={`donut-product tone-${i % 4}`}
                       key={p.id}
                       onClick={() => {
@@ -587,8 +600,12 @@ export function DonutStore({
                           select(p);
                         }
                       }}
-                      aria-disabled={!p.enabled || p.portions < 1}
-                      aria-label={`Personnaliser ${p.name}`}
+                      aria-disabled={
+                        shopEnabled ? !p.enabled || p.portions < 1 : undefined
+                      }
+                      aria-label={
+                        shopEnabled ? `Personnaliser ${p.name}` : undefined
+                      }
                     >
                       <span className="donut-product-image">
                         <img
@@ -645,14 +662,16 @@ export function DonutStore({
                         >
                           <Star size={15} /> Noter ce produit
                         </button>
-                        <span className="donut-add">
-                          {p.portions < 1
-                            ? "Victime de son succès"
-                            : purchaseIntent === "menu"
-                              ? "Composer mon menu"
-                              : "Choisir solo ou menu"}
-                          <Plus size={20} />
-                        </span>
+                        {shopEnabled && (
+                          <span className="donut-add">
+                            {p.portions < 1
+                              ? "Victime de son succès"
+                              : purchaseIntent === "menu"
+                                ? "Composer mon menu"
+                                : "Choisir solo ou menu"}
+                            <Plus size={20} />
+                          </span>
+                        )}
                       </span>
                     </article>
                   ))}
@@ -1354,17 +1373,21 @@ export function DonutStore({
           >
             <UserRound size={20} />
           </Link>
-          <Link className="donut-button compact" href="/commander">
-            {header.orderLabel} <ArrowUpRight size={17} />
-          </Link>
-          <button
-            className={`donut-bag ${toast ? "bounce" : ""}`}
-            aria-label={`Ouvrir le panier, ${count} produits`}
-            onClick={() => router.push("/checkout")}
-          >
-            <ShoppingBag size={23} />
-            <span>{count}</span>
-          </button>
+          {shopEnabled && (
+            <>
+              <Link className="donut-button compact" href="/commander">
+                {header.orderLabel} <ArrowUpRight size={17} />
+              </Link>
+              <button
+                className={`donut-bag ${toast ? "bounce" : ""}`}
+                aria-label={`Ouvrir le panier, ${count} produits`}
+                onClick={() => router.push("/checkout")}
+              >
+                <ShoppingBag size={23} />
+                <span>{count}</span>
+              </button>
+            </>
+          )}
           <button
             className="donut-mobile-menu"
             aria-label="Menu"
@@ -1399,9 +1422,11 @@ export function DonutStore({
               />
               <span>{r(footer.tagline)}</span>
             </Link>
-            <Link href="/commander">
-              {footer.cta} <ArrowUpRight />
-            </Link>
+            {shopEnabled && (
+              <Link href="/commander">
+                {footer.cta} <ArrowUpRight />
+              </Link>
+            )}
           </div>
           <div className="donut-footer-bottom">
             <span>
@@ -1445,7 +1470,7 @@ export function DonutStore({
           {toast}
         </div>
       )}
-      {count > 0 && route !== "checkout" && (
+      {shopEnabled && count > 0 && route !== "checkout" && (
         <button
           className="donut-mobile-cart donut-button"
           onClick={() => router.push("/checkout")}

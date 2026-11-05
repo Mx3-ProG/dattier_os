@@ -1,3 +1,4 @@
+import { requirePlan } from "@/features/platform/entitlements";
 import { recordFailure } from "@/features/ops-security/http";
 import {
   withRequestContext,
@@ -74,7 +75,7 @@ async function handleGet(req: NextRequest) {
       return NextResponse.json(
         await one(
           db,
-          "SELECT c.name,p.code,p.kind,p.value,p.expires_on,p.status,p.expires_on<CURRENT_DATE AS expired,r.name AS restaurant FROM promo_codes p JOIN customers c ON c.id=p.customer_id JOIN restaurants r ON r.id=p.restaurant_id WHERE p.token=$1",
+          "SELECT c.name,p.code,p.kind,p.value,p.expires_on,p.status,p.expires_on<CURRENT_DATE AS expired,r.name AS restaurant FROM promo_codes p JOIN customers c ON c.id=p.customer_id JOIN restaurants r ON r.id=p.restaurant_id WHERE p.token=$1 AND app.reward_plan_allowed(p.token)",
           [token],
         ),
         {
@@ -88,6 +89,7 @@ async function handleGet(req: NextRequest) {
     if (endpoint === "calendar" || endpoint === "availability") {
       const params = Object.fromEntries(req.nextUrl.searchParams);
       const r = params.restaurant || "bernay";
+      await requirePlan(db, r, 39);
       return NextResponse.json(
         endpoint === "calendar"
           ? await calendar(db, r, calendarQuery.parse(params))
@@ -97,6 +99,7 @@ async function handleGet(req: NextRequest) {
     }
     if (endpoint === "public") {
       const r = req.nextUrl.searchParams.get("restaurant") || "bernay";
+      await requirePlan(db, r, 69);
       return NextResponse.json({
         restaurants: await rows(
           db,
@@ -135,9 +138,11 @@ async function handlePost(req: NextRequest) {
     }
     if (endpoint === "reservation")
       return NextResponse.json({
-        id: await db.transaction((tx) =>
-          requestReservation(tx, reservationSchema.parse(body)),
-        ),
+        id: await db.transaction(async (tx) => {
+          const reservation = reservationSchema.parse(body);
+          await requirePlan(tx, reservation.restaurant, 39);
+          return requestReservation(tx, reservation);
+        }),
       });
     if (endpoint === "public-order") {
       const data = orderSchema.parse(body);

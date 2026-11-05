@@ -34,7 +34,7 @@ export default function RewardPage() {
   }, []);
   return (
     <main className="demo">
-      <span className="eyebrow">DATTIER · VOTRE AVANTAGE PERSONNEL</span>
+      <span className="eyebrow">atacuisine · VOTRE AVANTAGE PERSONNEL</span>
       <h1>Un plaisir à retrouver.</h1>
       {error ? (
         <p role="alert">{error}</p>

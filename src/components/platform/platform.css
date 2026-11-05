@@ -1,12 +1,12 @@
 .platform {
-  --ink: #163e32;
-  --line: #dce3dc;
-  max-width: 1160px;
+  --ink: #283b32;
+  --line: #e9e9e1;
+  max-width: 1480px;
   margin: 0 auto;
-  padding: 32px 20px 80px;
+  padding: 34px clamp(20px, 4vw, 56px) 80px;
   color: var(--ink);
   font-family: Arial, sans-serif;
-  background: #f8faf7;
+  background: #f8f7f3;
   min-height: 100vh;
 }
 .platform * {
@@ -14,15 +14,23 @@
   min-width: 0;
 }
 .platform header {
-  padding: 20px 0 28px;
+  padding: 8px 0 28px;
+}
+.platform > header > a:first-child {
+  color: #75806f;
+  text-decoration: none;
+  font-size: 12px;
+  font-weight: 600;
 }
 .platform h1 {
-  font-size: clamp(28px, 5vw, 44px);
+  font-size: clamp(28px, 3.2vw, 38px);
   line-height: 1.1;
-  margin: 20px 0;
+  letter-spacing: -1.1px;
+  margin: 15px 0 22px;
 }
 .platform h2 {
-  font-size: 23px;
+  font-size: 19px;
+  letter-spacing: -.25px;
 }
 .platform p {
   line-height: 1.6;
@@ -31,10 +39,11 @@
 .platform section,
 .platform article {
   border: 1px solid var(--line);
-  border-radius: 14px;
-  padding: 24px;
+  border-radius: 12px;
+  padding: 22px;
   background: white;
-  margin: 18px 0;
+  margin: 14px 0;
+  box-shadow: 0 2px 8px rgb(39 48 36 / 3%);
 }
 .platform article {
   padding: 16px;
@@ -63,12 +72,14 @@
 }
 .platform button,
 .platform .button {
-  display: inline-block;
-  background: #184d3b;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: #344d3e;
   color: white;
   border: 0;
-  border-radius: 7px;
-  padding: 12px 18px;
+  border-radius: 8px;
+  padding: 10px 15px;
   cursor: pointer;
   font: inherit;
   text-decoration: none;
@@ -79,8 +90,7 @@
   cursor: wait;
 }
 .platform a {
-  color: #1a6144;
-  text-decoration: underline;
+  color: #536d52;
   text-underline-offset: 3px;
   overflow-wrap: anywhere;
 }
@@ -107,14 +117,46 @@
   background: #e6f6e9;
   border-radius: 8px;
 }
+.platform .platform-empty-state {
+  display: grid;
+  justify-items: start;
+  gap: 12px;
+  max-width: 680px;
+  padding: 26px;
+  border-color: #e2e5dc;
+  background: #fffdf9;
+}
+.platform .platform-empty-state p { color: #68746a; }
 .platform small {
   display: block;
   line-height: 1.5;
 }
 .platform nav {
   display: flex;
-  gap: 12px;
+  gap: 7px;
   flex-wrap: wrap;
+  border-bottom: 1px solid var(--line);
+  padding-bottom: 16px;
+  margin-bottom: 20px;
+}
+.platform nav button {
+  background: transparent;
+  color: #70786e;
+  border: 1px solid transparent;
+  border-radius: 7px;
+  padding: 9px 12px;
+  min-height: 38px;
+  font-size: 12px;
+  font-weight: 600;
+}
+.platform nav button:hover {
+  background: #f0f1e9;
+  color: #344d3e;
+}
+.platform nav button[aria-pressed="true"] {
+  background: #eaf0e3;
+  border-color: #e1e8d8;
+  color: #3b513b;
 }
 .platform pre {
   overflow: auto;
@@ -176,9 +218,15 @@
 }
 .platform .button,
 .platform button {
-  background: var(--brand, #184d3b);
+  background: var(--brand, #344d3e);
   color: var(--brand-ink, #fff);
 }
+.platform nav button,
+.platform nav button[aria-pressed="true"] {
+  color: #3b513b;
+}
+.platform nav button { background: transparent; }
+.platform nav button[aria-pressed="true"] { background: #eaf0e3; }
 /* SEO & visibilité IA */
 .platform .seo-list {
   list-style: none;
@@ -250,6 +298,56 @@
   height: 1px;
   overflow: hidden;
   clip: rect(0 0 0 0);
+}
+.platform-chrome {
+  max-width: 1480px;
+  min-height: 100vh;
+  margin: 0 auto;
+  padding: 34px clamp(20px, 4vw, 56px) 80px;
+  color: #283b32;
+  background: #f8f7f3;
+  font-family: Arial, Helvetica, sans-serif;
+}
+.website-studio.platform-chrome,
+.operations-security-page.platform-chrome {
+  max-width: 1480px;
+  min-height: 100vh;
+  margin: 0 auto;
+  padding: 34px clamp(20px, 4vw, 56px) 80px;
+  background: #f8f7f3;
+  color: #283b32;
+}
+.platform-chrome > header,
+.platform-chrome > .studio-heading {
+  padding: 8px 0 26px;
+}
+.platform-chrome > .studio-heading { display: block; }
+.platform-chrome > header > a:first-child,
+.platform-chrome > .studio-heading > a:first-child {
+  color: #75806f;
+  text-decoration: none;
+  font-size: 12px;
+  font-weight: 600;
+}
+.platform-chrome > header h1,
+.platform-chrome > .studio-heading h1 {
+  margin: 15px 0 0;
+  font-size: clamp(28px, 3.2vw, 38px);
+  line-height: 1.1;
+  letter-spacing: -1.1px;
+  font-weight: 600;
+}
+.platform-chrome > .studio-heading p {
+  margin-top: 10px;
+  color: #68746a;
+  font-size: 14px;
+}
+@media (max-width: 600px) {
+  .platform-chrome,
+  .website-studio.platform-chrome,
+  .operations-security-page.platform-chrome {
+    padding: 22px 14px 60px;
+  }
 }
 @media (max-width: 600px) {
   .platform .seo-check {

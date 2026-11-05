@@ -1,8 +1,8 @@
 import type { MetadataRoute } from "next";
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "Dattier OS",
-    short_name: "Dattier",
+    name: "atacuisine",
+    short_name: "atacuisine",
     description: "Gestion des restaurants et poste de service hors ligne",
     start_url: "/platform",
     display: "standalone",

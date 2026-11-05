@@ -1,3 +1,4 @@
+import { restaurantPlan } from "@/features/platform/entitlements";
 import type { Metadata } from "next";
 import { cache } from "react";
 import { headers } from "next/headers";
@@ -34,6 +35,12 @@ const loadSite = cache(
         (await getDb()).transaction(async (db) => {
           await db.exec("SET LOCAL ROLE dattier_app");
           await one(db, "SELECT id FROM restaurants WHERE id=$1", [restaurant]);
+          const plan = await restaurantPlan(db, restaurant);
+          if (
+            plan < 69 ||
+            (plan < 99 && ["commander", "checkout", "panier"].includes(raw))
+          )
+            notFound();
           const cms = website(restaurant);
           if (preview) await cms.siteScope(db, user!);
           const config = preview
@@ -74,6 +81,7 @@ const loadSite = cache(
             .catch(() => null);
           return {
             redirect: null,
+            shopEnabled: plan >= 99,
             restaurant,
             route,
             key,
@@ -163,6 +171,7 @@ export default async function Page(props: Props) {
     <TenantSiteProvider
       restaurant={data.restaurant}
       demo={demoEnabled()}
+      shopEnabled={data.shopEnabled}
       preview={data.preview}
       platformOrigin={demoEnabled() ? "" : process.env.APP_URL || ""}
     >

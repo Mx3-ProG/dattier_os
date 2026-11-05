@@ -99,6 +99,13 @@ try {
       "INSERT INTO organization_memberships VALUES($1,$2,'OWNER')",
       [organization, owner],
     );
+    const sourceRestaurants = await local.query<{ count: number }>(
+      "SELECT count(*)::int AS count FROM restaurants",
+    );
+    await tx.query("SELECT app.configure_organization_plan($1,0,$2)", [
+      organization,
+      Math.max(1, sourceRestaurants.rows[0].count),
+    ]);
     for (const table of tables) {
       const exists = await local.query<{ exists: boolean }>(
         "SELECT to_regclass($1) IS NOT NULL AS exists",

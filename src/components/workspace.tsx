@@ -260,7 +260,9 @@ export function Workspace() {
     ? modules.filter(
         (m) =>
           !m.permission ||
-          can(data.user.roles ?? data.user.role, m.permission as Permission),
+          ((data.plan >= 69 ||
+            !["finance", "customers", "website"].includes(m.permission)) &&
+            can(data.user.roles ?? data.user.role, m.permission as Permission)),
       )
     : [];
   const current =
@@ -287,7 +289,7 @@ export function Workspace() {
     return (
       <main className="loading">
         <Leaf />
-        <h1>DATTIER OS</h1>
+        <h1>atacuisine</h1>
         <p>{error || "Votre restaurant se prépare…"}</p>
         <Link href="/platform">Mes restaurants et connexion</Link>
       </main>
@@ -299,7 +301,7 @@ export function Workspace() {
           <span className="brand-mark">
             <Leaf size={23} />
           </span>
-          DATTIER <span>OS</span>
+          atacuisine
         </Link>
         <div className="restaurant-switch" data-tour="restaurant-switch">
           <small>VOTRE ÉTABLISSEMENT</small>
@@ -502,11 +504,11 @@ export function Workspace() {
           )}
         </main>
         <footer className="workspace-footer">
-          DATTIER OS <span>Un service bien orchestré.</span>
+          atacuisine <span>Un service bien orchestré.</span>
           <small>
             {data.demo
               ? "Démonstration · données fictives"
-              : "Dattier OS · commandes et stocks partagés"}
+              : "atacuisine · commandes et stocks partagés"}
           </small>
         </footer>
       </div>

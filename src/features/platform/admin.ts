@@ -1,3 +1,4 @@
+import { requirePlan, restaurantPlan } from "@/features/platform/entitlements";
 import { createReward, rewardSchema } from "@/features/loyalty/service";
 import { offlinePerform } from "@/features/offline/service";
 import { securityAction } from "./security";
@@ -19,18 +20,25 @@ export async function adminState(
   after = 0,
 ) {
   user = await scope(db, user, r);
+  if (["site", "seo", "loyalty"].includes(module)) await requirePlan(db, r, 69);
   if (module === "site") return siteState(db, r, user);
   if (module === "seo") return seoState(db, r, user);
   if (module === "shop") {
     requirePermission(user.roles ?? user.role, "orders");
+    const plan = await restaurantPlan(db, r);
+    const shopEnabled = plan >= 99;
     return {
-      settings: await commerce(r).settings(db),
+      shopEnabled,
+      settings: shopEnabled ? await commerce(r).settings(db) : null,
       orders: await commerce(r).staffOrders(db, user),
-      reviews: await rows(
-        db,
-        "SELECT p.*,m.name AS product,c.name AS customer FROM product_reviews p JOIN menu_items m ON m.id=p.menu_id JOIN customers c ON c.id=p.customer_id WHERE p.restaurant_id=$1 ORDER BY created_at DESC LIMIT 100",
-        [r],
-      ),
+      reviews:
+        plan >= 69
+          ? await rows(
+              db,
+              "SELECT p.*,m.name AS product,c.name AS customer FROM product_reviews p JOIN menu_items m ON m.id=p.menu_id JOIN customers c ON c.id=p.customer_id WHERE p.restaurant_id=$1 ORDER BY created_at DESC LIMIT 100",
+              [r],
+            )
+          : [],
     };
   }
   if (module === "team") {
@@ -135,10 +143,19 @@ export async function adminPerform(
   raw: unknown,
 ) {
   user = await scope(db, user, r);
+  if (["site", "seo", "loyalty"].includes(module)) await requirePlan(db, r, 69);
   if (module === "site") return sitePerform(db, r, user, raw);
   if (module === "seo") return seoPerform(db, r, user, raw);
-  if (module === "team")
-    return platformPerform(db, user, { ...(raw as object), restaurant: r });
+  if (module === "team") {
+    const input = z
+      .object({ action: z.enum(["invite", "membership"]) })
+      .parse(raw);
+    return platformPerform(db, user, {
+      ...(raw as object),
+      action: input.action,
+      restaurant: r,
+    });
+  }
   if (module === "loyalty") {
     requirePermission(user.roles ?? user.role, "customers");
     const action = raw as { action?: string };
@@ -186,6 +203,9 @@ export async function adminPerform(
         })
         .parse(raw),
       shop = commerce(r);
+    if (input.action === "settings" || input.action === "product")
+      await requirePlan(db, r, 99);
+    if (input.action === "moderate") await requirePlan(db, r, 69);
     if (input.action === "settings")
       return shop.updateSettings(db, user, input.data);
     if (input.action === "product")
@@ -212,19 +232,22 @@ export async function adminPerform(
       return { updated: true };
     }
     const a = z.object({ id: z.string(), value: z.string() }).parse(input.data);
-    if (input.action === "settle")
-      return shop.settle(
+    if (input.action === "settle") {
+      await shop.settle(
         db,
         a.id,
         z.enum(["cash", "card"]).parse(a.value),
         user,
       );
-    return shop.transition(
-      db,
-      a.id,
-      z.enum(["preparing", "ready", "served", "cancelled"]).parse(a.value),
-      user,
-    );
+    } else {
+      await shop.transition(
+        db,
+        a.id,
+        z.enum(["preparing", "ready", "served", "cancelled"]).parse(a.value),
+        user,
+      );
+    }
+    return { updated: true };
   }
   throw new Error("Module en lecture seule.");
 }

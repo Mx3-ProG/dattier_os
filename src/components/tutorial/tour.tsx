@@ -692,7 +692,7 @@ function Center({
         <header>
           <div>
             <span className="eyebrow">Centre d’apprentissage</span>
-            <h2 id="tour-center-title">Apprendre Dattier OS</h2>
+            <h2 id="tour-center-title">Apprendre atacuisine</h2>
           </div>
           <button aria-label="Fermer le guide" onClick={close}>
             <X size={19} />

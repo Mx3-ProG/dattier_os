@@ -1,11 +1,12 @@
 "use client";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import "./platform.css";
 import { ShopSettings } from "./shop-settings";
 import { LoyaltyPanel } from "./loyalty-panel";
 import type { Settings } from "@/features/commerce/schema";
+import { can, type Permission, type Role } from "@/lib/permissions";
 type Member = { id: string; name: string; email: string; role: string };
 type ShopOrder = {
   order_id: string;
@@ -37,10 +38,43 @@ const tabs = [
   ["reconciliation", "Conflits hors ligne"],
   ["integrations", "Connexions"],
 ];
-export function RestaurantHub({ restaurant }: { restaurant: string }) {
+export function RestaurantHub({
+  restaurant,
+  plan,
+  userRoles,
+}: {
+  restaurant: string;
+  plan: number;
+  userRoles: Role[];
+}) {
   const router = useRouter();
   const [refreshVersion, setRefreshVersion] = useState(0);
-  const [tab, setTab] = useState("team"),
+  const accessibleTabs = useMemo(
+    () =>
+      tabs.filter(([id]) => {
+        const permissions: Record<string, Permission[]> = {
+          team: ["team"],
+          shop: ["orders"],
+          loyalty: ["customers"],
+          site: ["catalog"],
+          domains: ["catalog"],
+          seo: ["website"],
+          inventory: ["stock", "purchases"],
+          security: ["audit"],
+          reconciliation: ["audit"],
+          integrations: ["settings"],
+        };
+        const planAllows =
+          plan >= 69 || !["loyalty", "site", "domains", "seo"].includes(id);
+        return (
+          planAllows &&
+          (permissions[id] || []).some((permission) => can(userRoles, permission))
+        );
+      }),
+    [plan, userRoles],
+  );
+  const initialTab = accessibleTabs[0]?.[0] || "team";
+  const [tab, setTab] = useState(initialTab),
     [responseData, setData] = useState<Record<string, unknown>>(),
     [error, setError] = useState(""),
     [message, setMessage] = useState(""),
@@ -86,6 +120,7 @@ export function RestaurantHub({ restaurant }: { restaurant: string }) {
   );
   const data = responseData?._module === tab ? responseData : undefined;
   useEffect(() => {
+    if (!accessibleTabs.length) return;
     let active = true;
     setData(undefined);
     setError("");
@@ -106,7 +141,7 @@ export function RestaurantHub({ restaurant }: { restaurant: string }) {
     return () => {
       active = false;
     };
-  }, [api, tab, restaurant, refreshVersion]);
+  }, [api, tab, restaurant, refreshVersion, accessibleTabs.length]);
 
   async function perform(body: unknown) {
     setBusy(true);
@@ -135,14 +170,18 @@ export function RestaurantHub({ restaurant }: { restaurant: string }) {
           <Link className="button" href={`/dashboard?restaurant=${restaurant}`}>
             Poste de travail
           </Link>
-          <Link href={`/r/${restaurant}`}>Site et boutique</Link>
+          {plan >= 69 && (
+            <Link href={`/r/${restaurant}`}>
+              {plan >= 99 ? "Site et boutique" : "Site public"}
+            </Link>
+          )}
           <Link href={`/offline?restaurant=${restaurant}`}>
             Poste hors ligne
           </Link>
         </div>
       </header>
       <nav aria-label="Modules du restaurant">
-        {tabs.map(([id, label]) => (
+        {accessibleTabs.map(([id, label]) => (
           <button
             key={id}
             aria-pressed={tab === id}
@@ -156,11 +195,13 @@ export function RestaurantHub({ restaurant }: { restaurant: string }) {
               setTab(id);
             }}
           >
-            {label}
+            {id === "shop" && plan < 99
+              ? "Commandes boutique existantes"
+              : label}
           </button>
         ))}
       </nav>
-      {error && (
+      {error && data && (
         <p role="alert" className="error">
           {error}
         </p>
@@ -170,8 +211,35 @@ export function RestaurantHub({ restaurant }: { restaurant: string }) {
           {message}
         </p>
       )}
-      {!data ? (
-        <p role="status">Chargement…</p>
+      {!accessibleTabs.length ? (
+        <section className="platform-empty-state" role="status">
+          <h2>Aucun module d’administration n’est associé à votre profil</h2>
+          <p>Ouvrez votre poste de travail pour accéder aux tâches de votre rôle.</p>
+          <Link className="button" href={`/dashboard?restaurant=${restaurant}`}>
+            Ouvrir le poste de travail
+          </Link>
+        </section>
+      ) : !data ? (
+        error ? (
+          <section className="platform-empty-state" role="alert">
+            <h2>
+              {error.includes("Accès refusé")
+                ? "Ce module n’est pas disponible avec votre profil"
+                : "Impossible de charger ce module"}
+            </h2>
+            <p>{error}</p>
+            <div className="actions">
+              <button onClick={() => setRefreshVersion((value) => value + 1)}>
+                Réessayer
+              </button>
+              <Link className="button" href={`/dashboard?restaurant=${restaurant}`}>
+                Ouvrir le poste de travail
+              </Link>
+            </div>
+          </section>
+        ) : (
+          <p role="status">Chargement…</p>
+        )
       ) : (
         <>
           {tab === "team" && (
@@ -293,7 +361,9 @@ export function RestaurantHub({ restaurant }: { restaurant: string }) {
                   <article key={d.hostname}>
                     <p>
                       {d.hostname} · {d.verified_at ? "Vérifié" : "À vérifier"}
-                      {d.is_primary ? " · Domaine principal (référencement)" : ""}
+                      {d.is_primary
+                        ? " · Domaine principal (référencement)"
+                        : ""}
                     </p>
                     <div className="actions">
                       {d.verified_at && !d.is_primary && (
@@ -414,61 +484,65 @@ export function RestaurantHub({ restaurant }: { restaurant: string }) {
                   </article>
                 ))}
               </section>
-              <section>
-                <h2>Avis à modérer</h2>
-                {(
-                  data.reviews as {
-                    id: string;
-                    product: string;
-                    body: string;
-                    rating: number;
-                    status: string;
-                  }[]
-                ).map((review) => (
-                  <article key={review.id}>
-                    <h3>
-                      {review.product} · {review.rating}/5
-                    </h3>
-                    <p>{review.body}</p>
-                    <p>{review.status}</p>
-                    <div className="actions">
-                      {["published", "rejected", "archived"].map((status) => (
-                        <button
-                          disabled={busy}
-                          key={status}
-                          onClick={() =>
-                            perform({
-                              action: "moderate",
-                              data: { id: review.id, status, reply: "" },
-                            })
-                          }
-                        >
-                          {
-                            (
-                              {
-                                published: "Publier",
-                                rejected: "Refuser",
-                                archived: "Archiver",
-                              } as Record<string, string>
-                            )[status]
-                          }
-                        </button>
-                      ))}
-                    </div>
-                  </article>
-                ))}
-              </section>
-              <section>
-                <h2>Réglages de commande</h2>
-                <ShopSettings
-                  key={JSON.stringify(data.settings)}
-                  initial={data.settings as Settings}
-                  busy={busy}
-                  save={(value) =>
-                    void perform({ action: "settings", data: value })
-                  }
-                />
-              </section>
+              {plan >= 69 && (
+                <section>
+                  <h2>Avis à modérer</h2>
+                  {(
+                    data.reviews as {
+                      id: string;
+                      product: string;
+                      body: string;
+                      rating: number;
+                      status: string;
+                    }[]
+                  ).map((review) => (
+                    <article key={review.id}>
+                      <h3>
+                        {review.product} · {review.rating}/5
+                      </h3>
+                      <p>{review.body}</p>
+                      <p>{review.status}</p>
+                      <div className="actions">
+                        {["published", "rejected", "archived"].map((status) => (
+                          <button
+                            disabled={busy}
+                            key={status}
+                            onClick={() =>
+                              perform({
+                                action: "moderate",
+                                data: { id: review.id, status, reply: "" },
+                              })
+                            }
+                          >
+                            {
+                              (
+                                {
+                                  published: "Publier",
+                                  rejected: "Refuser",
+                                  archived: "Archiver",
+                                } as Record<string, string>
+                              )[status]
+                            }
+                          </button>
+                        ))}
+                      </div>
+                    </article>
+                  ))}
+                </section>
+              )}
+              {data.shopEnabled === true && (
+                <section>
+                  <h2>Réglages de commande</h2>
+                  <ShopSettings
+                    key={JSON.stringify(data.settings)}
+                    initial={data.settings as Settings}
+                    busy={busy}
+                    save={(value) =>
+                      void perform({ action: "settings", data: value })
+                    }
+                  />
+                </section>
+              )}
             </>
           )}
           {tab === "inventory" && (

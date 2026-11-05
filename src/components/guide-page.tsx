@@ -1,4 +1,4 @@
-/* Page /guide : le mode d’emploi écrit de Dattier OS. Même contenu que la
+/* Page /guide : le mode d’emploi écrit de atacuisine. Même contenu que la
    visite interactive du poste (features/guide/content.ts). */
 import Link from "next/link";
 import {
@@ -54,8 +54,8 @@ const stock = [
 
 const faq = [
   [
-    "Dattier OS encaisse-t-il l’argent en salle ?",
-    "Non. Vous encaissez avec votre terminal de paiement ou en espèces, puis vous déclarez le règlement dans Dattier OS. Les ventes, la fidélité et les rapports restent ainsi justes. Pour la commande en ligne, le paiement peut passer par Stripe.",
+    "atacuisine encaisse-t-il l’argent en salle ?",
+    "Non. Vous encaissez avec votre terminal de paiement ou en espèces, puis vous déclarez le règlement dans atacuisine. Les ventes, la fidélité et les rapports restent ainsi justes. Pour la commande en ligne, le paiement peut passer par Stripe.",
   ],
   [
     "Comment un client paie-t-il une commande sur le site ?",
@@ -63,7 +63,7 @@ const faq = [
   ],
   [
     "Puis-je gérer plusieurs restaurants ?",
-    "Oui, avec l’offre Premium : jusqu’à 10 établissements dans la même organisation, avec un sélecteur en haut de la barre latérale. L’offre Essentiel comprend un établissement.",
+    "Oui. Chaque forfait inclut un établissement. Les établissements supplémentaires coûtent 39 € HT par mois chacun et bénéficient du même forfait.",
   ],
   [
     "Mes données sont-elles séparées de celles des autres restaurants ?",
@@ -85,7 +85,7 @@ const faq = [
 
 export function GuidePage({ demo }: { demo: boolean }) {
   const toc = [
-    { id: "comprendre", label: "Comprendre Dattier OS" },
+    { id: "comprendre", label: "Comprendre atacuisine" },
     { id: "service", label: "Le cycle d’un service" },
     { id: "roles", label: "Qui fait quoi" },
     ...chapters.map((c) => ({ id: c.id, label: c.title })),
@@ -101,7 +101,7 @@ export function GuidePage({ demo }: { demo: boolean }) {
       </a>
       <header className="landing-header">
         <Link href="/" className="landing-brand">
-          <UtensilsCrossed size={20} aria-hidden /> DATTIER <span>OS</span>
+          <UtensilsCrossed size={20} aria-hidden /> atacuisine
         </Link>
         <nav aria-label="Navigation du guide">
           <a href="#comprendre">Les bases</a>
@@ -119,7 +119,7 @@ export function GuidePage({ demo }: { demo: boolean }) {
         <section className="guide-hero">
           <span className="landing-eyebrow">Guide d’utilisation</span>
           <h1>
-            Dattier OS, <em>de A à Z.</em>
+            atacuisine, <em>de A à Z.</em>
           </h1>
           <p className="landing-lead">
             Tout ce qu’il faut savoir pour faire tourner votre restaurant :
@@ -159,9 +159,9 @@ export function GuidePage({ demo }: { demo: boolean }) {
           <div className="guide-body">
             <section id="comprendre" className="guide-section">
               <span className="landing-eyebrow">Les bases</span>
-              <h2>Comprendre Dattier OS en deux minutes</h2>
+              <h2>Comprendre atacuisine en deux minutes</h2>
               <p>
-                Dattier OS est un seul logiciel partagé par toute l’équipe.
+                atacuisine est un seul logiciel partagé par toute l’équipe.
                 Chacun y travaille avec son propre écran, mais tout le monde lit
                 et écrit les mêmes données, en temps réel.
               </p>
@@ -170,10 +170,9 @@ export function GuidePage({ demo }: { demo: boolean }) {
                   <Building2 aria-hidden />
                   <h3>Organisation et établissements</h3>
                   <p>
-                    Votre organisation regroupe un établissement (Essentiel) ou
-                    jusqu’à dix (Premium). Chaque établissement a sa carte, ses
-                    tables, ses stocks, son équipe et son site, parfaitement
-                    cloisonnés.
+                    Votre organisation regroupe vos établissements. Chaque
+                    établissement a sa carte, ses tables, ses stocks, son équipe
+                    et son site, parfaitement cloisonnés.
                   </p>
                 </article>
                 <article>
@@ -402,7 +401,7 @@ export function GuidePage({ demo }: { demo: boolean }) {
 
       <footer className="landing-footer">
         <span className="landing-brand">
-          <UtensilsCrossed size={18} aria-hidden /> DATTIER <span>OS</span>
+          <UtensilsCrossed size={18} aria-hidden /> atacuisine
         </span>
         <nav aria-label="Liens utiles">
           <Link href="/">Accueil</Link>
@@ -410,7 +409,7 @@ export function GuidePage({ demo }: { demo: boolean }) {
           {demo && <Link href="/site-demo">Exemple de site restaurant</Link>}
           <Link href="/platform">Espace client</Link>
         </nav>
-        <small>© Dattier OS · Logiciel libre sous licence AGPL-3.0</small>
+        <small>© atacuisine · Logiciel libre sous licence AGPL-3.0</small>
       </footer>
     </div>
   );

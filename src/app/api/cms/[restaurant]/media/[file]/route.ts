@@ -1,3 +1,4 @@
+import { requirePlan } from "@/features/platform/entitlements";
 import { withRequestContext } from "@/features/ops-security/context";
 import { NextRequest, NextResponse } from "next/server";
 import { actor, type Actor } from "@/lib/auth/session";
@@ -20,6 +21,7 @@ async function routeGET(
       async () => {
         return (await getDb()).transaction(async (db) => {
           await db.exec("SET LOCAL ROLE dattier_app");
+          await requirePlan(db, restaurant, 69);
           const cms = website(restaurant);
           const config = await cms.getPublishedConfig(db);
           const published = JSON.stringify(config).includes(

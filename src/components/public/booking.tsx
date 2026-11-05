@@ -62,13 +62,17 @@ const dayLabels: Record<string, string> = {
 async function getJson<T>(url: string): Promise<T> {
   const r = await fetch(url);
   const d = await r.json();
-  if (!r.ok) throw new Error(d.error || "Connexion au restaurant impossible.");
+  if (!r.ok)
+    throw new Error(
+      d.error?.message || d.error || "Connexion au restaurant impossible.",
+    );
   return d;
 }
 
 export function Booking({
   restaurant = "bernay",
-}: { restaurant?: string } = {}) {
+  apiBase = "/api/v1",
+}: { restaurant?: string; apiBase?: string } = {}) {
   const RESTAURANT = restaurant;
   const [guests, setGuests] = useState(2),
     [month, setMonth] = useState(() => todayParis().slice(0, 7)),
@@ -98,7 +102,7 @@ export function Booking({
   useEffect(() => {
     let live = true;
     getJson<Calendar>(
-      `/api/v1/calendar?restaurant=${RESTAURANT}&month=${month}&guests=${guests}`,
+      `${apiBase}/calendar?restaurant=${RESTAURANT}&month=${month}&guests=${guests}`,
     )
       .then((c) => {
         if (!live) return;
@@ -116,14 +120,14 @@ export function Booking({
     return () => {
       live = false;
     };
-  }, [month, guests, RESTAURANT]);
+  }, [month, guests, RESTAURANT, apiBase]);
 
   useEffect(() => {
     if (!date) return;
     let live = true;
     const load = () =>
       getJson<Availability>(
-        `/api/v1/availability?restaurant=${RESTAURANT}&date=${date}&guests=${guests}`,
+        `${apiBase}/availability?restaurant=${RESTAURANT}&date=${date}&guests=${guests}`,
       )
         .then((d) => live && setDay(d))
         .catch((e) => live && setError(e.message));
@@ -134,7 +138,7 @@ export function Booking({
       live = false;
       clearInterval(t);
     };
-  }, [date, guests, reload, RESTAURANT]);
+  }, [date, guests, reload, RESTAURANT, apiBase]);
 
   const slot = useMemo(
     () =>
@@ -178,7 +182,7 @@ export function Booking({
     setBusy(true);
     setError("");
     try {
-      const r = await fetch("/api/v1/reservation", {
+      const r = await fetch(`${apiBase}/reservation`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -192,7 +196,7 @@ export function Booking({
         }),
       });
       const result = await r.json();
-      if (!r.ok) throw new Error(result.error);
+      if (!r.ok) throw new Error(result.error?.message || result.error);
       window.scrollTo({ top: 0, behavior: "smooth" });
       setDone({
         id: result.id,

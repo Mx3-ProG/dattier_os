@@ -2,7 +2,7 @@
 
 OS open source pour les restaurateurs : commandes, salle, cuisine, bar, stocks, achats, équipes, clients, fidélité, boutique et sites par établissement.
 
-**AGPL-3.0-only** · France en premier · installation auto-hébergeable. Une organisation peut gérer plusieurs restaurants et plusieurs rôles par utilisateur. L’abonnement hébergé de 20–30 € est une hypothèse économique, pas une offre activée.
+**AGPL-3.0-only** · France en premier · installation auto-hébergeable. Une organisation peut gérer plusieurs restaurants et plusieurs rôles par utilisateur. L’offre hébergée propose trois forfaits au niveau de l’organisation. Voir [la gestion du pilote](docs/platform/BILLING.md).
 
 ## Essayer localement
 

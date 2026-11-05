@@ -1,3 +1,4 @@
+import { plans, additionalRestaurantPrice } from "@/features/platform/pricing";
 import Link from "next/link";
 import {
   ArrowUpRight,
@@ -16,10 +17,6 @@ import {
   Users,
   UtensilsCrossed,
 } from "lucide-react";
-
-// Page de présentation de Dattier OS. Uniquement des faits vérifiables dans
-// le code : modules existants, isolation par structure, quotas des offres
-// (database/migrations/017_tenancy_plans.sql). Ni témoignage, ni chiffre client.
 
 const modules = [
   {
@@ -74,32 +71,6 @@ const steps = [
   },
 ];
 
-const plans = [
-  {
-    name: "Essentiel",
-    pitch: "Pour un établissement qui veut tout piloter au même endroit.",
-    structures: "1 structure",
-    features: [
-      "Tous les modules : commandes, salle, réservations, stocks, équipe",
-      "Site web et boutique de l’établissement",
-      "Accès de l’équipe par rôle et par poste",
-      "Données isolées dans votre propre espace",
-    ],
-  },
-  {
-    name: "Premium",
-    pitch: "Pour les restaurateurs qui gèrent plusieurs adresses.",
-    structures: "Jusqu’à 10 structures",
-    features: [
-      "Tout ce que contient l’offre Essentiel",
-      "Plusieurs structures dans un même compte",
-      "Un site, une boutique et une équipe par structure",
-      "Chaque structure reste cloisonnée des autres",
-    ],
-    featured: true,
-  },
-];
-
 const faq = [
   {
     q: "Puis-je essayer avant de créer mon compte ?",
@@ -111,11 +82,11 @@ const faq = [
   },
   {
     q: "J’ouvre une deuxième adresse, que se passe-t-il ?",
-    a: "L’offre Essentiel couvre une structure. Avec Premium, vous ajoutez vos autres établissements au même compte, chacun gardant ses données.",
+    a: "Chaque forfait inclut un établissement. Ajoutez des établissements à 39 € HT par mois chacun. Ils bénéficient tous du forfait de votre organisation et conservent leurs propres données.",
   },
   {
     q: "Le code est-il ouvert ?",
-    a: "Oui. Dattier OS est distribué sous licence AGPL-3.0 et peut être auto-hébergé. Le code de la version en service reste consultable.",
+    a: "Oui. atacuisine est distribué sous licence AGPL-3.0. Le code de la version en service reste consultable.",
   },
 ];
 
@@ -148,7 +119,7 @@ export function Landing({ demo }: { demo: boolean }) {
       </a>
       <header className="landing-header">
         <Link href="/" className="landing-brand">
-          <UtensilsCrossed size={20} aria-hidden /> DATTIER <span>OS</span>
+          <UtensilsCrossed size={20} aria-hidden /> atacuisine
         </Link>
         <nav aria-label="Navigation principale">
           <a href="#modules">Modules</a>
@@ -178,7 +149,7 @@ export function Landing({ demo }: { demo: boolean }) {
             </p>
             <Cta demo={demo} />
             <p className="landing-note">
-              Open source (AGPL-3.0) · Données cloisonnées par structure ·
+              Clean Code (AGPL-3.0) · Données cloisonnées par structure ·
               Auto-hébergeable
             </p>
           </div>
@@ -315,10 +286,10 @@ export function Landing({ demo }: { demo: boolean }) {
             </article>
             <article>
               <Code2 size={22} aria-hidden />
-              <h3>Open source</h3>
+              <h3>Clean Code</h3>
               <p>
                 Code ouvert sous AGPL-3.0, vérifiable et auto-hébergeable sur
-                votre propre serveur.
+                votre propre infrastructure.
               </p>
             </article>
           </div>
@@ -329,33 +300,30 @@ export function Landing({ demo }: { demo: boolean }) {
             <span className="landing-eyebrow">Offres</span>
             <h2>Une adresse ou plusieurs, le même OS.</h2>
             <p>
-              Les deux offres donnent accès à tous les modules. Elles ne
-              diffèrent que par le nombre de structures gérées.
+              Un établissement inclus. Chaque établissement supplémentaire coûte{" "}
+              {additionalRestaurantPrice} € HT par mois et bénéficie du même
+              forfait. Le hors ligne, la sécurité, la traçabilité et les
+              tutoriels sont inclus.
             </p>
           </div>
           <div className="landing-plans">
             {plans.map((p) => (
               <article
-                key={p.name}
+                key={p.price}
                 className="landing-plan"
-                data-featured={p.featured || undefined}
+                data-featured={p.price === 69 || undefined}
               >
                 <span className="landing-eyebrow">Offre</span>
-                <h3>{p.name}</h3>
-                <strong className="landing-plan-quota">{p.structures}</strong>
-                <p>{p.pitch}</p>
-                <ul>
-                  {p.features.map((f) => (
-                    <li key={f}>
-                      <Check size={16} aria-hidden /> {f}
-                    </li>
-                  ))}
-                </ul>
+                <h3>{p.title}</h3>
+                <strong className="landing-plan-quota">
+                  {p.price} € HT / mois
+                </strong>
+                <p>{p.description}</p>
                 <Link
-                  className={`landing-btn ${p.featured ? "light" : "primary"}`}
-                  href="/platform"
+                  className={`landing-btn ${p.price === 69 ? "light" : "primary"}`}
+                  href={`/checkout/${p.price}`}
                 >
-                  Choisir {p.name}
+                  Choisir {p.title}
                 </Link>
               </article>
             ))}
@@ -381,7 +349,7 @@ export function Landing({ demo }: { demo: boolean }) {
           <h2>Votre prochain service, dans un seul outil.</h2>
           <p>
             {demo
-              ? "Découvrez Dattier OS sur un restaurant de démonstration, puis créez votre espace."
+              ? "Découvrez atacuisine sur un restaurant de démonstration, puis créez votre espace."
               : "Créez votre espace, ajoutez votre structure et ouvrez le service."}
           </p>
           <Cta demo={demo} inverse />
@@ -390,7 +358,7 @@ export function Landing({ demo }: { demo: boolean }) {
 
       <footer className="landing-footer">
         <span className="landing-brand">
-          <UtensilsCrossed size={18} aria-hidden /> DATTIER <span>OS</span>
+          <UtensilsCrossed size={18} aria-hidden /> atacuisine
         </span>
         <nav aria-label="Liens utiles">
           {demo && <Link href="/demo">Démonstration</Link>}
@@ -398,7 +366,7 @@ export function Landing({ demo }: { demo: boolean }) {
           <Link href="/platform">Espace client</Link>
           <Link href="/source">Code source et licence</Link>
         </nav>
-        <small>© Dattier OS · Logiciel libre sous licence AGPL-3.0</small>
+        <small>© atacuisine · Logiciel libre sous licence AGPL-3.0</small>
       </footer>
     </div>
   );

@@ -3,7 +3,7 @@ export const dynamic = "force-dynamic";
 export default function Page() {
   return (
     <main className="platform">
-      <h1>Dattier OS, logiciel libre</h1>
+      <h1>atacuisine, logiciel libre</h1>
       <p>
         Le code de cette version est distribué sous AGPL-3.0, sous réserve des
         notices tierces et des droits sur les contenus.

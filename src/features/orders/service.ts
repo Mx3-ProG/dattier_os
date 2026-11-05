@@ -1,3 +1,4 @@
+import { requirePlan } from "@/features/platform/entitlements";
 import { mirrorAudit } from "@/features/ops-security/events";
 import { redeemPromo } from "@/features/loyalty/service";
 import { createHash, randomUUID as uuid } from "node:crypto";
@@ -127,9 +128,13 @@ export async function createOrder(
     requirePermission(user.roles ?? user.role, "orders");
   } else if (!input.customer.trim() || !input.contact.trim())
     throw new Error("Nom et coordonnées requis.");
-  await one(db, "SELECT id FROM restaurants WHERE id=$1 FOR UPDATE", [
-    input.restaurant,
-  ]);
+  const { locked } = await one<{ locked: boolean }>(
+    db,
+    "SELECT app.lock_restaurant_for_order($1) AS locked",
+    [input.restaurant],
+  );
+  if (!locked) throw new Error("Établissement non autorisé.");
+  await requirePlan(db, input.restaurant, input.channel === "staff" ? 39 : 99);
   const fingerprint = createHash("sha256")
     .update(JSON.stringify(input))
     .digest("hex");

@@ -1,3 +1,5 @@
+import { restaurantPlan } from "@/features/platform/entitlements";
+import { notFound } from "next/navigation";
 import { NextRequest } from "next/server";
 import { getDb, demoEnabled } from "@/lib/database/db";
 import { withDatabaseContext } from "@/lib/database/context";
@@ -19,6 +21,7 @@ export async function GET(
       getDb().then((db) =>
         db.transaction(async (tx) => {
           await tx.exec("SET LOCAL ROLE dattier_app");
+          if ((await restaurantPlan(tx, restaurant)) < 69) notFound();
           const cms = website(restaurant);
           const config = await cms.getPublishedConfig(tx);
           if (!llmsEnabled(config)) return null;

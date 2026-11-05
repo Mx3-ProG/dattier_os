@@ -50,7 +50,9 @@ export async function proxy(req: NextRequest) {
     if (pathname.startsWith("/r/"))
       return new NextResponse("Établissement non autorisé.", { status: 403 });
     if (/^\/(restaurant|platform|dashboard)(\/|$)/.test(pathname))
-      return NextResponse.redirect(new URL(`/restaurant/${r}`, process.env.APP_URL));
+      return NextResponse.redirect(
+        new URL(`/restaurant/${r}`, process.env.APP_URL),
+      );
     const tenantApi = pathname.match(
       /^\/api\/(?:store|cms|ops-security|restaurants)\/([^/]+)/,
     );
@@ -74,7 +76,7 @@ export async function proxy(req: NextRequest) {
       );
     }
     return NextResponse.rewrite(
-      new URL(`/r/${r}${pathname === "/" ? "" : pathname}`, req.url),
+      new URL(`/r/${r}${pathname === "/" ? "" : pathname}${search}`, req.url),
       forwarded(req, r),
     );
   } catch {

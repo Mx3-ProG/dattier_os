@@ -60,12 +60,18 @@ const cookieOptions = {
   secure: appOrigin().startsWith("https:"),
   path: "/",
 };
-export async function beginLogin(returnTo = "/platform") {
+export function safeReturnTo(value = "/platform") {
+  if (!value.startsWith("/") || value.startsWith("//") || /[\\\x00-\x20]/.test(value)) return "/platform";
+  const origin = appOrigin();
+  const target = new URL(value, origin);
+  return target.origin === origin ? value : "/platform";
+}
+export async function beginLogin(returnTo = "/platform", register = false) {
   const m = await metadata(),
     state = randomBytes(32).toString("hex"),
     nonce = randomBytes(32).toString("hex"),
     verifier = randomBytes(48).toString("base64url");
-  const safeReturn = /^\/(?!\/)/.test(returnTo) ? returnTo : "/platform";
+  const safeReturn = safeReturnTo(returnTo);
   (await cookies()).set(
     "dattier_oidc",
     await signed({ state, nonce, verifier, returnTo: safeReturn }, "10m"),
@@ -76,6 +82,7 @@ export async function beginLogin(returnTo = "/platform") {
     client_id: process.env.OIDC_CLIENT_ID || "dattier",
     redirect_uri: `${appOrigin()}/auth/callback`,
     response_type: "code",
+    prompt: register ? "create" : "login",
     scope: "openid profile email",
     state,
     nonce,
@@ -178,6 +185,8 @@ export async function oidcActor() {
   }
 }
 export async function logout() {
-  (await cookies()).delete(cookieName);
-  (await cookies()).delete("dattier_session");
+  const jar = await cookies();
+  jar.delete(cookieName);
+  jar.delete("dattier_session");
+  jar.delete("dattier_oidc");
 }

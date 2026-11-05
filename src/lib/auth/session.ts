@@ -1,3 +1,4 @@
+import { requirePlan } from "@/features/platform/entitlements";
 import { createHash, randomBytes } from "node:crypto";
 import { cookies } from "next/headers";
 import { getDb, demoEnabled, one, rows, type DB } from "../database/db";
@@ -50,6 +51,7 @@ export async function actor(): Promise<Actor> {
   return { ...user, authIssuedAt: user.auth_issued_at };
 }
 export async function scope(db: DB, user: Actor, r: string) {
+  await requirePlan(db, r, 39);
   const revoked = await rows<{ not_before: string }>(
     db,
     "SELECT not_before FROM restaurant_session_revocations WHERE restaurant_id=$1 AND profile_id=$2",

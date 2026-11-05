@@ -1,5 +1,7 @@
 # Hypothèses économiques
 
+Ce document conserve les hypothèses historiques. Voir [le pilote atacuisine](BILLING.md) pour les tarifs et le suivi actuels.
+
 Le modèle modifiable est dans `COSTS.json` ; `node --import tsx scripts/costs.ts` recalcule les scénarios. Tous les chiffres ci-dessous sont **illustratifs**, hors taxes, et ne sont pas des devis fournisseurs.
 
 Hypothèses : abonnement de 25 €/restaurant/mois, coût variable d’infrastructure de 0,45 €, support de 5 minutes/mois/restaurant valorisé à 30 €/heure. Le coût fixe varie selon le scénario.

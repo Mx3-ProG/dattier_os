@@ -405,7 +405,7 @@ export function commerce(SHOP: string) {
     if (promo) await recordCheckoutPromo(db, promo, id, customerId);
     const order = await receipt(db, token),
       s = await settings(db);
-    const preview = `DÉMONSTRATION — e-mail non envoyé\nDattier OS · Commande #${order.number}\n${a.customer}\n${order.items.map((i) => `${i.quantity} × ${i.name} — ${((i.price * i.quantity) / 100).toFixed(2)} €\n${i.note}`).join("\n")}\n${promo?.discount ? `Remise : -${(promo.discount / 100).toFixed(2)} €\n` : ""}${promo?.points ? `${promo.points} points fidélité ajoutés\n` : ""}Total : ${(total / 100).toFixed(2)} €\n${a.consumption === "onsite" ? "Sur place · aucune table garantie" : "À emporter"}\nPaiement : ${a.payment === "counter" ? "À encaisser au comptoir" : "Stripe test, en attente de confirmation"}\nRetrait : ${new Date(a.slot).toLocaleString("fr-FR", { timeZone: "Europe/Paris" })}\n${s.address} · ${s.phone}`;
+    const preview = `DÉMONSTRATION — e-mail non envoyé\natacuisine · Commande #${order.number}\n${a.customer}\n${order.items.map((i) => `${i.quantity} × ${i.name} — ${((i.price * i.quantity) / 100).toFixed(2)} €\n${i.note}`).join("\n")}\n${promo?.discount ? `Remise : -${(promo.discount / 100).toFixed(2)} €\n` : ""}${promo?.points ? `${promo.points} points fidélité ajoutés\n` : ""}Total : ${(total / 100).toFixed(2)} €\n${a.consumption === "onsite" ? "Sur place · aucune table garantie" : "À emporter"}\nPaiement : ${a.payment === "counter" ? "À encaisser au comptoir" : "Stripe test, en attente de confirmation"}\nRetrait : ${new Date(a.slot).toLocaleString("fr-FR", { timeZone: "Europe/Paris" })}\n${s.address} · ${s.phone}`;
     await db.query(
       "UPDATE shop_orders SET email_preview=$2 WHERE order_id=$1",
       [id, preview],

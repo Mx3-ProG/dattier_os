@@ -61,13 +61,13 @@ export const chapters: Chapter[] = [
     minutes: 2,
     steps: [
       {
-        title: "Bienvenue dans Dattier OS",
+        title: "Bienvenue dans atacuisine",
         body: "Un seul outil pour la salle, la cuisine, le bar, les stocks et la direction. Ce que l’un saisit est immédiatement visible par les autres. Cette visite vous montre où tout se trouve ; vous pouvez la quitter à tout moment avec Échap.",
       },
       {
         target: '[data-tour="restaurant-switch"]',
         title: "Votre établissement",
-        body: "Toutes les données affichées (carte, commandes, stocks, équipe) appartiennent à l’établissement choisi ici. Avec l’offre Premium, une même organisation gère jusqu’à 10 établissements, chacun parfaitement cloisonné.",
+        body: "Toutes les données affichées (carte, commandes, stocks, équipe) appartiennent à l’établissement choisi ici. Votre organisation peut regrouper plusieurs établissements, chacun avec ses propres données.",
       },
       {
         target: '[data-tour="nav"]',
@@ -457,7 +457,7 @@ export const chapters: Chapter[] = [
       {
         target: '.modal select[name="method"]',
         title: "Le moyen de paiement",
-        body: "Carte bancaire, espèces ou autre. Dattier OS enregistre le règlement que vous avez encaissé avec votre terminal habituel : il n’encaisse pas lui-même l’argent.",
+        body: "Carte bancaire, espèces ou autre. atacuisine enregistre le règlement que vous avez encaissé avec votre terminal habituel : il n’encaisse pas lui-même l’argent.",
       },
       {
         target: ".modal .btn.primary",
@@ -473,7 +473,7 @@ export const chapters: Chapter[] = [
       },
     ],
     guide: {
-      lead: "Le règlement se déclare à la fin du repas, une fois par table. Dattier OS n’est pas une caisse certifiée : il enregistre le paiement encaissé avec votre terminal ou en espèces, pour que les ventes, les stocks et la fidélité restent justes.",
+      lead: "Le règlement se déclare à la fin du repas, une fois par table. atacuisine n’est pas une caisse certifiée : il enregistre le paiement encaissé avec votre terminal ou en espèces, pour que les ventes, les stocks et la fidélité restent justes.",
       sections: [
         {
           title: "Pas à pas",
@@ -528,7 +528,7 @@ export const chapters: Chapter[] = [
         target: ".card.table-scroll .btn",
         text: "Gérer",
         title: "Confirmer et affecter une table",
-        body: "« Gérer » permet de confirmer ou refuser une demande, d’affecter une table, puis de noter l’arrivée ou l’absence. Dattier OS refuse une table trop petite ou déjà réservée sur le même créneau.",
+        body: "« Gérer » permet de confirmer ou refuser une demande, d’affecter une table, puis de noter l’arrivée ou l’absence. atacuisine refuse une table trop petite ou déjà réservée sur le même créneau.",
         fallback:
           "Aucune réservation à gérer : créez-en une depuis le formulaire public.",
       },
@@ -577,7 +577,7 @@ export const chapters: Chapter[] = [
       {
         target: ".modal .recipe-line",
         title: "La recette, par portion",
-        body: "Indiquez chaque ingrédient et sa quantité pour une portion, dans l’unité du stock (grammes, pièces…). C’est grâce à elle que Dattier OS réserve et consomme le bon stock, et calcule les portions disponibles.",
+        body: "Indiquez chaque ingrédient et sa quantité pour une portion, dans l’unité du stock (grammes, pièces…). C’est grâce à elle que atacuisine réserve et consomme le bon stock, et calcule les portions disponibles.",
         fallback: "Ouvrez « Ajouter un produit » pour voir le formulaire.",
       },
       {
@@ -740,7 +740,7 @@ export const chapters: Chapter[] = [
         },
         {
           title: "Bon à savoir",
-          text: "Les commandes fournisseurs sont enregistrées dans Dattier OS ; aucun bon n’est envoyé automatiquement au fournisseur. L’administration du restaurant propose aussi des commandes multilignes et des campagnes d’inventaire.",
+          text: "Les commandes fournisseurs sont enregistrées dans atacuisine ; aucun bon n’est envoyé automatiquement au fournisseur. L’administration du restaurant propose aussi des commandes multilignes et des campagnes d’inventaire.",
         },
       ],
     },
@@ -902,7 +902,7 @@ export const chapters: Chapter[] = [
         },
         {
           title: "Limites",
-          text: "Les exports sont des données à rapprocher : Dattier OS n’est ni un logiciel de comptabilité ni une caisse certifiée.",
+          text: "Les exports sont des données à rapprocher : atacuisine n’est ni un logiciel de comptabilité ni une caisse certifiée.",
         },
       ],
     },
@@ -1001,7 +1001,7 @@ export const chapters: Chapter[] = [
         module: "settings",
         target: ".two-grid .card:last-child",
         title: "Une ou plusieurs structures",
-        body: "L’offre Essentiel comprend une structure, l’offre Premium jusqu’à 10 dans la même organisation. Un nouvel établissement démarre vide : carte, stocks et tables se créent depuis ses modules.",
+        body: "Chaque forfait comprend un établissement. Les établissements supplémentaires bénéficient du même forfait. Un nouvel établissement démarre vide : carte, stocks et tables se créent depuis ses modules.",
       },
       {
         target: '[data-tour="nav-activity"]',
@@ -1020,7 +1020,7 @@ export const chapters: Chapter[] = [
       },
       {
         title: "Vous êtes prêt",
-        body: "Vous connaissez maintenant tout Dattier OS. Le guide complet reprend chaque fonctionnalité par écrit, avec les règles détaillées et les rôles.",
+        body: "Vous connaissez maintenant tout atacuisine. Le guide complet reprend chaque fonctionnalité par écrit, avec les règles détaillées et les rôles.",
         link: { label: "Lire le guide complet", href: "/guide" },
       },
     ],
@@ -1031,7 +1031,7 @@ export const chapters: Chapter[] = [
           title: "Organisation et établissements",
           points: [
             "Une organisation regroupe un ou plusieurs établissements (structures).",
-            "Offre Essentiel : une structure. Offre Premium : jusqu’à 10 structures.",
+            "Un établissement inclus, puis 39 € HT par mois par établissement supplémentaire.",
             "Les données de chaque structure sont cloisonnées, jusque dans la base de données.",
             "Un nouvel établissement démarre vide.",
           ],
@@ -1106,7 +1106,7 @@ export const glossary: { term: string; definition: string }[] = [
   {
     term: "Règlement déclaré",
     definition:
-      "L’enregistrement d’un paiement encaissé avec votre terminal ou en espèces. Dattier OS n’encaisse pas lui-même en salle.",
+      "L’enregistrement d’un paiement encaissé avec votre terminal ou en espèces. atacuisine n’encaisse pas lui-même en salle.",
   },
   {
     term: "Code promo personnel",

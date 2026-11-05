@@ -3,7 +3,10 @@ import { beginLogin } from "@/lib/auth/oidc";
 export async function GET(req: NextRequest) {
   try {
     return NextResponse.redirect(
-      await beginLogin(req.nextUrl.searchParams.get("returnTo") || "/platform"),
+      await beginLogin(
+        req.nextUrl.searchParams.get("returnTo") || "/platform",
+        req.nextUrl.searchParams.get("mode") === "register",
+      ),
     );
   } catch {
     return NextResponse.json(

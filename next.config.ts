@@ -1,6 +1,8 @@
 import type { NextConfig } from "next";
 const config: NextConfig = {
   serverExternalPackages: ["@electric-sql/pglite", "pg"],
+  // Keep the bound origin for internal rewrites from restaurant domains.
+  skipProxyUrlNormalize: true,
   poweredByHeader: false,
   devIndicators: false,
   async headers() {

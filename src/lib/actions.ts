@@ -1,3 +1,4 @@
+import { requirePlan } from "@/features/platform/entitlements";
 import {
   productSchema,
   createProduct,
@@ -159,6 +160,13 @@ export async function perform(
   user: Actor,
   a: z.infer<typeof actionSchema>,
 ) {
+  if (
+    ["issuePromo", "cancelPromo", "expense", "customer", "loyalty"].includes(
+      a.action,
+    ) ||
+    (a.action === "pay" && (a.customer || a.promo))
+  )
+    await requirePlan(db, r, 69);
   switch (a.action) {
     case "createProduct":
       return createProduct(db, r, user, a);

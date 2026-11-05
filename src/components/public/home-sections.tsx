@@ -259,7 +259,7 @@ export function HomeMenuPreview({ menu }: { menu?: MenuItem[] }) {
         </Link>
       </div>
       <p className="muted">
-        Carte de démonstration synchronisée avec DATTIER OS. Prix, compositions
+        Carte de démonstration synchronisée avec atacuisine. Prix, compositions
         et allergènes non validés par le restaurant.
       </p>
     </section>

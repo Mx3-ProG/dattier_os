@@ -1,26 +1,42 @@
 "use client";
+import { monthlyPrice, type Plan } from "@/features/platform/pricing";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, useEffect, useCallback } from "react";
 import "./platform.css";
+import "./access.css";
 type Overview = {
   user: { name: string };
-  organizations: { id: string; name: string; role: string }[];
-  restaurants: { id: string; name: string; organization_id: string }[];
+  organizations: {
+    id: string;
+    name: string;
+    role: string;
+    plan: Plan;
+    seats: number;
+    occupied: number;
+    requested_plan: number;
+  }[];
+  restaurants: {
+    id: string;
+    name: string;
+    organization_id: string;
+    plan: Plan;
+  }[];
 };
 export function PlatformHome() {
   const router = useRouter();
   const [data, setData] = useState<Overview>(),
     [error, setError] = useState(""),
     [busy, setBusy] = useState(false),
-    [org, setOrg] = useState(""),
     [name, setName] = useState(""),
     [selected, setSelected] = useState(""),
     [token, setToken] = useState("");
   const load = useCallback(async () => {
     const r = await fetch("/api/platform");
     if (r.status === 401) {
-      router.push("/auth/login?returnTo=/platform");
+      router.push(
+        `/connexion?returnTo=${encodeURIComponent(location.pathname + location.search)}`,
+      );
       return;
     }
     const d = await r.json();
@@ -29,7 +45,8 @@ export function PlatformHome() {
   }, [router]);
   useEffect(() => {
     void load().catch((e) => setError(e.message));
-    setToken(new URLSearchParams(location.search).get("invitation") || "");
+    const query = new URLSearchParams(location.search);
+    setToken(query.get("invitation") || "");
   }, [load]);
   async function submit(body: unknown) {
     setBusy(true);
@@ -44,7 +61,6 @@ export function PlatformHome() {
       if (!r.ok) throw new Error(d.error?.message || "Opération impossible.");
       await load();
       setName("");
-      setOrg("");
       setToken("");
     } catch (e) {
       setError((e as Error).message);
@@ -52,24 +68,18 @@ export function PlatformHome() {
       setBusy(false);
     }
   }
+  const organization = data?.organizations.find((item) => item.id === selected);
   return (
-    <main className="platform">
-      <header>
-        <span className="badge">Dattier OS · open source</span>
-        <h1>Vos restaurants, au même endroit.</h1>
-        <p>
-          Commandes, équipes, stocks, sites et clients dans votre propre espace.
-        </p>
-        <div className="actions">
-          <Link href="/">Présentation</Link>
-          <Link href="/demo">Démonstration locale</Link>
-          <Link href="/source">Code source et licence</Link>
-          {data && (
-            <form action="/auth/logout" method="post">
-              <button>Déconnexion</button>
-            </form>
-          )}
-        </div>
+    <main className="platform access-home">
+      <nav className="access-nav" aria-label="Compte">
+        <Link href="/" className="access-brand">atacuisine</Link>
+        {data && <form action="/auth/logout" method="post"><button>Se déconnecter</button></form>}
+      </nav>
+      <header className="access-hero">
+        <span className="access-label">Espace client</span>
+        <h1>{data ? `Bonjour ${data.user.name}` : "Mes restaurants"}</h1>
+        <p>Retrouvez vos établissements et reprenez votre service.</p>
+        <Link href="/#offres">Voir les offres →</Link>
       </header>
       {error && (
         <p role="alert" className="error">
@@ -78,7 +88,6 @@ export function PlatformHome() {
       )}
       {data ? (
         <>
-          <h2>Bonjour {data.user.name}</h2>
           {token && (
             <section>
               <h2>Invitation à rejoindre une équipe</h2>
@@ -90,22 +99,38 @@ export function PlatformHome() {
               </button>
             </section>
           )}
+          {data.organizations.map((o) => (
+            <p key={o.id}>
+              <strong>{o.name}</strong> ·{" "}
+              {o.plan
+                ? `Forfait à ${o.plan} € · ${monthlyPrice(o.plan, o.seats)} € HT / mois au total · ${o.occupied}/${o.seats} places utilisées`
+                : `Forfait à ${o.requested_plan} € HT / mois en attente d’activation`}
+            </p>
+          ))}
           <div className="grid">
-            {data.restaurants.map((r) => (
-              <article key={r.id}>
-                <h2>{r.name}</h2>
-                <div className="actions">
-                  <a className="button" href={`/dashboard?restaurant=${r.id}`}>
-                    Ouvrir le poste de travail
-                  </a>
-                  <a href={`/restaurant/${r.id}`}>Administrer</a>
-                  <a href={`/r/${r.id}`}>Voir le site</a>
-                  <a href={`/offline?restaurant=${r.id}`}>
-                    Préparer le hors ligne
-                  </a>
-                </div>
-              </article>
-            ))}
+            {data.restaurants.map((r) => {
+              const plan = r.plan;
+              return (
+                <article key={r.id}>
+                  <h2>{r.name}</h2>
+                  {plan !== 0 && (
+                    <div className="actions">
+                      <a
+                        className="button"
+                        href={`/dashboard?restaurant=${r.id}`}
+                      >
+                        Ouvrir le poste de travail
+                      </a>
+                      <a href={`/restaurant/${r.id}`}>Administrer</a>
+                      {plan >= 69 && <a href={`/r/${r.id}`}>Voir le site</a>}
+                      <a href={`/offline?restaurant=${r.id}`}>
+                        Préparer le hors ligne
+                      </a>
+                    </div>
+                  )}
+                </article>
+              );
+            })}
           </div>
           {data.organizations.some((o) =>
             ["OWNER", "ADMIN"].includes(o.role),
@@ -149,49 +174,32 @@ export function PlatformHome() {
                     onChange={(e) => setName(e.target.value)}
                   />
                 </label>
-                <button disabled={busy}>Créer le restaurant</button>
+                {organization &&
+                  organization.occupied >= organization.seats && (
+                    <p>
+                      Demandez l’activation d’une place supplémentaire à 39 € HT
+                      par mois.
+                    </p>
+                  )}
+                <button
+                  disabled={
+                    busy ||
+                    !organization?.plan ||
+                    organization.occupied >= organization.seats
+                  }
+                >
+                  Créer le restaurant
+                </button>
               </form>
             </section>
           )}
-          <section>
-            <h2>Créer votre organisation</h2>
-            <p>
-              Une organisation regroupe vos établissements et conserve son
-              propre fichier client.
-            </p>
-            <form
-              onSubmit={(e) => {
-                e.preventDefault();
-                void submit({
-                  action: "onboard",
-                  organization: org,
-                  restaurant: name,
-                });
-              }}
-            >
-              <label>
-                Nom de l’organisation
-                <input
-                  required
-                  minLength={2}
-                  maxLength={150}
-                  value={org}
-                  onChange={(e) => setOrg(e.target.value)}
-                />
-              </label>
-              <label>
-                Premier restaurant
-                <input
-                  required
-                  minLength={2}
-                  maxLength={150}
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                />
-              </label>
-              <button disabled={busy}>Créer mon espace</button>
-            </form>
-          </section>
+          {data.organizations.length === 0 && !token && (
+            <section>
+              <h2>Ouvrez votre premier espace</h2>
+              <p>Choisissez un forfait pour préparer votre organisation et votre premier restaurant.</p>
+              <Link className="button" href="/#offres">Choisir une offre</Link>
+            </section>
+          )}
         </>
       ) : (
         <p role="status">Chargement de votre espace…</p>

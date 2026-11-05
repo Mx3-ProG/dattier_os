@@ -12,6 +12,7 @@
 - Ingrédients, conversions, recettes des suppléments, inventaires et achats multilignes avec réceptions partielles ; transferts internes au restaurant par service.
 - Appareils hors ligne, quotas de lots, file IndexedDB, synchronisation dédupliquée et conflits conservés.
 - Boîte d’envoi persistante, worker, exports de ventes/pointages, chiffrement des secrets de connecteurs et vérification d’enveloppes signées.
+- Forfaits par organisation, contrôle du nombre d’établissements et gestion manuelle du pilote.
 - Composition auto-hébergeable, migrations séparées et outils de sauvegarde/import/charge.
 
 ## Partiel ou à raccorder
@@ -22,7 +23,7 @@
 - Les conflits hors ligne sont conservés et affichés ; un responsable peut demander une reprise ou rejeter une opération avec justification. Les cas nécessitant une décision physique de stock restent à traiter manuellement. La réconciliation d’un appareil libère les quotas inutilisés et ferme l’appareil ; elle nécessite un inventaire des opérations locales.
 - Le navigateur ne garantit ni conservation après effacement ni synchronisation lorsqu’il est fermé. Aucun échange automatique entre appareils pendant la coupure.
 - Les transferts entre établissements, le routage multi-clusters et les migrations d’organisation entre clusters ne sont pas implémentés.
-- Paiements en ligne, remboursements PSP, caisse, comptabilité, paie et livraison restent indisponibles tant que les accès et parcours prestataires n’ont pas été implémentés/validés. Aucun abonnement payant n’est créé.
+- Paiements en ligne, remboursements PSP, caisse, comptabilité, paie et livraison restent indisponibles tant que les accès et parcours prestataires n’ont pas été implémentés/validés. L’activation des forfaits et la facturation sont manuelles pendant le pilote.
 - Les informations légales et la gestion complète des droits RGPD restent à établir avant des données réelles.
 - Les tests locaux ne valent pas audit de sécurité indépendant, validation réglementaire, haute disponibilité ni pilote de 100–500 restaurants réels.
 

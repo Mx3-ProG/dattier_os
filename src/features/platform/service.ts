@@ -10,6 +10,7 @@ export const platformAction = z.discriminatedUnion("action", [
   z.object({
     action: z.literal("onboard"),
     organization: text,
+    plan: z.union([z.literal(39), z.literal(69), z.literal(99)]).default(39),
     restaurant: text,
   }),
   z.object({ action: z.literal("restaurant"), organization: id, name: text }),
@@ -76,12 +77,12 @@ export async function overview(db: DB, user: Actor) {
     user,
     organizations: await rows(
       db,
-      "SELECT o.*,m.role FROM organizations o JOIN organization_memberships m ON m.organization_id=o.id WHERE m.profile_id=$1 ORDER BY o.name",
+      "SELECT o.*,m.role,p.* FROM organizations o JOIN organization_memberships m ON m.organization_id=o.id CROSS JOIN LATERAL app.organization_plan(o.id) p WHERE m.profile_id=$1 ORDER BY o.name",
       [user.id],
     ),
     restaurants: await rows(
       db,
-      "SELECT DISTINCT r.* FROM restaurants r LEFT JOIN memberships m ON m.restaurant_id=r.id LEFT JOIN organization_memberships om ON om.organization_id=r.organization_id WHERE m.profile_id=$1 OR (om.profile_id=$1 AND om.role IN ('OWNER','ADMIN')) ORDER BY r.name",
+      "SELECT DISTINCT r.*,app.restaurant_plan(r.id) AS plan FROM restaurants r LEFT JOIN memberships m ON m.restaurant_id=r.id LEFT JOIN organization_memberships om ON om.organization_id=r.organization_id WHERE r.archived_at IS NULL AND (m.profile_id=$1 OR (om.profile_id=$1 AND om.role IN ('OWNER','ADMIN'))) ORDER BY r.name",
       [user.id],
     ),
   };
@@ -103,6 +104,10 @@ export async function platformPerform(db: DB, user: Actor, raw: unknown) {
       r,
       a.restaurant,
     ]);
+    await db.query("UPDATE organizations SET requested_plan=$2 WHERE id=$1", [
+      org,
+      a.plan,
+    ]);
     return { organization: org, restaurant: r };
   }
   if (a.action === "accept") {
@@ -117,6 +122,14 @@ export async function platformPerform(db: DB, user: Actor, raw: unknown) {
       "SELECT organization_id FROM organization_memberships WHERE organization_id=$1 AND profile_id=$2 AND role IN ('OWNER','ADMIN')",
       [a.organization, user.id],
     );
+    const billing = await one<{
+      plan: number;
+      occupied: number;
+      seats: number;
+    }>(db, "SELECT * FROM app.organization_plan($1)", [a.organization]);
+    if (!billing.plan) throw new Error("Accès non autorisé avant activation.");
+    if (billing.occupied >= billing.seats)
+      throw new Error("Quota d’établissements atteint.");
     const r = randomUUID();
     await db.query(
       "INSERT INTO restaurants(id,name,organization_id) VALUES($1,$2,$3)",
@@ -134,6 +147,13 @@ export async function platformPerform(db: DB, user: Actor, raw: unknown) {
       "SELECT organization_id FROM organization_memberships WHERE organization_id=$1 AND profile_id=$2 AND role IN ('OWNER','ADMIN')",
       [a.organization, user.id],
     );
+    const billing = await one<{ plan: number }>(
+      db,
+      "SELECT plan FROM app.organization_plan($1)",
+      [a.organization],
+    );
+    if (billing.plan < 69)
+      throw new Error("Accès non autorisé avec le forfait actuel.");
     await db.query("SELECT app.set_loyalty_scope($1,$2)", [
       a.organization,
       a.scope,
