@@ -2,11 +2,14 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, useEffect, useCallback, useMemo } from "react";
+import { useSearchParams } from "next/navigation";
 import "./platform.css";
 import { ShopSettings } from "./shop-settings";
 import { LoyaltyPanel } from "./loyalty-panel";
 import type { Settings } from "@/features/commerce/schema";
-import { can, type Permission, type Role } from "@/lib/permissions";
+import type { Role } from "@/lib/permissions";
+import { availableRestaurantModules, type RestaurantModuleId } from "@/features/platform/admin-navigation";
+import { RestaurantAdminShell } from "./restaurant-admin-shell";
 type Member = { id: string; name: string; email: string; role: string };
 type ShopOrder = {
   order_id: string;
@@ -26,54 +29,28 @@ const roleOptions = [
   "PURCHASING",
   "ACCOUNTANT",
 ];
-const tabs = [
-  ["team", "Équipe"],
-  ["shop", "Boutique et avis"],
-  ["loyalty", "Fidélité"],
-  ["site", "Mon site"],
-  ["domains", "Domaines"],
-  ["seo", "SEO & visibilité IA"],
-  ["inventory", "Stocks et achats"],
-  ["security", "Sécurité"],
-  ["reconciliation", "Conflits hors ligne"],
-  ["integrations", "Connexions"],
-];
 export function RestaurantHub({
   restaurant,
+  restaurantName,
   plan,
   userRoles,
 }: {
   restaurant: string;
+  restaurantName: string;
   plan: number;
   userRoles: Role[];
 }) {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [refreshVersion, setRefreshVersion] = useState(0);
   const accessibleTabs = useMemo(
-    () =>
-      tabs.filter(([id]) => {
-        const permissions: Record<string, Permission[]> = {
-          team: ["team"],
-          shop: ["orders"],
-          loyalty: ["customers"],
-          site: ["catalog"],
-          domains: ["catalog"],
-          seo: ["website"],
-          inventory: ["stock", "purchases"],
-          security: ["audit"],
-          reconciliation: ["audit"],
-          integrations: ["settings"],
-        };
-        const planAllows =
-          plan >= 69 || !["loyalty", "site", "domains", "seo"].includes(id);
-        return (
-          planAllows &&
-          (permissions[id] || []).some((permission) => can(userRoles, permission))
-        );
-      }),
+    () => availableRestaurantModules(userRoles, plan),
     [plan, userRoles],
   );
-  const initialTab = accessibleTabs[0]?.[0] || "team";
+  const requestedTab = searchParams.get("module");
+  const initialTab = accessibleTabs.some((module) => module.id === requestedTab)
+    ? requestedTab!
+    : accessibleTabs[0]?.id || "team";
   const [tab, setTab] = useState(initialTab),
     [responseData, setData] = useState<Record<string, unknown>>(),
     [error, setError] = useState(""),
@@ -120,6 +97,16 @@ export function RestaurantHub({
   );
   const data = responseData?._module === tab ? responseData : undefined;
   useEffect(() => {
+    if (
+      requestedTab &&
+      accessibleTabs.some((module) => module.id === requestedTab) &&
+      requestedTab !== tab
+    ) {
+      setData(undefined);
+      setTab(requestedTab as RestaurantModuleId);
+    }
+  }, [requestedTab, accessibleTabs, tab]);
+  useEffect(() => {
     if (!accessibleTabs.length) return;
     let active = true;
     setData(undefined);
@@ -162,45 +149,16 @@ export function RestaurantHub({
   }
   const members = (data?.members || []) as Member[];
   return (
-    <main className="platform">
-      <header>
-        <Link href="/platform">← Mes restaurants</Link>
-        <h1>Administration du restaurant</h1>
-        <div className="actions">
-          <Link className="button" href={`/dashboard?restaurant=${restaurant}`}>
-            Poste de travail
-          </Link>
-          {plan >= 69 && (
-            <Link href={`/r/${restaurant}`}>
-              {plan >= 99 ? "Site et boutique" : "Site public"}
-            </Link>
-          )}
-          <Link href={`/offline?restaurant=${restaurant}`}>
-            Poste hors ligne
-          </Link>
-        </div>
-      </header>
-      <nav aria-label="Modules du restaurant">
-        {accessibleTabs.map(([id, label]) => (
-          <button
-            key={id}
-            aria-pressed={tab === id}
-            disabled={busy}
-            onClick={() => {
-              if (["site", "security", "seo"].includes(id)) {
-                router.push(`/restaurant/${restaurant}/${id}`);
-                return;
-              }
-              setData(undefined);
-              setTab(id);
-            }}
-          >
-            {id === "shop" && plan < 99
-              ? "Commandes boutique existantes"
-              : label}
-          </button>
-        ))}
-      </nav>
+    <RestaurantAdminShell
+      restaurant={restaurant}
+      restaurantName={restaurantName}
+      plan={plan}
+      userRoles={userRoles}
+      activeModule={tab as RestaurantModuleId}
+      pageTitle="Administration du restaurant"
+      contentClassName="platform"
+    >
+      <div className="platform-admin-content">
       {error && data && (
         <p role="alert" className="error">
           {error}
@@ -966,7 +924,8 @@ export function RestaurantHub({
           )}
         </>
       )}
-    </main>
+      </div>
+    </RestaurantAdminShell>
   );
 }
 

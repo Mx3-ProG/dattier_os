@@ -1,22 +1,26 @@
-import Link from "next/link";
 import { SecurityCenter } from "@/components/security-center";
 import "@/app/security.css";
-import "@/components/platform/platform.css";
+import { RestaurantAdminShell } from "@/components/platform/restaurant-admin-shell";
+import { restaurantAdminContext } from "@/features/platform/admin-context";
+import { notFound } from "next/navigation";
 export default async function Page({
   params,
 }: {
   params: Promise<{ restaurant: string }>;
 }) {
   const { restaurant } = await params;
+  const access = await restaurantAdminContext(restaurant).catch(() => null);
+  if (!access) notFound();
   return (
-    <main className="operations-security-page platform-chrome">
-      <header>
-        <Link href={`/restaurant/${restaurant}`}>
-          ← Administration du restaurant
-        </Link>
-        <h1>Sécurité opérationnelle</h1>
-      </header>
+    <RestaurantAdminShell
+      restaurant={restaurant}
+      restaurantName={access.restaurantName}
+      plan={access.plan}
+      userRoles={access.roles}
+      activeModule="security"
+      pageTitle="Sécurité opérationnelle"
+    >
       <SecurityCenter restaurant={restaurant} />
-    </main>
+    </RestaurantAdminShell>
   );
 }

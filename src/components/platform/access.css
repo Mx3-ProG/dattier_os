@@ -7,14 +7,25 @@
   max-width: none;
   padding: 0 max(1.25rem, calc((100% - 72rem) / 2)) 3rem;
 }
+.platform.access-home {
+  padding-bottom: calc(100px + env(safe-area-inset-bottom));
+}
 .access-nav {
+  position: sticky;
+  top: 0;
+  z-index: 50;
   min-height: 5rem;
   display: flex;
   align-items: center;
   justify-content: space-between;
   flex-wrap: wrap;
   gap: .75rem;
+  padding-inline: max(1.25rem, calc((100% - 72rem) / 2));
   border-bottom: 1px solid #d9ded4;
+  background: rgb(245 242 233 / 96%);
+  -webkit-backdrop-filter: blur(14px);
+  backdrop-filter: blur(14px);
+  box-shadow: 0 5px 18px rgb(39 48 36 / 4%);
 }
 .access-brand {
   display: inline-flex;
@@ -49,6 +60,92 @@
   color: #fffdf5;
 }
 .access-home .access-hero { margin-block: 1.5rem; }
+.platform-home-content {
+  width: min(100%, 1180px);
+  margin: 0 auto;
+  padding: 12px 24px 36px;
+}
+.platform-home-content > .grid { margin-block: 22px; }
+.organization-summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 16px 20px;
+  border: 1px solid #e1e3d8;
+  border-radius: 12px;
+  background: #fffdf8;
+}
+.organization-summary .access-label {
+  margin-bottom: 3px;
+  color: #8d9486;
+  font-size: 9px;
+}
+.organization-summary > div > strong { font-size: 14px; }
+.organization-summary p { color: #727d70; font-size: 11px; text-align: right; }
+.add-restaurant-panel { scroll-margin-top: 150px; }
+.platform-home-dock {
+  position: fixed;
+  z-index: 45;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  padding: 10px max(18px, env(safe-area-inset-right)) calc(10px + env(safe-area-inset-bottom)) max(18px, env(safe-area-inset-left));
+  border-top: 1px solid #dedfd6;
+  background: rgb(253 253 249 / 94%);
+  box-shadow: 0 -8px 28px rgb(39 48 36 / 7%);
+  -webkit-backdrop-filter: blur(14px);
+  backdrop-filter: blur(14px);
+}
+.platform-home-dock-inner {
+  width: min(100%, 1120px);
+  min-height: 50px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 9px;
+}
+.platform-home-dock-context {
+  display: grid;
+  gap: 1px;
+  margin-right: auto;
+}
+.platform-home-dock-context span {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: #75806f;
+  font-size: 10px;
+}
+.platform-home-dock-context strong { font-size: 13px; }
+.platform-home-action {
+  min-height: 42px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  padding: 8px 13px;
+  border: 1px solid #dfe3d9;
+  border-radius: 8px;
+  background: #f7f8f2;
+  color: #465a49;
+  font-size: 11px;
+  font-weight: 700;
+  text-decoration: none;
+  white-space: nowrap;
+}
+.platform-home-action:hover { background: #edf1e7; }
+.platform-home-primary {
+  border-color: #344d3e;
+  background: #344d3e;
+  color: white;
+}
+.platform-home-primary:hover { background: #263e31; color: white; }
+.platform-home-create { background: #fffdf8; }
+.platform-loading { padding: 1rem; color: #727d70; }
+.access-home .platform-empty-state { padding: 24px; }
+#ajouter-etablissement { scroll-margin-top: 110px; }
 .access-hero a, .access-hero p { color: inherit; }
 .access-label {
   display: block;
@@ -99,4 +196,12 @@
 }
 @media (max-width: 700px) {
   .access-split { grid-template-columns: minmax(0, 1fr); }
+  .access-home { padding-bottom: calc(100px + env(safe-area-inset-bottom)); }
+  .platform-home-content { padding: 8px 14px 24px; }
+  .organization-summary { align-items: flex-start; flex-direction: column; }
+  .organization-summary p { text-align: left; }
+  .platform-home-dock { padding-inline: 10px; }
+  .platform-home-dock-inner { gap: 6px; }
+  .platform-home-dock-context { display: none; }
+  .platform-home-action { flex: 1 1 auto; padding-inline: 9px; font-size: 10px; }
 }

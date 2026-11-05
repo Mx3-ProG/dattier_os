@@ -1,5 +1,7 @@
 import { WebsiteStudio } from "@/components/site-editor/entry";
 import { demoEnabled } from "@/lib/database/db";
+import { restaurantAdminContext } from "@/features/platform/admin-context";
+import { notFound } from "next/navigation";
 import "@/app/site-editor.css";
 import "@/app/site-sections.css";
 export default async function Page({
@@ -8,5 +10,15 @@ export default async function Page({
   params: Promise<{ restaurant: string }>;
 }) {
   const { restaurant } = await params;
-  return <WebsiteStudio restaurant={restaurant} demo={demoEnabled()} />;
+  const access = await restaurantAdminContext(restaurant).catch(() => null);
+  if (!access) notFound();
+  return (
+    <WebsiteStudio
+      restaurant={restaurant}
+      restaurantName={access.restaurantName}
+      plan={access.plan}
+      userRoles={access.roles}
+      demo={demoEnabled()}
+    />
+  );
 }

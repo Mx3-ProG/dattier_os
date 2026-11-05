@@ -82,7 +82,7 @@ export async function overview(db: DB, user: Actor) {
     ),
     restaurants: await rows(
       db,
-      "SELECT DISTINCT r.*,app.restaurant_plan(r.id) AS plan FROM restaurants r LEFT JOIN memberships m ON m.restaurant_id=r.id LEFT JOIN organization_memberships om ON om.organization_id=r.organization_id WHERE r.archived_at IS NULL AND (m.profile_id=$1 OR (om.profile_id=$1 AND om.role IN ('OWNER','ADMIN'))) ORDER BY r.name",
+      "SELECT DISTINCT r.*,app.restaurant_plan(r.id) AS plan,COALESCE((SELECT array_agg(rm.role::text) FROM memberships rm WHERE rm.restaurant_id=r.id AND rm.profile_id=$1),(SELECT ARRAY['OWNER']::text[] WHERE EXISTS(SELECT 1 FROM organization_memberships omx WHERE omx.organization_id=r.organization_id AND omx.profile_id=$1 AND omx.role IN ('OWNER','ADMIN')))) AS user_roles FROM restaurants r LEFT JOIN memberships m ON m.restaurant_id=r.id LEFT JOIN organization_memberships om ON om.organization_id=r.organization_id WHERE r.archived_at IS NULL AND (m.profile_id=$1 OR (om.profile_id=$1 AND om.role IN ('OWNER','ADMIN'))) ORDER BY r.name",
       [user.id],
     ),
   };

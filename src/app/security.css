@@ -294,6 +294,39 @@
 .operations-security-page .security-center {
   min-width: 0;
 }
+.security-access-state {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  max-width: 720px;
+  margin: 28px auto;
+  padding: 22px;
+  border: 1px solid #e1e3d8;
+  border-radius: 13px;
+  background: #fffdf8;
+  color: #344d3e;
+}
+.security-access-state h2 { margin: 0 0 6px; font-size: 18px; }
+.security-access-state p { color: #6e786c; }
+.security-access-state .actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 9px;
+  margin-top: 15px;
+}
+.security-access-state .actions a {
+  min-height: 42px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 12px;
+  border: 1px solid #dfe3d9;
+  border-radius: 8px;
+  background: #f5f6f0;
+  color: #465a49;
+  font-size: 12px;
+  font-weight: 650;
+}
 @media (max-width: 700px) {
   .operations-security-page {
     padding: 16px 12px 50px;
@@ -301,4 +334,6 @@
   .operations-security-page > header h1 {
     font-size: 26px;
   }
+  .security-access-state { padding: 17px; }
+  .security-access-state .actions { display: grid; }
 }

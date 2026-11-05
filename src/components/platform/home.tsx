@@ -3,6 +3,14 @@ import { monthlyPrice, type Plan } from "@/features/platform/pricing";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, useEffect, useCallback } from "react";
+import {
+  ArrowUpRight,
+  Building2,
+  LayoutDashboard,
+  Plus,
+  UtensilsCrossed,
+} from "lucide-react";
+import { can, type Role } from "@/lib/permissions";
 import "./platform.css";
 import "./access.css";
 type Overview = {
@@ -21,6 +29,7 @@ type Overview = {
     name: string;
     organization_id: string;
     plan: Plan;
+    user_roles: Role[];
   }[];
 };
 export function PlatformHome() {
@@ -69,19 +78,23 @@ export function PlatformHome() {
     }
   }
   const organization = data?.organizations.find((item) => item.id === selected);
+  const firstAvailableRestaurant = data?.restaurants.find(
+    (restaurant) => restaurant.plan > 0,
+  );
   return (
     <main className="platform access-home">
       <nav className="access-nav" aria-label="Compte">
         <Link href="/" className="access-brand">atacuisine</Link>
         {data && <form action="/auth/logout" method="post"><button>Se déconnecter</button></form>}
       </nav>
+      <div className="platform-home-content">
       <header className="access-hero">
         <span className="access-label">Espace client</span>
         <h1>{data ? `Bonjour ${data.user.name}` : "Mes restaurants"}</h1>
         <p>Retrouvez vos établissements et reprenez votre service.</p>
         <Link href="/#offres">Voir les offres →</Link>
       </header>
-      {error && (
+      {error && data && (
         <p role="alert" className="error">
           {error}
         </p>
@@ -100,12 +113,17 @@ export function PlatformHome() {
             </section>
           )}
           {data.organizations.map((o) => (
-            <p key={o.id}>
-              <strong>{o.name}</strong> ·{" "}
-              {o.plan
-                ? `Forfait à ${o.plan} € · ${monthlyPrice(o.plan, o.seats)} € HT / mois au total · ${o.occupied}/${o.seats} places utilisées`
-                : `Forfait à ${o.requested_plan} € HT / mois en attente d’activation`}
-            </p>
+            <article className="organization-summary" key={o.id}>
+              <div>
+                <span className="access-label">Organisation</span>
+                <strong>{o.name}</strong>
+              </div>
+              <p>
+                {o.plan
+                  ? `Forfait ${o.plan} € · ${monthlyPrice(o.plan, o.seats)} € HT / mois · ${o.occupied}/${o.seats} places utilisées`
+                  : `Forfait ${o.requested_plan} € HT / mois en attente d’activation`}
+              </p>
+            </article>
           ))}
           <div className="grid">
             {data.restaurants.map((r) => {
@@ -123,9 +141,11 @@ export function PlatformHome() {
                       </a>
                       <a href={`/restaurant/${r.id}`}>Administrer</a>
                       {plan >= 69 && <a href={`/r/${r.id}`}>Voir le site</a>}
-                      <a href={`/offline?restaurant=${r.id}`}>
-                        Préparer le hors ligne
-                      </a>
+                      {can(r.user_roles, "orders") && (
+                        <a href={`/offline?restaurant=${r.id}`}>
+                          Préparer le hors ligne
+                        </a>
+                      )}
                     </div>
                   )}
                 </article>
@@ -135,7 +155,7 @@ export function PlatformHome() {
           {data.organizations.some((o) =>
             ["OWNER", "ADMIN"].includes(o.role),
           ) && (
-            <section>
+            <section id="ajouter-etablissement" className="add-restaurant-panel">
               <h2>Ajouter un établissement</h2>
               <form
                 onSubmit={(e) => {
@@ -202,7 +222,60 @@ export function PlatformHome() {
           )}
         </>
       ) : (
-        <p role="status">Chargement de votre espace…</p>
+        error ? (
+          <section className="platform-empty-state" role="alert">
+            <h2>Votre espace n’a pas pu être chargé</h2>
+            <p>{error}</p>
+            <div className="actions">
+              <button onClick={() => void load().catch((e) => setError(e.message))}>
+                Réessayer
+              </button>
+              <Link href="/connexion">Se reconnecter</Link>
+            </div>
+          </section>
+        ) : (
+          <p className="platform-loading" role="status">Chargement de votre espace…</p>
+        )
+      )}
+      </div>
+      {data && (
+        <nav className="platform-home-dock" aria-label="Raccourcis de votre espace">
+          <div className="platform-home-dock-inner">
+            <div className="platform-home-dock-context">
+              <span><Building2 size={17} aria-hidden="true" /> Vos restaurants</span>
+              <strong>{data.restaurants.length} établissement{data.restaurants.length > 1 ? "s" : ""}</strong>
+            </div>
+            {firstAvailableRestaurant ? (
+              <>
+                <a
+                  className="platform-home-action platform-home-secondary"
+                  href={`/restaurant/${firstAvailableRestaurant.id}`}
+                >
+                  Administrer
+                </a>
+                <a
+                  className="platform-home-action platform-home-primary"
+                  href={`/dashboard?restaurant=${firstAvailableRestaurant.id}`}
+                >
+                  <LayoutDashboard size={17} aria-hidden="true" />
+                  <span>Ouvrir le poste de travail</span>
+                  <ArrowUpRight size={15} aria-hidden="true" />
+                </a>
+              </>
+            ) : (
+              <Link className="platform-home-action platform-home-primary" href="/#offres">
+                <UtensilsCrossed size={17} aria-hidden="true" />
+                <span>Choisir une offre</span>
+              </Link>
+            )}
+            {data.organizations.some((organization) => ["OWNER", "ADMIN"].includes(organization.role)) && (
+              <a className="platform-home-action platform-home-create" href="#ajouter-etablissement">
+                <Plus size={17} aria-hidden="true" />
+                <span>Ajouter</span>
+              </a>
+            )}
+          </div>
+        </nav>
       )}
     </main>
   );

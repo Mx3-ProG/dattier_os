@@ -702,6 +702,20 @@
   color: #617065;
   margin: 0;
 }
+.website-studio-content .studio-heading {
+  display: block;
+  padding: 0 0 18px;
+}
+.website-studio-content .studio-heading h1 {
+  margin: 0;
+  color: #283b32;
+  font-size: clamp(25px, 3vw, 36px);
+  letter-spacing: -1px;
+}
+.website-studio-content .studio-heading p {
+  margin-top: 8px;
+  font-size: 13px;
+}
 .site-editor-gate {
   max-width: 720px;
   margin: clamp(1rem, 5vh, 3rem) auto;

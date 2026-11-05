@@ -1,21 +1,26 @@
-import Link from "next/link";
 import { SeoDashboard } from "@/components/platform/seo-dashboard";
-import "@/components/platform/platform.css";
+import { RestaurantAdminShell } from "@/components/platform/restaurant-admin-shell";
+import { restaurantAdminContext } from "@/features/platform/admin-context";
+import { notFound } from "next/navigation";
 export default async function Page({
   params,
 }: {
   params: Promise<{ restaurant: string }>;
 }) {
   const { restaurant } = await params;
+  const access = await restaurantAdminContext(restaurant).catch(() => null);
+  if (!access) notFound();
   return (
-    <main className="platform">
-      <header>
-        <Link href={`/restaurant/${restaurant}`}>
-          ← Administration du restaurant
-        </Link>
-        <h1>SEO & visibilité IA</h1>
-      </header>
+    <RestaurantAdminShell
+      restaurant={restaurant}
+      restaurantName={access.restaurantName}
+      plan={access.plan}
+      userRoles={access.roles}
+      activeModule="seo"
+      pageTitle="SEO et visibilité IA"
+      contentClassName="platform"
+    >
       <SeoDashboard restaurant={restaurant} />
-    </main>
+    </RestaurantAdminShell>
   );
 }
