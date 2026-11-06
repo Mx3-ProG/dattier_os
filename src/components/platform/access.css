@@ -83,6 +83,58 @@
 }
 .organization-summary > div > strong { font-size: 14px; }
 .organization-summary p { color: #727d70; font-size: 11px; text-align: right; }
+.referral-panel {
+  margin-top: 8px;
+  padding: 16px 20px;
+  border: 1px solid #e1e3d8;
+  border-radius: 12px;
+  background: #fffdf8;
+  display: grid;
+  gap: 14px;
+}
+.referral-panel header { display: flex; gap: 10px; align-items: flex-start; }
+.referral-panel header svg { margin-top: 2px; color: #416553; flex: none; }
+.referral-panel h2 { margin: 0; font-size: 14px; }
+.referral-panel header p { margin: 2px 0 0; color: #727d70; font-size: 12px; }
+.referral-progress { display: flex; align-items: center; gap: 6px; }
+.referral-progress span { flex: 1; height: 6px; border-radius: 999px; background: #e1e3d8; }
+.referral-progress span[data-filled] { background: #416553; }
+.referral-progress strong { margin-left: 6px; font-size: 12px; font-variant-numeric: tabular-nums; }
+.referral-link { display: flex; gap: 8px; min-width: 0; }
+.referral-link input {
+  flex: 1;
+  min-width: 0;
+  padding: 8px 10px;
+  border: 1px solid #d9ded4;
+  border-radius: 8px;
+  background: #f5f2e9;
+  color: inherit;
+  font: 12px ui-monospace, monospace;
+}
+.referral-link button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  border: 0;
+  border-radius: 999px;
+  background: #18372d;
+  color: #fffdf5;
+  font-size: 12px;
+  cursor: pointer;
+}
+.referral-list { margin: 0; padding: 0; list-style: none; display: grid; gap: 6px; }
+.referral-list li {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding-top: 6px;
+  border-top: 1px solid #eceee6;
+  font-size: 12px;
+}
+.referral-list li span:last-child { color: #8d9486; text-align: right; }
+.referral-list li span[data-paying] { color: #416553; font-weight: 600; }
+.referral-empty { margin: 0; color: #8d9486; font-size: 12px; }
 .add-restaurant-panel { scroll-margin-top: 150px; }
 .platform-home-dock {
   position: fixed;

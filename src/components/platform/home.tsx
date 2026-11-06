@@ -1,5 +1,6 @@
 "use client";
-import { monthlyPrice, type Plan } from "@/features/platform/pricing";
+import { monthlyPrice, referralGoal, type Plan } from "@/features/platform/pricing";
+import { ReferralPanel, type Referral } from "./referral-panel";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, useEffect, useCallback } from "react";
@@ -23,6 +24,8 @@ type Overview = {
     seats: number;
     occupied: number;
     requested_plan: number;
+    referral_code: string | null;
+    referrals: Referral[] | null;
   }[];
   restaurants: {
     id: string;
@@ -112,19 +115,27 @@ export function PlatformHome() {
               </button>
             </section>
           )}
-          {data.organizations.map((o) => (
-            <article className="organization-summary" key={o.id}>
-              <div>
-                <span className="access-label">Organisation</span>
-                <strong>{o.name}</strong>
+          {data.organizations.map((o) => {
+            const paying = o.referrals?.filter((f) => f.paying).length ?? 0;
+            return (
+              <div key={o.id}>
+                <article className="organization-summary">
+                  <div>
+                    <span className="access-label">Organisation</span>
+                    <strong>{o.name}</strong>
+                  </div>
+                  <p>
+                    {o.plan
+                      ? `Forfait ${o.plan} €${paying >= referralGoal ? " offert" : ""} · ${monthlyPrice(o.plan, o.seats, paying)} € HT / mois · ${o.occupied}/${o.seats} places utilisées`
+                      : `Forfait ${o.requested_plan} € HT / mois en attente d’activation`}
+                  </p>
+                </article>
+                {o.plan > 0 && o.referral_code && (
+                  <ReferralPanel code={o.referral_code} referrals={o.referrals ?? []} />
+                )}
               </div>
-              <p>
-                {o.plan
-                  ? `Forfait ${o.plan} € · ${monthlyPrice(o.plan, o.seats)} € HT / mois · ${o.occupied}/${o.seats} places utilisées`
-                  : `Forfait ${o.requested_plan} € HT / mois en attente d’activation`}
-              </p>
-            </article>
-          ))}
+            );
+          })}
           <div className="grid">
             {data.restaurants.map((r) => {
               const plan = r.plan;

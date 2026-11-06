@@ -12,6 +12,11 @@ export const platformAction = z.discriminatedUnion("action", [
     organization: text,
     plan: z.union([z.literal(39), z.literal(69), z.literal(99)]).default(39),
     restaurant: text,
+    referral: z
+      .string()
+      .regex(/^[A-Fa-f0-9]{10}$/)
+      .optional()
+      .catch(undefined),
   }),
   z.object({ action: z.literal("restaurant"), organization: id, name: text }),
   z.object({
@@ -77,7 +82,7 @@ export async function overview(db: DB, user: Actor) {
     user,
     organizations: await rows(
       db,
-      "SELECT o.*,m.role,p.* FROM organizations o JOIN organization_memberships m ON m.organization_id=o.id CROSS JOIN LATERAL app.organization_plan(o.id) p WHERE m.profile_id=$1 ORDER BY o.name",
+      "SELECT o.*,m.role,p.*,s.referral_code,s.referrals FROM organizations o JOIN organization_memberships m ON m.organization_id=o.id CROSS JOIN LATERAL app.organization_plan(o.id) p LEFT JOIN LATERAL app.referral_summary(o.id) s ON true WHERE m.profile_id=$1 ORDER BY o.name",
       [user.id],
     ),
     restaurants: await rows(
@@ -108,6 +113,8 @@ export async function platformPerform(db: DB, user: Actor, raw: unknown) {
       org,
       a.plan,
     ]);
+    if (a.referral)
+      await db.query("SELECT app.attach_referral($1,$2)", [org, a.referral]);
     return { organization: org, restaurant: r };
   }
   if (a.action === "accept") {

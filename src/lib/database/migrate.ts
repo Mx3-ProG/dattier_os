@@ -23,6 +23,7 @@ const migrations: [number, string][] = [
   [20, "020_organization_plans.sql"],
   [21, "021_product_pages.sql"],
   [22, "022_rebrand_roles.sql"],
+  [23, "023_referrals.sql"],
 ];
 /** Applies every additive migration not yet recorded, inside the caller's transaction. */
 export async function applyMigrations(tx: DB) {

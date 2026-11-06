@@ -336,3 +336,68 @@ test("invitations : identité vérifiée, rôles cumulés et usage unique", asyn
     0,
   );
 });
+
+test("parrainage : lien, filleuls payants et forfait offert au cinquième", async () => {
+  await db.query(
+    "INSERT INTO profiles(id,name,role,email) VALUES('parrain','Parrain','OWNER','parrain@example.test')",
+  );
+  await db.query("SELECT set_config('app.user_id','parrain',false)");
+  await db.query(
+    "SELECT app.bootstrap_organization('parrain-org','Groupe parrain','parrain-r','Restaurant parrain')",
+  );
+  const summary = () =>
+    asUser("parrain", "", (tx) =>
+      one<{ referral_code: string | null; referrals: { paying: boolean }[] }>(
+        tx,
+        "SELECT * FROM app.referral_summary('parrain-org')",
+      ),
+    );
+  assert.equal((await summary()).referral_code, null, "pas de lien avant abonnement");
+  await db.query("SELECT app.configure_organization_plan('parrain-org',39,1)");
+  const { referral_code: code } = await summary();
+  assert.match(code!, /^[A-F0-9]{10}$/);
+  // Self-referral and invalid codes are ignored without blocking onboarding.
+  await asUser("parrain", "", (tx) =>
+    platformPerform(tx, { id: "parrain", name: "Parrain", role: "OWNER" }, {
+      action: "onboard", organization: "Moi-même", restaurant: "Annexe", referral: code,
+    }),
+  );
+  assert.equal((await summary()).referrals.length, 0);
+  const filleuls: string[] = [];
+  for (let i = 1; i <= 5; i++) {
+    const id = `filleul-${i}`;
+    await db.query(
+      "INSERT INTO profiles(id,name,role,email) VALUES($1,$1,'OWNER',$2)",
+      [id, `${id}@example.test`],
+    );
+    const created = (await asUser(id, "", (tx) =>
+      platformPerform(tx, { id, name: id, role: "OWNER" }, {
+        action: "onboard", organization: `Org ${i}`, restaurant: `Resto ${i}`, referral: code!.toLowerCase(),
+      }),
+    )) as { organization: string };
+    filleuls.push(created.organization);
+  }
+  let state = await summary();
+  assert.equal(state.referrals.length, 5);
+  assert.equal(state.referrals.filter((f) => f.paying).length, 0);
+  for (const org of filleuls.slice(0, 4))
+    await db.query("SELECT app.configure_organization_plan($1,39,1)", [org]);
+  const paying = async () =>
+    (await one<{ n: number }>(db, "SELECT app.paying_referrals('parrain-org') AS n")).n;
+  assert.equal(await paying(), 4);
+  assert.equal(monthlyPrice(39, 1, await paying()), 39);
+  await db.query("SELECT app.configure_organization_plan($1,69,1)", [filleuls[4]]);
+  assert.equal(await paying(), 5);
+  assert.equal(monthlyPrice(39, 1, 5), 0);
+  assert.equal(monthlyPrice(99, 3, 5), 78, "les établissements supplémentaires restent facturés");
+  state = await summary();
+  assert.equal(state.referrals.filter((f) => f.paying).length, 5);
+  // A referral that stops paying no longer counts.
+  await db.query("SELECT app.configure_organization_plan($1,0,1)", [filleuls[0]]);
+  assert.equal(await paying(), 4);
+  // Another organisation cannot read the referrer's summary.
+  assert.equal(
+    (await asUser("filleul-1", "", (tx) => rows(tx, "SELECT * FROM app.referral_summary('parrain-org')"))).length,
+    0,
+  );
+});
