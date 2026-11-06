@@ -182,6 +182,31 @@ const modules = [
     permission: "security",
   },
 ] as const;
+type ModuleGroup = (typeof modules)[number]["group"];
+// Barre d’onglets façon app mobile (tablette et téléphone) : cinq entrées
+// maximum, chacune regroupant une ou plusieurs familles du menu latéral.
+const dockTabs: {
+  id: string;
+  label: string;
+  icon: typeof LayoutDashboard;
+  groups: ModuleGroup[];
+}[] = [
+  {
+    id: "pilotage",
+    label: "Pilotage",
+    icon: LayoutDashboard,
+    groups: ["PILOTAGE", "PILOTAGE FINANCIER"],
+  },
+  {
+    id: "operations",
+    label: "Opérations",
+    icon: UtensilsCrossed,
+    groups: ["OPÉRATIONS"],
+  },
+  { id: "gestion", label: "Gestion", icon: Package, groups: ["GESTION"] },
+  { id: "equipe", label: "Équipe", icon: Users, groups: ["ÉQUIPE"] },
+  { id: "clients", label: "Clients", icon: Heart, groups: ["RELATION CLIENT"] },
+];
 export function Workspace() {
   const router = useRouter();
   const [data, setData] = useState<Snapshot | null>(null),
@@ -191,6 +216,7 @@ export function Workspace() {
     [mobile, setMobile] = useState(false),
     [notifications, setNotifications] = useState(false),
     [guide, setGuide] = useState(false),
+    [dockSheet, setDockSheet] = useState(""),
     [updated, setUpdated] = useState("");
   const cursor = useRef(0);
   useEffect(() => {
@@ -288,7 +314,18 @@ export function Workspace() {
   if (!data)
     return (
       <main className="loading">
+    setDockSheet("");
+    window.scrollTo({ top: 0 });
         <Leaf />
+  const dock = dockTabs
+    .map((tab) => ({
+      ...tab,
+      items: allowed.filter((m) =>
+        (tab.groups as readonly string[]).includes(m.group),
+      ),
+    }))
+    .filter((tab) => tab.items.length > 0);
+  const openSheet = dock.find((tab) => tab.id === dockSheet);
         <h1>atacuisine</h1>
         <p>{error || "Votre restaurant se prépare…"}</p>
         <Link href="/platform">Mes restaurants et connexion</Link>
@@ -516,6 +553,63 @@ export function Workspace() {
         data={data}
         restaurant={restaurant}
         modules={allowed.map((m) => m.id)}
+      {dock.length > 0 && (
+        <>
+          {openSheet && (
+            <>
+              <button
+                className="dock-scrim"
+                aria-label="Fermer le menu"
+                onClick={() => setDockSheet("")}
+              />
+              <div
+                className="dock-sheet"
+                role="dialog"
+                aria-label={openSheet.label}
+              >
+                {openSheet.items.map((m, i) => (
+                  <div key={m.id}>
+                    {(i === 0 || openSheet.items[i - 1].group !== m.group) &&
+                      openSheet.groups.length > 1 && (
+                        <span className="nav-group">{m.group}</span>
+                      )}
+                    <button
+                      className={current?.id === m.id ? "active" : ""}
+                      onClick={() => navigate(m.id)}
+                    >
+                      <m.icon size={18} />
+                      {m.name}
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </>
+          )}
+          <nav className="workspace-dock" aria-label="Navigation rapide">
+            {dock.map((tab) => {
+              const active = tab.items.some((m) => m.id === current?.id);
+              return (
+                <button
+                  key={tab.id}
+                  className={`${active ? "active" : ""} ${dockSheet === tab.id ? "open" : ""}`}
+                  aria-current={active ? "page" : undefined}
+                  aria-expanded={
+                    tab.items.length > 1 ? dockSheet === tab.id : undefined
+                  }
+                  onClick={() =>
+                    tab.items.length === 1
+                      ? navigate(tab.items[0].id)
+                      : setDockSheet(dockSheet === tab.id ? "" : tab.id)
+                  }
+                >
+                  <tab.icon size={21} />
+                  <span>{tab.label}</span>
+                </button>
+              );
+            })}
+          </nav>
+        </>
+      )}
         navigate={navigate}
         open={guide}
         setOpen={setGuide}
