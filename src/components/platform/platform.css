@@ -603,6 +603,19 @@
   color: #fff;
 }
 .admin-dock-primary:hover { background: #263e31; color: #fff; }
+/* `.platform a` est plus spécifique : on force le texte blanc des boutons pleins. */
+.platform a.admin-shell-primary,
+.platform a.admin-dock-primary { color: #fff; }
+.platform a.admin-dock-item:not(.admin-dock-primary) { color: #687568; }
+/* Neutralise `.platform nav` (marge et padding bas) sur la nav du header et le dock. */
+.platform .admin-module-nav,
+.platform .admin-action-dock {
+  margin-bottom: 0;
+  border-bottom: 0;
+}
+.platform .admin-module-nav { padding-bottom: 0; }
+.platform .admin-action-dock { padding-bottom: calc(9px + env(safe-area-inset-bottom)); }
+.platform a.admin-dock-item[aria-current="page"]:not(.admin-dock-primary) { color: #36513d; }
 .restaurant-admin-shell :focus-visible {
   outline: 3px solid #bd8d4d;
   outline-offset: 3px;
@@ -629,7 +642,6 @@
   }
 }
 @media (max-width: 520px) {
-  .restaurant-admin-shell { padding-bottom: calc(78px + env(safe-area-inset-bottom)); }
   .admin-shell-top {
     grid-template-columns: 1fr auto;
     row-gap: 5px;
@@ -652,16 +664,24 @@
   .restaurant-admin-shell .admin-shell-content.platform {
     padding: 18px 12px 28px;
   }
+  .restaurant-admin-shell { padding-bottom: calc(66px + env(safe-area-inset-bottom)); }
   .admin-action-dock { padding-inline: 8px; }
-  .admin-action-dock-inner { justify-content: flex-start; gap: 3px; }
+  .admin-action-dock-inner { justify-content: space-between; gap: 4px; }
+  /* Téléphone : icônes seules, le libellé reste lu par les lecteurs d'écran. */
   .admin-dock-item {
-    flex: 0 0 70px;
-    min-width: 70px;
-    min-height: 52px;
-    flex-direction: column;
-    gap: 2px;
-    padding: 5px 4px;
-    font-size: 9px;
+    flex: 1 1 0;
+    min-width: 44px;
+    min-height: 46px;
+    padding: 8px 4px;
   }
-  .admin-dock-primary { flex-basis: 84px; }
+  .admin-dock-item svg { width: 22px; height: 22px; }
+  .admin-dock-item span {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+  }
+  .admin-dock-primary { flex: 1 1 0; }
 }
