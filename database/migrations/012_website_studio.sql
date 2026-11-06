@@ -12,11 +12,11 @@ CREATE POLICY media_scope ON cms_media USING(app.in_restaurant(restaurant_id)) W
 INSERT INTO restaurant_cms(restaurant_id) SELECT id FROM restaurants;
 CREATE FUNCTION app.setup_cms() RETURNS trigger LANGUAGE plpgsql SECURITY DEFINER SET search_path=public,pg_temp AS $$ BEGIN INSERT INTO restaurant_cms(restaurant_id) VALUES(NEW.id);RETURN NEW;END $$;
 CREATE TRIGGER cms_setup AFTER INSERT ON restaurants FOR EACH ROW EXECUTE FUNCTION app.setup_cms();
-DO $$ BEGIN IF NOT EXISTS(SELECT FROM pg_roles WHERE rolname='dattier_app') THEN CREATE ROLE dattier_app NOLOGIN NOSUPERUSER NOCREATEDB NOCREATEROLE NOBYPASSRLS; END IF; END $$;
-GRANT USAGE ON SCHEMA public,app TO dattier_app;
-GRANT SELECT,INSERT,UPDATE,DELETE ON ALL TABLES IN SCHEMA public TO dattier_app;
-GRANT USAGE,SELECT ON ALL SEQUENCES IN SCHEMA public TO dattier_app;
-GRANT EXECUTE ON ALL FUNCTIONS IN SCHEMA app TO dattier_app;
-REVOKE ALL ON schema_versions FROM dattier_app;
-REVOKE EXECUTE ON FUNCTION app.claim_jobs(text) FROM dattier_app;
+DO $$ BEGIN IF NOT EXISTS(SELECT FROM pg_roles WHERE rolname='atacuisine_app') THEN CREATE ROLE atacuisine_app NOLOGIN NOSUPERUSER NOCREATEDB NOCREATEROLE NOBYPASSRLS; END IF; END $$;
+GRANT USAGE ON SCHEMA public,app TO atacuisine_app;
+GRANT SELECT,INSERT,UPDATE,DELETE ON ALL TABLES IN SCHEMA public TO atacuisine_app;
+GRANT USAGE,SELECT ON ALL SEQUENCES IN SCHEMA public TO atacuisine_app;
+GRANT EXECUTE ON ALL FUNCTIONS IN SCHEMA app TO atacuisine_app;
+REVOKE ALL ON schema_versions FROM atacuisine_app;
+REVOKE EXECUTE ON FUNCTION app.claim_jobs(text) FROM atacuisine_app;
 INSERT INTO schema_versions VALUES(12);

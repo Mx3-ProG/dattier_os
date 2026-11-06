@@ -24,7 +24,7 @@ export function CookieConsent({
   onChange: (externalMedia: boolean) => void;
 }) {
   const { restaurant } = useTenantSite();
-  const STORAGE_KEY = `dattier-cookie-consent:${restaurant}`;
+  const STORAGE_KEY = `atacuisine-cookie-consent:${restaurant}`;
   const [consent, setConsent] = useState<Consent | null>(null);
   const [ready, setReady] = useState(false);
   const [settings, setSettings] = useState(false);

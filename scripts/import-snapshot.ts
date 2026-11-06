@@ -12,7 +12,7 @@ if (!source || !url || !owner || process.env.CONFIRM_COLD_SNAPSHOT !== "true")
   throw new Error(
     "IMPORT_SNAPSHOT_DIR, MIGRATION_DATABASE_URL, IMPORT_OWNER_ID et CONFIRM_COLD_SNAPSHOT=true requis.",
   );
-const copy = await mkdtemp(path.join(tmpdir(), "dattier-import-demo-"));
+const copy = await mkdtemp(path.join(tmpdir(), "atacuisine-import-demo-"));
 await cp(source, path.join(copy, "source"), {
   recursive: true,
   errorOnExist: true,

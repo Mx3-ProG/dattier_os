@@ -46,14 +46,14 @@ async function run(job: Job) {
           );
         } else if (job.kind === "security_scan") {
           await db.transaction(async (tx) => {
-            await tx.exec("SET LOCAL ROLE dattier_worker");
+            await tx.exec("SET LOCAL ROLE atacuisine_worker");
             await operationsTick(nestedDatabase(tx));
             await scanSecurity(tx, job.restaurant_id);
           });
         } else if (job.kind === "seo_audit") {
           // Reads only the restaurant's published data, as the application role.
           await db.transaction(async (tx) => {
-            await tx.exec("SET LOCAL ROLE dattier_app");
+            await tx.exec("SET LOCAL ROLE atacuisine_app");
             await runSeoAudit(
               tx,
               job.restaurant_id,

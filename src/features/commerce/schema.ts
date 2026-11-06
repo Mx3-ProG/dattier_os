@@ -1,3 +1,4 @@
+import type { ProductPageFields } from "@/lib/product-pages";
 import { z } from "zod";
 const publicUrlSchema = z.union([
   z
@@ -104,7 +105,7 @@ export const checkoutSchema = z.object({
     .max(30),
 });
 export type Checkout = z.infer<typeof checkoutSchema>;
-export type Product = {
+export type Product = ProductPageFields & {
   id: string;
   name: string;
   category: string;

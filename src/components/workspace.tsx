@@ -220,8 +220,12 @@ export function Workspace() {
     [updated, setUpdated] = useState("");
   const cursor = useRef(0);
   useEffect(() => {
-    const r = new URLSearchParams(window.location.search).get("restaurant");
+    const query = new URLSearchParams(window.location.search);
+    const r = query.get("restaurant");
+    const requestedModule = query.get("module");
     if (r) setRestaurant(r);
+    if (requestedModule && modules.some((item) => item.id === requestedModule))
+      setModule(requestedModule);
   }, []);
   const load = useCallback(async () => {
     const r = await fetch(
@@ -310,13 +314,9 @@ export function Workspace() {
     }
     setModule(s);
     setMobile(false);
-  };
-  if (!data)
-    return (
-      <main className="loading">
     setDockSheet("");
     window.scrollTo({ top: 0 });
-        <Leaf />
+  };
   const dock = dockTabs
     .map((tab) => ({
       ...tab,
@@ -326,6 +326,10 @@ export function Workspace() {
     }))
     .filter((tab) => tab.items.length > 0);
   const openSheet = dock.find((tab) => tab.id === dockSheet);
+  if (!data)
+    return (
+      <main className="loading">
+        <Leaf />
         <h1>atacuisine</h1>
         <p>{error || "Votre restaurant se prépare…"}</p>
         <Link href="/platform">Mes restaurants et connexion</Link>
@@ -549,10 +553,6 @@ export function Workspace() {
           </small>
         </footer>
       </div>
-      <Tutorial
-        data={data}
-        restaurant={restaurant}
-        modules={allowed.map((m) => m.id)}
       {dock.length > 0 && (
         <>
           {openSheet && (
@@ -610,6 +610,10 @@ export function Workspace() {
           </nav>
         </>
       )}
+      <Tutorial
+        data={data}
+        restaurant={restaurant}
+        modules={allowed.map((m) => m.id)}
         navigate={navigate}
         open={guide}
         setOpen={setGuide}

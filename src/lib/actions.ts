@@ -137,6 +137,10 @@ export const actionSchema = z.discriminatedUnion("action", [
     price: z.coerce.number().int().min(0),
     enabled: z.boolean(),
     description: z.string().max(500),
+    public_composition: z.string().trim().max(2000).optional(),
+    allergens: z.string().trim().max(500).optional(),
+    seo_title: z.string().trim().max(80).optional(),
+    seo_description: z.string().trim().max(200).optional(),
   }),
   z.object({
     action: z.literal("recipe"),
@@ -492,8 +496,23 @@ export async function perform(
     case "menu":
       requirePermission(user.roles ?? user.role, "catalog");
       await db.query(
-        "UPDATE menu_items SET name=$3,price=$4,enabled=$5,description=$6 WHERE id=$1 AND restaurant_id=$2",
-        [a.id, r, a.name, a.price, a.enabled, a.description],
+        `UPDATE menu_items SET name=$3,price=$4,enabled=$5,description=$6,
+          public_composition=coalesce($7,public_composition),
+          allergens=coalesce($8,allergens),seo_title=coalesce($9,seo_title),
+          seo_description=coalesce($10,seo_description)
+         WHERE id=$1 AND restaurant_id=$2`,
+        [
+          a.id,
+          r,
+          a.name,
+          a.price,
+          a.enabled,
+          a.description,
+          a.public_composition ?? null,
+          a.allergens ?? null,
+          a.seo_title ?? null,
+          a.seo_description ?? null,
+        ],
       );
       break;
     case "recipe":

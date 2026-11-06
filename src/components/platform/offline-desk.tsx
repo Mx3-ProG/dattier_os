@@ -30,8 +30,8 @@ export function OfflineDesk() {
     let id = requested || "";
     try {
       if (requested)
-        localStorage.setItem("dattier-offline-last-restaurant", requested);
-      else id = localStorage.getItem("dattier-offline-last-restaurant") || "";
+        localStorage.setItem("atacuisine-offline-last-restaurant", requested);
+      else id = localStorage.getItem("atacuisine-offline-last-restaurant") || "";
     } catch {}
 
     setRestaurant(id);

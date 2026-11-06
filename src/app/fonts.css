@@ -1,5 +1,5 @@
 @font-face {
-  font-family: "Dattier Playfair";
+  font-family: "Atacuisine Playfair";
   src:
     url("/fonts/playfair.woff2") format("woff2"),
     url("/fonts/playfair.ttf") format("truetype");
@@ -7,7 +7,7 @@
   font-display: swap;
 }
 @font-face {
-  font-family: "Dattier Fraunces";
+  font-family: "Atacuisine Fraunces";
   src:
     url("/fonts/fraunces.woff2") format("woff2"),
     url("/fonts/fraunces.ttf") format("truetype");
@@ -15,7 +15,7 @@
   font-display: swap;
 }
 @font-face {
-  font-family: "Dattier DM Serif";
+  font-family: "Atacuisine DM Serif";
   src:
     url("/fonts/dmserifdisplay.woff2") format("woff2"),
     url("/fonts/dmserifdisplay.ttf") format("truetype");
@@ -23,7 +23,7 @@
   font-display: swap;
 }
 @font-face {
-  font-family: "Dattier Poppins";
+  font-family: "Atacuisine Poppins";
   src:
     url("/fonts/poppins.woff2") format("woff2"),
     url("/fonts/poppins.ttf") format("truetype");
@@ -31,7 +31,7 @@
   font-display: swap;
 }
 @font-face {
-  font-family: "Dattier Poppins";
+  font-family: "Atacuisine Poppins";
   src:
     url("/fonts/poppins-bold.woff2") format("woff2"),
     url("/fonts/poppins-bold.ttf") format("truetype");
@@ -39,7 +39,7 @@
   font-display: swap;
 }
 @font-face {
-  font-family: "Dattier Nunito";
+  font-family: "Atacuisine Nunito";
   src:
     url("/fonts/nunito.woff2") format("woff2"),
     url("/fonts/nunito.ttf") format("truetype");
@@ -47,7 +47,7 @@
   font-display: swap;
 }
 @font-face {
-  font-family: "Dattier Inter";
+  font-family: "Atacuisine Inter";
   src:
     url("/fonts/inter.woff2") format("woff2"),
     url("/fonts/inter.ttf") format("truetype");
@@ -55,10 +55,10 @@
   font-display: swap;
 }
 :root {
-  --font-playfair: "Dattier Playfair";
-  --font-fraunces: "Dattier Fraunces";
-  --font-dm-serif: "Dattier DM Serif";
-  --font-poppins: "Dattier Poppins";
-  --font-nunito: "Dattier Nunito";
-  --font-inter: "Dattier Inter";
+  --font-playfair: "Atacuisine Playfair";
+  --font-fraunces: "Atacuisine Fraunces";
+  --font-dm-serif: "Atacuisine DM Serif";
+  --font-poppins: "Atacuisine Poppins";
+  --font-nunito: "Atacuisine Nunito";
+  --font-inter: "Atacuisine Inter";
 }

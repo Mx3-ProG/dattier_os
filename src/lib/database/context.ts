@@ -7,9 +7,9 @@ export type DatabaseContext = {
 };
 // Next route bundles share the database singleton; they must share its context too.
 const runtime = globalThis as typeof globalThis & {
-  dattierDatabaseContext?: AsyncLocalStorage<DatabaseContext>;
+  atacuisineDatabaseContext?: AsyncLocalStorage<DatabaseContext>;
 };
-export const databaseContext = (runtime.dattierDatabaseContext ??=
+export const databaseContext = (runtime.atacuisineDatabaseContext ??=
   new AsyncLocalStorage<DatabaseContext>());
 export const withDatabaseContext = <T>(
   context: DatabaseContext,

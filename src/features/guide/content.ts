@@ -948,10 +948,10 @@ export const chapters: Chapter[] = [
           title: "Construire le site",
           steps: [
             "Configuration › Mon site web : l’éditeur s’ouvre sur la page d’accueil.",
-            "Ajoutez des sections et des pages, racontez votre histoire, choisissez l’identité et les polices.",
-            "Réglez le référencement : titre, description, image de partage, icône.",
-            "Prévisualisez sur ordinateur, tablette et mobile.",
-            "Publiez ; une version précédente peut être restaurée à tout moment.",
+            "Ouvrez Guide de création dans le studio pour suivre les étapes. Dans Pages, créez une page puis utilisez l’œil pour la rendre visible.",
+            "Utilisez Ajouter une section pour insérer un texte, une bannière ou les catégories de la boutique. Dans Sections, sélectionnez un bloc pour modifier ses champs et utilisez les flèches pour le déplacer.",
+            "Personnalisez l’identité et le référencement, puis contrôlez le résultat avec les icônes ordinateur, tablette et téléphone.",
+            "Enregistrez votre brouillon, puis publiez pour mettre le site à jour. Historique permet de restaurer une publication précédente.",
           ],
         },
         {

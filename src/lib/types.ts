@@ -1,3 +1,4 @@
+import type { ProductPageFields } from "./product-pages";
 import type { Actor } from "./auth/session";
 export type Restaurant = {
   id: string;
@@ -6,7 +7,7 @@ export type Restaurant = {
   phone: string;
   goal: number;
 };
-export type MenuItem = {
+export type MenuItem = ProductPageFields & {
   id: string;
   name: string;
   category: string;

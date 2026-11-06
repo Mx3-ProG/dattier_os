@@ -19,7 +19,7 @@ async function app<T>(
 ) {
   return withDatabaseContext({ userId, restaurantId }, () =>
     db.transaction(async (tx) => {
-      await tx.exec("SET LOCAL ROLE dattier_app");
+      await tx.exec("SET LOCAL ROLE atacuisine_app");
       return fn(tx);
     }),
   );

@@ -43,7 +43,7 @@ async function routePOST(
     if (!(file instanceof File)) throw new Error("Ajoutez un fichier.");
     return json(
       await authenticated(restaurant, async (db, user) => {
-        await db.exec("SET LOCAL ROLE dattier_app");
+        await db.exec("SET LOCAL ROLE atacuisine_app");
         await website(restaurant).siteScope(db, user);
         const saved = await cmsMedia(restaurant).saveSiteMedia(
           db,

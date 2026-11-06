@@ -52,12 +52,13 @@ export function website(SHOP: string) {
       throw new Error(`Version de configuration inconnue : ${version}.`);
     const config = siteConfigSchema.parse(raw) as SiteConfig;
     if (
-      config.footer.credit === "{{restaurant.name}} · propulsé par DATTIER OS"
+      /^\{\{restaurant\.name\}\} · propulsé par [A-Z]+ OS$/.test(config.footer.credit)
     )
       config.footer.credit = defaultConfig().footer.credit;
     if (
-      config.seo.description ===
-      "Cuisine, rencontres et convivialité. Démonstration e-commerce locale propulsée par DATTIER OS."
+      /^Cuisine, rencontres et convivialité\. Démonstration e-commerce locale propulsée par [A-Z]+ OS\.$/.test(
+        config.seo.description,
+      )
     )
       config.seo.description = defaultConfig().seo.description;
     return config;

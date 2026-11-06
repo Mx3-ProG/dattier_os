@@ -1,4 +1,5 @@
 import { restaurantPlan } from "@/features/platform/entitlements";
+import { productPath } from "@/lib/product-pages";
 import type { Metadata } from "next";
 import { cache } from "react";
 import { headers } from "next/headers";
@@ -33,7 +34,7 @@ const loadSite = cache(
       { restaurantId: restaurant, public: !preview, userId: user?.id },
       async () =>
         (await getDb()).transaction(async (db) => {
-          await db.exec("SET LOCAL ROLE dattier_app");
+          await db.exec("SET LOCAL ROLE atacuisine_app");
           await one(db, "SELECT id FROM restaurants WHERE id=$1", [restaurant]);
           const plan = await restaurantPlan(db, restaurant);
           if (
@@ -49,7 +50,8 @@ const loadSite = cache(
               : await cms.getVersionConfig(db, mode.slice(8))
             : await cms.getPublishedConfig(db);
           const route = raw === "account" ? "compte" : raw;
-          const key = route || "home";
+          const isProduct = /^produits\/[^/]+$/.test(route);
+          const key = isProduct ? "carte" : route || "home";
           const facts = await seoFacts(db, restaurant);
           const urls = siteUrls({
             restaurant,
@@ -79,7 +81,14 @@ const loadSite = cache(
           const catalog = await commerce(restaurant)
             .catalog(db)
             .catch(() => null);
+          const product = isProduct
+            ? catalog?.products.find(
+                (p) => p.id === route.slice("produits/".length),
+              )
+            : undefined;
+          if (isProduct && !product) notFound();
           return {
+            product,
             redirect: null,
             shopEnabled: plan >= 99,
             restaurant,
@@ -109,22 +118,34 @@ async function load(props: Props) {
   return data;
 }
 export async function generateMetadata(props: Props): Promise<Metadata> {
-  const { config, context, key, preview, urls } = await load(props),
+  const { config, context, key, preview, urls, product } = await load(props),
     page = config.pages[key];
-  const title = effectiveTitle(config, key, context),
-    description = effectiveDescription(config, key, context);
+  const title = product
+    ? product.seo_title || `${product.name} · ${context.name}`
+    : effectiveTitle(config, key, context);
+  const description = product
+    ? product.seo_description ||
+      product.description.slice(0, 200) ||
+      `Découvrez ${product.name} à la carte de ${context.name}.`
+    : effectiveDescription(config, key, context);
   const origin = new URL(urls.canonicalBase).origin;
   const image = absoluteMedia(
     origin,
-    page.seo.ogImage || config.seo.ogImage || config.branding.logo.src,
+    product?.images[0] ||
+      page.seo.ogImage ||
+      config.seo.ogImage ||
+      config.branding.logo.src,
   );
-  const canonical = pageUrl(urls.canonicalBase, key);
+  const canonical = product
+    ? urls.canonicalBase + productPath(product.id)
+    : pageUrl(urls.canonicalBase, key);
   const locale = siteLocale(config);
   const indexable =
     !demoEnabled() &&
     !preview &&
     config.seo.noIndex === false &&
     !page.seo.noIndex &&
+    (!product || page.visible) &&
     page.kind !== "protected";
   return {
     metadataBase: new URL(origin),
@@ -155,17 +176,25 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
 }
 export default async function Page(props: Props) {
   const data = await load(props);
-  const jsonLd = data.preview
-    ? null
-    : buildJsonLd({
-        pageKey: data.key,
-        config: data.config,
-        context: data.context,
-        canonicalBase: data.urls.canonicalBase,
-        settings: data.catalog?.settings ?? null,
-        products: data.catalog?.products ?? [],
-        dateModified: data.publishedAt,
-      });
+  const { categorie } = await props.searchParams;
+  const category =
+    data.route === "carte" &&
+    typeof categorie === "string" &&
+    data.catalog?.settings.categories.includes(categorie)
+      ? categorie
+      : "Tout";
+  const jsonLd =
+    data.preview || data.product
+      ? null
+      : buildJsonLd({
+          pageKey: data.key,
+          config: data.config,
+          context: data.context,
+          canonicalBase: data.urls.canonicalBase,
+          settings: data.catalog?.settings ?? null,
+          products: data.catalog?.products ?? [],
+          dateModified: data.publishedAt,
+        });
   // <html lang> is set by the root layout from the same setting (see src/app/layout.tsx).
   return (
     <TenantSiteProvider
@@ -182,11 +211,14 @@ export default async function Page(props: Props) {
         />
       )}
       <DonutStore
+        key={category}
+        initialCategory={category}
         route={data.route}
         config={data.config}
         context={data.context}
         preview={data.preview}
         initialData={data.catalog}
+        detailProduct={data.product}
         updatedAt={data.publishedAt}
       />
     </TenantSiteProvider>

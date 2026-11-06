@@ -93,8 +93,8 @@ BEGIN
   END IF;
   UPDATE app.organization_plans SET plan=new_plan,seats=new_seats WHERE organization_id=oid;
 END $$;
-REVOKE ALL ON FUNCTION app.configure_organization_plan(text,integer,integer,text[]) FROM PUBLIC,dattier_app;
-REVOKE ALL ON app.organization_plans FROM PUBLIC,dattier_app;
+REVOKE ALL ON FUNCTION app.configure_organization_plan(text,integer,integer,text[]) FROM PUBLIC,atacuisine_app;
+REVOKE ALL ON app.organization_plans FROM PUBLIC,atacuisine_app;
 CREATE OR REPLACE FUNCTION app.has_restaurant(rid text) RETURNS boolean LANGUAGE sql STABLE SECURITY DEFINER SET search_path=public,pg_temp AS $$ SELECT EXISTS(SELECT 1 FROM restaurants r JOIN organizations o ON o.id=r.organization_id WHERE r.id=rid AND r.archived_at IS NULL AND o.status='active' AND ((current_setting('app.public',true)='true' AND current_setting('app.restaurant_id',true)=rid) OR EXISTS(SELECT 1 FROM memberships m JOIN profiles p ON p.id=m.profile_id WHERE m.restaurant_id=rid AND m.profile_id=app.user_id() AND p.status='active') OR app.org_admin(r.organization_id) OR EXISTS(SELECT 1 FROM support_grants g JOIN platform_admins a ON a.profile_id=g.profile_id JOIN profiles p ON p.id=a.profile_id WHERE g.profile_id=app.user_id() AND p.status='active' AND g.restaurant_id=rid AND g.expires_at>now() AND g.revoked_at IS NULL))) $$;
 CREATE OR REPLACE FUNCTION app.resolve_domain(host text) RETURNS text LANGUAGE sql STABLE SECURITY DEFINER SET search_path=public,pg_temp AS $$ SELECT d.restaurant_id FROM restaurant_domains d JOIN restaurants r ON r.id=d.restaurant_id JOIN organizations o ON o.id=r.organization_id WHERE d.hostname=lower(host) AND d.verified_at IS NOT NULL AND EXISTS(SELECT 1 FROM app.organization_plans p WHERE p.organization_id=o.id AND p.plan>=69) AND r.archived_at IS NULL AND o.status='active' $$;
 CREATE FUNCTION app.protect_restaurant_archive() RETURNS trigger LANGUAGE plpgsql AS $$

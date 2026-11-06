@@ -26,7 +26,7 @@ export type LocalState = {
 };
 function database() {
   return new Promise<IDBDatabase>((resolve, reject) => {
-    const req = indexedDB.open("dattier-offline-v1", 1);
+    const req = indexedDB.open("atacuisine-offline-v1", 1);
     req.onupgradeneeded = () =>
       req.result.createObjectStore("workstations", { keyPath: "key" });
     req.onsuccess = () => resolve(req.result);

@@ -25,7 +25,7 @@ export async function login(id: string) {
     "INSERT INTO sessions VALUES($1,$2,now()+interval '12 hours')",
     [hash(token), profile.id],
   );
-  (await cookies()).set("dattier_session", token, {
+  (await cookies()).set("atacuisine_session", token, {
     httpOnly: true,
     sameSite: "strict",
     secure: !!process.env.VERCEL,
@@ -40,7 +40,7 @@ export async function actor(): Promise<Actor> {
     bindActor(user.id, hash(`${user.id}:${user.authIssuedAt}`));
     return user;
   }
-  const token = (await cookies()).get("dattier_session")?.value;
+  const token = (await cookies()).get("atacuisine_session")?.value;
   if (!token) throw new Error("Connexion requise.");
   const user = await one<Actor & { auth_issued_at: number }>(
     await getDb(),

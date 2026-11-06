@@ -11,7 +11,7 @@ export function Brand({ tagline }: { tagline: string }) {
     <Link className="public-brand" href={sitePath("/")}>
       <Leaf aria-hidden />
       <span>
-        le dattier<small>{tagline}</small>
+        le atacuisine<small>{tagline}</small>
       </span>
     </Link>
   );
@@ -36,7 +36,7 @@ export function SiteHeader() {
   }, []);
   return (
     <header className="public-header" data-scrolled={scrolled || undefined}>
-      <Brand tagline="HEFSI · BERNAY" />
+      <Brand tagline="STUDIO RESTAU · BERNAY" />
       <nav className="public-nav" aria-label="Navigation principale">
         {primaryNav.map((l) => (
           <Link

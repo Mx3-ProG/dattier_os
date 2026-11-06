@@ -13,7 +13,7 @@ export async function GET() {
     const sites = await getDb()
       .then((db) =>
         db.transaction(async (tx) => {
-          await tx.exec("SET LOCAL ROLE dattier_app");
+          await tx.exec("SET LOCAL ROLE atacuisine_app");
           return platformSites(tx);
         }),
       )

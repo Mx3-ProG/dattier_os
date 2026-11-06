@@ -1,4 +1,4 @@
-# Dattier OS
+# Studio OS
 
 OS open source pour les restaurateurs : commandes, salle, cuisine, bar, stocks, achats, équipes, clients, fidélité, boutique et sites par établissement.
 

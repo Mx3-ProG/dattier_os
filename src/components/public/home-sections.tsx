@@ -1,14 +1,12 @@
+import { LocationMap } from "./location-map";
+import Image from "next/image";
+import { foodMedia } from "./food-media";
 import Link from "next/link";
 import { Fragment } from "react";
 import { ArrowUpRight, ChevronDown, MapPin, Phone } from "lucide-react";
 import type { MenuItem, Restaurant } from "@/lib/types";
 import { homeAnchors, sitePath } from "./navigation";
-import {
-  HeroVideo,
-  QuickBooking,
-  TiltCard,
-  useHeroMotion,
-} from "./home-motion";
+import { QuickBooking, TiltCard, useHeroMotion } from "./home-motion";
 
 // Sections de l'accueil. Chaque section porte un id (ancre de navigation)
 // et un attribut data-scene ; les blocs marqués data-reveal apparaissent au
@@ -48,7 +46,14 @@ export function HomeIntro({ restaurant }: { restaurant?: Restaurant }) {
       data-scene="intro"
       aria-label="Introduction"
     >
-      <HeroVideo />
+      <Image
+        className="hero-food"
+        src={foodMedia.couscous}
+        alt=""
+        fill
+        sizes="100vw"
+        preload
+      />
       <div className="hero-veil" aria-hidden />
       <div className="hero-glow" aria-hidden />
       <svg
@@ -64,24 +69,27 @@ export function HomeIntro({ restaurant }: { restaurant?: Restaurant }) {
         <div className="public-hero-copy">
           <span className="eyebrow">UNE ESCALE EN MÉDITERRANÉE</span>
           <h1>
-            <SplitWords text="La chaleur d’un lieu." from={0} />
+            <SplitWords text="Un couscous qui fume." from={0} />
             <br />
             <em>
-              <SplitWords text="Le goût du partage." from={4} />
+              <SplitWords text="Et tout le monde se rapproche." from={4} />
             </em>
           </h1>
           <p>
-            Au cœur de Bernay, découvrez une cuisine tunisienne et maghrébine,
-            entre traditions généreuses et plaisirs simples.
+            Semoule légère, bouillon parfumé et harissa à doser à votre goût.
+            Une escale tunisienne au cœur de Bernay.
           </p>
           <div className="actions">
             <Link className="btn light" href={sitePath("/reservations")}>
               Réserver une table <ArrowUpRight size={17} aria-hidden />
             </Link>
             <Link className="btn ghost" href={sitePath("/carte")}>
-              Découvrir notre carte
+              Explorer la carte
             </Link>
           </div>
+          <Link className="hero-order" href={sitePath("/commander")}>
+            Click & collect <ArrowUpRight size={16} aria-hidden />
+          </Link>
           <div className="hero-address">
             <MapPin size={17} aria-hidden />{" "}
             {restaurant?.address || "29 Rue du Général Leclerc, Bernay"}
@@ -157,7 +165,7 @@ export function HomeStory() {
       <div data-reveal>
         <p>
           Un couscous à partager, les parfums d’un tajine, un thé à la menthe
-          pour prolonger l’instant. Bienvenue au Dattier Hefsi.
+          pour prolonger l’instant. Bienvenue au Studio Restau.
         </p>
         <Link href={sitePath("/histoire")} className="text-button">
           Découvrir la maison →
@@ -174,9 +182,13 @@ export function HomeStory() {
 // Les trois familles de plats citées dans la présentation existante.
 // Descriptions, photographies et sélection définitive restent à fournir.
 const specialties = [
-  { name: "Le couscous", line: "À partager.", motif: "✳" },
-  { name: "Les tajines", line: "Pour leurs parfums.", motif: "◬" },
-  { name: "Le thé à la menthe", line: "Pour prolonger l’instant.", motif: "❧" },
+  { name: "Le couscous", line: "À partager.", image: foodMedia.couscous },
+  { name: "Les tajines", line: "Pour leurs parfums.", image: foodMedia.tajine },
+  {
+    name: "Le thé à la menthe",
+    line: "Pour prolonger l’instant.",
+    image: foodMedia.tea,
+  },
 ];
 
 export function HomeSpecialties() {
@@ -197,21 +209,25 @@ export function HomeSpecialties() {
             className="specialty-card"
             style={{ "--d": i } as React.CSSProperties}
           >
-            <span className="specialty-index" aria-hidden>
-              {String(i + 1).padStart(2, "0")}
-            </span>
-            <span className="specialty-motif" aria-hidden>
-              {s.motif}
-            </span>
-            <h3>{s.name}</h3>
-            <p>{s.line}</p>
+            <Link href={sitePath("/carte")} className="specialty-link">
+              <Image
+                src={s.image}
+                alt=""
+                fill
+                sizes="(max-width: 700px) 100vw, 33vw"
+              />
+              <div className="specialty-caption">
+                <h3>{s.name}</h3>
+                <p>{s.line}</p>
+              </div>
+              <ArrowUpRight className="specialty-arrow" size={22} aria-hidden />
+            </Link>
           </TiltCard>
         ))}
       </ul>
-      <MissingContent>
-        sélection des spécialités, descriptions et photographies officielles des
-        plats.
-      </MissingContent>
+      <p className="muted">
+        Images d’illustration générées pour la démonstration.
+      </p>
     </section>
   );
 }
@@ -378,16 +394,9 @@ export function HomePracticalInfo({ restaurant }: { restaurant?: Restaurant }) {
           <dt>Adresse</dt>
           <dd>
             <span className="with-icon">
-              <MapPin size={17} aria-hidden /> {restaurant?.address || "—"}
+              <MapPin size={17} aria-hidden />{" "}
+              {restaurant?.address || "29 Rue du Général Leclerc, 27300 Bernay"}
             </span>
-            <a
-              className="text-button"
-              href="https://www.openstreetmap.org/search?query=29%20Rue%20du%20G%C3%A9n%C3%A9ral%20Leclerc%20Bernay"
-              target="_blank"
-              rel="noreferrer"
-            >
-              Voir la localisation ↗
-            </a>
           </dd>
         </div>
         <div>
@@ -410,6 +419,11 @@ export function HomePracticalInfo({ restaurant }: { restaurant?: Restaurant }) {
           <dd>Horaires à confirmer auprès de l’établissement.</dd>
         </div>
       </dl>
+      <LocationMap
+        address={
+          restaurant?.address || "29 Rue du Général Leclerc, 27300 Bernay"
+        }
+      />
       <Link href={sitePath("/contact")} className="text-button">
         Toutes les informations de contact →
       </Link>

@@ -12,7 +12,7 @@ Référence de départ : `npm test` → 34/34 tests verts. `npm run typecheck` �
 | Rendu | SSR dynamique partout (`force-dynamic`), aucun SSG/ISR, aucun cache HTTP sur les pages publiques |
 | Backend | Route handlers Next (`src/app/api/**`), services métier dans `src/features/**` |
 | Base de données | PostgreSQL (prod, `pg`) ou PGlite (démo locale), migrations SQL `database/migrations/001…016` |
-| Isolation | RLS PostgreSQL (`app.in_restaurant()`), rôle `dattier_app` sans BYPASSRLS (vérifié au démarrage), contexte tenant via `AsyncLocalStorage` (`src/lib/database/context.ts`) |
+| Isolation | RLS PostgreSQL (`app.in_restaurant()`), rôle `atacuisine_app` sans BYPASSRLS (vérifié au démarrage), contexte tenant via `AsyncLocalStorage` (`src/lib/database/context.ts`) |
 | Domaines | Table `restaurant_domains(hostname, restaurant_id, verified_at)`, résolution par `app.resolve_domain()` (SECURITY DEFINER, domaine vérifié + organisation active) dans `src/proxy.ts`, réécriture vers `/r/{restaurant}` |
 | Vitrine tenant | `src/app/r/[restaurant]/[[...page]]/page.tsx` → `DonutStore` (`src/components/cms-site/store.tsx`, 2 028 lignes, `"use client"`) |
 | Configuration tenant | CMS JSON versionné (`restaurant_cms`, `cms_versions`), schéma Zod `src/features/cms/schema.ts` (`seo`, `branding`, `legal`, `pages[*].seo`) + réglages boutique (`commerce.settings` : horaires, adresse, téléphone, URL Google Business) |
@@ -22,7 +22,7 @@ Référence de départ : `npm test` → 34/34 tests verts. `npm run typecheck` �
 
 ## 2. Ce qui existe déjà (à réutiliser)
 
-- **Séparation plateforme / tenants** : `/` (présentation Dattier OS) a ses propres métadonnées ; le `layout` racine est `noindex` par défaut, donc tout espace privé non configuré reste non indexable.
+- **Séparation plateforme / tenants** : `/` (présentation Studio OS) a ses propres métadonnées ; le `layout` racine est `noindex` par défaut, donc tout espace privé non configuré reste non indexable.
 - **Métadonnées par page tenant** : `generateMetadata` dans la route tenant (title, description, canonical, robots, Open Graph, favicon), valeurs éditables dans le Studio (`seo.title` ≤ 70, `seo.description` ≤ 170, `ogImage`, `noIndex` par page).
 - **Garde-fou d’indexation** : un site n’est indexable que si le propriétaire a explicitement mis `seo.noIndex = false`, **et** la publication l’exige seulement si l’identité légale (exploitant, e-mail, hébergeur) est remplie (`service.ts`, op `publish`). Démo et aperçus brouillon → `noindex`.
 - **Sitemap par tenant** : `/r/{id}/sitemap.xml` (et `/sitemap.xml` sur domaine personnalisé via la réécriture du proxy) ; exclut pages masquées, protégées et `noIndex`.
@@ -111,7 +111,7 @@ Non vérifié : rendu en mode production avec un vrai domaine (nécessite Postgr
 
 | Point | Statut | Fichiers |
 | --- | --- | --- |
-| Langue et pays par site | Implémenté + testé + vérifié en local. `seo.locale` (BCP 47 + ISO 3166, facultatif, défaut fr/FR). `<html lang>` posé par le layout racine à partir de l’en-tête interne `x-dattier-site`, que seul le proxy positionne (tout en-tête client du même nom est retiré). `og:locale` et `inLanguage` suivent. | `src/features/seo/locale.ts`, `src/app/layout.tsx`, `src/proxy.ts`, `siteLanguage()` |
+| Langue et pays par site | Implémenté + testé + vérifié en local. `seo.locale` (BCP 47 + ISO 3166, facultatif, défaut fr/FR). `<html lang>` posé par le layout racine à partir de l’en-tête interne `x-atacuisine-site`, que seul le proxy positionne (tout en-tête client du même nom est retiré). `og:locale` et `inLanguage` suivent. | `src/features/seo/locale.ts`, `src/app/layout.tsx`, `src/proxy.ts`, `siteLanguage()` |
 | Identité de l’établissement | Implémenté + testé. `business` facultatif : type schema.org (restauration, commerce, établissement local ou activité en ligne), cuisines, gamme de prix, profils officiels `sameAs` (https), zones desservies, coordonnées GPS. Activité en ligne → ni adresse, ni horaires, ni position ; types non alimentaires → ni `hasMenu` ni `servesCuisine`. | `schema.ts`, `jsonld.ts` |
 | Robots IA | Interface ajoutée (recherche / entraînement) dans Studio › Référencement. | `site-editor/seo-identity.tsx` |
 | Redirections | Implémenté + testé + vérifié (308 permanente / 307 temporaire). Une seule étape, uniquement pour une adresse qui n’existe plus, cible interne ou https ; `//`, `javascript:`, `http:` et boucles refusés. Saisie « /ancienne -> /nouvelle » ou « ~> ». | `locale.ts`, route tenant, `seo-identity.tsx` |
@@ -179,7 +179,7 @@ Tests : 57/57 unitaires (27 SEO/GEO/performance/automatisation) ; E2E 5/5 sur le
 ```
 Requête ─► src/proxy.ts ── domaine personnalisé ? ─► app.resolve_domain() ─► réécriture /r/{id}/…
                │                                   └─ domaine secondaire ─► 308 vers le principal
-               └─ en-tête interne x-dattier-site (jamais accepté du client) ─► <html lang>
+               └─ en-tête interne x-atacuisine-site (jamais accepté du client) ─► <html lang>
 
 /r/{id}/[[...page]]   métadonnées (canonical depuis app.primary_domain), JSON-LD, catalogue SSR, redirections
 /r/{id}/sitemap.xml   /r/{id}/robots.txt   /r/{id}/llms.txt      (servis à la racine d’un domaine propre)

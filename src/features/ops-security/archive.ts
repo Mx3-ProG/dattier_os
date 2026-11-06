@@ -19,7 +19,7 @@ export function defaultArchiveDir() {
   if (!restaurant) throw new Error("Établissement requis pour les archives.");
   return demoEnabled()
     ? path.resolve(
-        process.env.DATTIER_DATA_DIR || ".data/dattier-demo",
+        process.env.ATACUISINE_DATA_DIR || ".data/atacuisine-demo",
         "security-centre",
         encodeURIComponent(restaurant),
       )

@@ -443,7 +443,7 @@ export function RestaurantHub({
                 ))}
               </section>
               {plan >= 69 && (
-                <section>
+                <section id="avis">
                   <h2>Avis à modérer</h2>
                   {(
                     data.reviews as {
@@ -489,7 +489,7 @@ export function RestaurantHub({
                 </section>
               )}
               {data.shopEnabled === true && (
-                <section>
+                <section id="reglages-commande">
                   <h2>Réglages de commande</h2>
                   <ShopSettings
                     key={JSON.stringify(data.settings)}

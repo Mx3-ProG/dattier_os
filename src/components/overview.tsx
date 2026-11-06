@@ -67,7 +67,7 @@ export function Overview({
           </div>
           <i className="leaf one" />
           <i className="leaf two" />
-          <span className="art-caption">L’ESPRIT DU DATTIER</span>
+          <span className="art-caption">L’ESPRIT ATACUISINE</span>
         </div>
       </div>
       <div className="metrics">
@@ -286,7 +286,7 @@ export function Finance({ data }: { data: Snapshot }) {
     );
     const a = document.createElement("a");
     a.href = url;
-    a.download = "dattier-reglements-demo.csv";
+    a.download = "atacuisine-reglements-demo.csv";
     a.click();
     URL.revokeObjectURL(url);
   };

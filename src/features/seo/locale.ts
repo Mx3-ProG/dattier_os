@@ -1,7 +1,7 @@
 import type { SiteConfig } from "@/features/cms/schema";
 
 /** Internal request header naming the restaurant site being rendered (set by src/proxy.ts only). */
-export const SITE_HEADER = "x-dattier-site";
+export const SITE_HEADER = "x-atacuisine-site";
 export const DEFAULT_LOCALE = { language: "fr", country: "FR" } as const;
 const LANGUAGE = /^[a-z]{2,3}(-[A-Z]{2})?$/;
 

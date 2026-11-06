@@ -11,7 +11,7 @@ export async function seed(db: DB) {
     "SELECT app.configure_organization_plan('legacy',99,greatest(2,count(*)::int+2)) FROM restaurants WHERE organization_id='legacy' AND archived_at IS NULL",
   );
   await db.query(
-    "INSERT INTO restaurants(id,name,address,phone,goal) VALUES ('bernay','Le Dattier Hefsi','29 Rue du Général Leclerc, 27300 Bernay','02 32 46 12 11',150000),('atelier','L’Atelier — établissement fictif','Établissement de démonstration','',90000)",
+    "INSERT INTO restaurants(id,name,address,phone,goal) VALUES ('bernay','Studio Restau','29 Rue du Général Leclerc, 27300 Bernay','02 32 46 12 11',150000),('atelier','L’Atelier — établissement fictif','Établissement de démonstration','',90000)",
   );
   const people = [
     ["slimane", "Slimane", "SUPER_ADMIN"],

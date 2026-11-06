@@ -11,7 +11,7 @@ export const siteLanguage = cache(async (restaurant: string) => {
       { restaurantId: restaurant, public: true },
       async () =>
         (await getDb()).transaction(async (tx) => {
-          await tx.exec("SET LOCAL ROLE dattier_app");
+          await tx.exec("SET LOCAL ROLE atacuisine_app");
           const [row] = await rows<{ lang: string | null }>(
             tx,
             "SELECT v.config #>> '{seo,locale,language}' AS lang FROM cms_versions v JOIN restaurant_cms c ON c.published_version_id=v.id WHERE c.restaurant_id=$1 AND v.restaurant_id=$1",

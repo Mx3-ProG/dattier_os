@@ -1,5 +1,5 @@
 {
-  "realm": "dattier",
+  "realm": "atacuisine",
   "enabled": true,
   "registrationAllowed": true,
   "registrationEmailAsUsername": true,
@@ -10,7 +10,7 @@
   "bruteForceProtected": true,
   "clients": [
     {
-      "clientId": "dattier",
+      "clientId": "atacuisine",
       "enabled": true,
       "publicClient": true,
       "standardFlowEnabled": true,

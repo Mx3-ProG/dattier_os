@@ -39,7 +39,7 @@ function storage() {
 function localFile(r: string, file: string) {
   if (!FILE_NAME.test(file)) throw new Error("Média invalide.");
   const root = path.resolve(
-    process.env.DATTIER_DATA_DIR || ".data/dattier-demo",
+    process.env.ATACUISINE_DATA_DIR || ".data/atacuisine-demo",
     "cms-media",
     encodeURIComponent(r),
   );

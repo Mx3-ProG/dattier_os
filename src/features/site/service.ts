@@ -131,8 +131,8 @@ export async function sitePerform(
     );
     await log(db, r, user.id, "Domaine proposé", a.hostname);
     return {
-      record: `_dattier.${a.hostname}`,
-      value: `dattier-verification=${token}`,
+      record: `_atacuisine.${a.hostname}`,
+      value: `atacuisine-verification=${token}`,
     };
   }
   if (a.action === "verifyDomain") {
@@ -141,11 +141,11 @@ export async function sitePerform(
       "SELECT verification_hash FROM restaurant_domains WHERE hostname=$1 AND restaurant_id=$2",
       [a.hostname, r],
     );
-    const records = await resolveTxt(`_dattier.${a.hostname}`);
+    const records = await resolveTxt(`_atacuisine.${a.hostname}`);
     const valid = records.some((v) => {
       const txt = v.join("");
       return (
-        txt.startsWith("dattier-verification=") &&
+        txt.startsWith("atacuisine-verification=") &&
         createHash("sha256").update(txt.slice(21)).digest("hex") ===
           d.verification_hash
       );

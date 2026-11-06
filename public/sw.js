@@ -1,4 +1,4 @@
-const CACHE = "dattier-shell-v2";
+const CACHE = "atacuisine-shell-v2";
 self.addEventListener("install", (event) => {
   event.waitUntil(
     caches.open(CACHE).then(async (cache) => {

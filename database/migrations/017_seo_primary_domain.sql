@@ -8,6 +8,6 @@ CREATE OR REPLACE FUNCTION app.primary_domain(rid text) RETURNS text LANGUAGE sq
  WHERE d.restaurant_id=rid AND d.verified_at IS NOT NULL AND o.status='active'
  ORDER BY d.is_primary DESC,d.verified_at,d.hostname LIMIT 1 $$;
 REVOKE ALL ON FUNCTION app.primary_domain(text) FROM PUBLIC;
-GRANT EXECUTE ON FUNCTION app.primary_domain(text) TO dattier_app;
+GRANT EXECUTE ON FUNCTION app.primary_domain(text) TO atacuisine_app;
 CREATE OR REPLACE FUNCTION app.health_ready() RETURNS boolean LANGUAGE sql STABLE SECURITY DEFINER SET search_path=public,pg_temp AS $$ SELECT EXISTS(SELECT 1 FROM schema_versions WHERE version>=17) $$;
 INSERT INTO schema_versions VALUES(17);

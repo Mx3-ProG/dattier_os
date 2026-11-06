@@ -29,7 +29,7 @@ npm run build -- --webpack
 Les tests navigateur réinitialisent la démonstration. Ne les diriger que vers une installation jetable, avec un dossier de données distinct contenant `demo` :
 
 ```sh
-DATTIER_DEMO=true DATTIER_DATA_DIR=/private/tmp/dattier-qa-demo npm run start -- --port 3102
+ATACUISINE_DEMO=true ATACUISINE_DATA_DIR=/private/tmp/atacuisine-qa-demo npm run start -- --port 3102
 # Dans un autre terminal :
 E2E_URL=http://127.0.0.1:3102 npm run test:e2e
 ```

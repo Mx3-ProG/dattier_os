@@ -26,7 +26,7 @@ async function routeGET(
     return new NextResponse(csv, {
       headers: {
         "Content-Type": "text/csv; charset=utf-8",
-        "Content-Disposition": `attachment; filename="dattier-${a.kind}-${a.from}.csv"`,
+        "Content-Disposition": `attachment; filename="atacuisine-${a.kind}-${a.from}.csv"`,
         "Cache-Control": "private, no-store",
       },
     });

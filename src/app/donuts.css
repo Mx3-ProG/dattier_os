@@ -2489,3 +2489,16 @@
     600 0.8rem Arial,
     sans-serif;
 }
+
+.donut-extra-pages {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 24px;
+  margin-block: 12px;
+}
+.donut-extra-pages a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  overflow-wrap: anywhere;
+}

@@ -3,8 +3,8 @@ import { withDatabaseContext } from "../src/lib/database/context";
 import { createOrder, orderSchema } from "../src/features/orders/service";
 import { randomUUID } from "node:crypto";
 const url = process.env.MIGRATION_DATABASE_URL;
-if (!url || new URL(url).pathname !== "/dattier_load_test")
-  throw new Error("Utiliser uniquement la base jetable dattier_load_test.");
+if (!url || new URL(url).pathname !== "/atacuisine_load_test")
+  throw new Error("Utiliser uniquement la base jetable atacuisine_load_test.");
 const db = new PostgresDatabase(url),
   count = Number(process.env.RESTAURANTS || 500),
   concurrency = 20;
@@ -65,7 +65,7 @@ try {
         try {
           await withDatabaseContext({ userId: u, restaurantId: r }, () =>
             db.transaction(async (tx) => {
-              await tx.exec("SET LOCAL ROLE dattier_app");
+              await tx.exec("SET LOCAL ROLE atacuisine_app");
               if (n % 2 === 0) {
                 await createOrder(
                   tx,

@@ -39,7 +39,7 @@ type Progress = { done: string[]; seen: boolean };
 type Run = { queue: string[]; chapter: number; step: number };
 type Rect = { top: number; left: number; width: number; height: number };
 
-const storageKey = (user: string) => `dattier-tour:v1:${user}`;
+const storageKey = (user: string) => `atacuisine-tour:v1:${user}`;
 function readProgress(user: string): Progress {
   try {
     const raw = localStorage.getItem(storageKey(user));

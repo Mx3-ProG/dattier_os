@@ -20,7 +20,7 @@ async function routeGET(
       { restaurantId: restaurant, public: true, userId: user?.id },
       async () => {
         return (await getDb()).transaction(async (db) => {
-          await db.exec("SET LOCAL ROLE dattier_app");
+          await db.exec("SET LOCAL ROLE atacuisine_app");
           await requirePlan(db, restaurant, 69);
           const cms = website(restaurant);
           const config = await cms.getPublishedConfig(db);

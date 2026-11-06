@@ -265,6 +265,11 @@ export function Catalog({ data, act }: { data: Snapshot; act: Act }) {
       )}
       {product && (
         <Modal title="Modifier le produit" close={() => setEdit(null)}>
+          <p>
+            La description, la composition et les allergènes s’affichent sur la
+            fiche publique. Vérifiez la recette, les sauces et les garnitures
+            avant de les renseigner.
+          </p>
           <Form
             fields={[
               { name: "name", label: "Nom", value: product.name },
@@ -278,8 +283,41 @@ export function Catalog({ data, act }: { data: Snapshot; act: Act }) {
               },
               {
                 name: "description",
-                label: "Description",
+                label: "Description publique",
                 value: product.description,
+                type: "textarea",
+                maxLength: 500,
+                required: false,
+              },
+              {
+                name: "public_composition",
+                label: "Composition exacte du plat servi",
+                value: product.public_composition,
+                type: "textarea",
+                maxLength: 2000,
+                required: false,
+              },
+              {
+                name: "allergens",
+                label: "Allergènes et traces éventuelles vérifiés",
+                value: product.allergens,
+                type: "textarea",
+                maxLength: 500,
+                required: false,
+              },
+              {
+                name: "seo_title",
+                label: "Titre SEO",
+                value: product.seo_title,
+                maxLength: 80,
+                required: false,
+              },
+              {
+                name: "seo_description",
+                label: "Description SEO",
+                value: product.seo_description,
+                type: "textarea",
+                maxLength: 200,
                 required: false,
               },
               {

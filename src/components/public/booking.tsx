@@ -458,21 +458,23 @@ export function Booking({
               }
             />
             {slot && !day?.group && (
-              <div className="table-choice">
-                {chosen ? (
-                  <p>
-                    <b>
-                      Table {chosen.number}
-                      {chosen.label ? ` · ${chosen.label}` : ""}
-                    </b>{" "}
-                    · {chosen.capacity} places · {chosen.zone}
-                  </p>
-                ) : (
-                  <p>
-                    Touchez une table verte, ou laissez l’équipe choisir la
-                    meilleure pour vous.
-                  </p>
-                )}
+              <div className="table-choice" data-selected={!!chosen}>
+                <div aria-live="polite">
+                  {chosen ? (
+                    <p>
+                      <b>
+                        Table {chosen.number}
+                        {chosen.label ? ` · ${chosen.label}` : ""}
+                      </b>{" "}
+                      · {chosen.capacity} places · {chosen.zone}
+                    </p>
+                  ) : (
+                    <p>
+                      Touchez une table verte, ou laissez l’équipe choisir la
+                      meilleure pour vous.
+                    </p>
+                  )}
+                </div>
                 {chosen && (
                   <button
                     type="button"

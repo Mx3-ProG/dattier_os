@@ -3,7 +3,7 @@ import { SignJWT, jwtVerify, createRemoteJWKSet } from "jose";
 import { cookies } from "next/headers";
 import { getDb } from "../database/db";
 import { withDatabaseContext } from "../database/context";
-const cookieName = "dattier_identity";
+const cookieName = "atacuisine_identity";
 function secret() {
   const s = process.env.SESSION_SECRET;
   if (!s || s.length < 32)
@@ -48,8 +48,8 @@ async function metadata() {
 async function signed(payload: Record<string, unknown>, expires: string) {
   return new SignJWT(payload)
     .setProtectedHeader({ alg: "HS256" })
-    .setIssuer("dattier")
-    .setAudience("dattier-web")
+    .setIssuer("atacuisine")
+    .setAudience("atacuisine-web")
     .setIssuedAt()
     .setExpirationTime(expires)
     .sign(secret());
@@ -73,13 +73,13 @@ export async function beginLogin(returnTo = "/platform", register = false) {
     verifier = randomBytes(48).toString("base64url");
   const safeReturn = safeReturnTo(returnTo);
   (await cookies()).set(
-    "dattier_oidc",
+    "atacuisine_oidc",
     await signed({ state, nonce, verifier, returnTo: safeReturn }, "10m"),
     { ...cookieOptions, maxAge: 600 },
   );
   const url = new URL(m.authorization_endpoint);
   url.search = new URLSearchParams({
-    client_id: process.env.OIDC_CLIENT_ID || "dattier",
+    client_id: process.env.OIDC_CLIENT_ID || "atacuisine",
     redirect_uri: `${appOrigin()}/auth/callback`,
     response_type: "code",
     prompt: register ? "create" : "login",
@@ -93,21 +93,21 @@ export async function beginLogin(returnTo = "/platform", register = false) {
 }
 export async function finishLogin(code: string, state: string) {
   const jar = await cookies(),
-    flow = jar.get("dattier_oidc")?.value;
+    flow = jar.get("atacuisine_oidc")?.value;
   if (!flow) throw new Error("Connexion expirée.");
   const { payload } = await jwtVerify(flow, secret(), {
-    issuer: "dattier",
-    audience: "dattier-web",
+    issuer: "atacuisine",
+    audience: "atacuisine-web",
     algorithms: ["HS256"],
   });
-  jar.delete("dattier_oidc");
+  jar.delete("atacuisine_oidc");
   if (payload.state !== state || typeof payload.verifier !== "string")
     throw new Error("État de connexion invalide.");
   const m = await metadata();
   const params = new URLSearchParams({
     grant_type: "authorization_code",
     code,
-    client_id: process.env.OIDC_CLIENT_ID || "dattier",
+    client_id: process.env.OIDC_CLIENT_ID || "atacuisine",
     redirect_uri: `${appOrigin()}/auth/callback`,
     code_verifier: payload.verifier,
   });
@@ -125,7 +125,7 @@ export async function finishLogin(code: string, state: string) {
     createRemoteJWKSet(new URL(backchannel(m.jwks_uri))),
     {
       issuer: m.issuer,
-      audience: process.env.OIDC_CLIENT_ID || "dattier",
+      audience: process.env.OIDC_CLIENT_ID || "atacuisine",
       algorithms: ["RS256", "PS256", "ES256"],
     },
   );
@@ -168,8 +168,8 @@ export async function oidcActor() {
   if (!token) throw new Error("Connexion requise.");
   try {
     const { payload } = await jwtVerify(token, secret(), {
-      issuer: "dattier",
-      audience: "dattier-web",
+      issuer: "atacuisine",
+      audience: "atacuisine-web",
       algorithms: ["HS256"],
     });
     if (!payload.sub) throw new Error();
@@ -187,6 +187,6 @@ export async function oidcActor() {
 export async function logout() {
   const jar = await cookies();
   jar.delete(cookieName);
-  jar.delete("dattier_session");
-  jar.delete("dattier_oidc");
+  jar.delete("atacuisine_session");
+  jar.delete("atacuisine_oidc");
 }

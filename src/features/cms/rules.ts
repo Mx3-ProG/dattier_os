@@ -80,6 +80,7 @@ export const reservedSlugs = new Set([
   "login",
   "logout",
   "panier",
+  "produits",
   "paiement",
   "commande",
   "connexion",

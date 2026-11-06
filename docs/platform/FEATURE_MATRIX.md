@@ -2,9 +2,9 @@
 
 | Fonction                                       | Origine       | Traitement                                                                                                                                             |
 | ---------------------------------------------- | ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| Salle, éditeur et réservations visuelles       | Dattier       | Conservés ; établissement paramétrable pour la réservation                                                                                             |
+| Salle, éditeur et réservations visuelles       | Studio OS     | Conservés ; établissement paramétrable pour la réservation                                                                                             |
 | Commandes, cuisine/bar, lots et recettes       | Commun        | Services existants, transactions et contraintes conservés                                                                                              |
-| Catalogue, archivage, promotions nominatives   | Dattier       | Conservés, permissions cumulées et périmètre SQL                                                                                                       |
+| Catalogue, archivage, promotions nominatives   | Studio OS     | Conservés, permissions cumulées et périmètre SQL                                                                                                       |
 | Boutique, choix, créneaux, prix serveur, suivi | Donuts        | Services adaptés via `commerce(restaurant)` ; aucun identifiant Donuts imposé                                                                          |
 | Historique et nouvelle commande                | Donuts        | Repris dans l’espace client ; accès par identité OIDC et organisation                                                                                  |
 | Authentification client et récupération        | Donuts        | Remplacées par OIDC/Keycloak ; aucun mot de passe local importé                                                                                        |

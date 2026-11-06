@@ -769,3 +769,179 @@
   .site-editor-gate .actions { display: grid; }
   .site-editor-gate .actions > * { width: 100%; }
 }
+
+.site-quick-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.site-quick-actions .btn,
+.site-topbar .btn {
+  min-height: 44px;
+}
+.site-topbar a[aria-disabled="true"] {
+  opacity: .5;
+  cursor: default;
+}
+.site-topbar-page label,
+.site-topbar-page select {
+  max-width: 100%;
+}
+.site-guide-step {
+  display: grid;
+  gap: 12px;
+  justify-items: start;
+  margin-block: 16px;
+}
+.site-guide-step h3,
+.site-guide-step p {
+  margin: 0;
+}
+.site-guide-step p {
+  line-height: 1.6;
+}
+
+@media (max-width: 1250px) {
+  .site-left,
+  .site-right {
+    width: min(420px, 100%);
+  }
+  .site-tabs button,
+  .site-devices button,
+  .site-row-actions button,
+  .site-section-name,
+  .site-page-row > button {
+    min-height: 44px;
+  }
+  .site-row-actions button,
+  .site-devices button {
+    min-width: 44px;
+  }
+  .site-section-list li {
+    flex-wrap: wrap;
+  }
+  .site-section-list .site-row-actions {
+    margin-left: auto;
+  }
+}
+@media (max-width: 580px) {
+  .site-quick-actions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .site-quick-actions .btn {
+    white-space: normal;
+    text-align: left;
+  }
+  .site-topbar {
+    padding: 10px;
+  }
+  .site-topbar-page {
+    width: 100%;
+  }
+  .site-topbar-page label {
+    flex: 1;
+    min-width: 0;
+  }
+  .site-topbar-page select {
+    width: 100%;
+    min-width: 0;
+  }
+  .site-editor:is(.panels-left, .panels-right) .site-workarea {
+    height: auto;
+    min-height: 0;
+  }
+  .site-editor:is(.panels-left, .panels-right) .site-stage {
+    display: none;
+  }
+  .site-editor.panels-left .site-left,
+  .site-editor.panels-right .site-right {
+    position: static;
+    width: 100%;
+    box-shadow: none;
+  }
+  .site-form :is(input, select, textarea),
+  .site-props :is(input, select, textarea),
+  .site-topbar-page select {
+    font-size: 16px;
+  }
+}
+
+.site-topbar .site-show-preview {
+  display: none;
+}
+@media (max-width: 1250px) {
+  .site-topbar .site-show-preview {
+    display: inline-flex;
+  }
+}
+
+/* The studio sits inside the administration shell, which styles bare controls. */
+.platform .site-editor .site-topbar {
+  position: static;
+  padding: 12px;
+}
+.platform .site-editor .site-topbar label {
+  margin: 0;
+}
+.platform .site-editor :is(.site-tabs, .site-devices) {
+  background: #f1f3ec;
+  border-color: #e3e7dd;
+}
+.platform .site-editor :is(.site-tabs, .site-devices, .site-row-actions) button,
+.platform .site-editor .site-section-name,
+.platform .site-editor .site-page-row > button {
+  background: transparent;
+  color: #344d3e;
+  padding: 6px 8px;
+}
+.platform .site-editor :is(.site-tabs, .site-devices) button.active {
+  background: #fff;
+  color: #244d37;
+  box-shadow: 0 0 0 1px #b4c2ae;
+}
+.platform .site-editor .site-quick-actions button {
+  background: #eaf0e3;
+  color: #2d4938;
+  justify-content: flex-start;
+}
+.platform .site-editor .site-quick-actions button:hover {
+  background: #dce7d5;
+}
+.platform .site-editor .site-quick-actions button.ghost {
+  background: transparent;
+}
+.platform .site-editor .site-topbar .icon-button {
+  padding: 0;
+  min-width: 44px;
+}
+.platform .site-editor .site-topbar a.btn {
+  display: inline-flex;
+  align-items: center;
+}
+.platform .site-editor .site-stage {
+  background: repeating-conic-gradient(#edf0e8 0% 25%, #f7f8f4 0% 50%) 0 0 / 22px 22px;
+  border-color: #dce3d6;
+}
+@media (min-width: 1251px) {
+  .platform .site-editor .site-panel-toggle {
+    display: none;
+  }
+}
+@media (max-width: 580px) {
+  .restaurant-admin-shell:has(.website-studio-content) > .admin-shell-header {
+    position: static;
+    padding-bottom: 0;
+  }
+  .restaurant-admin-shell:has(.website-studio-content) .admin-module-nav {
+    margin-bottom: 0;
+    padding-bottom: 0;
+  }
+  .site-topbar-page .badge {
+    flex-basis: max-content;
+    margin-right: auto;
+  }
+  .site-topbar-page label {
+    flex-basis: calc(100% - 52px);
+  }
+}

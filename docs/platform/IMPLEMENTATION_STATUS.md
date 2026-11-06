@@ -31,7 +31,7 @@ La documentation historique sous `docs/` décrit la V0 locale. Les fichiers sous
 
 ## Accès à la démonstration locale
 
-Avec `DATTIER_DEMO=true`, choisir Nadia dans `/demo`, puis ouvrir :
+Avec `ATACUISINE_DEMO=true`, choisir Nadia dans `/demo`, puis ouvrir :
 
 - `/restaurant/bernay/site` : studio complet du site.
 - `/r/bernay` : site publié, `/r/bernay/histoire` : Ma story.
@@ -39,4 +39,4 @@ Avec `DATTIER_DEMO=true`, choisir Nadia dans `/demo`, puis ouvrir :
 - `/restaurant/bernay` : équipes, boutique, clients, stocks et réconciliation.
 - `/offline` : poste local avec quotas attribués en ligne.
 
-La vitrine historique Dattier reste disponible à la racine de la démonstration. Les données de cette vitrine ne sont pas automatiquement recopiées dans le CMS. L’installation PostgreSQL ne reçoit aucune donnée fictive.
+La vitrine historique Studio OS reste disponible à la racine de la démonstration. Les données de cette vitrine ne sont pas automatiquement recopiées dans le CMS. L’installation PostgreSQL ne reçoit aucune donnée fictive.

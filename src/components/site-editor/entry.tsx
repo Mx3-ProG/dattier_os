@@ -1,5 +1,4 @@
 "use client";
-import { useRouter } from "next/navigation";
 import { SiteEditor } from "./index";
 import { TenantSiteProvider } from "../cms-site/context";
 import type { Role } from "@/lib/permissions";
@@ -17,7 +16,6 @@ export function WebsiteStudio({
   userRoles: Role[];
   demo: boolean;
 }) {
-  const router = useRouter();
   return (
     <TenantSiteProvider restaurant={restaurant} demo={demo}>
       <RestaurantAdminShell
@@ -32,13 +30,16 @@ export function WebsiteStudio({
             <h1>Mon site web</h1>
             {demo && (
               <p>
-                Démonstration locale · modifications propres à cet établissement.
+                Démonstration locale · modifications propres à cet
+                établissement.
               </p>
             )}
           </div>
           <SiteEditor
-            navigate={(module) =>
-              router.push(`/restaurant/${restaurant}?module=${module}`)
+            liveDataHref={(module) =>
+              module === "menu"
+                ? `/dashboard?restaurant=${restaurant}&module=menu`
+                : `/restaurant/${restaurant}?module=shop${module === "reviews" ? "#avis" : "#reglages-commande"}`
             }
           />
         </div>

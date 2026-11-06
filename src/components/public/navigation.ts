@@ -23,7 +23,7 @@ export const primaryNav: NavLink[] = [
   { href: sitePath("/carte"), label: "Notre carte" },
   { href: `${siteBase}#${homeAnchors.specialites}`, label: "Nos spécialités" },
   { href: sitePath("/avis"), label: "Avis clients" },
-  { href: sitePath("/commander"), label: "À emporter" },
+  { href: sitePath("/commander"), label: "Click & collect" },
   { href: sitePath("/contact"), label: "Contact" },
 ];
 
@@ -34,7 +34,7 @@ export const fullNav: NavLink[] = [
   { href: `${siteBase}#${homeAnchors.specialites}`, label: "Nos spécialités" },
   { href: sitePath("/avis"), label: "Avis clients" },
   { href: sitePath("/reservations"), label: "Réservation" },
-  { href: sitePath("/commander"), label: "À emporter" },
+  { href: sitePath("/commander"), label: "Click & collect" },
   { href: `${siteBase}#${homeAnchors.infos}`, label: "Informations pratiques" },
   { href: sitePath("/contact"), label: "Contact" },
   { href: `${siteBase}#${homeAnchors.faq}`, label: "FAQ" },

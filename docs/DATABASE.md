@@ -26,7 +26,7 @@ Le stock historique du seed est consommé et historisé, les ventes viennent des
 
 Paramètres → Réinitialiser, confirmation obligatoire, propriétaire/admin seulement. La route est désactivée hors démo. Elle vide exclusivement la base locale dédiée et recharge le seed dans une transaction ; elle révoque les sessions locales. Aucun connecteur distant n’est appelé.
 
-Pour sauvegarder localement : arrêter le processus serveur, copier le dossier `.data/dattier-demo`, puis redémarrer. Ne pas copier une base ouverte pour une sauvegarde fiable. Un export/restauration SQL interopérable PostgreSQL devra être ajouté avant migration réelle.
+Pour sauvegarder localement : arrêter le processus serveur, copier le dossier `.data/atacuisine-demo`, puis redémarrer. Ne pas copier une base ouverte pour une sauvegarde fiable. Un export/restauration SQL interopérable PostgreSQL devra être ajouté avant migration réelle.
 
 Le runner (`src/lib/database/migrate.ts`) applique chaque version manquante de sa liste transactionnellement, y compris sur une base ouverte avant la mise à jour, et vérifie la version pour ne pas la rejouer. Une nouvelle migration s’ajoute à cette liste. Ne pas modifier la migration initiale sur une installation contenant des données à conserver.
 

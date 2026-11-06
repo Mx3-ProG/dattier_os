@@ -10,6 +10,7 @@ export type Field = {
   value?: string | number;
   options?: { value: string; label: string }[];
   min?: number;
+  maxLength?: number;
   step?: string;
   required?: boolean;
 };

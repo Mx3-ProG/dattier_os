@@ -12,9 +12,9 @@ export type RequestContext = {
   clientRef?: string;
 };
 const runtime = globalThis as typeof globalThis & {
-  dattierRequestContext?: AsyncLocalStorage<RequestContext>;
+  atacuisineRequestContext?: AsyncLocalStorage<RequestContext>;
 };
-const storage = (runtime.dattierRequestContext ??=
+const storage = (runtime.atacuisineRequestContext ??=
   new AsyncLocalStorage<RequestContext>());
 const salt =
   process.env.SECURITY_LOG_SALT || process.env.SESSION_SECRET || randomUUID();

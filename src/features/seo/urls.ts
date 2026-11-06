@@ -7,7 +7,7 @@
  */
 export type SiteUrlInput = {
   restaurant: string;
-  /** Platform origin (APP_URL), e.g. https://app.dattier.fr */
+  /** Platform origin (APP_URL), e.g. https://app.atacuisine.fr */
   platformUrl: string;
   /** Primary verified hostname from `app.primary_domain()`, or null. */
   primaryHost: string | null;

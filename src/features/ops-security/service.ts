@@ -557,7 +557,7 @@ const knowledge: Record<string, Knowledge> = {
   "system.database.unavailable": {
     causes: [["Mode démo désactivé ou dossier de données invalide.", false]],
     checks: [
-      "Vérifier DATTIER_DEMO et DATTIER_DATA_DIR.",
+      "Vérifier ATACUISINE_DEMO et ATACUISINE_DATA_DIR.",
       "Redémarrer le serveur local.",
     ],
   },

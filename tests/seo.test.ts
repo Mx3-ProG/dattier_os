@@ -26,7 +26,7 @@ import type { DB } from "../src/lib/database/db";
 
 /* ───────────── Fictitious tenants: different domains, sectors, languages ───────────── */
 
-const PLATFORM = "https://app.dattier.test";
+const PLATFORM = "https://app.atacuisine.test";
 type Tenant = {
   id: string;
   name: string;
@@ -138,7 +138,7 @@ const urlsFor = (t: Tenant, requestHost: string) =>
     primaryHost: t.host,
     requestHost,
   });
-const ld = (t: Tenant, pageKey: string, requestHost = t.host ?? "app.dattier.test") =>
+const ld = (t: Tenant, pageKey: string, requestHost = t.host ?? "app.atacuisine.test") =>
   buildJsonLd({
     pageKey,
     config: t.config,
@@ -152,7 +152,7 @@ const ld = (t: Tenant, pageKey: string, requestHost = t.host ?? "app.dattier.tes
 
 test("SEO canonical : plateforme, domaine principal et miroir", () => {
   const [tajine, sushi] = tenants;
-  assert.deepEqual(urlsFor(tajine, "app.dattier.test"), {
+  assert.deepEqual(urlsFor(tajine, "app.atacuisine.test"), {
     canonicalBase: `${PLATFORM}/r/tajine`,
     servedBase: `${PLATFORM}/r/tajine`,
     mirror: false,
@@ -161,7 +161,7 @@ test("SEO canonical : plateforme, domaine principal et miroir", () => {
   assert.equal(onDomain.canonicalBase, "https://www.sushi-kaze.test");
   assert.equal(onDomain.mirror, false);
   // Same site reached through the platform: canonical stays on the domain.
-  const mirror = urlsFor(sushi, "app.dattier.test");
+  const mirror = urlsFor(sushi, "app.atacuisine.test");
   assert.equal(mirror.canonicalBase, "https://www.sushi-kaze.test");
   assert.equal(mirror.servedBase, `${PLATFORM}/r/sushi`);
   assert.equal(mirror.mirror, true);
@@ -265,7 +265,7 @@ test("SEO robots : par domaine, sitemap déclaré, préférences robots IA", () 
   for (const p of ["/restaurant/", "/platform", "/dashboard", "/api/", "/r/*/checkout"])
     assert.ok(platform.includes(`Disallow: ${p}`), p);
   assert.ok(!/Disallow: \/r\/\n/.test(platform), "les vitrines /r/{id} restent explorables");
-  assert.match(platform, /Sitemap: https:\/\/app\.dattier\.test\/sitemap\.xml/);
+  assert.match(platform, /Sitemap: https:\/\/app\.atacuisine\.test\/sitemap\.xml/);
 });
 
 /* ───────────────────────── JSON-LD ───────────────────────── */
@@ -348,7 +348,7 @@ test("SEO isolation : aucune donnée d’un établissement chez un autre", () =>
         JSON.stringify(
           sitemapEntries({
             config: t.config,
-            canonicalBase: urlsFor(t, t.host ?? "app.dattier.test").canonicalBase,
+            canonicalBase: urlsFor(t, t.host ?? "app.atacuisine.test").canonicalBase,
             publishedAt: null,
           }),
         );
@@ -382,7 +382,7 @@ after(() => db.close());
 /** Public visitor context of one restaurant, under the application role (RLS enforced). */
 const visitor = <T>(r: string, fn: (tx: DB) => Promise<T>) =>
   db.transaction(async (tx) => {
-    await tx.exec("SET LOCAL ROLE dattier_app");
+    await tx.exec("SET LOCAL ROLE atacuisine_app");
     await tx.query(
       "SELECT set_config('app.user_id','',true),set_config('app.restaurant_id',$1,true),set_config('app.public','true',true)",
       [r],
@@ -626,7 +626,7 @@ const llms = (t: Tenant, config = t.config) =>
   buildLlmsTxt({
     config,
     context: { name: t.name, phone: t.phone, address: t.address, opening_hours: "lun. 12:00–14:30" },
-    canonicalBase: urlsFor(t, t.host ?? "app.dattier.test").canonicalBase,
+    canonicalBase: urlsFor(t, t.host ?? "app.atacuisine.test").canonicalBase,
     settings: t.settings,
     products: t.products,
     publishedAt: "2026-11-02T09:00:00Z",
@@ -700,7 +700,7 @@ test("Performance : bandeau cookies dans le HTML serveur, masqué avant affichag
     ),
   );
   assert.match(html, /<aside class="donut-cookie-banner"/);
-  assert.match(html, /<script>try\{var v=JSON\.parse\(localStorage\.getItem\("dattier-cookie-consent:sushi"\)/);
+  assert.match(html, /<script>try\{var v=JSON\.parse\(localStorage\.getItem\("atacuisine-cookie-consent:sushi"\)/);
   assert.match(html, /previousElementSibling\.hidden=true/);
   // A tenant id cannot break out of the inline script.
   const evil = renderToString(
@@ -842,7 +842,7 @@ test("SEO audit : contrôles factuels, sans score ni donnée inventée", () => {
 /** Member context (authenticated staff) under the application role. */
 const member = <T>(user: string, r: string, fn: (tx: DB) => Promise<T>) =>
   db.transaction(async (tx) => {
-    await tx.exec("SET LOCAL ROLE dattier_app");
+    await tx.exec("SET LOCAL ROLE atacuisine_app");
     await tx.query(
       "SELECT set_config('app.user_id',$1,true),set_config('app.restaurant_id',$2,true),set_config('app.public','false',true)",
       [user, r],

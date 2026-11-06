@@ -1,4 +1,7 @@
 "use client";
+import { ProductRecommendations } from "../product-recommendations";
+import { ProductDetails } from "../product-details";
+import { productPath } from "@/lib/product-pages";
 import { useTenantSite } from "./context";
 /* eslint-disable @next/next/no-img-element */
 import { TenantLink as Link } from "./context";
@@ -89,7 +92,7 @@ const badgeIcons = {
 } as const;
 /** Messages exchanged with the CMS editor (same origin only). */
 export type PreviewMessage =
-  | { type: "cms:config"; config: SiteConfig }
+  | { type: "cms:config"; config: SiteConfig; page?: string }
   | { type: "cms:select"; id: string | null }
   | { type: "cms:ready" }
   | { type: "cms:pick"; id: string };
@@ -103,12 +106,14 @@ function linePrice(p: Product | undefined, l: Line) {
   );
 }
 export function DonutStore({
-  route,
+  route: initialRoute,
   config: initialConfig,
   context,
   preview = false,
   initialData = null,
   updatedAt = null,
+  initialCategory = "Tout",
+  detailProduct,
 }: {
   route: string;
   config: SiteConfig;
@@ -119,6 +124,8 @@ export function DonutStore({
   initialData?: Data | null;
   /** Publication date of the live version, shown so visitors and machines know how fresh the site is. */
   updatedAt?: string | null;
+  initialCategory?: string;
+  detailProduct?: Product;
 }) {
   const nextRouter = useRouter();
   const {
@@ -131,7 +138,9 @@ export function DonutStore({
   } = useTenantSite();
   const router = { push: (path: string) => nextRouter.push(href(path)) };
   const [config, setConfig] = useState(initialConfig),
+    [previewPage, setPreviewPage] = useState<string>(),
     [selectedSection, setSelectedSection] = useState<string | null>(null);
+  const route = previewPage ?? initialRoute;
   useEffect(() => setConfig(initialConfig), [initialConfig]);
   useEffect(() => {
     if (!preview || window.parent === window) return;
@@ -142,7 +151,13 @@ export function DonutStore({
         return;
       if (event.data?.type === "cms:config") {
         const parsed = siteConfigSchema.safeParse(event.data.config);
-        if (parsed.success) setConfig(parsed.data as SiteConfig);
+        if (parsed.success) {
+          setConfig(parsed.data as SiteConfig);
+          const key = event.data.page;
+          setPreviewPage(
+            key && parsed.data.pages[key]?.kind === "custom" ? key : undefined,
+          );
+        }
       }
       if (event.data?.type === "cms:select") {
         setSelectedSection(event.data.id);
@@ -182,7 +197,7 @@ export function DonutStore({
     [menuTreat, setMenuTreat] = useState(""),
     [choices, setChoices] = useState<string[]>([]),
     [note, setNote] = useState(""),
-    [category, setCategory] = useState("Tout"),
+    [category, setCategory] = useState(initialCategory),
     [toast, setToast] = useState(""),
     [nav, setNav] = useState(false),
     [burgerOpen, setBurgerOpen] = useState(false),
@@ -208,7 +223,7 @@ export function DonutStore({
     try {
       const saved = JSON.parse(
         localStorage.getItem(
-          `dattier-cart:${restaurant}${preview ? ":preview" : ""}`,
+          `atacuisine-cart:${restaurant}${preview ? ":preview" : ""}`,
         ) || "[]",
       );
       if (Array.isArray(saved))
@@ -248,7 +263,7 @@ export function DonutStore({
     if (hydrated) {
       try {
         localStorage.setItem(
-          `dattier-cart:${restaurant}${preview ? ":preview" : ""}`,
+          `atacuisine-cart:${restaurant}${preview ? ":preview" : ""}`,
           JSON.stringify(cart),
         );
       } catch {
@@ -266,7 +281,7 @@ export function DonutStore({
     const token =
       location.hash.slice(1) ||
       sessionStorage.getItem(
-        `dattier-receipt:${restaurant}${preview ? ":preview" : ""}`,
+        `atacuisine-receipt:${restaurant}${preview ? ":preview" : ""}`,
       );
     if (!token) {
       setError(
@@ -300,11 +315,11 @@ export function DonutStore({
           l.quantity,
       0,
     );
-  function select(p: Product) {
+  function select(p: Product, intent = purchaseIntent) {
     if (!shopEnabled) return;
     setError("");
     setProduct(p);
-    setPurchaseMode(p.category === "Menus" ? "solo" : purchaseIntent);
+    setPurchaseMode(p.category === "Menus" ? "solo" : intent);
     setMenuDrink("");
     setMenuTreat("");
     setChoices([]);
@@ -416,6 +431,9 @@ export function DonutStore({
       `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`,
     googleReviewUrl = data?.settings.googleReviewUrl,
     googleMapUrl = `https://www.google.com/maps?q=${encodeURIComponent(address)}&output=embed`;
+  const extraPages = Object.entries(config.pages).filter(
+    ([, page]) => page.kind === "custom" && page.visible,
+  );
   const page = config.pages[route || "home"] ?? { sections: [] as Section[] },
     ctx: PlaceholderContext = {
       ...context,
@@ -579,47 +597,34 @@ export function DonutStore({
                   .slice(0, fp.limit && category === "Tout" ? fp.limit : 100)
                   .map((p, i) => (
                     <article
-                      role={shopEnabled ? "button" : undefined}
-                      tabIndex={
-                        shopEnabled && p.enabled && p.portions > 0
-                          ? 0
-                          : undefined
-                      }
                       className={`donut-product tone-${i % 4}`}
                       key={p.id}
-                      onClick={() => {
-                        if (p.enabled && p.portions > 0) select(p);
-                      }}
-                      onKeyDown={(event) => {
-                        if (
-                          p.enabled &&
-                          p.portions > 0 &&
-                          (event.key === "Enter" || event.key === " ")
-                        ) {
-                          event.preventDefault();
-                          select(p);
-                        }
-                      }}
-                      aria-disabled={
-                        shopEnabled ? !p.enabled || p.portions < 1 : undefined
-                      }
-                      aria-label={
-                        shopEnabled ? `Personnaliser ${p.name}` : undefined
-                      }
                     >
-                      <span className="donut-product-image">
-                        <img
-                          loading="lazy"
-                          src={p.images[0] || "/cms/restaurant.svg"}
-                          alt={`Photo de ${p.name}`}
-                          width="600"
-                          height="480"
-                        />
-                        <span>{p.category}</span>
-                      </span>
+                      <Link
+                        href={productPath(p.id)}
+                        aria-label={`Voir la fiche de ${p.name}`}
+                      >
+                        <span className="donut-product-image">
+                          <img
+                            loading="lazy"
+                            src={p.images[0] || "/cms/restaurant.svg"}
+                            alt={`Photo de ${p.name}`}
+                            width="600"
+                            height="480"
+                          />
+                          <span>{p.category}</span>
+                        </span>
+                      </Link>
                       <span className="donut-product-info">
                         <div>
-                          <h3>{p.name}</h3>
+                          <h3>
+                            <Link
+                              className="product-name-link"
+                              href={productPath(p.id)}
+                            >
+                              {p.name}
+                            </Link>
+                          </h3>
                           <b>{money(p.price)}</b>
                         </div>
                         <p>{p.description}</p>
@@ -663,14 +668,19 @@ export function DonutStore({
                           <Star size={15} /> Noter ce produit
                         </button>
                         {shopEnabled && (
-                          <span className="donut-add">
+                          <button
+                            type="button"
+                            className="donut-add"
+                            disabled={p.portions < 1}
+                            onClick={() => select(p)}
+                          >
                             {p.portions < 1
                               ? "Victime de son succès"
                               : purchaseIntent === "menu"
                                 ? "Composer mon menu"
                                 : "Choisir solo ou menu"}
-                            <Plus size={20} />
-                          </span>
+                            <Plus size={20} aria-hidden />
+                          </button>
                         )}
                       </span>
                     </article>
@@ -1406,7 +1416,57 @@ export function DonutStore({
             </button>
           </div>
         )}
-        {page.sections.filter((s) => s.visible).map(renderSection)}
+        {detailProduct ? (
+          <section className="donut-section">
+            <ProductDetails
+              product={detailProduct}
+              image={detailProduct.images[0]}
+            >
+              <Link className="donut-button outline" href="/carte">
+                Retour à la carte
+              </Link>
+              {shopEnabled && detailProduct.portions > 0 && (
+                <button
+                  type="button"
+                  className="donut-button primary"
+                  onClick={() => select(detailProduct)}
+                >
+                  Commander ce produit
+                </button>
+              )}
+            </ProductDetails>
+            <ProductRecommendations
+              product={detailProduct}
+              items={data?.products ?? []}
+              href={(item) => href(productPath(item.id))}
+              image={(item) => item.images[0]}
+            >
+              {shopEnabled &&
+                !preview &&
+                (detailProduct.portions > 0 &&
+                detailProduct.category !== "Menus" &&
+                (detailProduct.category === "Boissons" || drinks.length > 0) &&
+                (detailProduct.category === "Desserts" || treats.length > 0) ? (
+                  <button
+                    type="button"
+                    className="donut-button"
+                    onClick={() => select(detailProduct, "menu")}
+                  >
+                    Composer mon menu
+                  </button>
+                ) : (
+                  <Link
+                    className="donut-button outline"
+                    href="/commander#start"
+                  >
+                    Voir les options à emporter
+                  </Link>
+                ))}
+            </ProductRecommendations>
+          </section>
+        ) : (
+          page.sections.filter((s) => s.visible).map(renderSection)
+        )}
       </main>
       {route !== "checkout" && (
         <footer className="donut-footer" {...cms({ id: "site-footer" })}>
@@ -1428,6 +1488,22 @@ export function DonutStore({
               </Link>
             )}
           </div>
+          {extraPages.length > 0 && (
+            <nav
+              className="donut-extra-pages"
+              aria-label="Autres pages du restaurant"
+            >
+              {extraPages.map(([key, page]) => (
+                <Link
+                  key={key}
+                  href={`/${key}`}
+                  aria-current={key === route ? "page" : undefined}
+                >
+                  {page.title}
+                </Link>
+              ))}
+            </nav>
+          )}
           <div className="donut-footer-bottom">
             <span>
               {r(footer.credit)} · <Link href="/source">Code source</Link>
@@ -1905,12 +1981,12 @@ export function DonutStore({
                       const values = new FormData(e.currentTarget);
                       try {
                         let key = sessionStorage.getItem(
-                          `dattier-checkout-key:${restaurant}${preview ? ":preview" : ""}`,
+                          `atacuisine-checkout-key:${restaurant}${preview ? ":preview" : ""}`,
                         );
                         if (!key) {
                           key = crypto.randomUUID();
                           sessionStorage.setItem(
-                            `dattier-checkout-key:${restaurant}${preview ? ":preview" : ""}`,
+                            `atacuisine-checkout-key:${restaurant}${preview ? ":preview" : ""}`,
                             key,
                           );
                         }
@@ -1927,14 +2003,14 @@ export function DonutStore({
                           items: cart,
                         });
                         sessionStorage.setItem(
-                          `dattier-receipt:${restaurant}${preview ? ":preview" : ""}`,
+                          `atacuisine-receipt:${restaurant}${preview ? ":preview" : ""}`,
                           order.token,
                         );
                         sessionStorage.removeItem(
-                          `dattier-checkout-key:${restaurant}${preview ? ":preview" : ""}`,
+                          `atacuisine-checkout-key:${restaurant}${preview ? ":preview" : ""}`,
                         );
                         localStorage.removeItem(
-                          `dattier-cart:${restaurant}${preview ? ":preview" : ""}`,
+                          `atacuisine-cart:${restaurant}${preview ? ":preview" : ""}`,
                         );
                         setCart([]);
                         router.push(`/suivi#${order.token}`);

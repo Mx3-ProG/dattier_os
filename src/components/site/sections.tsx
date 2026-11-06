@@ -315,7 +315,7 @@ export function Categories({
       <Heading kicker={p.kicker} title={p.title} ctx={ctx} />
       <div className="donut-categories">
         {categories.map((c) => (
-          <Link key={c} href="/carte">
+          <Link key={c} href={`/carte?categorie=${encodeURIComponent(c)}`}>
             {c}
           </Link>
         ))}

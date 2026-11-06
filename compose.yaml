@@ -1,11 +1,11 @@
-name: dattier
+name: atacuisine
 services:
   postgres:
     image: postgres:16-bookworm
     restart: unless-stopped
     environment:
-      POSTGRES_USER: dattier_migrator
-      POSTGRES_DB: dattier
+      POSTGRES_USER: atacuisine_migrator
+      POSTGRES_DB: atacuisine
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?required}
       APP_DB_PASSWORD: ${APP_DB_PASSWORD:?required}
       WORKER_DB_PASSWORD: ${WORKER_DB_PASSWORD:?required}
@@ -14,29 +14,29 @@ services:
       - postgres:/var/lib/postgresql/data
       - ./infra/postgres/init.sh:/docker-entrypoint-initdb.d/init.sh:ro
     healthcheck:
-      test: [CMD-SHELL, "pg_isready -U dattier_migrator -d dattier"]
+      test: [CMD-SHELL, "pg_isready -U atacuisine_migrator -d atacuisine"]
       interval: 5s
       retries: 20
   migrate:
-    image: ${DATTIER_IMAGE:-dattier-os:local}
+    image: ${ATACUISINE_IMAGE:-atacuisine-os:local}
     build: .
     command: [node, --import, tsx, scripts/migrate.ts]
     environment:
-      MIGRATION_DATABASE_URL: postgresql://dattier_migrator:${POSTGRES_PASSWORD}@postgres:5432/dattier
+      MIGRATION_DATABASE_URL: postgresql://atacuisine_migrator:${POSTGRES_PASSWORD}@postgres:5432/atacuisine
     depends_on:
       postgres: { condition: service_healthy }
     restart: "no"
   app:
-    image: ${DATTIER_IMAGE:-dattier-os:local}
+    image: ${ATACUISINE_IMAGE:-atacuisine-os:local}
     pull_policy: never
     restart: unless-stopped
     ports: ["127.0.0.1:3000:3000"]
     environment:
-      DATTIER_DEMO: "false"
-      DATABASE_URL: postgresql://dattier_web:${APP_DB_PASSWORD}@postgres:5432/dattier
+      ATACUISINE_DEMO: "false"
+      DATABASE_URL: postgresql://atacuisine_web:${APP_DB_PASSWORD}@postgres:5432/atacuisine
       APP_URL: ${APP_URL}
-      OIDC_ISSUER: ${IDENTITY_URL}/realms/dattier
-      OIDC_CLIENT_ID: dattier
+      OIDC_ISSUER: ${IDENTITY_URL}/realms/atacuisine
+      OIDC_CLIENT_ID: atacuisine
       OIDC_BACKCHANNEL_ORIGIN: http://keycloak:8080
       SESSION_SECRET: ${SESSION_SECRET:?required}
       INTEGRATION_ENCRYPTION_KEY: ${INTEGRATION_ENCRYPTION_KEY:-}
@@ -61,16 +61,16 @@ services:
       interval: 30s
       retries: 3
   worker:
-    image: ${DATTIER_IMAGE:-dattier-os:local}
+    image: ${ATACUISINE_IMAGE:-atacuisine-os:local}
     pull_policy: never
     command: [node, --import, tsx, scripts/worker.ts]
     restart: unless-stopped
     environment:
-      DATTIER_DEMO: "false"
-      WORKER_DATABASE_URL: postgresql://dattier_jobs:${WORKER_DB_PASSWORD}@postgres:5432/dattier
+      ATACUISINE_DEMO: "false"
+      WORKER_DATABASE_URL: postgresql://atacuisine_jobs:${WORKER_DB_PASSWORD}@postgres:5432/atacuisine
       APP_URL: ${APP_URL}
-      OIDC_ISSUER: ${IDENTITY_URL}/realms/dattier
-      OIDC_CLIENT_ID: dattier
+      OIDC_ISSUER: ${IDENTITY_URL}/realms/atacuisine
+      OIDC_CLIENT_ID: atacuisine
       OIDC_BACKCHANNEL_ORIGIN: http://keycloak:8080
       SESSION_SECRET: ${SESSION_SECRET:?required}
       INTEGRATION_ENCRYPTION_KEY: ${INTEGRATION_ENCRYPTION_KEY:-}
@@ -89,8 +89,8 @@ services:
     restart: unless-stopped
     environment:
       KC_DB: postgres
-      KC_DB_URL: jdbc:postgresql://postgres:5432/dattier_identity
-      KC_DB_USERNAME: dattier_identity
+      KC_DB_URL: jdbc:postgresql://postgres:5432/atacuisine_identity
+      KC_DB_USERNAME: atacuisine_identity
       KC_DB_PASSWORD: ${IDENTITY_DB_PASSWORD}
       KC_BOOTSTRAP_ADMIN_USERNAME: ${KEYCLOAK_ADMIN:?required}
       KC_BOOTSTRAP_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD:?required}
@@ -101,7 +101,7 @@ services:
     ports: ["127.0.0.1:8080:8080"]
     volumes:
       [
-        "./infra/keycloak/realm.json:/opt/keycloak/data/import/dattier-realm.json:ro",
+        "./infra/keycloak/realm.json:/opt/keycloak/data/import/atacuisine-realm.json:ro",
       ]
     depends_on:
       postgres: { condition: service_healthy }

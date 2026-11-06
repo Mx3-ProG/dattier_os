@@ -31,7 +31,7 @@ after(() => db.close());
 const app = <T>(r: string, fn: (tx: DB) => Promise<T>) =>
   withDatabaseContext({ userId: "nadia", restaurantId: r }, () =>
     db.transaction(async (tx) => {
-      await tx.exec("SET LOCAL ROLE dattier_app");
+      await tx.exec("SET LOCAL ROLE atacuisine_app");
       await tx.query(
         "SELECT set_config('app.user_id','nadia',true),set_config('app.restaurant_id',$1,true),set_config('app.public','false',true)",
         [r],

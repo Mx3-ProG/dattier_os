@@ -5,14 +5,14 @@ CREATE TABLE seo_audits(id text PRIMARY KEY,restaurant_id text NOT NULL REFERENC
 CREATE INDEX seo_audits_scope ON seo_audits(restaurant_id,created_at DESC);
 ALTER TABLE seo_audits ENABLE ROW LEVEL SECURITY;
 CREATE POLICY seo_audits_read ON seo_audits FOR SELECT USING(app.in_restaurant(restaurant_id) AND current_setting('app.public',true) IS DISTINCT FROM 'true');
-GRANT SELECT ON seo_audits TO dattier_app;
+GRANT SELECT ON seo_audits TO atacuisine_app;
 
 -- AI visibility observations entered by the team (manual tests, with date and method). Never generated.
 CREATE TABLE seo_ai_observations(id text PRIMARY KEY,restaurant_id text NOT NULL REFERENCES restaurants,observed_on date NOT NULL,assistant text NOT NULL CHECK(length(assistant) BETWEEN 1 AND 60),query text NOT NULL CHECK(length(query) BETWEEN 1 AND 300),cited boolean NOT NULL,evidence text NOT NULL DEFAULT '' CHECK(length(evidence)<=1000),created_by text REFERENCES profiles,created_at timestamptz NOT NULL DEFAULT clock_timestamp());
 CREATE INDEX seo_obs_scope ON seo_ai_observations(restaurant_id,observed_on DESC);
 ALTER TABLE seo_ai_observations ENABLE ROW LEVEL SECURITY;
 CREATE POLICY seo_obs_scope ON seo_ai_observations USING(app.in_restaurant(restaurant_id) AND current_setting('app.public',true) IS DISTINCT FROM 'true') WITH CHECK(app.in_restaurant(restaurant_id) AND current_setting('app.public',true) IS DISTINCT FROM 'true');
-GRANT SELECT,INSERT,DELETE ON seo_ai_observations TO dattier_app;
+GRANT SELECT,INSERT,DELETE ON seo_ai_observations TO atacuisine_app;
 
 -- Stores a report for the restaurant of the current database context only; keeps the 20 latest.
 CREATE FUNCTION app.record_seo_audit(rid text,source text,report jsonb) RETURNS text LANGUAGE plpgsql SECURITY DEFINER SET search_path=public,pg_temp AS $$
@@ -24,7 +24,7 @@ BEGIN
  RETURN new_id;
 END $$;
 REVOKE ALL ON FUNCTION app.record_seo_audit(text,text,jsonb) FROM PUBLIC;
-GRANT EXECUTE ON FUNCTION app.record_seo_audit(text,text,jsonb) TO dattier_app;
+GRANT EXECUTE ON FUNCTION app.record_seo_audit(text,text,jsonb) TO atacuisine_app;
 
 -- Debounced audit job: at most one pending and one follow-up (if an audit is running) per restaurant.
 CREATE FUNCTION app.queue_seo_audit(rid text,source text) RETURNS void LANGUAGE plpgsql SECURITY DEFINER SET search_path=public,pg_temp AS $$
