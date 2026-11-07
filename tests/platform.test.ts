@@ -337,7 +337,7 @@ test("invitations : identité vérifiée, rôles cumulés et usage unique", asyn
   );
 });
 
-test("parrainage : lien, filleuls payants et forfait offert au cinquième", async () => {
+test("parrainage : lien, récompenses, paliers, défi, classement et notifications", async () => {
   await db.query(
     "INSERT INTO profiles(id,name,role,email) VALUES('parrain','Parrain','OWNER','parrain@example.test')",
   );
@@ -345,17 +345,27 @@ test("parrainage : lien, filleuls payants et forfait offert au cinquième", asyn
   await db.query(
     "SELECT app.bootstrap_organization('parrain-org','Groupe parrain','parrain-r','Restaurant parrain')",
   );
-  const summary = () =>
-    asUser("parrain", "", (tx) =>
-      one<{ referral_code: string | null; referrals: { paying: boolean }[] }>(
-        tx,
-        "SELECT * FROM app.referral_summary('parrain-org')",
-      ),
+  type Summary = {
+    referral_code: string | null;
+    referrals: { paying: boolean }[];
+    paying_referrals: number;
+    activated_total: number;
+    activated_month: number;
+    credits: number;
+    rewards: { kind: string }[];
+  };
+  const summary = (org = "parrain-org", as = "parrain") =>
+    asUser(as, "", (tx) =>
+      one<Summary>(tx, "SELECT * FROM app.referral_summary($1)", [org]),
     );
   assert.equal((await summary()).referral_code, null, "pas de lien avant abonnement");
   await db.query("SELECT app.configure_organization_plan('parrain-org',39,1)");
   const { referral_code: code } = await summary();
   assert.match(code!, /^[A-F0-9]{10}$/);
+  assert.equal(
+    (await one<{ name: string }>(db, "SELECT app.referral_invitation($1) AS name", [code!.toLowerCase()])).name,
+    "Groupe parrain",
+  );
   // Self-referral and invalid codes are ignored without blocking onboarding.
   await asUser("parrain", "", (tx) =>
     platformPerform(tx, { id: "parrain", name: "Parrain", role: "OWNER" }, {
@@ -377,27 +387,67 @@ test("parrainage : lien, filleuls payants et forfait offert au cinquième", asyn
     )) as { organization: string };
     filleuls.push(created.organization);
   }
+  // The referred organisation gets its welcome month at sign-up.
+  assert.equal(
+    (await one<{ n: number }>(db, "SELECT count(*)::int AS n FROM app.referral_rewards WHERE organization_id=$1 AND key='welcome'", [filleuls[0]])).n,
+    1,
+  );
   let state = await summary();
   assert.equal(state.referrals.length, 5);
-  assert.equal(state.referrals.filter((f) => f.paying).length, 0);
-  for (const org of filleuls.slice(0, 4))
-    await db.query("SELECT app.configure_organization_plan($1,39,1)", [org]);
-  const paying = async () =>
-    (await one<{ n: number }>(db, "SELECT app.paying_referrals('parrain-org') AS n")).n;
-  assert.equal(await paying(), 4);
-  assert.equal(monthlyPrice(39, 1, await paying()), 39);
-  await db.query("SELECT app.configure_organization_plan($1,69,1)", [filleuls[4]]);
-  assert.equal(await paying(), 5);
-  assert.equal(monthlyPrice(39, 1, 5), 0);
-  assert.equal(monthlyPrice(99, 3, 5), 78, "les établissements supplémentaires restent facturés");
+  assert.equal(state.paying_referrals, 0);
+  assert.equal(state.credits, 0);
+  const access = async () =>
+    (await one<{ plan: number }>(db, "SELECT app.restaurant_plan('parrain-r') AS plan")).plan;
+  await db.query("SELECT app.configure_organization_plan($1,39,1)", [filleuls[0]]);
+  await db.query("SELECT app.configure_organization_plan($1,39,1)", [filleuls[1]]);
   state = await summary();
-  assert.equal(state.referrals.filter((f) => f.paying).length, 5);
-  // A referral that stops paying no longer counts.
+  assert.equal(state.credits, 3, "2 mois de parrainage + 1 mois du défi mensuel");
+  assert.equal(state.rewards.filter((r) => r.kind === "challenge").length, 1);
+  assert.equal(state.activated_month, 2);
+  assert.equal(await access(), 39);
+  await db.query("SELECT app.configure_organization_plan($1,39,1)", [filleuls[2]]);
+  assert.equal(monthlyPrice(39, 1, 3), 0, "3 filleuls : forfait 39 € offert");
+  await db.query("SELECT app.configure_organization_plan($1,39,1)", [filleuls[3]]);
+  await db.query("SELECT app.configure_organization_plan($1,69,1)", [filleuls[4]]);
+  state = await summary();
+  assert.equal(state.paying_referrals, 5);
+  assert.equal(state.activated_total, 5);
+  assert.equal(state.credits, 6, "1 mois par filleul et un seul défi par mois");
+  assert.equal(await access(), 69, "5 filleuls : fonctions du forfait 69 € débloquées");
+  const notified = await one<{ n: number }>(
+    db,
+    "SELECT count(*)::int AS n FROM notifications WHERE restaurant_id='parrain-r' AND message LIKE 'Parrainage :%'",
+  );
+  assert.equal(notified.n, 5);
+  // A referral that stops paying no longer counts; coming back grants nothing twice.
   await db.query("SELECT app.configure_organization_plan($1,0,1)", [filleuls[0]]);
-  assert.equal(await paying(), 4);
-  // Another organisation cannot read the referrer's summary.
+  assert.equal((await summary()).paying_referrals, 4);
+  assert.equal(await access(), 39);
+  await db.query("SELECT app.configure_organization_plan($1,39,1)", [filleuls[0]]);
+  assert.equal((await summary()).credits, 6);
+  assert.equal(await access(), 69);
+  // Leaderboard: anonymous by default, named once the referrer opts in.
+  const board = (as: string, org: string) =>
+    asUser(as, "", (tx) =>
+      rows<{ name: string | null; referrals: number; is_me: boolean }>(
+        tx,
+        "SELECT * FROM app.referral_leaderboard($1)",
+        [org],
+      ),
+    );
+  const mine = await board("parrain", "parrain-org");
+  assert.deepEqual(mine.find((r) => r.is_me), { rank: 1, name: "Groupe parrain", referrals: 5, is_me: true });
+  assert.equal((await board("filleul-2", filleuls[1]))[0].name, null);
+  await asUser("parrain", "", (tx) =>
+    platformPerform(tx, { id: "parrain", name: "Parrain", role: "OWNER" }, {
+      action: "referralVisibility", organization: "parrain-org", visible: true,
+    }),
+  );
+  assert.equal((await board("filleul-2", filleuls[1]))[0].name, "Groupe parrain");
+  // Another organisation cannot read the referrer's data.
   assert.equal(
     (await asUser("filleul-1", "", (tx) => rows(tx, "SELECT * FROM app.referral_summary('parrain-org')"))).length,
     0,
   );
+  assert.equal((await board("filleul-1", "parrain-org")).length, 0);
 });

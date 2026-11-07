@@ -47,6 +47,11 @@ export const platformAction = z.discriminatedUnion("action", [
   }),
   z.object({ action: z.literal("revokeSupport"), restaurant: id, grant: id }),
   z.object({
+    action: z.literal("referralVisibility"),
+    organization: id,
+    visible: z.boolean(),
+  }),
+  z.object({
     action: z.literal("loyaltyScope"),
     organization: id,
     scope: z.enum(["restaurant", "organization"]),
@@ -82,7 +87,7 @@ export async function overview(db: DB, user: Actor) {
     user,
     organizations: await rows(
       db,
-      "SELECT o.*,m.role,p.*,s.referral_code,s.referrals FROM organizations o JOIN organization_memberships m ON m.organization_id=o.id CROSS JOIN LATERAL app.organization_plan(o.id) p LEFT JOIN LATERAL app.referral_summary(o.id) s ON true WHERE m.profile_id=$1 ORDER BY o.name",
+      "SELECT o.*,m.role,p.*,s.referral_code,s.referrals,s.paying_referrals,s.activated_total,s.activated_month,s.credits FROM organizations o JOIN organization_memberships m ON m.organization_id=o.id CROSS JOIN LATERAL app.organization_plan(o.id) p LEFT JOIN LATERAL app.referral_summary(o.id) s ON true WHERE m.profile_id=$1 ORDER BY o.name",
       [user.id],
     ),
     restaurants: await rows(
@@ -147,6 +152,13 @@ export async function platformPerform(db: DB, user: Actor, raw: unknown) {
       r,
     ]);
     return { restaurant: r };
+  }
+  if (a.action === "referralVisibility") {
+    await db.query("SELECT app.set_referral_visibility($1,$2)", [
+      a.organization,
+      a.visible,
+    ]);
+    return { visible: a.visible };
   }
   if (a.action === "loyaltyScope") {
     await one(
@@ -247,4 +259,31 @@ export async function platformPerform(db: DB, user: Actor, raw: unknown) {
   );
   await log(db, a.restaurant, user.id, "Accès support révoqué", a.grant);
   return { revoked: true };
+}
+
+/** Full referral program for one organisation: summary and monthly leaderboard. */
+export async function referralProgram(db: DB, organization: string) {
+  const summary = await rows<Record<string, unknown>>(db, "SELECT * FROM app.referral_summary($1)", [
+    organization,
+  ]);
+  if (!summary.length) throw new Error("Administration non autorisée.");
+  const billing = await one<Record<string, unknown>>(
+    db,
+    "SELECT * FROM app.organization_plan($1)",
+    [organization],
+  );
+  const organizationRow = await one<{ name: string }>(
+    db,
+    "SELECT name FROM organizations WHERE id=$1",
+    [organization],
+  );
+  return {
+    organization: { id: organization, name: organizationRow.name, ...billing },
+    ...summary[0],
+    leaderboard: await rows(
+      db,
+      "SELECT * FROM app.referral_leaderboard($1)",
+      [organization],
+    ),
+  };
 }

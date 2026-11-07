@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { PostgresDatabase } from "../src/lib/database/postgres";
-import { monthlyPrice, referralGoal } from "../src/features/platform/pricing";
+import { referralPricing } from "../src/features/platform/referrals";
 
 const [organization, rawPlan, rawSeats, ...archive] = process.argv.slice(2);
 const input = z
@@ -25,8 +25,9 @@ try {
     [input.organization],
   );
   const paying = rows[0]?.paying ?? 0;
+  const price = referralPricing(input.plan, input.seats, paying);
   console.log(
-    `${input.organization} · ${input.seats} place(s) · ${monthlyPrice(input.plan, input.seats, paying)} € HT / mois · ${paying} filleul(s) payant(s)${paying >= referralGoal ? " · forfait offert par le parrainage" : ""}`,
+    `${input.organization} · ${input.seats} place(s) · ${price.total} € HT / mois · ${paying} filleul(s) payant(s)${price.free ? " · forfait offert par le parrainage" : ""}${price.freeSeats ? ` · ${price.freeSeats} établissement(s) offert(s)` : ""}`,
   );
 } finally {
   await db.close();

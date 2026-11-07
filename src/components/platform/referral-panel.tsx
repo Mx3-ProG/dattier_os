@@ -1,26 +1,22 @@
 "use client";
 import { useEffect, useState } from "react";
-import { Check, Copy, Gift } from "lucide-react";
-import { referralGoal } from "@/features/platform/pricing";
+import Link from "next/link";
+import { ArrowUpRight, Check, Copy, Crown, Gift, Medal, Trophy } from "lucide-react";
+import {
+  referralLevel,
+  referralPricing,
+  type PaidPlan,
+} from "@/features/platform/referrals";
 
-export type Referral = {
-  name: string;
-  created_at: string;
-  activated_at: string | null;
-  paying: boolean;
-};
-
-const date = (value: string) =>
-  new Date(value).toLocaleDateString("fr-FR", { day: "numeric", month: "short", year: "numeric" });
-
-export function ReferralPanel({ code, referrals }: { code: string; referrals: Referral[] }) {
+/** Absolute referral link, computed after mount so server and client markup match. */
+export function useReferralLink(code: string) {
   const [link, setLink] = useState(`/parrainage/${code}`);
-  const [copied, setCopied] = useState(false);
   useEffect(() => setLink(`${location.origin}/parrainage/${code}`), [code]);
-  const paying = referrals.filter((f) => f.paying).length;
-  const free = paying >= referralGoal;
-  const remaining = Math.max(referralGoal - paying, 0);
+  return link;
+}
 
+export function CopyLink({ link }: { link: string }) {
+  const [copied, setCopied] = useState(false);
   async function copy() {
     try {
       await navigator.clipboard.writeText(link);
@@ -30,51 +26,96 @@ export function ReferralPanel({ code, referrals }: { code: string; referrals: Re
       setCopied(false);
     }
   }
+  return (
+    <div className="referral-link">
+      <input readOnly value={link} aria-label="Votre lien de parrainage" onFocus={(e) => e.currentTarget.select()} />
+      <button type="button" onClick={copy}>
+        {copied ? <Check size={15} aria-hidden /> : <Copy size={15} aria-hidden />}
+        {copied ? "Copié" : "Copier"}
+      </button>
+    </div>
+  );
+}
 
+const plural = (n: number, word: string) => `${n} ${word}${n > 1 ? "s" : ""}`;
+
+/** Sentence and gauge towards the next referral milestone. */
+export function goalOf(plan: PaidPlan, seats: number, paying: number) {
+  const pricing = referralPricing(plan, seats, paying);
+  const goal = pricing.nextGoal;
+  if (!goal)
+    return { pricing, goal, label: "Tout est débloqué : votre forfait et vos établissements sont offerts." };
+  const left = goal.target - paying;
+  const label =
+    goal.kind === "free"
+      ? `Encore ${left} ${left > 1 ? "filleuls abonnés" : "filleul abonné"} et votre forfait ${goal.plan} € devient gratuit.`
+      : goal.kind === "upgrade"
+        ? `Forfait offert. Encore ${plural(left, "filleul")} et le forfait ${goal.plan} € est débloqué.`
+        : `Forfait offert. Encore ${plural(left, "filleul")} et un établissement supplémentaire est offert.`;
+  return { pricing, goal, label };
+}
+
+export function GoalGauge({ target, value, label }: { target: number; value: number; label: string }) {
+  return (
+    <div className="referral-progress" role="progressbar" aria-valuemin={0} aria-valuemax={target} aria-valuenow={Math.min(value, target)} aria-label={label}>
+      {Array.from({ length: target }, (_, i) => (
+        <span key={i} data-filled={i < value || undefined} />
+      ))}
+      <strong>{Math.min(value, target)}/{target}</strong>
+    </div>
+  );
+}
+
+const levelIcons = { Bronze: Medal, Argent: Medal, Or: Trophy, Platine: Trophy, Légende: Crown } as const;
+
+export function LevelBadge({ activated }: { activated: number }) {
+  const { current } = referralLevel(activated);
+  const Icon = current ? levelIcons[current.name] : Gift;
+  return (
+    <span className="referral-badge" data-level={current?.name ?? "none"}>
+      <Icon size={14} aria-hidden /> {current ? current.name : "Nouveau parrain"}
+    </span>
+  );
+}
+
+export function ReferralPanel({
+  organization,
+  code,
+  plan,
+  seats,
+  paying,
+  activated,
+  credits,
+}: {
+  organization: string;
+  code: string;
+  plan: PaidPlan;
+  seats: number;
+  paying: number;
+  activated: number;
+  credits: number;
+}) {
+  const link = useReferralLink(code);
+  const { goal, label } = goalOf(plan, seats, paying);
   return (
     <section className="referral-panel" aria-labelledby={`parrainage-${code}`}>
       <header>
         <Gift size={18} aria-hidden />
         <div>
-          <h2 id={`parrainage-${code}`}>Parrainage</h2>
-          <p>
-            {free
-              ? "Votre forfait est offert tant que vos filleuls restent abonnés."
-              : `Encore ${remaining} filleul${remaining > 1 ? "s" : ""} abonné${remaining > 1 ? "s" : ""} et votre forfait devient gratuit.`}
-          </p>
+          <h2 id={`parrainage-${code}`}>
+            Parrainage <LevelBadge activated={activated} />
+          </h2>
+          <p>{label}</p>
         </div>
+        {credits > 0 && (
+          <span className="referral-credits">{plural(credits, "mois offert")}</span>
+        )}
       </header>
-      <div className="referral-progress" role="progressbar" aria-valuemin={0} aria-valuemax={referralGoal} aria-valuenow={Math.min(paying, referralGoal)} aria-label="Filleuls abonnés">
-        {Array.from({ length: referralGoal }, (_, i) => (
-          <span key={i} data-filled={i < paying || undefined} />
-        ))}
-        <strong>{Math.min(paying, referralGoal)}/{referralGoal}</strong>
-      </div>
-      <div className="referral-link">
-        <input readOnly value={link} aria-label="Votre lien de parrainage" onFocus={(e) => e.currentTarget.select()} />
-        <button type="button" onClick={copy}>
-          {copied ? <Check size={15} aria-hidden /> : <Copy size={15} aria-hidden />}
-          {copied ? "Copié" : "Copier"}
-        </button>
-      </div>
-      {referrals.length > 0 ? (
-        <ul className="referral-list">
-          {referrals.map((f) => (
-            <li key={`${f.name}-${f.created_at}`}>
-              <span>{f.name}</span>
-              <span data-paying={f.paying || undefined}>
-                {f.paying
-                  ? `Abonné depuis le ${date(f.activated_at ?? f.created_at)}`
-                  : f.activated_at
-                    ? "Abonnement interrompu"
-                    : "En attente d’abonnement"}
-              </span>
-            </li>
-          ))}
-        </ul>
-      ) : (
-        <p className="referral-empty">Partagez votre lien : chaque restaurateur qui s’abonne grâce à lui apparaîtra ici.</p>
-      )}
+      {goal && <GoalGauge target={goal.target} value={paying} label={label} />}
+      <CopyLink link={link} />
+      <Link className="referral-more" href={`/platform/parrainage?organisation=${encodeURIComponent(organization)}`}>
+        Voir mon programme : défis, classement, QR code <ArrowUpRight size={14} aria-hidden />
+      </Link>
     </section>
   );
 }

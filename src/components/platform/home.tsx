@@ -1,6 +1,7 @@
 "use client";
-import { monthlyPrice, referralGoal, type Plan } from "@/features/platform/pricing";
-import { ReferralPanel, type Referral } from "./referral-panel";
+import { type Plan } from "@/features/platform/pricing";
+import { referralPricing, type PaidPlan } from "@/features/platform/referrals";
+import { ReferralPanel } from "./referral-panel";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, useEffect, useCallback } from "react";
@@ -24,8 +25,11 @@ type Overview = {
     seats: number;
     occupied: number;
     requested_plan: number;
+    paid_plan: Plan;
     referral_code: string | null;
-    referrals: Referral[] | null;
+    paying_referrals: number | null;
+    activated_total: number | null;
+    credits: number | null;
   }[];
   restaurants: {
     id: string;
@@ -116,7 +120,8 @@ export function PlatformHome() {
             </section>
           )}
           {data.organizations.map((o) => {
-            const paying = o.referrals?.filter((f) => f.paying).length ?? 0;
+            const paying = o.paying_referrals ?? 0;
+            const price = referralPricing(o.paid_plan, o.seats, paying);
             return (
               <div key={o.id}>
                 <article className="organization-summary">
@@ -125,13 +130,28 @@ export function PlatformHome() {
                     <strong>{o.name}</strong>
                   </div>
                   <p>
-                    {o.plan
-                      ? `Forfait ${o.plan} €${paying >= referralGoal ? " offert" : ""} · ${monthlyPrice(o.plan, o.seats, paying)} € HT / mois · ${o.occupied}/${o.seats} places utilisées`
+                    {o.paid_plan
+                      ? [
+                          `Forfait ${o.paid_plan} €${price.free ? " offert" : ""}`,
+                          price.accessPlan > o.paid_plan && `accès ${price.accessPlan} € débloqué`,
+                          `${price.total} € HT / mois`,
+                          `${o.occupied}/${o.seats} places utilisées`,
+                        ]
+                          .filter(Boolean)
+                          .join(" · ")
                       : `Forfait ${o.requested_plan} € HT / mois en attente d’activation`}
                   </p>
                 </article>
-                {o.plan > 0 && o.referral_code && (
-                  <ReferralPanel code={o.referral_code} referrals={o.referrals ?? []} />
+                {o.paid_plan > 0 && o.referral_code && (
+                  <ReferralPanel
+                    organization={o.id}
+                    code={o.referral_code}
+                    plan={o.paid_plan as PaidPlan}
+                    seats={o.seats}
+                    paying={paying}
+                    activated={o.activated_total ?? 0}
+                    credits={o.credits ?? 0}
+                  />
                 )}
               </div>
             );
