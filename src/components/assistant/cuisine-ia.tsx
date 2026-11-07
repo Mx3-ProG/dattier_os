@@ -11,6 +11,7 @@ import {
   Mic,
   MicOff,
   Sparkles,
+  Settings,
   Volume2,
   X,
   Zap,
@@ -177,7 +178,7 @@ export function CuisineIa({
   docked?: boolean;
 }) {
   const [open, setOpen] = useState(false);
-  const [view, setView] = useState<"chat" | "credits">("chat");
+  const [view, setView] = useState<"chat" | "credits" | "settings">("chat");
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [busy, setBusy] = useState(false);
@@ -189,6 +190,30 @@ export function CuisineIa({
   const [speaking, setSpeaking] = useState(false);
   const [interim, setInterim] = useState("");
   const [voiceSupported, setVoiceSupported] = useState(false);
+  const [voices, setVoices] = useState<SpeechSynthesisVoice[]>([]);
+  const [preferences, setPreferences] = useState({ voiceURI: "", rate: 1.05, pitch: 1 });
+  const preferencesRef = useRef(preferences);
+  preferencesRef.current = preferences;
+  const updatePreferences = (next: typeof preferences) => {
+    setPreferences(next);
+    try { localStorage.setItem("cuisine-ia:voice:v1", JSON.stringify(next)); } catch { /* Stockage privé indisponible. */ }
+  };
+  useEffect(() => {
+    try {
+      const saved = JSON.parse(localStorage.getItem("cuisine-ia:voice:v1") || "null");
+      if (saved) setPreferences({
+        voiceURI: typeof saved.voiceURI === "string" ? saved.voiceURI : "",
+        rate: typeof saved.rate === "number" && Number.isFinite(saved.rate) ? Math.min(1.5, Math.max(0.6, saved.rate)) : 1.05,
+        pitch: typeof saved.pitch === "number" && Number.isFinite(saved.pitch) ? Math.min(1.5, Math.max(0.5, saved.pitch)) : 1,
+      });
+    } catch { /* Les valeurs par défaut restent utilisables. */ }
+    if (!("speechSynthesis" in window)) return;
+    const synth = window.speechSynthesis;
+    const load = () => setVoices(synth.getVoices());
+    load();
+    synth.addEventListener("voiceschanged", load);
+    return () => { synth.removeEventListener("voiceschanged", load); synth.cancel(); };
+  }, []);
   const recognition = useRef<Recognition | null>(null);
   const voiceRef = useRef(false);
   const busyRef = useRef(false);
@@ -235,9 +260,13 @@ export function CuisineIa({
     window.speechSynthesis.cancel();
     const u = new SpeechSynthesisUtterance(spoken(text));
     u.lang = "fr-FR";
-    u.rate = 1.05;
-    const fr = window.speechSynthesis.getVoices().find((v) => v.lang.startsWith("fr"));
-    if (fr) u.voice = fr;
+    const prefs = preferencesRef.current;
+    u.rate = prefs.rate;
+    u.pitch = prefs.pitch;
+    const available = window.speechSynthesis.getVoices();
+    const fr = available.find((v) => v.voiceURI === prefs.voiceURI)
+      ?? available.find((v) => v.lang.startsWith("fr"));
+    if (fr) { u.voice = fr; u.lang = fr.lang; }
     setSpeaking(true);
     u.onend = u.onerror = () => {
       setSpeaking(false);
@@ -476,7 +505,7 @@ export function CuisineIa({
   return (
     <>
       {launcher && !open && (
-        <button className={`cia-launcher ${docked ? "docked" : ""}`} onClick={() => openCuisineIa()} aria-label="Ouvrir Cuisine IA">
+        <button data-tour="ia-button" className={`cia-launcher ${docked ? "docked" : ""}`} onClick={() => openCuisineIa()} aria-label="Ouvrir Cuisine IA">
           <Sparkles size={20} aria-hidden />
           <span>Cuisine IA</span>
         </button>
@@ -513,12 +542,36 @@ export function CuisineIa({
             >
               <Coins size={14} aria-hidden /> {state ? state.balance.toLocaleString("fr-FR") : "…"}
             </button>
+            <button className="cia-icon" onClick={() => { stopVoice(); setView(view === "settings" ? "chat" : "settings"); }} aria-label="Paramètres de Cuisine IA" aria-pressed={view === "settings"}>
+              <Settings size={18} />
+            </button>
             <button className="cia-icon" onClick={() => setOpen(false)} aria-label="Fermer Cuisine IA">
               <X size={18} />
             </button>
           </header>
 
-          {view === "credits" && state ? (
+          {view === "settings" ? (
+            <div className="cia-body cia-settings">
+              <h2>Paramètres de Cuisine IA</h2>
+              <p>Personnalisez la voix de synthèse. Vos choix sont conservés dans ce navigateur et s’appliquent à vos prochaines réponses vocales.</p>
+              <label htmlFor="cia-voice">Voix disponible sur cet appareil</label>
+              <select id="cia-voice" value={voices.some(v => v.voiceURI === preferences.voiceURI) ? preferences.voiceURI : ""} onChange={e => updatePreferences({ ...preferences, voiceURI: e.target.value })}>
+                <option value="">Automatique · français si disponible</option>
+                {voices.map(v => <option key={v.voiceURI} value={v.voiceURI}>{v.name} · {v.lang}{v.localService ? " · sur l’appareil" : " · service en ligne"}</option>)}
+              </select>
+              {!voices.length && <p role="status">Aucune voix chargée pour le moment. Les voix dépendent du navigateur et du système.</p>}
+              {preferences.voiceURI && !voices.some(v => v.voiceURI === preferences.voiceURI) && <p>La voix enregistrée n’est plus disponible. La voix automatique sera utilisée.</p>}
+              <label htmlFor="cia-rate">Débit · {preferences.rate.toFixed(2)}×</label>
+              <input id="cia-rate" type="range" min="0.6" max="1.5" step="0.05" value={preferences.rate} onChange={e => updatePreferences({ ...preferences, rate: Number(e.target.value) })} />
+              <label htmlFor="cia-pitch">Hauteur · {preferences.pitch.toFixed(2)}</label>
+              <input id="cia-pitch" type="range" min="0.5" max="1.5" step="0.05" value={preferences.pitch} onChange={e => updatePreferences({ ...preferences, pitch: Number(e.target.value) })} />
+              <button className="cia-back" disabled={!voices.length} onClick={() => speaking ? window.speechSynthesis.cancel() : speak("Bonjour, je suis Cuisine IA. Je vous aide à gérer votre restaurant. Voilà un aperçu de ma voix.")}>{speaking ? "Arrêter l’aperçu" : "Écouter cette voix"}</button>
+              <button className="cia-back" onClick={() => updatePreferences({ voiceURI: "", rate: 1.05, pitch: 1 })}>Rétablir les réglages par défaut</button>
+              <p>Voix du navigateur, sans intégration d’un service payant. Certaines voix utilisent une connexion Internet. Leur qualité varie selon l’appareil. Les voix OpenAI ne sont pas connectées.</p>
+              <p>Moteur actuel : {state?.llm ? "réflexe et IA avancée" : "réflexe"}. Les actions de gestion restent soumises à votre confirmation.</p>
+              <button className="cia-back" onClick={() => { window.speechSynthesis?.cancel(); setView("chat"); }}>Revenir à la conversation</button>
+            </div>
+          ) : view === "credits" && state ? (
             <div className="cia-body cia-wallet">
               <div className="cia-balance">
                 <span>Solde</span>

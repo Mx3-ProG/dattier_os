@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto";
-import { mkdir, readFile, writeFile } from "node:fs/promises";
+import { mkdir, open, writeFile } from "node:fs/promises";
 import path from "node:path";
 import {
   S3Client,
@@ -7,11 +7,8 @@ import {
   GetObjectCommand,
 } from "@aws-sdk/client-s3";
 import { rows, one, demoEnabled, type DB } from "@/lib/database/db";
-export const limits = {
-  imageBytes: 8 * 1024 * 1024,
-  videoBytes: 40 * 1024 * 1024,
-  imageMaxSide: 2000,
-};
+import { optimizeMedia, type OptimizedMedia } from "./media-optimizer";
+export { limits } from "./media-optimizer";
 export const FILE_NAME = /^[a-f0-9-]{36}\.(webp|jpg|png|mp4|webm)$/;
 export type MediaRow = {
   id: string;
@@ -58,7 +55,12 @@ export function cmsMedia(restaurant: string) {
       )
     ).map((m) => ({ ...m, url: mediaUrl(m.file) }));
   }
-  async function saveSiteMedia(db: DB, file: File, actor: string) {
+  async function saveSiteMedia(
+    db: DB,
+    file: File | OptimizedMedia,
+    actor: string,
+  ) {
+    const optimized = file instanceof File ? await optimizeMedia(file) : file;
     await one(db, "SELECT id FROM restaurants WHERE id=$1 FOR UPDATE", [
       restaurant,
     ]);
@@ -69,49 +71,13 @@ export function cmsMedia(restaurant: string) {
     );
     if (
       usage.count >= 500 ||
-      usage.total + file.size >
+      usage.total + optimized.data.length >
         Number(process.env.CMS_STORAGE_LIMIT_MB || 512) * 1024 * 1024
     )
       throw new Error("Limite de la médiathèque atteinte.");
-    let data = Buffer.from(await file.arrayBuffer()),
-      mime = file.type,
-      width: number | null = null,
-      height: number | null = null;
+    const { data, mime, width, height, kind } = optimized;
     const id = randomUUID();
-    let name: string, kind: "image" | "video";
-    if (["image/png", "image/jpeg", "image/webp"].includes(mime)) {
-      if (data.length > limits.imageBytes)
-        throw new Error("Image limitée à 8 Mo.");
-      const sharp = (await import("sharp")).default;
-      const output = await sharp(data, {
-        failOn: "error",
-        limitInputPixels: 40e6,
-      })
-        .rotate()
-        .resize({
-          width: 2000,
-          height: 2000,
-          fit: "inside",
-          withoutEnlargement: true,
-        })
-        .webp({ quality: 82 })
-        .toBuffer({ resolveWithObject: true });
-      data = output.data;
-      width = output.info.width;
-      height = output.info.height;
-      mime = "image/webp";
-      name = `${id}.webp`;
-      kind = "image";
-    } else if (
-      (mime === "video/mp4" && data.subarray(4, 8).toString() === "ftyp") ||
-      (mime === "video/webm" &&
-        data.subarray(0, 4).equals(Buffer.from([26, 69, 223, 163])))
-    ) {
-      if (data.length > limits.videoBytes)
-        throw new Error("Vidéo limitée à 40 Mo.");
-      name = `${id}.${mime === "video/mp4" ? "mp4" : "webm"}`;
-      kind = "video";
-    } else throw new Error("Formats acceptés : JPG, PNG, WebP, MP4 et WebM.");
+    const name = `${id}.${optimized.extension}`;
     if (!data.length) throw new Error("Fichier vide.");
     if (demoEnabled()) {
       const target = localFile(restaurant, name);
@@ -137,7 +103,7 @@ export function cmsMedia(restaurant: string) {
         data.length,
         width,
         height,
-        file.name.slice(0, 200),
+        optimized.originalName,
         actor,
       ],
     );
@@ -148,6 +114,8 @@ export function cmsMedia(restaurant: string) {
       url: mediaUrl(name),
       mime,
       size: data.length,
+      originalSize: optimized.originalSize,
+      savedBytes: Math.max(0, optimized.originalSize - data.length),
       width,
       height,
     };
@@ -175,11 +143,26 @@ export function cmsMedia(restaurant: string) {
         return { status: 416, size: row.size, type: row.mime };
     }
     let data: Uint8Array;
-    if (demoEnabled())
-      data = new Uint8Array(
-        (await readFile(localFile(restaurant, file))).subarray(start, end + 1),
-      );
-    else {
+    if (demoEnabled()) {
+      const handle = await open(localFile(restaurant, file), "r");
+      try {
+        const buffer = Buffer.alloc(end - start + 1);
+        let offset = 0;
+        while (offset < buffer.length) {
+          const { bytesRead } = await handle.read(
+            buffer,
+            offset,
+            buffer.length - offset,
+            start + offset,
+          );
+          if (!bytesRead) throw new Error("Média incomplet.");
+          offset += bytesRead;
+        }
+        data = buffer;
+      } finally {
+        await handle.close();
+      }
+    } else {
       const result = await storage().send(
         new GetObjectCommand({
           Bucket: process.env.S3_BUCKET,

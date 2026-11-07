@@ -1,4 +1,6 @@
 "use client";
+import { TemplateExtras } from "./template-extras";
+import "./templates.css";
 import { ProductRecommendations } from "../product-recommendations";
 import { ProductDetails } from "../product-details";
 import { productPath } from "@/lib/product-pages";
@@ -96,6 +98,7 @@ const badgeIcons = {
 export type PreviewMessage =
   | { type: "cms:config"; config: SiteConfig; page?: string }
   | { type: "cms:select"; id: string | null }
+  | { type: "cms:drop"; files: File[]; id: string | null }
   | { type: "cms:ready" }
   | { type: "cms:pick"; id: string };
 function linePrice(p: Product | undefined, l: Line) {
@@ -179,12 +182,35 @@ export function DonutStore({
         send({ type: "cms:pick", id: block.getAttribute("data-cms-section")! });
       }
     };
+    const onDragOver = (event: DragEvent) => {
+      if (!event.dataTransfer?.types.includes("Files")) return;
+      event.preventDefault();
+      event.dataTransfer.dropEffect = "copy";
+    };
+    const onDrop = (event: DragEvent) => {
+      if (!event.dataTransfer?.files.length) return;
+      event.preventDefault();
+      event.stopPropagation();
+      const target =
+        event.target instanceof Element
+          ? event.target.closest("[data-cms-section]")
+          : null;
+      send({
+        type: "cms:drop",
+        files: Array.from(event.dataTransfer.files),
+        id: target?.getAttribute("data-cms-section") || null,
+      });
+    };
+    document.addEventListener("dragover", onDragOver);
+    document.addEventListener("drop", onDrop);
     window.addEventListener("message", onMessage);
     document.addEventListener("click", onClick, true);
     send({ type: "cms:ready" });
     return () => {
       window.removeEventListener("message", onMessage);
       document.removeEventListener("click", onClick, true);
+      document.removeEventListener("dragover", onDragOver);
+      document.removeEventListener("drop", onDrop);
     };
   }, [preview]);
   const [data, setData] = useState<Data | null>(initialData),
@@ -782,7 +808,7 @@ export function DonutStore({
               >
                 {data?.settings.phone || ""} <ArrowUpRight size={18} />
               </a>
-              {p.burger && (
+              {p.burger && !config.theme.presentation && (
                 <button
                   type="button"
                   className={`donut-burger-stack ${burgerOpen ? "is-open" : ""}`}
@@ -1245,9 +1271,11 @@ export function DonutStore({
                         : "Vos points fidélité sont crédités dès le retrait"}
                     </b>
                     <small>
-                      Partagez votre lien de parrainage : vos amis reçoivent
-                      un cadeau, vous gagnez des points.{" "}
-                      <Link href="/compte?onglet=parrainage">Partager et gagner →</Link>
+                      Partagez votre lien de parrainage : vos amis reçoivent un
+                      cadeau, vous gagnez des points.{" "}
+                      <Link href="/compte?onglet=parrainage">
+                        Partager et gagner →
+                      </Link>
                     </small>
                   </span>
                 </div>
@@ -1383,7 +1411,16 @@ export function DonutStore({
     );
   }
   return (
-    <div className={`donut-site${preview ? " is-cms-preview" : ""}`}>
+    <div
+      className={`donut-site${preview ? " is-cms-preview" : ""}`}
+      data-template={config.theme.presentation?.layout}
+      data-sticky-header={config.theme.presentation?.stickyHeader}
+      data-motion={config.theme.presentation?.motion}
+      data-action-bar={
+        config.theme.presentation?.stickyAction !== undefined &&
+        config.theme.presentation.stickyAction !== "none"
+      }
+    >
       {demo && (
         <aside className="tenant-demo-banner">
           Démonstration locale · données fictives · aucun paiement réel.
@@ -1610,6 +1647,13 @@ export function DonutStore({
             </p>
           )}
         </footer>
+      )}
+      {!["checkout", "compte", "suivi"].includes(route || "") && (
+        <TemplateExtras
+          presentation={config.theme.presentation}
+          shopEnabled={shopEnabled}
+          cartVisible={count > 0 && shopEnabled}
+        />
       )}
       <CookieConsent onChange={setExternalMediaAllowed} />
       {toast && (

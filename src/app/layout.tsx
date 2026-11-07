@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { ServiceWorkerUpdate } from "@/components/service-worker-update";
 import { demoEnabled } from "@/lib/database/db";
 import type { Metadata } from "next";
 import { headers } from "next/headers";
@@ -30,6 +31,7 @@ export default async function Layout({
   return (
     <html lang={lang}>
       <body>
+        <ServiceWorkerUpdate />
         {children}
         {demoEnabled() && (
           <Link

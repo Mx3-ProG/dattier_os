@@ -98,6 +98,7 @@ export function GuidePage({ demo }: { demo: boolean }) {
     { id: "roles", label: "Qui fait quoi" },
     { id: "cuisine-ia", label: "Cuisine IA, votre assistant" },
     ...chapters.map((c) => ({ id: c.id, label: c.title })),
+    { id: "evolutions", label: "Évolutions et maintenance" },
     { id: "glossaire", label: "Glossaire" },
     { id: "questions", label: "Questions fréquentes" },
   ];
@@ -310,11 +311,11 @@ export function GuidePage({ demo }: { demo: boolean }) {
               <h2>Cuisine IA, votre second qui ne dort jamais</h2>
               <p>
                 Cuisine IA est l’assistant intégré au poste de travail et à
-                l’administration. Vous lui parlez comme à un membre de
-                l’équipe, à l’écrit ou à la voix : il comprend le service en
-                cours, prépare les actions et vous propose la suite logique.
-                Ouvrez-le avec le bouton <b>Cuisine IA</b> en haut du poste, le
-                bouton flottant, ou <kbd>⌘K</kbd> / <kbd>Ctrl K</kbd>.
+                l’administration. Vous lui parlez comme à un membre de l’équipe,
+                à l’écrit ou à la voix : il comprend le service en cours,
+                prépare les actions et vous propose la suite logique. Ouvrez-le
+                avec le bouton flottant <b>Cuisine IA</b> en bas à droite, ou{" "}
+                <kbd>⌘K</kbd> / <kbd>Ctrl K</kbd>.
               </p>
               <div className="guide-cards">
                 <article>
@@ -341,8 +342,8 @@ export function GuidePage({ demo }: { demo: boolean }) {
                   <h3>En temps réel, à la voix</h3>
                   <p>
                     Activez le micro : Cuisine IA écoute, répond à voix haute et
-                    attend votre « oui » pour exécuter. Les mains restent sur
-                    le service.
+                    attend votre « oui » pour exécuter. Les mains restent sur le
+                    service.
                   </p>
                 </article>
               </div>
@@ -357,7 +358,9 @@ export function GuidePage({ demo }: { demo: boolean }) {
                   Vous confirmez d’un clic ou d’un « oui ». Le serveur revérifie
                   vos droits, les stocks et les étapes, comme pour toute action.
                 </li>
-                <li>Cuisine IA vous propose la suite : suivi, règlement, table.</li>
+                <li>
+                  Cuisine IA vous propose la suite : suivi, règlement, table.
+                </li>
               </ol>
               <h3 className="guide-sub">Crédits</h3>
               <p>
@@ -442,6 +445,52 @@ export function GuidePage({ demo }: { demo: boolean }) {
                 </section>
               );
             })}
+
+            <section id="evolutions" className="guide-section">
+              <span className="landing-eyebrow">Le produit dans la durée</span>
+              <h2>Évolutions et maintenance</h2>
+              <p>
+                Studio ATS assure le développement, la maintenance et les
+                corrections d’atacuisine. Voici les repères de la version
+                présentée dans ce guide.
+              </p>
+              <div className="guide-cards">
+                <article>
+                  <Sparkles aria-hidden />
+                  <h3>Cuisine IA</h3>
+                  <p>
+                    Un assistant à l’écrit ou à la voix, qui prépare les actions
+                    et vous laisse les confirmer. Les crédits et leur
+                    utilisation sont expliqués dans ce guide.
+                  </p>
+                  <a href="#cuisine-ia">Comprendre Cuisine IA →</a>
+                </article>
+                <article>
+                  <Building2 aria-hidden />
+                  <h3>Votre site, à votre rythme</h3>
+                  <p>
+                    Le studio de création propose des modèles, l’ajout de médias
+                    et un aperçu des pages avant publication, selon votre
+                    forfait.
+                  </p>
+                  <Link href="/#modules">Retrouver les possibilités →</Link>
+                </article>
+                <article>
+                  <ShieldCheck aria-hidden />
+                  <h3>Maintenance et prochaines mises à jour</h3>
+                  <p>
+                    Aucun calendrier daté des prochaines livraisons n’est publié
+                    ici pour le moment. Les fonctionnalités présentées ne
+                    constituent pas une promesse de livraison future.
+                  </p>
+                  <Link href="/#contact">Contact et questions →</Link>
+                </article>
+              </div>
+              <Link className="guide-practice" href="/">
+                Revenir à l’accueil et aux offres{" "}
+                <ArrowRight size={15} aria-hidden />
+              </Link>
+            </section>
 
             <section id="glossaire" className="guide-section">
               <span className="landing-eyebrow">Vocabulaire</span>

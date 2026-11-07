@@ -5,13 +5,18 @@ import "./landing.css";
 export const dynamic = "force-dynamic";
 export function generateMetadata(): Metadata {
   return {
-    title: "atacuisine · Tout votre restaurant dans un seul OS",
+    title: "atacuisine · Moins de gestion, plus de passion",
     description:
-      "Commandes, salle, réservations, stocks, équipe, site web et boutique : le logiciel de gestion des restaurateurs, avec des données cloisonnées par structure.",
+      "Retrouvez du temps pour votre restaurant et pour vous. Service, équipe, site web et Cuisine IA : un quotidien plus simple, dès 39 € HT par mois.",
     robots: { index: !demoEnabled(), follow: !demoEnabled() },
   };
 }
 export default function Page() {
   const demo = demoEnabled();
-  return <Landing demo={demo} demoHref={demo ? "/demo" : process.env.ATACUISINE_PUBLIC_DEMO_URL} />;
+  return (
+    <Landing
+      demo={demo}
+      demoHref={demo ? "/demo" : process.env.ATACUISINE_PUBLIC_DEMO_URL}
+    />
+  );
 }

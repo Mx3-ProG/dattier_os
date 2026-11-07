@@ -8,6 +8,7 @@ RUN npm run build -- --webpack
 FROM node:22-bookworm-slim AS runtime
 ENV NODE_ENV=production NEXT_TELEMETRY_DISABLED=1
 WORKDIR /app
+RUN apt-get update && apt-get install -y --no-install-recommends ffmpeg && rm -rf /var/lib/apt/lists/*
 RUN groupadd --gid 1001 atacuisine && useradd --uid 1001 --gid atacuisine --create-home atacuisine
 COPY --from=build --chown=atacuisine:atacuisine /app .
 USER atacuisine

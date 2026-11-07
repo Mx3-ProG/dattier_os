@@ -224,7 +224,7 @@ export function RestaurantHub({
                       onChange={(e) => setEmail(e.target.value)}
                     />
                   </label>
-                  <fieldset>
+                  <fieldset className="admin-role-options">
                     <legend>Rôles dans cet établissement</legend>
                     {roleOptions.map((role) => (
                       <label className="inline" key={role}>
@@ -239,7 +239,7 @@ export function RestaurantHub({
                             )
                           }
                         />
-                        {role}
+                        {roleLabels[role as Role]}
                       </label>
                     ))}
                   </fieldset>

@@ -3,6 +3,7 @@ import { SiteEditor } from "./index";
 import { TenantSiteProvider } from "../cms-site/context";
 import type { Role } from "@/lib/permissions";
 import { RestaurantAdminShell } from "@/components/platform/restaurant-admin-shell";
+
 export function WebsiteStudio({
   restaurant,
   restaurantName,
@@ -16,6 +17,7 @@ export function WebsiteStudio({
   userRoles: Role[];
   demo: boolean;
 }) {
+  const dashboard = `/dashboard?restaurant=${encodeURIComponent(restaurant)}`;
   return (
     <TenantSiteProvider restaurant={restaurant} demo={demo}>
       <RestaurantAdminShell
@@ -24,25 +26,15 @@ export function WebsiteStudio({
         plan={plan}
         userRoles={userRoles}
         activeModule="site"
+        demo={demo}
       >
-        <div className="website-studio-content">
-          <div className="studio-heading">
-            <h1>Mon site web</h1>
-            {demo && (
-              <p>
-                Démonstration locale · modifications propres à cet
-                établissement.
-              </p>
-            )}
-          </div>
-          <SiteEditor
-            liveDataHref={(module) =>
-              module === "menu"
-                ? `/dashboard?restaurant=${restaurant}&module=menu`
-                : `/restaurant/${restaurant}?module=shop${module === "reviews" ? "#avis" : "#reglages-commande"}`
-            }
-          />
-        </div>
+        <SiteEditor
+          liveDataHref={(module) =>
+            module === "menu"
+              ? `${dashboard}&module=menu`
+              : `/restaurant/${restaurant}?module=shop${module === "reviews" ? "#avis" : "#reglages-commande"}`
+          }
+        />
       </RestaurantAdminShell>
     </TenantSiteProvider>
   );

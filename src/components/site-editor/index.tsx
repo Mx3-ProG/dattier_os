@@ -1,9 +1,11 @@
 "use client";
+import { PresentationFields } from "./presentation-fields";
 import { UtensilsLoader } from "@/components/brand/utensils";
 import { useTenantSite } from "../cms-site/context";
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
+  Upload,
   ArrowDown,
   BookOpen,
   ArrowUp,
@@ -58,6 +60,10 @@ import {
   plain,
   type PlaceholderContext,
 } from "@/features/cms/text";
+import { SiteHome, TemplatesPanel } from "./templates";
+import { applySiteTemplate } from "@/features/cms/templates";
+import { uploadMedia, mediaSize, mediaAccept } from "./media-upload";
+import { insertDroppedMedia } from "@/features/cms/media-drop";
 import { StudioGuide } from "./guide";
 import type { PreviewMessage } from "../cms-site/store";
 
@@ -134,8 +140,9 @@ export function SiteEditor({
 }: {
   liveDataHref: (module: string) => string;
 }) {
-  const { request: fetch, base, restaurant } = useTenantSite();
+  const { request: fetch, base, restaurant, demo } = useTenantSite();
   const UNSAVED_KEY = `atacuisine-cms-unsaved:${restaurant}`;
+  const [view, setView] = useState<"home" | "shop" | "editor">("home");
   const [meta, setMeta] = useState<EditorState | null>(null),
     [config, setConfigState] = useState<SiteConfig | null>(null),
     [saved, setSaved] = useState<SiteConfig | null>(null),
@@ -364,6 +371,12 @@ export function SiteEditor({
   }, []);
   const previewPage =
     config?.pages[pageKey]?.kind === "custom" ? pageKey : undefined;
+  const dropHandler = useRef<(files: File[], target: string | null) => void>(
+    () => {},
+  );
+  const mediaLock = useRef(false);
+  const [mediaStatus, setMediaStatus] = useState("");
+  const [mediaBusy, setMediaBusy] = useState(false);
   const selectedRef = useRef(selected);
   useEffect(() => {
     selectedRef.current = selected;
@@ -385,6 +398,9 @@ export function SiteEditor({
           });
         send({ type: "cms:select", id: selectedRef.current });
         setReady(true);
+      }
+      if (event.data?.type === "cms:drop" && Array.isArray(event.data.files)) {
+        dropHandler.current(event.data.files, event.data.id);
       }
       if (event.data?.type === "cms:pick") {
         const id = event.data.id;
@@ -419,7 +435,7 @@ export function SiteEditor({
     );
     observer.observe(stage.current);
     return () => observer.disconnect();
-  }, [editorLoaded]);
+  }, [editorLoaded, view]);
 
   const page = config?.pages[pageKey];
   const isAdmin = meta?.role === "SUPER_ADMIN";
@@ -461,6 +477,70 @@ export function SiteEditor({
           (s.lock === 2 && registry[s.type].partialFields.includes(field))),
     };
   }, [page, isAdmin]);
+
+  useEffect(() => {
+    dropHandler.current = async (files, target) => {
+      if (mediaLock.current || !configRef.current || !meta) return;
+      if (!files.length || files.length > 10) {
+        setError("Déposez de 1 à 10 fichiers à la fois.");
+        return;
+      }
+      mediaLock.current = true;
+      setMediaBusy(true);
+      setError("");
+      let inserted = 0;
+      if (files.length > 1) target = null;
+      try {
+        for (const file of files) {
+          if (!(file instanceof File)) throw new Error("Fichier invalide.");
+          const id = newId(pageKey, "media");
+          const kind = file.type.startsWith("image/") ? "image" : "video";
+          // Check the destination before uploading; never create an unusable upload knowingly.
+          insertDroppedMedia(
+            structuredClone(configRef.current!),
+            pageKey,
+            target,
+            { kind, url: "" },
+            meta.settings.allowedTypes,
+            meta.role === "SUPER_ADMIN",
+            id,
+          );
+          setMediaStatus(
+            `${inserted + 1}/${files.length} · Envoi et compression de ${file.name}…`,
+          );
+          const media = await uploadMedia(fetch, file);
+          update((c) => {
+            const selectedId = insertDroppedMedia(
+              c,
+              pageKey,
+              target,
+              media,
+              meta.settings.allowedTypes,
+              meta.role === "SUPER_ADMIN",
+              id,
+            );
+            setSelected(selectedId);
+          });
+          inserted++;
+          // A batch forms successive blocks, instead of replacing the same image repeatedly.
+          if (files.length > 1) target = null;
+          setMediaStatus(
+            `${inserted}/${files.length} · ${mediaSize(media.originalSize)} → ${mediaSize(media.size)} · ${mediaSize(media.savedBytes)} économisés`,
+          );
+        }
+        setNotice(
+          `${inserted} média(s) optimisé(s) ajouté(s) au brouillon. Pensez aux textes alternatifs, puis enregistrez.`,
+        );
+      } catch (e) {
+        setError(
+          `${(e as Error).message}${inserted ? ` ${inserted} média(s) déjà ajouté(s) au brouillon.` : ""}`,
+        );
+      } finally {
+        mediaLock.current = false;
+        setMediaBusy(false);
+      }
+    };
+  }, [fetch, meta, pageKey, update]);
 
   if (!meta || !config || !page)
     return error ? (
@@ -559,8 +639,91 @@ export function SiteEditor({
     setPanels("left");
   };
 
+  if (view === "home")
+    return (
+      <SiteHome
+        dirty={dirty}
+        shop={() => setView("shop")}
+        edit={() => {
+          setReady(false);
+          setView("editor");
+        }}
+      />
+    );
+
+  if (view === "shop")
+    return (
+      <TemplatesPanel
+        demo={demo}
+        dirty={dirty}
+        back={() => setView("home")}
+        apply={(template, composition) => {
+          commit(applySiteTemplate(config, template, composition));
+          setPageKey("home");
+          setSelected(null);
+          setReady(false);
+          setView("editor");
+          setNotice(
+            `${template.name} appliqué au brouillon. Personnalisez votre site avant de publier.`,
+          );
+        }}
+      />
+    );
+
   return (
-    <div className={`site-editor panels-${panels}`}>
+    <div
+      className={`site-editor panels-${panels}`}
+      onDragOver={(e) => {
+        if (e.dataTransfer.types.includes("Files")) {
+          e.preventDefault();
+          e.dataTransfer.dropEffect = mediaBusy ? "none" : "copy";
+        }
+      }}
+      onDrop={(e) => {
+        if (e.dataTransfer.files.length) {
+          e.preventDefault();
+          dropHandler.current(Array.from(e.dataTransfer.files), selected);
+        }
+      }}
+    >
+      <div className="studio-editor-heading">
+        <div>
+          <span className="shop-eyebrow">VOTRE ATELIER DE CRÉATION</span>
+          <h1>Personnaliser mon site</h1>
+        </div>
+        <Button variant="secondary" onClick={() => setView("shop")}>
+          <Layers size={16} />
+          Boutique de modèles
+        </Button>
+      </div>
+      <details className="studio-media-bar" aria-busy={mediaBusy}>
+        <summary>
+          <Upload size={17} /> Photos et vidéos{" "}
+          <span>Glisser-déposer et compression automatique</span>
+        </summary>
+        <label>
+          <Upload size={17} />
+          <span>
+            {mediaBusy ? "Compression en cours…" : "Importer des médias"}
+          </span>
+          <input
+            type="file"
+            multiple
+            accept={mediaAccept}
+            disabled={mediaBusy}
+            onChange={(e) => {
+              if (e.target.files)
+                dropHandler.current(Array.from(e.target.files), selected);
+              e.target.value = "";
+            }}
+          />
+        </label>
+        <small>
+          Photos : 32 Mo · Vidéos : 100 Mo / 2 min · Seules les versions
+          optimisées sont stockées.
+        </small>
+        {mediaStatus && <p role="status">{mediaStatus}</p>}
+      </details>
       <datalist id="site-internal-links">
         {Object.entries(config.pages)
           .filter(
@@ -577,7 +740,11 @@ export function SiteEditor({
         <option value="#specialites">Produits de la page</option>
       </datalist>
 
-      <div className="site-quick-actions" role="group" aria-label="Créer votre site">
+      <div
+        className="site-quick-actions"
+        role="group"
+        aria-label="Créer votre site"
+      >
         <Button variant="secondary" onClick={() => openTab("pages")}>
           <FileText size={16} /> Gérer les pages
         </Button>
@@ -1570,6 +1737,14 @@ function ThemePanel({
   const checks = contrastChecks(t);
   return (
     <div className="site-form">
+      <PresentationFields
+        value={t.presentation}
+        change={(value) =>
+          update((c) => {
+            c.theme.presentation = value;
+          })
+        }
+      />
       <h4>Couleurs</h4>
       {colorLabels.map(([key, label]) => (
         <label className="site-color" key={key}>
@@ -1717,7 +1892,7 @@ function ThemePanel({
         onClick={() =>
           update((c) => {
             const colors = c.theme.colors;
-            c.theme = { ...structuredClone(defaults.theme), colors };
+            c.theme = { ...structuredClone(defaults.theme), colors, presentation: c.theme.presentation };
           })
         }
       >

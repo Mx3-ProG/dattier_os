@@ -6,6 +6,7 @@ import {
   json,
   failure,
 } from "@/features/platform/http";
+import { optimizeMedia, reserveMediaJob } from "@/features/cms/media-optimizer";
 import { cmsMedia, limits } from "@/features/cms/media";
 import { website } from "@/features/cms/service";
 import { log } from "@/features/orders/service";
@@ -13,12 +14,14 @@ async function routePOST(
   req: NextRequest,
   c: { params: Promise<{ restaurant: string }> },
 ) {
+  let release: (() => void) | undefined;
   try {
     await assertOrigin(req);
     const { restaurant } = await c.params;
     await authenticated(restaurant, (db, user) =>
       website(restaurant).siteScope(db, user),
     );
+    release = reserveMediaJob();
     const max = limits.videoBytes + 100000;
     const reader = req.body?.getReader();
     if (!reader) throw new Error("Fichier absent.");
@@ -41,13 +44,14 @@ async function routePOST(
       }).formData(),
       file = form.get("file");
     if (!(file instanceof File)) throw new Error("Ajoutez un fichier.");
+    const optimized = await optimizeMedia(file);
     return json(
       await authenticated(restaurant, async (db, user) => {
         await db.exec("SET LOCAL ROLE atacuisine_app");
         await website(restaurant).siteScope(db, user);
         const saved = await cmsMedia(restaurant).saveSiteMedia(
           db,
-          file,
+          optimized,
           user.id,
         );
         await log(db, restaurant, user.id, "Site : média importé", saved.id);
@@ -56,6 +60,8 @@ async function routePOST(
     );
   } catch (e) {
     return failure(e);
+  } finally {
+    release?.();
   }
 }
 
@@ -63,3 +69,6 @@ export const POST = withRequestContext(
   "/api/cms/[restaurant]/media",
   routePOST,
 );
+
+export const runtime = "nodejs";
+export const maxDuration = 240;

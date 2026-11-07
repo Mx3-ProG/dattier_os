@@ -578,3 +578,10 @@
     animation: none;
   }
 }
+
+.cia-settings { display: flex; flex-direction: column; gap: 14px; }
+.cia-settings h2 { font-size: 20px; margin: 0; }
+.cia-settings p { font-size: 13px; line-height: 1.6; margin: 0; }
+.cia-settings label { font-size: 14px; font-weight: 600; }
+.cia-settings select { width: 100%; min-width: 0; padding: 12px; border: 1px solid #d6d3d1; border-radius: 10px; background: white; color: #292524; }
+.cia-settings input[type="range"] { width: 100%; min-height: 32px; }

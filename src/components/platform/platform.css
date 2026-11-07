@@ -689,3 +689,82 @@
   }
   .admin-dock-primary { flex: 1 1 0; }
 }
+
+/* Shared workspace frame for every restaurant administration module. */
+.restaurant-workspace .workspace-main { min-width: 0; }
+.restaurant-workspace .restaurant-switch strong { display: block; margin-top: 8px; }
+.restaurant-nav-link { display: flex; align-items: center; gap: 12px; padding: 11px 14px; border-radius: 8px; margin: 3px 0; color: #626b60; font-size: 13px; }
+.restaurant-nav-link svg { flex-shrink: 0; }
+.restaurant-nav-link:hover { background: #f2f3ec; }
+.restaurant-nav-link.active { background: #e8eddf; color: #344d3e; font-weight: 700; }
+.restaurant-breadcrumb, .restaurant-back-workspace { display: flex; gap: 12px; align-items: center; }
+.restaurant-breadcrumb > span { color: #7c8179; }
+.restaurant-breadcrumb strong { overflow-wrap: anywhere; }
+.restaurant-back-workspace { color: #344d3e; font-size: 12px; flex-shrink: 0; }
+.restaurant-workspace .restaurant-workspace-content { width: 100%; max-width: 1480px; min-height: auto; margin: 0 auto; padding: 36px clamp(18px, 3vw, 48px) 72px; background: transparent; }
+.restaurant-page-heading { margin: 10px 0 30px; }
+.restaurant-page-heading > span { color: #8a7258; font-size: 10px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; }
+.restaurant-workspace .restaurant-page-heading h1 { font-family: Georgia, serif; font-weight: 400; letter-spacing: -1.3px; font-size: clamp(30px, 3.2vw, 44px); line-height: 1.15; margin: 12px 0; }
+.restaurant-page-heading p { color: #73786c; font-size: 14px; max-width: 740px; margin: 0; }
+.restaurant-workspace-content.platform section { border-color: #e4e6dc; border-radius: 14px; padding: 26px; margin: 20px 0; box-shadow: 0 2px 8px #283b3203; }
+.restaurant-workspace-content.platform article { background: #fafbf7; border-color: #e5e8de; }
+.restaurant-workspace-content.platform h2 { font-size: 18px; margin-top: 0; color: #344d3e; }
+.restaurant-workspace-content.platform label { font-size: 13px; color: #4c594c; }
+.restaurant-workspace-content.platform :is(input, textarea, select) { border-color: #d9dfd2; border-radius: 9px; padding: 11px 12px; }
+.restaurant-workspace-content.platform :is(input, textarea, select):focus-visible { outline: 2px solid #879b72; outline-offset: 2px; }
+.restaurant-workspace-content.platform :is(button, .button) { border-radius: 9px; font-size: 12px; font-weight: 600; }
+.restaurant-workspace-content.platform table { font-size: 12px; }
+.restaurant-workspace-content.platform th { color: #7c8475; font-size: 10px; letter-spacing: .04em; }
+.restaurant-workspace-content.platform fieldset { border: 1px solid #e2e6da; border-radius: 10px; padding: 16px; }
+.restaurant-workspace-content.platform .inline input { width: auto; }
+.restaurant-workspace-content .security-center :is(.security-unavailable, .security-health small) { color: #707b68; }
+.restaurant-workspace-content .security-center .security-dot.ok { background: #6c8d5e; }
+.restaurant-demo-note { padding: 12px 32px; color: #7c8179; font-size: 11px; }
+.admin-sidebar-close { display: none; }
+body:has(.restaurant-workspace) > .demo-purchase-link { display: none; }
+.restaurant-workspace :focus-visible { outline: 2px solid #879b72; outline-offset: 3px; }
+@media (max-width: 850px) {
+  .restaurant-workspace .admin-sidebar-close { display: grid; position: absolute; top: 14px; right: 8px; background: #f0f3ea; }
+  .restaurant-workspace .sidebar > .brand { padding-right: 25px; }
+  .restaurant-back-workspace { display: none; }
+  .restaurant-breadcrumb { gap: 8px; font-size: 12px; }
+  .restaurant-workspace .restaurant-workspace-content { padding: 24px 16px 72px; }
+}
+@media (max-width: 600px) {
+  .restaurant-workspace-content.platform section { padding: 18px; }
+  .restaurant-workspace-content.platform table { display: block; max-width: 100%; overflow-x: auto; }
+  .restaurant-page-heading { margin-top: 0; margin-bottom: 24px; }
+}
+.restaurant-workspace-content .admin-role-options { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin-bottom: 18px; }
+.restaurant-workspace-content.platform .admin-role-options label.inline { display: flex; align-items: center; gap: 8px; margin: 0; padding: 10px; border: 1px solid #e3e8db; border-radius: 8px; background: #fafbf7; }
+.restaurant-workspace-content.platform .admin-role-options label:has(input:checked) { background: #edf2e5; border-color: #9cad87; }
+.restaurant-workspace-content.platform .admin-role-options input { margin: 0; accent-color: #344d3e; }
+/* Account landing uses the same workspace vocabulary as restaurant administration. */
+.account-logout { border-top: 1px solid #e9e9e1; padding: 14px 0; }
+.account-logout button { display: flex; align-items: center; gap: 10px; padding: 10px 14px; color: #687461; font-size: 12px; }
+.account-page-heading { display: flex; justify-content: space-between; align-items: center; gap: 24px; margin: 8px 0 28px; }
+.platform .account-page-heading { padding: 0; }
+.account-eyebrow { color: #8a7258; font-size: 10px; font-weight: 700; letter-spacing: .14em; }
+.platform .account-page-heading h1 { font-family: Georgia, serif; font-size: clamp(32px, 3.2vw, 44px); font-weight: 400; margin: 12px 0; }
+.account-page-heading p { margin: 0; color: #73786c; }
+.account-page-heading > .button { flex-shrink: 0; gap: 8px; }
+.account-overview { display: flex; gap: 28px; align-items: center; padding: 22px 24px; background: #edf0e6; border: 1px solid #e1e6d8; border-radius: 14px; margin-bottom: 28px; }
+.account-overview > div { display: flex; align-items: center; gap: 14px; flex-shrink: 0; }
+.account-overview strong { font-size: 23px; margin-right: 6px; }
+.account-overview p { margin: 0; color: #687461; font-size: 12px; }
+.account-home-content .organization-summary { background: #fff; padding: 18px 22px; }
+.account-home-content .organization-summary strong { display: block; }
+.account-home-content .organization-summary p { text-align: left; }
+.account-home-content .organization-summary .access-label { color: #8a927e; font-size: 9px; }
+.account-home-content .account-restaurants { margin: 24px 0; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.account-home-content.platform .account-restaurant-card { background: #fff; padding: 24px; margin: 0; border-radius: 14px; }
+.account-restaurant-identity { display: flex; align-items: center; justify-content: space-between; margin-bottom: 22px; }
+.account-restaurant-icon { padding: 12px; border-radius: 12px; background: #edf1e6; color: #536b44; display: flex; }
+.account-plan { background: #f1f4e9; color: #667a53; border-radius: 6px; padding: 5px 9px; font-size: 10px; }
+.account-home-content .account-restaurant-card h2 { font-size: 23px; font-family: Georgia, serif; font-weight: 400; margin-bottom: 8px; }
+.account-restaurant-card > p { font-size: 12px; color: #77816e; }
+.account-restaurant-card .actions { border-top: 1px solid #eceee5; margin-top: 24px; padding-top: 18px; font-size: 12px; }
+.account-restaurant-card .actions .button { width: 100%; gap: 10px; justify-content: space-between; }
+.account-home-content .add-restaurant-panel { scroll-margin-top: 95px; }
+body:has(.account-workspace) > .demo-purchase-link { display: none; }
+@media(max-width:700px) { .account-page-heading { flex-direction: column; align-items: flex-start; } .account-overview { align-items: flex-start; flex-direction: column; gap: 12px; } .account-home-content .account-restaurants { grid-template-columns: minmax(0,1fr); } .account-home-content .organization-summary { align-items: flex-start; flex-direction: column; gap: 5px; } }

@@ -4,27 +4,28 @@ import Link from "next/link";
 import {
   ArrowUpRight,
   BadgePercent,
-  ChevronRight,
+  Menu,
+  X,
+  Search,
+  Plug,
   Globe2,
   LayoutDashboard,
   Leaf,
   PackageCheck,
   ShieldCheck,
-  Sparkles,
   Store,
   UsersRound,
   Wifi,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
-import type { ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { can, roleLabels, type Role } from "@/lib/permissions";
 import {
   availableRestaurantModules,
   restaurantModuleHref,
   type RestaurantModuleId,
 } from "@/features/platform/admin-navigation";
-import { plans } from "@/features/platform/pricing";
-import { CuisineIa, openCuisineIa } from "@/components/assistant/cuisine-ia";
+import { CuisineIa } from "@/components/assistant/cuisine-ia";
 import "./platform.css";
 
 const moduleIcons = {
@@ -33,20 +34,27 @@ const moduleIcons = {
   loyalty: BadgePercent,
   site: Globe2,
   domains: Globe2,
-  seo: ArrowUpRight,
+  seo: Search,
   inventory: PackageCheck,
   security: ShieldCheck,
   reconciliation: Wifi,
-  integrations: PackageCheck,
+  integrations: Plug,
 } satisfies Record<RestaurantModuleId, LucideIcon>;
 
-const quickActions: RestaurantModuleId[] = [
-  "shop",
-  "team",
-  "inventory",
-  "site",
-  "security",
-];
+const moduleDescriptions: Partial<Record<RestaurantModuleId, string>> = {
+  team: "Les bonnes personnes, les bons accès. Organisez votre équipe en toute simplicité.",
+  shop: "Votre boutique, vos commandes en ligne et les retours de vos clients, au même endroit.",
+  loyalty: "Donnez à vos clients de bonnes raisons de revenir.",
+  domains:
+    "Votre restaurant, à sa propre adresse. Gérez les domaines de votre site.",
+  seo: "Aidez vos futurs clients à vous trouver sur les moteurs de recherche et les assistants IA.",
+  inventory: "Gardez une vue claire sur vos stocks et vos approvisionnements.",
+  security:
+    "Suivez la santé de votre établissement et protégez les accès de votre équipe.",
+  reconciliation:
+    "Retrouvez les opérations à vérifier après une utilisation hors ligne.",
+  integrations: "Reliez vos outils aux services de votre restaurant.",
+};
 
 export function RestaurantAdminShell({
   restaurant,
@@ -57,6 +65,7 @@ export function RestaurantAdminShell({
   pageTitle,
   contentClassName,
   children,
+  demo = false,
 }: {
   restaurant: string;
   restaurantName: string;
@@ -66,143 +75,155 @@ export function RestaurantAdminShell({
   pageTitle?: string;
   contentClassName?: string;
   children: ReactNode;
+  demo?: boolean;
 }) {
+  const [mobile, setMobile] = useState(false);
   const modules = availableRestaurantModules(userRoles, plan);
-  const quick = [...new Set([...(activeModule ? [activeModule] : []), ...quickActions])]
-    .filter((id) => modules.some((module) => module.id === id))
-    .slice(0, 4);
-  const planTitle = plans.find((item) => item.price === plan)?.title;
-
+  const dashboard = `/dashboard?restaurant=${encodeURIComponent(restaurant)}`;
+  const isSite = activeModule === "site";
+  const title = isSite
+    ? "Mon site web"
+    : modules.find((m) => m.id === activeModule)?.label ||
+      pageTitle ||
+      "Mon restaurant";
+  useEffect(() => {
+    if (!mobile) return;
+    const close = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setMobile(false);
+    };
+    window.addEventListener("keydown", close);
+    return () => window.removeEventListener("keydown", close);
+  }, [mobile]);
   return (
-    <main className="platform restaurant-admin-shell">
-      <header className="admin-shell-header">
-        <div className="admin-shell-top">
-          <Link className="admin-shell-brand" href="/platform">
-            <span className="admin-shell-mark">
-              <Leaf size={18} />
-            </span>
-            <span>atacuisine</span>
-          </Link>
-          <div className="admin-shell-context">
-            <Link href="/platform">Mes restaurants</Link>
-            <ChevronRight size={14} aria-hidden="true" />
-            <strong title={restaurantName}>{restaurantName}</strong>
-            {planTitle && <span className="admin-plan-badge">{planTitle}</span>}
-            {userRoles[0] && (
-              <span
-                className="admin-role-badge"
-                title={userRoles.map((role) => roleLabels[role]).join(" · ")}
-              >
-                {roleLabels[userRoles[0]]}
-                {userRoles.length > 1 ? ` +${userRoles.length - 1}` : ""}
-              </span>
-            )}
-          </div>
-          <div className="admin-shell-actions">
-            <button
-              type="button"
-              className="admin-shell-secondary admin-ia-link"
-              onClick={() => openCuisineIa()}
-            >
-              <Sparkles size={16} />
-              <span>Cuisine IA</span>
-            </button>
-            {plan >= 69 && (
-              <Link
-                className="admin-shell-secondary"
-                href={`/r/${encodeURIComponent(restaurant)}`}
-                target="_blank"
-              >
-                <Globe2 size={16} />
-                <span>Voir le site</span>
-                <ArrowUpRight size={13} />
-              </Link>
-            )}
-            {can(userRoles, "orders") && (
-              <Link
-                className="admin-shell-secondary admin-offline-link"
-                href={`/offline?restaurant=${encodeURIComponent(restaurant)}`}
-              >
-                <Wifi size={16} />
-                <span>Hors ligne</span>
-              </Link>
-            )}
-            <Link
-              className="admin-shell-primary"
-              href={`/dashboard?restaurant=${encodeURIComponent(restaurant)}`}
-            >
-              <LayoutDashboard size={16} />
-              <span>Poste de travail</span>
-            </Link>
-          </div>
+    <div
+      className={`workspace restaurant-workspace ${isSite ? "web-studio-workspace" : ""}`}
+    >
+      <aside
+        className={`sidebar ${mobile ? "open" : ""}`}
+        id="restaurant-navigation"
+      >
+        <Link href={dashboard} className="brand">
+          <span className="brand-mark">
+            <Leaf size={23} />
+          </span>
+          atacuisine
+        </Link>
+        <button
+          className="icon-button admin-sidebar-close"
+          aria-label="Fermer la navigation"
+          onClick={() => setMobile(false)}
+        >
+          <X size={18} />
+        </button>
+        <div className="restaurant-switch">
+          <small>VOTRE ÉTABLISSEMENT</small>
+          <strong>{restaurantName}</strong>
         </div>
-        <nav className="admin-module-nav" aria-label="Administration du restaurant">
-          <div className="admin-module-nav-inner">
-            {modules.map(({ id, label }) => {
-              const Icon = moduleIcons[id];
-              return (
-                <Link
-                  key={id}
-                  href={restaurantModuleHref(restaurant, id)}
-                  aria-current={activeModule === id ? "page" : undefined}
-                  title={label}
-                >
-                  <Icon size={15} aria-hidden="true" />
-                  <span>{id === "seo" ? "SEO et IA" : label}</span>
-                </Link>
-              );
-            })}
-          </div>
-        </nav>
-      </header>
-
-      <div className={`admin-shell-content ${contentClassName ?? ""}`}>
-        {pageTitle && (
-          <div className="admin-page-heading">
-            <span>{restaurantName} · {userRoles.map((role) => roleLabels[role]).join(" · ")}</span>
-            <h1>{pageTitle}</h1>
-          </div>
-        )}
-        {children}
-      </div>
-
-      <nav className="admin-action-dock" aria-label="Raccourcis rapides">
-        <div className="admin-action-dock-inner">
-          <Link className="admin-dock-item" href="/platform">
-            <Store size={18} aria-hidden="true" />
-            <span>Restaurants</span>
+        <nav aria-label="Navigation du restaurant">
+          <span className="nav-group">POSTE DE TRAVAIL</span>
+          <Link className="restaurant-nav-link" href={dashboard}>
+            <LayoutDashboard size={18} />
+            Vue d’ensemble
           </Link>
-          {quick.map((id) => {
-            const moduleInfo = modules.find((candidate) => candidate.id === id)!;
+          <span className="nav-group">MON RESTAURANT</span>
+          {modules.map(({ id, label }) => {
             const Icon = moduleIcons[id];
-            const label =
-              id === "shop"
-                ? "Commandes"
-                : id === "inventory"
-                  ? "Stocks"
-                  : moduleInfo.label;
             return (
               <Link
-                className="admin-dock-item"
                 key={id}
+                className={`restaurant-nav-link ${activeModule === id ? "active" : ""}`}
                 href={restaurantModuleHref(restaurant, id)}
                 aria-current={activeModule === id ? "page" : undefined}
+                onClick={() => setMobile(false)}
               >
-                <Icon size={18} aria-hidden="true" />
-                <span>{label}</span>
+                <Icon size={18} />
+                <span>{id === "site" ? "Mon site web" : label}</span>
               </Link>
             );
           })}
-          <Link
-            className="admin-dock-item admin-dock-primary"
-            href={`/dashboard?restaurant=${encodeURIComponent(restaurant)}`}
-          >
-            <LayoutDashboard size={18} aria-hidden="true" />
-            <span>Poste de travail</span>
+          <span className="nav-group">MON ESPACE</span>
+          <Link className="restaurant-nav-link" href="/platform">
+            <Store size={18} />
+            Mes restaurants
           </Link>
+          {can(userRoles, "orders") && (
+            <Link
+              className="restaurant-nav-link"
+              href={`/offline?restaurant=${encodeURIComponent(restaurant)}`}
+            >
+              <Wifi size={18} />
+              Mode hors ligne
+            </Link>
+          )}
+        </nav>
+        {plan >= 69 && (
+          <Link
+            href={`/r/${encodeURIComponent(restaurant)}`}
+            target="_blank"
+            className="public-link"
+          >
+            <Globe2 size={17} />
+            Voir le site public
+            <ArrowUpRight size={16} />
+          </Link>
+        )}
+        <div className="sidebar-profile">
+          <span className="avatar">{restaurantName.slice(0, 2)}</span>
+          <div>
+            <b>{restaurantName}</b>
+            <small>{userRoles.map((r) => roleLabels[r]).join(" · ")}</small>
+          </div>
         </div>
-      </nav>
-      <CuisineIa restaurant={restaurant} docked />
-    </main>
+      </aside>
+      {mobile && (
+        <button
+          className="sidebar-scrim"
+          aria-label="Fermer la navigation"
+          onClick={() => setMobile(false)}
+        />
+      )}
+      <div className="workspace-main">
+        <header className="topbar">
+          <div className="restaurant-breadcrumb">
+            <button
+              className="icon-button mobile-toggle"
+              aria-label="Ouvrir la navigation"
+              aria-expanded={mobile}
+              aria-controls="restaurant-navigation"
+              onClick={() => setMobile(!mobile)}
+            >
+              <Menu size={20} />
+            </button>
+            <span>Mon restaurant</span>
+            <span>/</span>
+            <strong>{title}</strong>
+          </div>
+          <Link className="restaurant-back-workspace" href={dashboard}>
+            Poste de travail
+            <ArrowUpRight size={15} />
+          </Link>
+        </header>
+        <main
+          className={`restaurant-workspace-content ${isSite ? "studio-main" : "platform"} ${contentClassName || ""}`}
+        >
+          {!isSite && (
+            <div className="restaurant-page-heading">
+              <span>{restaurantName} · MON RESTAURANT</span>
+              <h1>{title}</h1>
+              {activeModule && moduleDescriptions[activeModule] && (
+                <p>{moduleDescriptions[activeModule]}</p>
+              )}
+            </div>
+          )}
+          {children}
+        </main>
+        {demo && (
+          <footer className="restaurant-demo-note">
+            Démonstration · données fictives · aucun paiement réel
+          </footer>
+        )}
+      </div>
+      <CuisineIa restaurant={restaurant} />
+    </div>
   );
 }

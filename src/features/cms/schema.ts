@@ -42,7 +42,27 @@ export const fontIds = [
 ] as const;
 export type FontId = (typeof fontIds)[number];
 
+export const presentationSchema = z.object({
+  layout: z.enum([
+    "bistrot",
+    "jardin",
+    "comptoir",
+    "pause",
+    "signature",
+    "riviera",
+    "atelier",
+    "escale",
+  ]),
+  stickyHeader: z.boolean(),
+  stickyAction: z.enum(["none", "order", "reserve"]),
+  motion: z.boolean(),
+  surprise: z.boolean(),
+});
+export type Presentation = z.infer<typeof presentationSchema>;
+
 export const themeSchema = z.object({
+  // Optional for existing published sites: no migration or visual change required.
+  presentation: presentationSchema.optional(),
   colors: z.object({
     primary: hex,
     primaryDark: hex,
@@ -296,14 +316,23 @@ const sitePath = z
   .regex(/^\/(?!\/)[A-Za-z0-9._~\-/%]*$/, "Chemin au format /ancienne-page.");
 export const redirectSchema = z
   .object({
-    from: sitePath.refine((p) => p !== "/", "L’accueil ne peut pas être redirigé."),
+    from: sitePath.refine(
+      (p) => p !== "/",
+      "L’accueil ne peut pas être redirigé.",
+    ),
     to: z.union([
       sitePath,
-      z.string().max(500).regex(/^https:\/\/[^\s]+$/, "Adresse https attendue."),
+      z
+        .string()
+        .max(500)
+        .regex(/^https:\/\/[^\s]+$/, "Adresse https attendue."),
     ]),
     permanent: z.boolean(),
   })
-  .refine((r) => r.from !== r.to, "Une redirection ne peut pas pointer vers elle-même.");
+  .refine(
+    (r) => r.from !== r.to,
+    "Une redirection ne peut pas pointer vers elle-même.",
+  );
 export const businessTypes = [
   "Restaurant",
   "FastFoodRestaurant",
@@ -323,7 +352,12 @@ export const businessSchema = z.object({
   priceRange: text(10),
   /** Official profiles (social networks, directories) owned by the business. */
   sameAs: z
-    .array(z.string().max(300).regex(/^https:\/\/[^\s]+$/, "Adresse https attendue."))
+    .array(
+      z
+        .string()
+        .max(300)
+        .regex(/^https:\/\/[^\s]+$/, "Adresse https attendue."),
+    )
     .max(10),
   areaServed: z.array(text(80)).max(10),
   geo: z
