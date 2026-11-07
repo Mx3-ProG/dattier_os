@@ -10,6 +10,15 @@ import {
   cancelPromo,
 } from "@/features/loyalty/service";
 import {
+  awardBookingPoints,
+  createFlashPromotion,
+  engagementSettingsSchema,
+  flashSchema,
+  saveEngagementSettings,
+  stopFlashPromotion,
+  stopFlashSchema,
+} from "@/features/commerce/engagement";
+import {
   tableSchema,
   saveTable,
   moveTable,
@@ -37,6 +46,9 @@ const text = z.string().trim().min(1).max(300),
 export const actionSchema = z.discriminatedUnion("action", [
   productSchema,
   promoSchema,
+  engagementSettingsSchema,
+  flashSchema,
+  stopFlashSchema,
   z.object({
     action: z.literal("productLifecycle"),
     id,
@@ -165,9 +177,16 @@ export async function perform(
   a: z.infer<typeof actionSchema>,
 ) {
   if (
-    ["issuePromo", "cancelPromo", "expense", "customer", "loyalty"].includes(
-      a.action,
-    ) ||
+    [
+      "issuePromo",
+      "cancelPromo",
+      "expense",
+      "customer",
+      "loyalty",
+      "engagementSettings",
+      "flashPromotion",
+      "stopFlashPromotion",
+    ].includes(a.action) ||
     (a.action === "pay" && (a.customer || a.promo))
   )
     await requirePlan(db, r, 69);
@@ -178,6 +197,12 @@ export async function perform(
       return lifecycle(db, r, user, a.id, a.operation);
     case "issuePromo":
       return issuePromo(db, r, user, a);
+    case "engagementSettings":
+      return saveEngagementSettings(db, r, user, a);
+    case "flashPromotion":
+      return createFlashPromotion(db, r, user, a);
+    case "stopFlashPromotion":
+      return stopFlashPromotion(db, r, user, a.id);
     case "cancelPromo":
       return cancelPromo(db, r, user, a.id);
     case "order":
@@ -284,6 +309,7 @@ export async function perform(
         "UPDATE reservations SET status=$2,table_id=$3 WHERE id=$1",
         [a.id, a.status, table],
       );
+      if (a.status === "arrived") await awardBookingPoints(db, r, a.id);
       break;
     }
     case "stock": {

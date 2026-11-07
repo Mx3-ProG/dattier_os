@@ -1,3 +1,5 @@
+import type { AccountEngagement } from "./engagement";
+import type { FlashInfo } from "./engagement-rules";
 import type { ProductPageFields } from "@/lib/product-pages";
 import { z } from "zod";
 const publicUrlSchema = z.union([
@@ -106,6 +108,8 @@ export const checkoutSchema = z.object({
 });
 export type Checkout = z.infer<typeof checkoutSchema>;
 export type Product = ProductPageFields & {
+  /** Set by the catalog while a flash promotion is live; `price` is then the flash price. */
+  flash?: FlashInfo;
   id: string;
   name: string;
   category: string;
@@ -181,8 +185,10 @@ export type CustomerAccount = {
     name: string;
     points_cost: number;
     kind: string;
+    value: number;
   }[];
   orders: ShopOrder[];
+  engagement: AccountEngagement;
 };
 export function preparation(o: ShopOrder) {
   if (o.status === "cancelled") return "cancelled";

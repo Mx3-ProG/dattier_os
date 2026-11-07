@@ -28,6 +28,7 @@ import {
   Star,
   ExternalLink,
   UserRound,
+  Zap,
 } from "lucide-react";
 import type {
   Product,
@@ -625,8 +626,22 @@ export function DonutStore({
                               {p.name}
                             </Link>
                           </h3>
-                          <b>{money(p.price)}</b>
+                          <b>
+                            {money(p.price)}
+                            {p.flash && (
+                              <s className="donut-flash-was">
+                                {money(p.flash.regular_price)}
+                              </s>
+                            )}
+                          </b>
                         </div>
+                        {p.flash && (
+                          <span className="donut-flash-tag">
+                            <Zap size={13} /> Flash −{p.flash.percent} %
+                            {p.flash.member_bonus_points > 0 &&
+                              ` · +${p.flash.member_bonus_points} pts membre`}
+                          </span>
+                        )}
                         <p>{p.description}</p>
                         {data.reviews.some(
                           (review) => review.menu_id === p.id,
@@ -1194,12 +1209,21 @@ export function DonutStore({
                     <b>− {money(receipt.discount)}</b>
                   </div>
                 )}
-                {receipt.points_awarded > 0 && (
-                  <p className="note">
-                    +{receipt.points_awarded} points ajoutés à votre compte
-                    fidélité.
-                  </p>
-                )}
+                <div className="donut-points-earned">
+                  <Star size={22} fill="currentColor" />
+                  <span>
+                    <b>
+                      {receipt.points_awarded > 0
+                        ? `+${receipt.points_awarded} points ajoutés à votre compte`
+                        : "Vos points fidélité sont crédités dès le retrait"}
+                    </b>
+                    <small>
+                      Partagez votre lien de parrainage : vos amis reçoivent
+                      un cadeau, vous gagnez des points.{" "}
+                      <Link href="/compte?onglet=parrainage">Partager et gagner →</Link>
+                    </small>
+                  </span>
+                </div>
                 <div className="donut-receipt-line">
                   <b>Total</b>
                   <b>{money(receipt.total)}</b>
@@ -1710,7 +1734,14 @@ export function DonutStore({
                   <Star size={16} /> Donner mon avis sur ce produit
                 </button>
               </div>
-              <b>{money(product.price)}</b>
+              <b>
+                {money(product.price)}
+                {product.flash && (
+                  <s className="donut-flash-was">
+                    {money(product.flash.regular_price)}
+                  </s>
+                )}
+              </b>
             </div>
             <p>
               <b>Allergènes :</b>{" "}

@@ -169,6 +169,12 @@ export type Snapshot = {
   demo: boolean;
   categories: string[];
   promos: Promo[];
+  /** Gamification settings of the customer account (Clients & fidélité). */
+  engagement: import("@/features/commerce/engagement-rules").EngagementSettings | null;
+  /** Current and upcoming flash promotions (La carte). */
+  flashPromotions: Awaited<
+    ReturnType<typeof import("@/features/commerce/engagement").adminFlashPromotions>
+  >;
   checkoutCustomers: { id: string; name: string }[];
   now: string;
   user: Actor;

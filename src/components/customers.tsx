@@ -61,8 +61,134 @@ export function Customers({ data, act }: { data: Snapshot; act: Act }) {
         }),
     });
   }
+  function gamification() {
+    const g = data.engagement;
+    if (!g) return;
+    const slots = [0, 1, 2];
+    setEditor({
+      title: "Gamification du compte client",
+      fields: [
+        {
+          name: "points_per_euro",
+          label: "Points gagnés par euro commandé en ligne",
+          type: "number",
+          min: 0,
+          step: "0.1",
+          value: g.points_per_euro,
+        },
+        {
+          name: "booking_points",
+          label: "Points offerts à l’arrivée après une réservation",
+          type: "number",
+          min: 0,
+          value: g.booking_points,
+        },
+        {
+          name: "referrer_points",
+          label: "Points du parrain à la 1re commande de son filleul",
+          type: "number",
+          min: 0,
+          value: g.referrer_points,
+        },
+        {
+          name: "welcome_kind",
+          label: "Cadeau de bienvenue du filleul",
+          value: g.welcome_kind,
+          options: [
+            { value: "fixed", label: "Montant fixe (€)" },
+            { value: "percent", label: "Pourcentage (%)" },
+          ],
+        },
+        {
+          name: "welcome_value",
+          label: "Valeur du cadeau (€ ou %, 0 pour aucun)",
+          type: "number",
+          min: 0,
+          step: "0.01",
+          value:
+            g.welcome_kind === "fixed" ? g.welcome_value / 100 : g.welcome_value,
+        },
+        {
+          name: "welcome_days",
+          label: "Validité du cadeau de bienvenue (jours)",
+          type: "number",
+          min: 1,
+          value: g.welcome_days,
+        },
+        ...slots.flatMap((n) => [
+          {
+            name: `m${n}_count`,
+            label: `Palier ${n + 1} · nombre d’amis (0 pour retirer)`,
+            type: "number",
+            min: 0,
+            value: g.milestones[n]?.count ?? 0,
+          },
+          {
+            name: `m${n}_points`,
+            label: `Palier ${n + 1} · points bonus`,
+            type: "number",
+            min: 0,
+            value: g.milestones[n]?.points ?? 0,
+          },
+          {
+            name: `m${n}_label`,
+            label: `Palier ${n + 1} · cadeau affiché`,
+            required: false,
+            value: g.milestones[n]?.label ?? "",
+          },
+        ]),
+      ],
+      submit: (v) =>
+        act({
+          action: "engagementSettings",
+          points_per_euro: Number(v.points_per_euro),
+          booking_points: Number(v.booking_points),
+          referrer_points: Number(v.referrer_points),
+          welcome_kind: v.welcome_kind,
+          welcome_value:
+            v.welcome_kind === "fixed"
+              ? Math.round(Number(v.welcome_value) * 100)
+              : Number(v.welcome_value),
+          welcome_days: Number(v.welcome_days),
+          milestones: slots
+            .map((n) => ({
+              count: Number(v[`m${n}_count`]),
+              points: Number(v[`m${n}_points`]),
+              label: v[`m${n}_label`]?.trim() || "Cadeau de palier",
+            }))
+            .filter((m) => m.count > 0),
+        }),
+    });
+  }
   return (
     <>
+      {data.engagement && (
+        <section className="card engagement-card">
+          <div>
+            <span className="eyebrow">Compte client gamifié</span>
+            <h3>Points, parrainage et paliers</h3>
+            <p className="muted">
+              {data.engagement.points_per_euro} pt / € commandé ·{" "}
+              {data.engagement.booking_points} pts à l’arrivée après réservation
+              · parrain +{data.engagement.referrer_points} pts · filleul{" "}
+              {data.engagement.welcome_value
+                ? data.engagement.welcome_kind === "fixed"
+                  ? `${money(data.engagement.welcome_value)} offerts`
+                  : `${data.engagement.welcome_value} % offerts`
+                : "sans cadeau"}
+            </p>
+            <p className="muted">
+              Paliers :{" "}
+              {data.engagement.milestones
+                .map((m) => `${m.count} amis → +${m.points} pts (${m.label})`)
+                .join(" · ") || "aucun"}
+            </p>
+          </div>
+          <Button variant="secondary" onClick={gamification}>
+            Régler la gamification
+          </Button>
+        </section>
+      )}
       <div className="section-heading">
         <div>
           <h2>Clients & avantages de fidélité</h2>

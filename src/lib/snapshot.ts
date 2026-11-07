@@ -4,6 +4,10 @@ import { type DB, rows, one, demoEnabled } from "./database/db";
 import { type Actor, scope } from "./auth/session";
 import { can } from "./permissions";
 import type { Snapshot, MenuItem, Restaurant, Order, Item } from "./types";
+import {
+  adminFlashPromotions,
+  engagementSettings,
+} from "@/features/commerce/engagement";
 export async function menu(
   db: DB,
   r: string,
@@ -157,6 +161,13 @@ export async function snapshot(
           [r],
         )
       : [],
+    engagement: allowed("customers")
+      ? await engagementSettings(db, r)
+      : null,
+    flashPromotions:
+      plan >= 69 && can(user.roles ?? user.role, "catalog")
+        ? await adminFlashPromotions(db, r)
+        : [],
     checkoutCustomers:
       plan >= 69 && allowed("payments")
         ? await rows(

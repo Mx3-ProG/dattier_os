@@ -1,6 +1,6 @@
 "use client";
 import { useState } from "react";
-import { Plus, Archive, Trash2, RotateCcw } from "lucide-react";
+import { Plus, Archive, Trash2, RotateCcw, Zap } from "lucide-react";
 import type { Snapshot } from "@/lib/types";
 import { money } from "@/lib/domain";
 import { Button } from "./ui/button";
@@ -53,6 +53,24 @@ export function Catalog({ data, act }: { data: Snapshot; act: Act }) {
       : field,
   );
   const product = data.menu.find((m) => m.id === edit);
+  const [flashFor, setFlashFor] = useState<string | null>(null);
+  const flashProduct = data.menu.find((m) => m.id === flashFor);
+  const flashOf = (id: string) =>
+    data.flashPromotions.find((f) => f.menu_id === id);
+  const localNow = () => {
+    const now = new Date(data.now);
+    return new Date(now.getTime() - now.getTimezoneOffset() * 60000)
+      .toISOString()
+      .slice(0, 16);
+  };
+  const when = (iso: string) =>
+    new Date(iso).toLocaleString("fr-FR", {
+      weekday: "short",
+      day: "numeric",
+      month: "short",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
   const [error, setError] = useState("");
   async function change(id: string, operation: string) {
     try {
@@ -82,6 +100,49 @@ export function Catalog({ data, act }: { data: Snapshot; act: Act }) {
           Ajouter un produit
         </Button>
       </div>
+      {data.flashPromotions.length > 0 && (
+        <section className="card flash-admin">
+          <span className="eyebrow">
+            <Zap size={14} /> Promotions flash
+          </span>
+          <ul>
+            {data.flashPromotions.map((f) => {
+              const live = Date.parse(f.starts_at) <= Date.parse(data.now);
+              return (
+                <li key={f.id} className="between">
+                  <span>
+                    <b>{f.menu_name}</b> ·{" "}
+                    {f.kind === "percent"
+                      ? `−${f.value} %`
+                      : `${money(f.value)} au lieu de ${money(f.regular_price)}`}
+                    {f.member_bonus_points
+                      ? ` · +${f.member_bonus_points} pts membre`
+                      : ""}
+                    <br />
+                    <small className="muted">
+                      {live ? "En cours" : `Dès ${when(f.starts_at)}`} ·
+                      jusqu’au {when(f.ends_at)}
+                    </small>
+                  </span>
+                  <Button
+                    variant="ghost"
+                    onClick={async () => {
+                      try {
+                        await act({ action: "stopFlashPromotion", id: f.id });
+                        setError("");
+                      } catch (e) {
+                        setError((e as Error).message);
+                      }
+                    }}
+                  >
+                    Arrêter
+                  </Button>
+                </li>
+              );
+            })}
+          </ul>
+        </section>
+      )}
       <div className="tabs">
         <button
           className={mode === "active" ? "active" : ""}
@@ -135,6 +196,12 @@ export function Catalog({ data, act }: { data: Snapshot; act: Act }) {
               <Button variant="secondary" onClick={() => setEdit(m.id)}>
                 Modifier le produit
               </Button>
+              {!m.archived_at && data.plan >= 69 && (
+                <Button variant="ghost" onClick={() => setFlashFor(m.id)}>
+                  <Zap size={15} />
+                  {flashOf(m.id) ? "Promo flash programmée" : "Promo flash"}
+                </Button>
+              )}
               <div className="actions">
                 {m.archived_at ? (
                   <Button
@@ -178,6 +245,78 @@ export function Catalog({ data, act }: { data: Snapshot; act: Act }) {
             </article>
           ))}
       </div>
+      {flashProduct && (
+        <Modal
+          title={`Promo flash · ${flashProduct.name}`}
+          close={() => setFlashFor(null)}
+        >
+          <p className="muted">
+            Le prix réduit s’affiche sur le site, dans l’espace client avec un
+            compte à rebours, et s’applique automatiquement au panier. Prix
+            habituel : {money(flashProduct.price)}.
+          </p>
+          <Form
+            label="Lancer la promo flash"
+            fields={[
+              {
+                name: "kind",
+                label: "Type de promotion",
+                options: [
+                  { value: "percent", label: "Remise en pourcentage" },
+                  { value: "price", label: "Prix flash (€)" },
+                ],
+              },
+              {
+                name: "value",
+                label: "Remise (%) ou prix flash (€)",
+                type: "number",
+                min: 0.01,
+                step: "0.01",
+                value: 20,
+              },
+              {
+                name: "start",
+                label: "Début",
+                type: "datetime-local",
+                value: localNow(),
+              },
+              {
+                name: "hours",
+                label: "Durée (heures)",
+                type: "number",
+                min: 1,
+                value: 3,
+              },
+              {
+                name: "bonus",
+                label: "Bonus points pour les clients connectés (par article)",
+                type: "number",
+                min: 0,
+                value: 10,
+              },
+            ]}
+            onSubmit={async (v) => {
+              const start = new Date(v.start);
+              const end = new Date(
+                start.getTime() + Number(v.hours) * 3600000,
+              );
+              await act({
+                action: "flashPromotion",
+                menu: flashProduct.id,
+                kind: v.kind,
+                value:
+                  v.kind === "price"
+                    ? Math.round(Number(v.value) * 100)
+                    : Math.round(Number(v.value)),
+                starts_at: start.toISOString(),
+                ends_at: end.toISOString(),
+                member_bonus_points: Number(v.bonus) || 0,
+              });
+              setFlashFor(null);
+            }}
+          />
+        </Modal>
+      )}
       {create && (
         <Modal title="Ajouter un produit" close={() => setCreate(false)}>
           <h3>Recette · quantités par portion</h3>

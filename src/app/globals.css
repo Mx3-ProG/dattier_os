@@ -2524,3 +2524,36 @@ td .btn {
 .product-suggestion-card h3 svg {
   flex-shrink: 0;
 }
+
+/* Clients & fidélité / La carte : gamification et promos flash */
+.engagement-card {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-bottom: 20px;
+}
+.engagement-card h3 {
+  margin: 4px 0;
+}
+.flash-admin {
+  margin-bottom: 16px;
+}
+.flash-admin .eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.flash-admin ul {
+  list-style: none;
+  margin: 8px 0 0;
+  padding: 0;
+  display: grid;
+  gap: 8px;
+}
+.flash-admin li {
+  gap: 12px;
+  padding: 8px 0;
+  border-top: 1px solid var(--line);
+}

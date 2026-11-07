@@ -16,6 +16,12 @@ import { withDatabaseContext } from "@/lib/database/context";
 import { actor, type Actor } from "@/lib/auth/session";
 import { commerce } from "@/features/commerce/service";
 import { customerForActor } from "@/features/commerce/account";
+import {
+  attachCustomerReferral,
+  ensureReferralCode,
+  joinLoyalty,
+  referralInvitation,
+} from "@/features/commerce/engagement";
 import { publicSite } from "@/features/site/service";
 import {
   json,
@@ -64,6 +70,14 @@ async function routeGET(req: NextRequest, c: Context) {
                 request_hash: undefined,
               };
             }
+            if (action === "invite")
+              return {
+                invitation: await referralInvitation(
+                  db,
+                  restaurant,
+                  params.code || "",
+                ),
+              };
             if (action === "customer-session" && user) {
               await customerForActor(db, restaurant, user);
               return { id: user.id, name: user.name, email: user.email };
@@ -110,13 +124,19 @@ async function routePOST(req: NextRequest, c: Context) {
               return { ok: true };
             }
             await requirePlan(db, restaurant, action === "checkout" ? 99 : 69);
-            if (action === "reservation")
-              return {
-                id: await requestReservation(
-                  db,
-                  reservationSchema.parse({ ...body, restaurant }),
-                ),
-              };
+            if (action === "reservation") {
+              const id = await requestReservation(
+                db,
+                reservationSchema.parse({ ...body, restaurant }),
+              );
+              // Bookings made while logged in appear in the account and earn points on arrival.
+              if (user)
+                await db.query(
+                  "UPDATE reservations SET customer_id=$2 WHERE id=$1",
+                  [id, await customerForActor(db, restaurant, user)],
+                );
+              return { id };
+            }
             if (action === "checkout") {
               if (body.payment !== "counter")
                 throw new Error("Paiement en ligne non raccordé.");
@@ -134,6 +154,29 @@ async function routePOST(req: NextRequest, c: Context) {
             if (action === "reward") {
               if (!user) throw new Error("Connexion client requise.");
               return claimReward(db, restaurant, user, body);
+            }
+            if (
+              ["loyalty-join", "referral-code", "referral-attach"].includes(
+                action,
+              )
+            ) {
+              if (!user) throw new Error("Connexion client requise.");
+              const customer = await customerForActor(db, restaurant, user);
+              if (action === "loyalty-join") {
+                await joinLoyalty(db, customer);
+                return { ok: true };
+              }
+              if (action === "referral-code")
+                return {
+                  code: await ensureReferralCode(db, restaurant, customer),
+                };
+              return attachCustomerReferral(
+                db,
+                restaurant,
+                customer,
+                user,
+                String(body.code || ""),
+              );
             }
             if (action === "review") {
               if (!user) throw new Error("Connexion client requise.");

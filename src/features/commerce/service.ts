@@ -15,6 +15,13 @@ import {
   redeemCheckoutPromo,
 } from "@/features/loyalty/service";
 import {
+  accountEngagement,
+  awardOrderPoints,
+  liveFlashRules,
+  withFlashPrices,
+} from "./engagement";
+import { bestFlash } from "./engagement-rules";
+import {
   checkoutSchema,
   reviewSubmissionSchema,
   settingsSchema,
@@ -84,7 +91,13 @@ export function commerce(SHOP: string) {
     return {
       settings: config,
       // `menu()` selects m.*, which includes the commerce columns of Product.
-      products: ((await menu(db, SHOP)) as unknown as Product[])
+      products: (
+        await withFlashPrices(
+          db,
+          SHOP,
+          (await menu(db, SHOP)) as unknown as Product[],
+        )
+      )
         .filter((p) => p.enabled)
         .sort(
           (a, b) =>
@@ -155,7 +168,7 @@ export function commerce(SHOP: string) {
       throw new Error("Lien de suivi invalide.");
     const o = await one<ShopOrder>(
       db,
-      "SELECT c.*,o.status,o.desired_at,o.created_at,o.customer_name,coalesce(pr.points_awarded,0)::int AS points_awarded FROM shop_orders c JOIN orders o ON o.id=c.order_id LEFT JOIN promo_redemptions pr ON pr.order_id=o.id WHERE c.token=$1 AND o.restaurant_id=$2",
+      "SELECT c.*,o.status,o.desired_at,o.created_at,o.customer_name,(c.loyalty_points+coalesce(pr.points_awarded,0))::int AS points_awarded FROM shop_orders c JOIN orders o ON o.id=c.order_id LEFT JOIN promo_redemptions pr ON pr.order_id=o.id WHERE c.token=$1 AND o.restaurant_id=$2",
       [token, SHOP],
     );
     o.items = await rows(
@@ -202,6 +215,11 @@ export function commerce(SHOP: string) {
       "SELECT token FROM shop_orders WHERE customer_id=$1 ORDER BY number DESC LIMIT 100",
       [customerId],
     );
+    const rewards = await rows<CustomerAccount["rewards"][number]>(
+      db,
+      "SELECT id,name,points_cost,kind,value FROM loyalty_rewards WHERE restaurant_id=$1 AND active=true ORDER BY points_cost,name",
+      [SHOP],
+    );
     return {
       customer: {
         name: customer.name,
@@ -209,13 +227,17 @@ export function commerce(SHOP: string) {
         points: customer.points,
         loyaltyConsent: customer.consent,
       },
-      rewards: await rows(
-        db,
-        "SELECT id,name,points_cost,kind FROM loyalty_rewards WHERE restaurant_id=$1 AND active=true ORDER BY points_cost,name",
-        [SHOP],
-      ),
+      rewards,
       orders: await Promise.all(
         orderTokens.map((order) => receipt(db, order.token)),
+      ),
+      engagement: await accountEngagement(
+        db,
+        SHOP,
+        customerId,
+        customer.points,
+        customer.consent,
+        rewards,
       ),
     };
   }
@@ -259,10 +281,19 @@ export function commerce(SHOP: string) {
         "Ce créneau est fermé, complet ou dépassé. Choisissez un autre horaire.",
       );
     const products = (await menu(db, SHOP)) as unknown as Product[];
+    // Flash prices are recomputed here: the client price is never trusted.
+    const flashRules = await liveFlashRules(db, SHOP);
+    let flashItems = 0,
+      flashBonus = 0;
     const lines = a.items.map((i) => {
       const p = products.find((p) => p.id === i.menu && p.enabled);
       if (!p) throw new Error("Un produit est indisponible.");
-      let price = p.price;
+      const flash = bestFlash(flashRules, p.id, p.price);
+      if (flash) {
+        flashItems += i.quantity;
+        flashBonus += flash.rule.member_bonus_points * i.quantity;
+      }
+      let price = flash ? flash.price : p.price;
       const labels: string[] = [];
       const valid = new Set<string>();
       for (const group of p.options) {
@@ -386,7 +417,7 @@ export function commerce(SHOP: string) {
     await db.query("UPDATE orders SET status='active' WHERE id=$1", [id]);
     const token = randomBytes(32).toString("hex");
     await db.query(
-      "INSERT INTO shop_orders(order_id,token,request_hash,consumption,payment_method,total,subtotal,discount,promo_id,customer_id,reorder_items,terms_version,terms_accepted_at) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,now())",
+      "INSERT INTO shop_orders(order_id,token,request_hash,consumption,payment_method,total,subtotal,discount,promo_id,customer_id,reorder_items,terms_version,terms_accepted_at,flash_items,flash_bonus_points) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,now(),$13,$14)",
       [
         id,
         token,
@@ -400,6 +431,9 @@ export function commerce(SHOP: string) {
         customerId,
         JSON.stringify(a.items),
         TERMS_VERSION,
+        flashItems,
+        // The member bonus is reserved to logged-in customers.
+        authenticatedCustomerId ? flashBonus : 0,
       ],
     );
     if (promo) await recordCheckoutPromo(db, promo, id, customerId);
@@ -461,6 +495,7 @@ export function commerce(SHOP: string) {
       [id],
     );
     await log(db, SHOP, user.id, "Encaissement comptoir déclaré (démo)", id);
+    await awardOrderPoints(db, SHOP, id);
   }
   async function transition(db: DB, id: string, target: string, user: Actor) {
     requirePermission(user.roles ?? user.role, "orders");
@@ -492,6 +527,7 @@ export function commerce(SHOP: string) {
     }
     if (target === "cancelled")
       await db.query("UPDATE orders SET status='cancelled' WHERE id=$1", [id]);
+    if (target === "served") await awardOrderPoints(db, SHOP, id);
   }
   const image = z
     .string()

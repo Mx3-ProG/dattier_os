@@ -19,6 +19,7 @@ import { DonutStore } from "@/components/cms-site/store";
 import { TenantSiteProvider } from "@/components/cms-site/context";
 import "@/app/donuts.css";
 import "@/app/site-sections.css";
+import "@/app/customer-account.css";
 export const dynamic = "force-dynamic";
 type Props = {
   params: Promise<{ restaurant: string; page?: string[] }>;
