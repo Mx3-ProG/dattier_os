@@ -6,6 +6,9 @@ import {
   Building2,
   Check,
   Lightbulb,
+  Mic,
+  MessageSquareText,
+  Wand2,
   Network,
   Play,
   ShieldCheck,
@@ -16,6 +19,7 @@ import { can, roleLabels, roles, type Permission } from "@/lib/permissions";
 import { chapterRoles, chapters, glossary } from "@/features/guide/content";
 import { chapterIcons } from "./tutorial/icons";
 import { GuideToc } from "./guide-toc";
+import { packs, welcomeCredits, eur } from "@/features/assistant/pricing";
 
 const matrix: [Permission, string][] = [
   ["orders", "Commandes"],
@@ -78,6 +82,10 @@ const faq = [
     "Chaque rôle n’affiche que les modules qu’il est autorisé à utiliser. Le tableau « Qui fait quoi » ci-dessus indique les accès de chaque rôle.",
   ],
   [
+    "Comment fonctionnent les crédits Cuisine IA ?",
+    `Chaque organisation reçoit ${welcomeCredits} crédits à l’inscription. Une réponse du moteur réflexe (commandes, règlements, stocks, ventes, mode d’emploi) coûte 1 crédit ; une analyse par l’IA avancée coûte de 2 à 60 crédits selon sa longueur. Le solde, l’aide et la navigation sont gratuits. Un administrateur recharge depuis le bouton de solde, dans Cuisine IA.`,
+  ],
+  [
     "Comment relancer la visite guidée ?",
     "Dans le poste de travail, cliquez sur le bouton « Guide » en haut à droite : chaque parcours se relance en un clic et votre progression est mémorisée.",
   ],
@@ -88,6 +96,7 @@ export function GuidePage({ demo }: { demo: boolean }) {
     { id: "comprendre", label: "Comprendre atacuisine" },
     { id: "service", label: "Le cycle d’un service" },
     { id: "roles", label: "Qui fait quoi" },
+    { id: "cuisine-ia", label: "Cuisine IA, votre assistant" },
     ...chapters.map((c) => ({ id: c.id, label: c.title })),
     { id: "glossaire", label: "Glossaire" },
     { id: "questions", label: "Questions fréquentes" },
@@ -105,6 +114,7 @@ export function GuidePage({ demo }: { demo: boolean }) {
         </Link>
         <nav aria-label="Navigation du guide">
           <a href="#comprendre">Les bases</a>
+          <a href="#cuisine-ia">Cuisine IA</a>
           <a href="#order">Commandes</a>
           <a href="#payment">Règlement</a>
           <a href="#online">Paiement client</a>
@@ -293,6 +303,80 @@ export function GuidePage({ demo }: { demo: boolean }) {
                   </tbody>
                 </table>
               </div>
+            </section>
+
+            <section id="cuisine-ia" className="guide-section guide-ia">
+              <span className="landing-eyebrow">Nouveau</span>
+              <h2>Cuisine IA, votre second qui ne dort jamais</h2>
+              <p>
+                Cuisine IA est l’assistant intégré au poste de travail et à
+                l’administration. Vous lui parlez comme à un membre de
+                l’équipe, à l’écrit ou à la voix : il comprend le service en
+                cours, prépare les actions et vous propose la suite logique.
+                Ouvrez-le avec le bouton <b>Cuisine IA</b> en haut du poste, le
+                bouton flottant, ou <kbd>⌘K</kbd> / <kbd>Ctrl K</kbd>.
+              </p>
+              <div className="guide-cards">
+                <article>
+                  <Wand2 aria-hidden />
+                  <h3>Il agit pour vous</h3>
+                  <p>
+                    « Commande table 4 : deux couscous agneau et un thé » : la
+                    commande est prête, vous confirmez, elle part en cuisine et
+                    au bar. Puis « encaisse la table 4 en espèces », « libère la
+                    table 4 ».
+                  </p>
+                </article>
+                <article>
+                  <MessageSquareText aria-hidden />
+                  <h3>Il répond à tout</h3>
+                  <p>
+                    Stocks sous le seuil, chiffre du jour, réservations de ce
+                    soir, tables libres, prix d’un plat, et tout le mode
+                    d’emploi de ce guide, avec un lien vers la visite guidée.
+                  </p>
+                </article>
+                <article>
+                  <Mic aria-hidden />
+                  <h3>En temps réel, à la voix</h3>
+                  <p>
+                    Activez le micro : Cuisine IA écoute, répond à voix haute et
+                    attend votre « oui » pour exécuter. Les mains restent sur
+                    le service.
+                  </p>
+                </article>
+              </div>
+              <h3 className="guide-sub">Rien ne se fait sans vous</h3>
+              <ol className="guide-steps">
+                <li>Vous demandez, en phrase normale.</li>
+                <li>
+                  Cuisine IA prépare une carte d’action détaillée (plats,
+                  quantités, total, alertes de stock).
+                </li>
+                <li>
+                  Vous confirmez d’un clic ou d’un « oui ». Le serveur revérifie
+                  vos droits, les stocks et les étapes, comme pour toute action.
+                </li>
+                <li>Cuisine IA vous propose la suite : suivi, règlement, table.</li>
+              </ol>
+              <h3 className="guide-sub">Crédits</h3>
+              <p>
+                {welcomeCredits} crédits offerts à l’inscription. Réponse
+                réflexe : 1 crédit. Analyse IA avancée : 2 à 60 crédits selon la
+                longueur. Solde, aide et navigation : gratuits.
+              </p>
+              <ul className="guide-points">
+                {packs.map((p) => (
+                  <li key={p.id}>
+                    <b>Pack {p.title}</b> : {p.credits.toLocaleString("fr-FR")}{" "}
+                    crédits pour {eur(p.priceCents)} HT · {p.hint}
+                  </li>
+                ))}
+              </ul>
+              <Link className="guide-practice" href="/dashboard">
+                <Wand2 size={15} aria-hidden /> Essayer Cuisine IA dans le poste
+                <ArrowRight size={15} aria-hidden />
+              </Link>
             </section>
 
             {chapters.map((c, n) => {

@@ -10,6 +10,7 @@ import {
   Leaf,
   PackageCheck,
   ShieldCheck,
+  Sparkles,
   Store,
   UsersRound,
   Wifi,
@@ -23,6 +24,7 @@ import {
   type RestaurantModuleId,
 } from "@/features/platform/admin-navigation";
 import { plans } from "@/features/platform/pricing";
+import { CuisineIa, openCuisineIa } from "@/components/assistant/cuisine-ia";
 import "./platform.css";
 
 const moduleIcons = {
@@ -97,6 +99,14 @@ export function RestaurantAdminShell({
             )}
           </div>
           <div className="admin-shell-actions">
+            <button
+              type="button"
+              className="admin-shell-secondary admin-ia-link"
+              onClick={() => openCuisineIa()}
+            >
+              <Sparkles size={16} />
+              <span>Cuisine IA</span>
+            </button>
             {plan >= 69 && (
               <Link
                 className="admin-shell-secondary"
@@ -192,6 +202,7 @@ export function RestaurantAdminShell({
           </Link>
         </div>
       </nav>
+      <CuisineIa restaurant={restaurant} docked />
     </main>
   );
 }

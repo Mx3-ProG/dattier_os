@@ -553,3 +553,65 @@
     transition: none;
   }
 }
+
+/* Centre d’apprentissage : accès à Cuisine IA */
+.tour-ia {
+  margin: 0 24px 14px;
+  padding: 14px;
+  border-radius: 16px;
+  background: linear-gradient(135deg, #2f4a3a, #4c6b55 60%, #8a5a40);
+  color: #fff;
+}
+.tour-ia-head {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+}
+.tour-ia-head div {
+  display: grid;
+  gap: 2px;
+}
+.tour-ia-head b {
+  color: #fff;
+}
+.tour-ia-head small {
+  color: rgb(255 255 255 / 85%);
+  line-height: 1.4;
+}
+.tour-ia-ask {
+  width: 100%;
+  margin-top: 10px;
+  padding: 10px 12px;
+  border: 0;
+  border-radius: 11px;
+  background: #fff;
+  color: #6b7067;
+  text-align: left;
+}
+.tour-ia-examples {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 8px;
+}
+.tour-ia-examples button {
+  padding: 5px 10px;
+  border: 1px solid rgb(255 255 255 / 35%);
+  border-radius: 999px;
+  background: rgb(255 255 255 / 12%);
+  color: #fff;
+  font-size: 12px;
+}
+.ia-button {
+  border-color: transparent;
+  background: linear-gradient(135deg, #344d3e, #ac6848);
+  color: #fff;
+}
+.ia-button:hover {
+  background: linear-gradient(135deg, #2c4335, #9a5c3f);
+}
+@media (max-width: 640px) {
+  .tour-ia {
+    margin: 0 16px 12px;
+  }
+}

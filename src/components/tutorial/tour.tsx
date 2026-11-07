@@ -24,6 +24,7 @@ import {
   X,
 } from "lucide-react";
 import { roleLabels } from "@/lib/permissions";
+import { openCuisineIa } from "../assistant/cuisine-ia";
 import type { Snapshot } from "@/lib/types";
 import {
   chapterAllowed,
@@ -736,6 +737,44 @@ function Center({
           <Link className="tour-secondary" href="/guide" target="_blank">
             <BookOpenText size={15} /> Guide écrit
           </Link>
+        </div>
+        <div className="tour-ia">
+          <div className="tour-ia-head">
+            <Sparkles size={18} aria-hidden />
+            <div>
+              <b>Une question ? Demandez à Cuisine IA</b>
+              <small>
+                Elle répond à partir de ce guide et de votre service en cours,
+                à l’écrit ou à la voix, et prépare les actions pour vous.
+              </small>
+            </div>
+          </div>
+          <button
+            className="tour-ia-ask"
+            onClick={() => {
+              close();
+              openCuisineIa();
+            }}
+          >
+            Posez votre question…
+          </button>
+          <div className="tour-ia-examples">
+            {[
+              "Comment déclarer un règlement ?",
+              "Comment créer un code promo ?",
+              "Que sais-tu faire ?",
+            ].map((q) => (
+              <button
+                key={q}
+                onClick={() => {
+                  close();
+                  openCuisineIa(q);
+                }}
+              >
+                {q}
+              </button>
+            ))}
+          </div>
         </div>
         <ol className="tour-chapters">
           {chapters.map((c) => {
