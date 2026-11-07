@@ -29,6 +29,7 @@ import {
   moveZone,
   deleteZone,
 } from "@/features/floor/service";
+import { messageSchema, messageCustomer } from "@/features/messaging/service";
 import { randomUUID as uuid } from "node:crypto";
 import { z } from "zod";
 import { rows, one, type DB } from "./database/db";
@@ -54,6 +55,7 @@ export const actionSchema = z.discriminatedUnion("action", [
   engagementSettingsSchema,
   flashSchema,
   stopFlashSchema,
+  messageSchema,
   z.object({
     action: z.literal("productLifecycle"),
     id,
@@ -189,6 +191,7 @@ export async function perform(
       "expense",
       "customer",
       "loyalty",
+      "messageCustomer",
       "engagementSettings",
       "flashPromotion",
       "stopFlashPromotion",
@@ -211,6 +214,11 @@ export async function perform(
       return stopFlashPromotion(db, r, user, a.id);
     case "cancelPromo":
       return cancelPromo(db, r, user, a.id);
+    case "messageCustomer": {
+      const sent = await messageCustomer(db, r, user, a);
+      await log(db, r, user.id, `Message ${a.channel} au client`, a.id);
+      return sent;
+    }
     case "order":
       if (a.data.restaurant !== r)
         throw new Error("Établissement incompatible.");

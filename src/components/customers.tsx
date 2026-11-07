@@ -3,7 +3,21 @@ import { useState } from "react";
 import type { Snapshot } from "@/lib/types";
 import { money } from "@/lib/domain";
 import { Button } from "./ui/button";
+import { Mail, MessageSquare } from "lucide-react";
 import { Form, Modal, type Field, type Act } from "./forms";
+import {
+  MessageComposer,
+  contactsOf,
+  type SendResult,
+} from "./customer-message";
+import type { Channel } from "@/features/messaging/contact";
+const when = (iso: string) =>
+  new Date(iso).toLocaleString("fr-FR", {
+    day: "2-digit",
+    month: "short",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
 export function Customers({ data, act }: { data: Snapshot; act: Act }) {
   const [editor, setEditor] = useState<{
       title: string;
@@ -11,7 +25,15 @@ export function Customers({ data, act }: { data: Snapshot; act: Act }) {
       submit: (v: Record<string, string>) => Promise<void>;
     } | null>(null),
     [query, setQuery] = useState(""),
-    [message, setMessage] = useState("");
+    [message, setMessage] = useState(""),
+    [composer, setComposer] = useState<{
+      id: string;
+      channel: Channel;
+    } | null>(null);
+  const composing = composer
+    ? data.customers.find((c) => c.id === composer.id)
+    : undefined;
+  const history = data.customerMessages ?? [];
   function issue(customer?: string) {
     setEditor({
       title: "Créer un code promo nominatif",
@@ -106,7 +128,9 @@ export function Customers({ data, act }: { data: Snapshot; act: Act }) {
           min: 0,
           step: "0.01",
           value:
-            g.welcome_kind === "fixed" ? g.welcome_value / 100 : g.welcome_value,
+            g.welcome_kind === "fixed"
+              ? g.welcome_value / 100
+              : g.welcome_value,
         },
         {
           name: "welcome_days",
@@ -251,53 +275,163 @@ export function Customers({ data, act }: { data: Snapshot; act: Act }) {
               <th>Contact</th>
               <th>Consentement</th>
               <th>Points</th>
-              <th>Actions</th>
+              <th>Dernier message</th>
+              <th>Contacter</th>
+              <th>Fidélité</th>
             </tr>
           </thead>
           <tbody>
             {data.customers
-              .filter((c) => c.name.toLowerCase().includes(query.toLowerCase()))
-              .map((c) => (
-                <tr key={c.id}>
-                  <td>{c.name}</td>
-                  <td>{c.contact}</td>
-                  <td>{c.consent ? "Accord recueilli" : "Non"}</td>
-                  <td>{c.points}</td>
-                  <td>
-                    <Button
-                      variant="ghost"
-                      disabled={!c.consent}
-                      onClick={() =>
-                        setEditor({
-                          title: "Mouvement de fidélité",
-                          fields: [
-                            {
-                              name: "points",
-                              label: "Points à ajouter ou retirer",
-                              type: "number",
-                            },
-                            { name: "reason", label: "Motif" },
-                          ],
-                          submit: (v) =>
-                            act({ action: "loyalty", id: c.id, ...v }),
-                        })
-                      }
-                    >
-                      Ajuster les points
-                    </Button>
-                    <Button
-                      variant="secondary"
-                      disabled={!c.consent}
-                      onClick={() => issue(c.id)}
-                    >
-                      Offrir un code
-                    </Button>
-                  </td>
-                </tr>
-              ))}
+              .filter((c) =>
+                (c.name + " " + c.contact)
+                  .toLowerCase()
+                  .includes(query.toLowerCase()),
+              )
+              .map((c) => {
+                const k = contactsOf(c);
+                return (
+                  <tr key={c.id}>
+                    <td>{c.name}</td>
+                    <td>{c.contact}</td>
+                    <td>{k.consent ? "Accord recueilli" : "Non"}</td>
+                    <td>{c.points}</td>
+                    <td>
+                      {c.last_message_at ? when(c.last_message_at) : "Jamais"}
+                    </td>
+                    <td className="contact-actions">
+                      <Button
+                        variant="secondary"
+                        disabled={!k.email}
+                        title={k.email ?? "Aucune adresse email sur la fiche"}
+                        onClick={() =>
+                          setComposer({ id: c.id, channel: "email" })
+                        }
+                      >
+                        <Mail size={14} /> Email
+                      </Button>
+                      <Button
+                        variant="secondary"
+                        disabled={!k.phone}
+                        title={k.phone ?? "Aucun numéro de mobile sur la fiche"}
+                        onClick={() =>
+                          setComposer({ id: c.id, channel: "sms" })
+                        }
+                      >
+                        <MessageSquare size={14} /> SMS
+                      </Button>
+                    </td>
+                    <td>
+                      <Button
+                        variant="ghost"
+                        disabled={!c.consent}
+                        onClick={() =>
+                          setEditor({
+                            title: "Mouvement de fidélité",
+                            fields: [
+                              {
+                                name: "points",
+                                label: "Points à ajouter ou retirer",
+                                type: "number",
+                              },
+                              { name: "reason", label: "Motif" },
+                            ],
+                            submit: (v) =>
+                              act({ action: "loyalty", id: c.id, ...v }),
+                          })
+                        }
+                      >
+                        Ajuster les points
+                      </Button>
+                      <Button
+                        variant="secondary"
+                        disabled={!c.consent}
+                        onClick={() => issue(c.id)}
+                      >
+                        Offrir un code
+                      </Button>
+                    </td>
+                  </tr>
+                );
+              })}
           </tbody>
         </table>
       </div>
+      <h2>Messages envoyés</h2>
+      <p className="muted">
+        Relances, offres et informations envoyées depuis la fiche client. Les
+        relances et offres exigent l’accord du client et portent une mention de
+        désinscription.
+        {data.messaging &&
+          !(data.messaging.email && data.messaging.sms) &&
+          ` ${[!data.messaging.email && "Email", !data.messaging.sms && "SMS"]
+            .filter(Boolean)
+            .join(
+              " et ",
+            )} en mode démo : les envois sont tracés mais ne partent pas tant que le fournisseur n’est pas branché.`}
+      </p>
+      {history.length ? (
+        <div className="card table-scroll">
+          <table>
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Client</th>
+                <th>Canal</th>
+                <th>Intention</th>
+                <th>Message</th>
+                <th>Statut</th>
+              </tr>
+            </thead>
+            <tbody>
+              {history
+                .filter((m) =>
+                  (m.customer_name + " " + m.recipient)
+                    .toLowerCase()
+                    .includes(query.toLowerCase()),
+                )
+                .map((m) => (
+                  <tr key={m.id}>
+                    <td>{when(m.created_at)}</td>
+                    <td>
+                      {m.customer_name}
+                      <br />
+                      <small className="muted">{m.recipient}</small>
+                    </td>
+                    <td>{m.channel === "email" ? "Email" : "SMS"}</td>
+                    <td>
+                      {m.purpose === "relance"
+                        ? "Relance"
+                        : m.purpose === "offre"
+                          ? "Offre"
+                          : "Information"}
+                    </td>
+                    <td className="message-preview" title={m.body}>
+                      {m.subject && <b>{m.subject} · </b>}
+                      {m.body.slice(0, 90)}
+                      {m.body.length > 90 ? "…" : ""}
+                    </td>
+                    <td>
+                      <span
+                        className="badge"
+                        title={m.error ?? m.actor_name ?? undefined}
+                      >
+                        {m.status === "sent"
+                          ? "Envoyé"
+                          : m.status === "demo"
+                            ? "Démo"
+                            : "Échec"}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+            </tbody>
+          </table>
+        </div>
+      ) : (
+        <p className="empty">
+          Aucun message envoyé. Utilisez Email ou SMS sur une fiche client.
+        </p>
+      )}
       <h2>Codes attribués</h2>
       <p className="muted">
         Partagez la fiche privée au titulaire pour qu’il consulte son code. Le
@@ -390,6 +524,25 @@ export function Customers({ data, act }: { data: Snapshot; act: Act }) {
       </div>
       {!data.promos.length && (
         <p className="empty">Aucun code attribué pour le moment.</p>
+      )}
+      {composer && composing && (
+        <Modal
+          title={`Contacter ${composing.name}`}
+          description="Choisissez l’intention : le message est pré-rédigé, modifiez-le si besoin puis envoyez."
+          close={() => setComposer(null)}
+        >
+          <MessageComposer
+            key={composing.id}
+            data={data}
+            customer={composing}
+            channel={composer.channel}
+            send={(m) => act(m) as Promise<unknown> as Promise<SendResult>}
+            done={(note) => {
+              setMessage(note);
+              setComposer(null);
+            }}
+          />
+        </Modal>
       )}
       {editor && (
         <Modal title={editor.title} close={() => setEditor(null)}>

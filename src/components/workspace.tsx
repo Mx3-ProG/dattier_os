@@ -29,7 +29,6 @@ import {
   Leaf,
   ShieldCheck,
   GraduationCap,
-  Sparkles,
 } from "lucide-react";
 import { can, type Permission, roleLabels } from "@/lib/permissions";
 import type { Snapshot } from "@/lib/types";
@@ -42,7 +41,7 @@ const Overview = dynamic(() => import("./overview").then((m) => m.Overview), {
 const Finance = dynamic(() => import("./overview").then((m) => m.Finance));
 import { dateTime } from "@/lib/domain";
 import { Tutorial } from "./tutorial/tour";
-import { CuisineIa, openCuisineIa } from "./assistant/cuisine-ia";
+import { CuisineIa } from "./assistant/cuisine-ia";
 const modules = [
   {
     id: "overview",
@@ -284,6 +283,7 @@ export function Workspace() {
       if (!r.ok) throw new Error(d.error);
       setError("");
       await load();
+      return d.result;
     } catch (e) {
       setError((e as Error).message);
       throw e;
@@ -329,7 +329,8 @@ export function Workspace() {
     }))
     .filter((tab) => tab.items.length > 0);
   const openSheet = dock.find((tab) => tab.id === dockSheet);
-  if (!data && !error) return <UtensilsLoader label="Votre restaurant se prépare" />;
+  if (!data && !error)
+    return <UtensilsLoader label="Votre restaurant se prépare" />;
   if (!data)
     return (
       <main className="loading">
@@ -444,14 +445,6 @@ export function Workspace() {
                 month: "long",
               })}
             </span>
-            <button
-              className="guide-button ia-button"
-              data-tour="ia-button"
-              aria-label="Ouvrir Cuisine IA"
-              onClick={() => openCuisineIa()}
-            >
-              <Sparkles size={16} /> <span>Cuisine IA</span>
-            </button>
             <button
               className="guide-button"
               data-tour="guide-button"
@@ -622,11 +615,7 @@ export function Workspace() {
           </nav>
         </>
       )}
-      <CuisineIa
-        restaurant={restaurant}
-        execute={act}
-        onNavigate={navigate}
-      />
+      <CuisineIa restaurant={restaurant} execute={act} onNavigate={navigate} />
       <Tutorial
         data={data}
         restaurant={restaurant}

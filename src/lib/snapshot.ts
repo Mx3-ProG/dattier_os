@@ -1,4 +1,8 @@
 import { restaurantPlan } from "@/features/platform/entitlements";
+import {
+  messagingProviders,
+  recentMessages,
+} from "@/features/messaging/service";
 import { registerPresence } from "@/features/ops-security/presence";
 import { type DB, rows, one, demoEnabled } from "./database/db";
 import { type Actor, scope } from "./auth/session";
@@ -175,9 +179,7 @@ export async function snapshot(
           [r],
         )
       : [],
-    engagement: allowed("customers")
-      ? await engagementSettings(db, r)
-      : null,
+    engagement: allowed("customers") ? await engagementSettings(db, r) : null,
     flashPromotions:
       plan >= 69 && can(user.roles ?? user.role, "catalog")
         ? await adminFlashPromotions(db, r)
@@ -193,10 +195,15 @@ export async function snapshot(
     customers: allowed("customers")
       ? await rows(
           db,
-          "SELECT *,coalesce(app.customer_points(id),points) AS points FROM customers WHERE restaurant_id=$1",
+          `SELECT c.*,coalesce(app.customer_points(c.id),c.points) AS points,oc.email AS account_email,
+            coalesce(oc.marketing_consent,false) AS marketing_consent,
+            (SELECT max(m.created_at) FROM customer_messages m WHERE m.customer_id=c.id AND m.status<>'error') AS last_message_at
+           FROM customers c LEFT JOIN organization_customers oc ON oc.id=c.account_id WHERE c.restaurant_id=$1 ORDER BY c.name`,
           [r],
         )
       : [],
+    customerMessages: allowed("customers") ? await recentMessages(db, r) : [],
+    messaging: messagingProviders(),
     expenses: allowed("finance")
       ? await rows(
           db,

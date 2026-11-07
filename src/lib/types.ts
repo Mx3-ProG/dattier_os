@@ -1,3 +1,4 @@
+import type { CustomerMessage } from "@/features/messaging/service";
 import type { ProductPageFields } from "./product-pages";
 import type { Actor } from "./auth/session";
 export type Restaurant = {
@@ -140,6 +141,9 @@ export type Customer = {
   contact: string;
   consent: boolean;
   points: number;
+  account_email?: string | null;
+  marketing_consent?: boolean;
+  last_message_at?: string | null;
 };
 export type Expense = {
   id: string;
@@ -173,10 +177,13 @@ export type Snapshot = {
   categories: string[];
   promos: Promo[];
   /** Gamification settings of the customer account (Clients & fidélité). */
-  engagement: import("@/features/commerce/engagement-rules").EngagementSettings | null;
+  engagement:
+    import("@/features/commerce/engagement-rules").EngagementSettings | null;
   /** Current and upcoming flash promotions (La carte). */
   flashPromotions: Awaited<
-    ReturnType<typeof import("@/features/commerce/engagement").adminFlashPromotions>
+    ReturnType<
+      typeof import("@/features/commerce/engagement").adminFlashPromotions
+    >
   >;
   checkoutCustomers: { id: string; name: string }[];
   now: string;
@@ -211,6 +218,8 @@ export type Snapshot = {
     created_at: string;
   }[];
   customers: Customer[];
+  customerMessages?: CustomerMessage[];
+  messaging?: { email: boolean; sms: boolean };
   expenses: Expense[];
   recipes: RecipeLine[];
   sales: { day: string; total: number }[];

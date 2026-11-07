@@ -2646,9 +2646,12 @@ td .btn {
 
 .demo-purchase-link {
   position: fixed;
-  z-index: 40;
-  top: max(0.75rem, env(safe-area-inset-top));
-  right: max(0.75rem, env(safe-area-inset-right));
+  z-index: 60;
+  left: 50%;
+  bottom: calc(24px + env(safe-area-inset-bottom));
+  transform: translateX(-50%);
+  white-space: nowrap;
+  box-shadow: 0 4px 16px rgb(40 59 50 / 20%);
   padding: 0.55rem 0.85rem;
   border-radius: 999px;
   background: #344d3e;
@@ -2656,6 +2659,16 @@ td .btn {
   font-size: 0.875rem;
   font-weight: 600;
   text-decoration: none;
+}
+
+body:has(.admin-action-dock) .demo-purchase-link {
+  bottom: calc(80px + env(safe-area-inset-bottom));
+}
+
+@media (max-width: 850px), (max-width: 1180px) and (pointer: coarse) {
+  body:has(.workspace-dock, .admin-action-dock) .demo-purchase-link {
+    bottom: calc(84px + env(safe-area-inset-bottom));
+  }
 }
 
 .demo-purchase-link:focus-visible {
@@ -2695,4 +2708,74 @@ td .btn {
 .floor-help {
   margin-top: 8px;
   font-size: 12px;
+}
+
+/* Envoi d’email / SMS depuis la fiche client */
+.contact-actions {
+  white-space: nowrap;
+}
+.contact-actions .btn + .btn {
+  margin-left: 6px;
+}
+.message-composer .tabs {
+  margin: 0 0 4px;
+}
+.message-composer .tabs button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.message-composer .tabs button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+.purpose-picker {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+.purpose-picker button {
+  display: grid;
+  gap: 2px;
+  text-align: left;
+  padding: 10px 12px;
+  border: 1px solid #e6e9df;
+  border-radius: 8px;
+  background: var(--paper);
+  color: var(--ink);
+}
+.purpose-picker button small {
+  font-size: 11px;
+  color: #6a7965;
+}
+.purpose-picker button.active {
+  border-color: #455d3e;
+  box-shadow: inset 0 0 0 1px #455d3e;
+}
+.purpose-picker button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+.message-composer textarea,
+.message-composer select {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #677464;
+  border-radius: 8px;
+  background: var(--paper);
+  color: var(--ink);
+  font: inherit;
+  resize: vertical;
+}
+.message-meta {
+  font-size: 12px;
+}
+.message-preview {
+  max-width: 340px;
+  font-size: 12px;
+}
+@media (max-width: 560px) {
+  .purpose-picker {
+    grid-template-columns: 1fr;
+  }
 }
