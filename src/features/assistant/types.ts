@@ -1,6 +1,8 @@
 import type { Snapshot } from "@/lib/types";
 
-/** Corps envoyé tel quel à POST /api/v1/action après confirmation. */
+/** Corps envoyé tel quel à POST /api/v1/action après confirmation. Une valeur
+    « $N » est remplacée par l’identifiant renvoyé par la N-ième action de la
+    même carte (ingrédient ou fournisseur créé juste avant). */
 export type ActionPayload = { action: string } & Record<string, unknown>;
 
 /** Action proposée par Cuisine IA : rien n’est exécuté sans confirmation. */
@@ -27,6 +29,9 @@ export type Answer = {
   suggestions: string[];
   links: Link[];
   navigate?: string;
+  /** Question en attente : la prochaine réponse de l’utilisateur complète
+      cette phrase (« Commande 3 kg de fraises chez » + « Primeurs Martin »). */
+  followUp?: string;
 };
 
 export type AssistantReply = Answer & {
@@ -53,6 +58,7 @@ export type AssistantContext = {
     enabled: boolean;
     portions: number;
     station: string;
+    description: string;
   }[];
   tables: {
     id: string;
@@ -93,6 +99,40 @@ export type AssistantContext = {
     status: string;
     table_id: string | null;
   }[];
+  suppliers: {
+    id: string;
+    name: string;
+    contact: string;
+    lead_days: number;
+    ingredients: string[];
+  }[];
+  purchases: {
+    id: string;
+    supplier: string;
+    ingredient_id: string;
+    ingredient: string;
+    unit: string;
+    quantity: number;
+    received: number;
+    due_on: string;
+    status: string;
+  }[];
+  lots: {
+    id: string;
+    ingredient: string;
+    unit: string;
+    quantity: number;
+    reserved: number;
+    expires_on: string;
+  }[];
+  employees: { id: string; name: string; role: string }[];
+  clients: {
+    id: string;
+    name: string;
+    contact: string;
+    consent: boolean;
+    points: number;
+  }[];
   paidToday: number;
   paymentsToday: number;
   sales: { day: string; total: number }[];
@@ -130,6 +170,7 @@ export function assistantContext(
         enabled: m.enabled,
         portions: m.portions,
         station: m.station,
+        description: m.description ?? "",
       })),
     tables: s.tables
       .filter((t) => !t.archived_at)
@@ -178,6 +219,42 @@ export function assistantContext(
         status: r.status,
         table_id: r.table_id,
       })),
+    suppliers: s.suppliers.map((x) => ({
+      id: x.id,
+      name: x.name,
+      contact: x.contact,
+      lead_days: x.lead_days,
+      ingredients: x.ingredient_ids ?? [],
+    })),
+    purchases: s.purchases
+      .filter((p) => !["received", "cancelled"].includes(p.status))
+      .map((p) => ({
+        id: p.id,
+        supplier: p.name,
+        ingredient_id: p.ingredient_id,
+        ingredient: p.ingredient_name,
+        unit: p.unit,
+        quantity: p.quantity,
+        received: p.received,
+        due_on: p.due_on,
+        status: p.status,
+      })),
+    lots: s.lots.map((l) => ({
+      id: l.id,
+      ingredient: l.name,
+      unit: l.unit,
+      quantity: l.quantity,
+      reserved: l.reserved,
+      expires_on: l.expires_on,
+    })),
+    employees: s.employees.map((e) => ({ id: e.id, name: e.name, role: e.role })),
+    clients: s.customers.slice(0, 300).map((c) => ({
+      id: c.id,
+      name: c.name,
+      contact: c.contact,
+      consent: c.consent,
+      points: c.points,
+    })),
     paidToday: payments.reduce((sum, p) => sum + p.amount, 0),
     paymentsToday: payments.length,
     sales: s.sales.slice(-14),

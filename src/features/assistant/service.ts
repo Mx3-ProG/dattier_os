@@ -37,6 +37,8 @@ export const askSchema = z.object({
   kind: z.literal("ask"),
   message: z.string().trim().max(800),
   voice: z.boolean().default(false),
+  /** Phrase en attente que ce message complète (question posée par Cuisine IA). */
+  followUp: z.string().trim().max(300).optional(),
   history: z
     .array(z.object({ role: z.enum(["user", "assistant"]), content: z.string().max(4000) }))
     .max(16)
@@ -134,7 +136,13 @@ export async function ask(
     await rateLimit(db, `assistant:${user.id}`, 30);
     const w = await wallet(db, restaurant);
     const ctx = await buildContext(db, restaurant, user, w.balance);
-    const local = reflex(input.message, ctx);
+    // Une réponse courte (« Primeurs Martin », « 3 kilos ») complète la question
+    // en attente ; une nouvelle demande complète (« chiffre du jour ») passe avant.
+    const alone = reflex(input.message, ctx);
+    const local =
+      input.followUp && (!alone || alone.engine === "free")
+        ? (reflex(`${input.followUp} ${input.message}`, ctx) ?? alone)
+        : alone;
     if (local) {
       if (local.engine === "free")
         return { done: { ...local, credits: 0, balance: w.balance } };
@@ -166,7 +174,11 @@ export async function ask(
     };
   if (balance < minimumLlmCredits)
     throw new Error("Crédits Cuisine IA insuffisants pour une analyse avancée.");
-  const outcome = await askLlm(input.message, input.history, ctx);
+  const outcome = await askLlm(
+    input.followUp ? `${input.message}\n(En réponse à ta question : « ${input.followUp} … »)` : input.message,
+    input.history,
+    ctx,
+  );
   const credits = llmCredits(outcome.costEur);
   const after = await authenticated(restaurant, (db) =>
     consume(db, restaurant, credits, outcome.model, input.message, outcome.costEur, true),
@@ -177,6 +189,7 @@ export async function ask(
     suggestions: [...outcome.suggestions, ...refill(after)].slice(0, 4),
     links: outcome.links,
     navigate: outcome.navigate,
+    followUp: outcome.followUp,
     engine: "llm",
     credits: Math.min(credits, balance),
     balance: after,

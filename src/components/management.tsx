@@ -402,6 +402,15 @@ export function Management({
                   <h3>{s.name}</h3>
                   <p>{s.contact}</p>
                   <small>Délai indicatif : {s.lead_days} jours</small>
+                  {!!s.ingredient_ids?.length && (
+                    <small>
+                      Vend :{" "}
+                      {s.ingredient_ids
+                        .map((id) => data.ingredients.find((i) => i.id === id)?.name)
+                        .filter(Boolean)
+                        .join(", ")}
+                    </small>
+                  )}
                 </article>
               ))}
           </div>

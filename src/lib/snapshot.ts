@@ -141,7 +141,7 @@ export async function snapshot(
     suppliers: allowed("purchases")
       ? await rows(
           db,
-          "SELECT * FROM suppliers WHERE restaurant_id=$1 ORDER BY name",
+          "SELECT s.*,coalesce((SELECT array_agg(si.ingredient_id ORDER BY si.ingredient_id) FROM supplier_ingredients si WHERE si.supplier_id=s.id),'{}') AS ingredient_ids FROM suppliers s WHERE s.restaurant_id=$1 ORDER BY s.name",
           [r],
         )
       : [],

@@ -5,6 +5,25 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { guideDigest } from "./knowledge";
 import { navigation } from "./reflex";
+import { linkStep, supplierStep } from "./manage";
+import {
+  customerStep,
+  expenseStep,
+  findClient,
+  findMenu,
+  flashStep,
+  loyaltyStep,
+  menuEditStep,
+  messageStep,
+  productStep,
+  purchaseStep,
+  receiveStep,
+  restockStep,
+  shiftStep,
+  wasteStep,
+  type Step,
+} from "./operations";
+import type { BaseUnit } from "./parse";
 import {
   itemStatusProposal,
   orderProposal,
@@ -106,6 +125,154 @@ const tools: Anthropic.Beta.BetaTool[] = [
     input_schema: object({ module: { type: "string", enum: modules } }),
   },
   {
+    name: "propose_purchase",
+    description:
+      "Prépare une commande fournisseur. Crée l’ingrédient ou le fournisseur s’ils n’existent pas. Laisse supplier_name vide pour laisser l’application trouver le fournisseur qui vend déjà ce produit (elle demandera sinon). quantity en unité indiquée.",
+    strict: true,
+    input_schema: object({
+      ingredient_name: { type: "string" },
+      quantity: { type: "number", description: "0 si l’utilisateur ne l’a pas dite." },
+      unit: { type: "string", enum: ["g", "kg", "ml", "l", "unit"] },
+      supplier_name: { type: "string", description: "Vide si non précisé." },
+      supplier_contact: { type: "string", description: "Email ou téléphone, vide sinon." },
+      due_date: { type: "string", description: "AAAA-MM-JJ, vide pour le délai habituel." },
+    }),
+  },
+  {
+    name: "propose_restock",
+    description: "Prépare le réassort de tous les ingrédients sous leur seuil, chez leurs fournisseurs habituels.",
+    strict: true,
+    input_schema: object({}),
+  },
+  {
+    name: "propose_receive",
+    description: "Réceptionne une livraison attendue (commandes fournisseurs du contexte).",
+    strict: true,
+    input_schema: object({
+      ingredient_name: { type: "string" },
+      expires: { type: "string", description: "Date limite AAAA-MM-JJ, vide sinon." },
+    }),
+  },
+  {
+    name: "propose_waste",
+    description: "Déclare une perte de stock (produit jeté, abîmé, périmé).",
+    strict: true,
+    input_schema: object({
+      ingredient_name: { type: "string" },
+      quantity: { type: "number" },
+      unit: { type: "string", enum: ["g", "kg", "ml", "l", "unit"] },
+      reason: { type: "string" },
+    }),
+  },
+  {
+    name: "propose_supplier",
+    description: "Crée un fournisseur ou complète son catalogue (ce qu’il vend). Les ingrédients inconnus sont créés.",
+    strict: true,
+    input_schema: object({
+      name: { type: "string" },
+      contact: { type: "string", description: "Vide si inconnu." },
+      sells: { type: "array", items: { type: "string" } },
+    }),
+  },
+  {
+    name: "propose_product",
+    description:
+      "Ajoute un produit à la carte avec sa recette (ingrédients par portion, créés s’ils manquent). Si le prix ou la recette manquent, utilise plutôt ask_user.",
+    strict: true,
+    input_schema: object({
+      name: { type: "string" },
+      price_cents: { type: "integer" },
+      category: { type: "string" },
+      ingredients: {
+        type: "array",
+        items: object({
+          name: { type: "string" },
+          quantity: { type: "number" },
+          unit: { type: "string", enum: ["g", "kg", "ml", "l", "unit"] },
+        }),
+      },
+    }),
+  },
+  {
+    name: "propose_menu_update",
+    description: "Change le prix ou la disponibilité d’un produit de la carte. price_cents = -1 pour garder le prix.",
+    strict: true,
+    input_schema: object({
+      menu_id: { type: "string" },
+      price_cents: { type: "integer" },
+      availability: { type: "string", enum: ["keep", "on", "off"] },
+    }),
+  },
+  {
+    name: "propose_customer",
+    description: "Crée une fiche client.",
+    strict: true,
+    input_schema: object({
+      name: { type: "string" },
+      contact: { type: "string" },
+      consent: { type: "boolean" },
+    }),
+  },
+  {
+    name: "propose_loyalty",
+    description: "Ajoute (positif) ou retire (négatif) des points de fidélité à un client du contexte.",
+    strict: true,
+    input_schema: object({
+      client_name: { type: "string" },
+      points: { type: "integer" },
+      reason: { type: "string" },
+    }),
+  },
+  {
+    name: "propose_expense",
+    description: "Enregistre une dépense opérationnelle.",
+    strict: true,
+    input_schema: object({ label: { type: "string" }, amount_cents: { type: "integer" } }),
+  },
+  {
+    name: "propose_shift",
+    description: "Ajoute un créneau au planning d’un membre de l’équipe.",
+    strict: true,
+    input_schema: object({
+      employee_name: { type: "string" },
+      date: { type: "string", description: "AAAA-MM-JJ" },
+      start: { type: "string", description: "HH:MM" },
+      end: { type: "string", description: "HH:MM" },
+    }),
+  },
+  {
+    name: "propose_flash_promotion",
+    description: "Lance une promotion flash en pourcentage sur un produit, pour quelques heures.",
+    strict: true,
+    input_schema: object({
+      menu_id: { type: "string" },
+      percent: { type: "integer" },
+      hours: { type: "integer" },
+    }),
+  },
+  {
+    name: "propose_customer_message",
+    description: "Prépare un email ou un SMS à un client (relance, offre, information). Rédige un message court et chaleureux.",
+    strict: true,
+    input_schema: object({
+      client_name: { type: "string" },
+      channel: { type: "string", enum: ["email", "sms"] },
+      purpose: { type: "string", enum: ["relance", "offre", "information"] },
+      body: { type: "string" },
+    }),
+  },
+  {
+    name: "ask_user",
+    description:
+      "Pose une question quand une information indispensable manque (prix, quantité, fournisseur, contact). pending_sentence est la demande complète à laquelle il ne manque que la réponse, ex. « Commande 3 kg de fraises chez ».",
+    strict: true,
+    input_schema: object({
+      question: { type: "string" },
+      pending_sentence: { type: "string" },
+      options: { type: "array", items: { type: "string" } },
+    }),
+  },
+  {
     name: "suggest_followups",
     description:
       "Propose une à trois prochaines demandes courtes, formulées comme l’utilisateur les dirait.",
@@ -123,6 +290,9 @@ Ton rôle :
 - Expliquer le fonctionnement d’atacuisine à partir du guide ci-dessous, en citant les étapes.
 - Préparer les actions demandées avec les outils propose_* : ils affichent une carte que l’utilisateur confirme. Tu ne dis jamais qu’une action est faite : dis qu’elle est prête à confirmer.
 - Enchaîner sur la suite naturelle du service (après une commande : suivi cuisine puis règlement ; après un règlement : libérer la table) avec suggest_followups.
+- Gérer le restaurant de bout en bout : achats et fournisseurs, réassort, réceptions, pertes, carte et recettes, clients et fidélité, dépenses, planning, promotions flash, messages clients.
+- Si un élément existe déjà (ingrédient, fournisseur, produit, client), l’utiliser. S’il manque et peut être créé, le créer dans la même proposition (les outils le font). S’il manque une information que seul l’utilisateur connaît, poser la question avec ask_user, une seule question à la fois.
+- Une même phrase peut contenir plusieurs demandes : appelle un outil par demande.
 - Si la demande dépasse les droits de l’utilisateur (permissions du contexte), le dire simplement.
 
 Règles :
@@ -170,19 +340,47 @@ function contextJson(ctx: AssistantContext) {
     reglements_aujourdhui: ctx.paymentsToday,
     ventes_par_jour: ctx.sales,
     nombre_clients: ctx.customers,
+    fournisseurs: ctx.suppliers.map((x) => ({
+      nom: x.name,
+      contact: x.contact,
+      delai_jours: x.lead_days,
+      vend: x.ingredients.map((id) => ctx.ingredients.find((i) => i.id === id)?.name).filter(Boolean),
+    })),
+    ingredients: ctx.ingredients.map((i) => [i.name, Math.round(i.available * 10) / 10, i.unit, i.threshold]),
+    livraisons_attendues: ctx.purchases.map((p) => [p.ingredient, p.quantity - p.received, p.unit, p.supplier, p.due_on]),
+    equipe: ctx.employees.map((e) => [e.name, e.role]),
+    clients: ctx.clients.slice(0, 120).map((c) => [c.name, c.points, c.consent ? "consentant" : "sans consentement"]),
   });
 }
 
 type Outcome = Answer & { usages: TokenUsage[]; model: string; costEur: number };
 
+type Out = {
+  proposals: Proposal[];
+  suggestions: string[];
+  navigate?: string;
+  followUp?: string;
+  question?: string;
+};
+
 function runTool(
   ctx: AssistantContext,
   block: Anthropic.Beta.BetaToolUseBlock,
-  out: { proposals: Proposal[]; suggestions: string[]; navigate?: string },
+  out: Out,
 ) {
   const input = block.input as Record<string, unknown>;
   const n = Number(input.table_number);
-  const built = (() => {
+  const str = (k: string) => String(input[k] ?? "").trim();
+  const amount = (k: string) => {
+    const unit = str("unit");
+    const q = Number(input[k]) || 0;
+    return {
+      quantity: q > 0 ? q * (unit === "kg" || unit === "l" ? 1000 : 1) : null,
+      unit: (unit === "kg" ? "g" : unit === "l" ? "ml" : unit || null) as BaseUnit | null,
+    };
+  };
+  const date = (v: string) => (/^\d{4}-\d{2}-\d{2}$/.test(v) ? v : null);
+  const built: Step = (() => {
     switch (block.name) {
       case "propose_order":
         return orderProposal(
@@ -217,6 +415,76 @@ function runTool(
         out.navigate = target;
         return { reply: `Écran ${target} ouvert.` };
       }
+      case "propose_purchase": {
+        const a = amount("quantity");
+        return purchaseStep(ctx, {
+          item: str("ingredient_name"),
+          quantity: a.quantity,
+          unit: a.unit,
+          supplier: str("supplier_name") || undefined,
+          contact: str("supplier_contact") || undefined,
+          due: date(str("due_date")),
+        });
+      }
+      case "propose_restock":
+        return restockStep(ctx);
+      case "propose_receive":
+        return receiveStep(ctx, str("ingredient_name"), date(str("expires")));
+      case "propose_waste": {
+        const a = amount("quantity");
+        return wasteStep(ctx, str("ingredient_name"), a.quantity, a.unit, str("reason") || "Perte déclarée à Cuisine IA");
+      }
+      case "propose_supplier": {
+        const sells = ((input.sells as string[]) ?? []).map((x) => String(x).trim()).filter(Boolean);
+        const existing = ctx.suppliers.find((x) => x.name.toLowerCase() === str("name").toLowerCase());
+        return existing ? linkStep(ctx, existing.id, sells) : supplierStep(ctx, str("name"), str("contact"), sells);
+      }
+      case "propose_product": {
+        const lines = ((input.ingredients as { name: string; quantity: number; unit: string }[]) ?? []).map((i) => ({
+          item: String(i.name),
+          quantity: Number(i.quantity) * (i.unit === "kg" || i.unit === "l" ? 1000 : 1),
+          unit: (i.unit === "kg" ? "g" : i.unit === "l" ? "ml" : i.unit) as BaseUnit,
+        }));
+        const price = Number(input.price_cents);
+        return productStep(ctx, { name: str("name"), price: price > 0 ? price : null, category: str("category"), lines, original: `Ajoute le plat ${str("name")}` });
+      }
+      case "propose_menu_update": {
+        const m = ctx.menu.find((x) => x.id === str("menu_id")) ?? findMenu(ctx, str("menu_id"));
+        if (!m) return { reply: "Produit introuvable." };
+        const price = Number(input.price_cents);
+        const availability = str("availability");
+        return menuEditStep(ctx, m.name, {
+          price: price >= 0 ? price : undefined,
+          enabled: availability === "on" ? true : availability === "off" ? false : undefined,
+        });
+      }
+      case "propose_customer":
+        return customerStep(ctx, str("name"), str("contact"), input.consent === true, `Ajoute le client ${str("name")}`);
+      case "propose_loyalty":
+        return loyaltyStep(ctx, str("client_name"), Math.trunc(Number(input.points)) || 0, str("reason") || "Geste fidélité");
+      case "propose_expense":
+        return expenseStep(ctx, str("label"), Number(input.amount_cents) > 0 ? Math.round(Number(input.amount_cents)) : null, "Ajoute une dépense");
+      case "propose_shift": {
+        const t = (v: string) => {
+          const m = v.match(/^(\d{1,2}):(\d{2})$/);
+          return m ? ([Number(m[1]), Number(m[2])] as const) : null;
+        };
+        const start = t(str("start")), end = t(str("end"));
+        return shiftStep(ctx, str("employee_name"), date(str("date")), start && end ? { start, end } : null, `Planifie ${str("employee_name")}`);
+      }
+      case "propose_flash_promotion": {
+        const m = ctx.menu.find((x) => x.id === str("menu_id"));
+        return flashStep(ctx, m?.name ?? str("menu_id"), Number(input.percent) || null, null, Number(input.hours) || 2);
+      }
+      case "propose_customer_message": {
+        const c = findClient(ctx, str("client_name"));
+        return messageStep(ctx, c?.name ?? str("client_name"), str("channel") === "sms" ? "sms" : "email", (["relance", "offre", "information"].includes(str("purpose")) ? str("purpose") : "information") as "relance" | "offre" | "information", str("body") || undefined);
+      }
+      case "ask_user":
+        out.followUp = str("pending_sentence") || undefined;
+        out.suggestions = ((input.options as string[]) ?? []).slice(0, 4).map((x) => String(x).slice(0, 80));
+        out.question = str("question");
+        return { reply: "Question posée à l’utilisateur. Arrête-toi là et attends sa réponse." };
       case "suggest_followups":
         out.suggestions = ((input.suggestions as string[]) ?? []).slice(0, 3).map((s) => String(s).slice(0, 80));
         return { reply: "Suggestions affichées." };
@@ -230,6 +498,12 @@ function runTool(
       content: `Carte « ${built.proposal.title} » affichée à l’utilisateur, en attente de sa confirmation. ${built.reply}`,
       error: false,
     };
+  }
+  if (built.ask) {
+    out.followUp = built.ask.followUp;
+    out.suggestions = built.ask.options;
+    out.question = built.reply;
+    return { content: `Question posée à l’utilisateur : « ${built.reply} ». Attends sa réponse.`, error: false };
   }
   const failed = block.name.startsWith("propose_");
   return { content: built.reply, error: failed };
@@ -248,7 +522,7 @@ export async function askLlm(
     },
   ];
   if (messages[0]?.role !== "user") messages.shift();
-  const out: { proposals: Proposal[]; suggestions: string[]; navigate?: string } = {
+  const out: Out = {
     proposals: [],
     suggestions: [],
   };
@@ -291,6 +565,11 @@ export async function askLlm(
         };
       }),
     });
+    // Question posée : on attend l’utilisateur, inutile de relancer le modèle.
+    if (out.question) {
+      if (!texts.some((t) => t.includes(out.question!))) texts.push(out.question);
+      break;
+    }
     // Si seules des suggestions ou une navigation restent, inutile de relancer.
     if (calls.every((c) => ["suggest_followups", "open_module"].includes(c.name)) && texts.length) break;
   }
@@ -300,6 +579,7 @@ export async function askLlm(
     suggestions: out.suggestions,
     links: [],
     navigate: out.navigate,
+    followUp: out.followUp,
     usages,
     model,
     costEur: providerCostEur(model, usages),

@@ -230,7 +230,7 @@
   padding: 0;
   margin: 6px 0;
 }
-.cia-card li:last-child {
+.cia-card li.total {
   font-weight: 700;
 }
 .cia-warn {
@@ -270,6 +270,18 @@
 }
 .cia-card-actions button:disabled {
   opacity: 0.7;
+}
+.cia-confirm-all {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 8px;
+  padding: 8px 12px;
+  border: 0;
+  border-radius: 10px;
+  background: var(--cia-terracotta);
+  color: #fff;
+  font-weight: 700;
 }
 .cia-links {
   display: flex;

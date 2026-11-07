@@ -34,6 +34,7 @@ type Reply = {
   suggestions: string[];
   links: { label: string; href: string }[];
   navigate?: string;
+  followUp?: string;
   engine: "reflex" | "llm" | "free" | "none";
   credits: number;
   balance: number;
@@ -66,11 +67,12 @@ export function openCuisineIa(prompt?: string) {
 }
 
 const starters = [
-  "Commandes en cours",
   "Commande table 4 : deux couscous agneau et un thé",
-  "Qu’est-ce qui manque en stock ?",
+  "Aide-moi à gérer les stocks",
+  "Achète 3 kg de fraises",
+  "Ajoute le fournisseur Verger Bio qui vend des fraises",
+  "Livraisons attendues",
   "Chiffre du jour",
-  "Réservations de ce soir",
   "Comment créer un code promo ?",
 ];
 const euros = (cents: number) =>
@@ -141,6 +143,22 @@ async function defaultExecute(restaurant: string, payload: ActionPayload) {
   });
   const d = await r.json().catch(() => ({}));
   if (!r.ok) throw new Error(typeof d.error === "string" ? d.error : d.error?.message || "Action impossible.");
+  return d.result;
+}
+
+/** Remplace « $N » par l’identifiant créé par la N-ième action de la carte. */
+function resolve(value: unknown, results: unknown[]): unknown {
+  if (typeof value === "string") {
+    const ref = value.match(/^\$(\d+)$/);
+    if (!ref) return value;
+    const id = (results[Number(ref[1])] as { id?: string } | undefined)?.id;
+    if (!id) throw new Error("Étape précédente incomplète : réessayez.");
+    return id;
+  }
+  if (Array.isArray(value)) return value.map((v) => resolve(v, results));
+  if (value && typeof value === "object")
+    return Object.fromEntries(Object.entries(value).map(([k, v]) => [k, resolve(v, results)]));
+  return value;
 }
 
 export function CuisineIa({
@@ -178,6 +196,7 @@ export function CuisineIa({
   const field = useRef<HTMLTextAreaElement>(null);
   const messagesRef = useRef<Message[]>([]);
   const statusesRef = useRef<Record<string, Status>>({});
+  const progress = useRef<Record<string, unknown[]>>({});
   const handleVoiceRef = useRef<(said: string) => Promise<void>>(async () => {});
   messagesRef.current = messages;
   statusesRef.current = statuses;
@@ -227,48 +246,76 @@ export function CuisineIa({
     window.speechSynthesis.speak(u);
   }, []);
 
+  /* Écoute continue : la phrase n’est envoyée qu’après un vrai silence, pour
+     capter les demandes longues (« aide-moi à gérer les stocks et à acheter
+     des fraises chez… »). Un silence plus long est accordé quand la phrase
+     finit sur un mot qui annonce une suite (« et », « de », « chez »…). */
   const listen = useCallback(() => {
     const Rec = recognitionClass();
     if (!Rec || !voiceRef.current || busyRef.current) return;
     recognition.current?.abort();
     const rec = new Rec();
     rec.lang = "fr-FR";
-    rec.continuous = false;
+    rec.continuous = true;
     rec.interimResults = true;
     let final = "";
+    let partial = "";
+    let silence: ReturnType<typeof setTimeout> | undefined;
+    let stopped = false;
+    const finish = () => {
+      if (stopped) return;
+      stopped = true;
+      rec.stop();
+    };
     rec.onresult = (e) => {
-      let partial = "";
+      partial = "";
       for (let i = e.resultIndex; i < e.results.length; i++) {
-        if (e.results[i].isFinal) final += e.results[i][0].transcript;
+        if (e.results[i].isFinal) final += ` ${e.results[i][0].transcript}`;
         else partial += e.results[i][0].transcript;
       }
-      setInterim(final || partial);
+      const heard = `${final} ${partial}`.replace(/\s+/g, " ").trim();
+      setInterim(heard);
+      clearTimeout(silence);
+      const unfinished = /\b(et|de|du|des|chez|pour|avec|à|a|le|la|les|un|une|puis|plus)$/i.test(heard);
+      silence = setTimeout(finish, unfinished ? 2600 : 1400);
     };
     rec.onerror = (e) => {
-      if (e.error === "not-allowed") {
+      if (e.error === "not-allowed" || e.error === "service-not-allowed") {
         voiceRef.current = false;
         setVoice(false);
         setNotice("Micro refusé par le navigateur. Autorisez-le pour le mode vocal.");
       }
     };
     rec.onend = () => {
+      clearTimeout(silence);
       setListening(false);
       setInterim("");
-      const said = final.trim();
+      const said = `${final} ${partial}`.replace(/\s+/g, " ").trim();
       if (said) void handleVoiceRef.current(said);
-      else if (voiceRef.current && !busyRef.current) setTimeout(listen, 300);
+      else if (voiceRef.current && !busyRef.current) setTimeout(() => listenRef.current(), 250);
     };
     recognition.current = rec;
     setListening(true);
-    rec.start();
+    try {
+      rec.start();
+    } catch {
+      setListening(false);
+    }
   }, []);
+  const listenRef = useRef(listen);
+  listenRef.current = listen;
 
   const runProposal = useCallback(
     async (p: Proposal) => {
       if (statusesRef.current[p.id]?.state === "running" || statusesRef.current[p.id]?.state === "done") return;
       setStatuses((s) => ({ ...s, [p.id]: { state: "running" } }));
+      // Les étapes déjà réussies ne sont pas rejouées après une erreur.
+      const results = (progress.current[p.id] ??= []);
       try {
-        for (const a of p.actions) await (execute ? execute(a) : defaultExecute(restaurant, a));
+        for (let i = results.length; i < p.actions.length; i++) {
+          const payload = resolve(p.actions[i], results) as ActionPayload;
+          results.push((await (execute ? execute(payload) : defaultExecute(restaurant, payload))) ?? null);
+        }
         setStatuses((s) => ({ ...s, [p.id]: { state: "done" } }));
         if (p.open) onNavigate?.(p.open);
         return true;
@@ -289,6 +336,8 @@ export function CuisineIa({
         setView("credits");
         return;
       }
+      const last = messagesRef.current.at(-1);
+      const followUp = last?.role === "assistant" ? last.followUp : undefined;
       const history = messagesRef.current
         .slice(-8)
         .map((m) => ({ role: m.role, content: m.text.slice(0, 1500) }));
@@ -301,7 +350,7 @@ export function CuisineIa({
         const r = await fetch(base, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ kind: "ask", message, history, voice: spokenReply }),
+          body: JSON.stringify({ kind: "ask", message, history, voice: spokenReply, followUp }),
         });
         const d = await r.json();
         if (!r.ok) throw new Error(d.error?.message || "Cuisine IA est indisponible.");
@@ -311,7 +360,12 @@ export function CuisineIa({
         if (reply.navigate) onNavigate?.(reply.navigate);
         if (spokenReply)
           speak(
-            reply.reply + (reply.proposals.length ? ". Dites oui pour confirmer, ou non pour annuler." : ""),
+            reply.reply +
+              (reply.proposals.length > 1
+                ? `. ${reply.proposals.length} actions prêtes. Dites oui pour tout confirmer, « la première » pour une seule, ou non.`
+                : reply.proposals.length
+                  ? ". Dites oui pour confirmer, ou non pour annuler."
+                  : ""),
             () => listen(),
           );
       } catch (e) {
@@ -334,25 +388,33 @@ export function CuisineIa({
     [base, listen, onNavigate, refresh, speak],
   );
 
-  const pendingProposal = () =>
-    [...messagesRef.current]
-      .reverse()
-      .flatMap((m) => m.proposals ?? [])
-      .find((p) => !statusesRef.current[p.id]);
+  /** Cartes encore en attente dans la dernière réponse qui en propose. */
+  const pendingProposals = () => {
+    const last = [...messagesRef.current].reverse().find((m) => m.proposals?.length);
+    return (last?.proposals ?? []).filter((p) => !statusesRef.current[p.id]);
+  };
 
   async function handleVoice(said: string) {
-    const n = said.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().trim();
-    const pending = pendingProposal();
-    if (pending && /^(oui|ok|d accord|confirme|valide|vas y|go|c est bon|envoie|parfait)\b/.test(n.replace(/'/g, " "))) {
+    const n = said.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/['’]/g, " ").trim();
+    const pending = pendingProposals();
+    const short = n.split(" ").length <= 6;
+    const ordinal = n.match(/\b(premier|premiere|deuxieme|second|seconde|troisieme)\b/);
+    if (pending.length && short && (ordinal || /^(oui|ouais|ok|d accord|confirme|valide|vas y|go|c est bon|envoie|parfait|fais le|lance)\b/.test(n))) {
+      const index = ordinal ? { premier: 0, premiere: 0, deuxieme: 1, second: 1, seconde: 1, troisieme: 2 }[ordinal[1]]! : -1;
+      const chosen = index >= 0 ? pending.slice(index, index + 1) : pending;
       setMessages((m) => [...m, { id: uid(), role: "user", text: said }]);
-      const ok = await runProposal(pending);
-      const text = ok ? `C’est fait : ${pending.title}.` : "L’action a échoué, regardez l’écran.";
-      setMessages((m) => [...m, { id: uid(), role: "assistant", text, suggestions: ok ? pending.next : [] }]);
+      const done: Proposal[] = [];
+      for (const p of chosen) if (await runProposal(p)) done.push(p);
+      const next = [...new Set(done.flatMap((p) => p.next))].slice(0, 3);
+      const text = done.length
+        ? `C’est fait : ${done.map((p) => p.title).join(", ")}.${next.length ? ` Ensuite, je peux : ${next.join(", ou ")}.` : ""}`
+        : "L’action a échoué, regardez l’écran.";
+      setMessages((m) => [...m, { id: uid(), role: "assistant", text, suggestions: next }]);
       speak(text, () => listen());
       return;
     }
-    if (pending && /^(non|annule|stop|laisse tomber|pas maintenant)\b/.test(n)) {
-      setStatuses((s) => ({ ...s, [pending.id]: { state: "dismissed" } }));
+    if (pending.length && short && /^(non|annule|stop|laisse tomber|pas maintenant|oublie)\b/.test(n)) {
+      setStatuses((s) => ({ ...s, ...Object.fromEntries(pending.map((p) => [p.id, { state: "dismissed" as const }])) }));
       setMessages((m) => [...m, { id: uid(), role: "user", text: said }, { id: uid(), role: "assistant", text: "C’est annulé." }]);
       speak("C’est annulé.", () => listen());
       return;
@@ -553,7 +615,9 @@ export function CuisineIa({
                         <b>{p.title}</b>
                         <ul>
                           {p.lines.map((l, i) => (
-                            <li key={i}>{l}</li>
+                            <li key={i} className={/^(Total|Livraison attendue)/.test(l) ? "total" : undefined}>
+                              {l}
+                            </li>
                           ))}
                         </ul>
                         {p.warning && <p className="cia-warn">{p.warning}</p>}
@@ -591,6 +655,16 @@ export function CuisineIa({
                       </div>
                     );
                   })}
+                  {(m.proposals?.filter((p) => !statuses[p.id]).length ?? 0) > 1 && (
+                    <button
+                      className="cia-confirm-all"
+                      onClick={async () => {
+                        for (const p of m.proposals!.filter((x) => !statusesRef.current[x.id])) await runProposal(p);
+                      }}
+                    >
+                      <Check size={15} aria-hidden /> Tout confirmer ({m.proposals!.filter((p) => !statuses[p.id]).length})
+                    </button>
+                  )}
                   {((m.links && m.links.length > 0) || (m.navigate && !onNavigate)) && (
                     <div className="cia-links">
                       {[

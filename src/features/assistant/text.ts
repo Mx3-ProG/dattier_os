@@ -8,6 +8,8 @@ export function normalize(value: string) {
     .toLowerCase()
     .replace(/[’'`]/g, " ")
     .replace(/œ/g, "oe")
+    .replace(/€/g, " euros ")
+    .replace(/%/g, " pourcent ")
     .replace(/[^a-z0-9+,\s]/g, " ")
     .replace(/\s+/g, " ")
     .trim();

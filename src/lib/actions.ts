@@ -34,7 +34,7 @@ import { randomUUID as uuid } from "node:crypto";
 import { z } from "zod";
 import { rows, one, type DB } from "./database/db";
 import type { Actor } from "./auth/session";
-import { requirePermission } from "./permissions";
+import { can, requirePermission, type Permission } from "./permissions";
 import {
   changeItem,
   createOrder,
@@ -113,7 +113,25 @@ export const actionSchema = z.discriminatedUnion("action", [
     reason: text,
     kind: z.enum(["waste", "inventory"]),
   }),
-  z.object({ action: z.literal("supplier"), name: text, contact: text }),
+  z.object({
+    action: z.literal("supplier"),
+    name: text,
+    contact: text,
+    ingredients: z.array(id).max(50).default([]),
+  }),
+  z.object({
+    action: z.literal("supplierIngredient"),
+    supplier: id,
+    ingredient: id,
+    linked: z.boolean().default(true),
+  }),
+  z.object({
+    action: z.literal("ingredient"),
+    name: text,
+    unit: z.enum(["g", "ml", "unit"]),
+    threshold: z.coerce.number().min(0).max(1000000).default(0),
+    cost: z.coerce.number().min(0).max(1000000).default(0),
+  }),
   z.object({
     action: z.literal("purchase"),
     supplier: id,
@@ -367,15 +385,59 @@ export async function perform(
       );
       break;
     }
-    case "supplier":
+    case "supplier": {
       requirePermission(user.roles ?? user.role, "purchases");
+      const supplierId = uuid();
       await db.query("INSERT INTO suppliers VALUES($1,$2,$3,$4,2)", [
-        uuid(),
+        supplierId,
         r,
         a.name,
         a.contact,
       ]);
+      for (const ingredient of a.ingredients) {
+        await one(
+          db,
+          "SELECT id FROM ingredients WHERE id=$1 AND restaurant_id=$2",
+          [ingredient, r],
+        );
+        await db.query(
+          "INSERT INTO supplier_ingredients(supplier_id,ingredient_id,restaurant_id) VALUES($1,$2,$3) ON CONFLICT DO NOTHING",
+          [supplierId, ingredient, r],
+        );
+      }
+      await log(db, r, user.id, "Fournisseur créé", supplierId);
+      return { id: supplierId };
+    }
+    case "supplierIngredient":
+      requirePermission(user.roles ?? user.role, "purchases");
+      await one(db, "SELECT id FROM suppliers WHERE id=$1 AND restaurant_id=$2", [
+        a.supplier,
+        r,
+      ]);
+      await one(
+        db,
+        "SELECT id FROM ingredients WHERE id=$1 AND restaurant_id=$2",
+        [a.ingredient, r],
+      );
+      await db.query(
+        a.linked
+          ? "INSERT INTO supplier_ingredients(supplier_id,ingredient_id,restaurant_id) VALUES($1,$2,$3) ON CONFLICT DO NOTHING"
+          : "DELETE FROM supplier_ingredients WHERE supplier_id=$1 AND ingredient_id=$2 AND restaurant_id=$3",
+        [a.supplier, a.ingredient, r],
+      );
       break;
+    case "ingredient": {
+      const roles = user.roles ?? user.role;
+      if (!["catalog", "stock", "purchases"].some((p) => can(roles, p as Permission)))
+        throw new Error("Accès refusé pour ce profil.");
+      const ingredientId = uuid();
+      await db.query(
+        "INSERT INTO ingredients(id,restaurant_id,name,unit,threshold,cost) VALUES($1,$2,$3,$4,$5,$6)",
+        [ingredientId, r, a.name, a.unit, a.threshold, a.cost],
+      );
+      await log(db, r, user.id, "Ingrédient créé", ingredientId);
+      return { id: ingredientId };
+    }
     case "purchase":
       requirePermission(user.roles ?? user.role, "purchases");
       await one(
@@ -391,6 +453,10 @@ export async function perform(
       await db.query(
         "INSERT INTO purchase_orders(id,restaurant_id,supplier_id,ingredient_id,quantity,due_on) VALUES($1,$2,$3,$4,$5,$6)",
         [uuid(), r, a.supplier, a.ingredient, a.quantity, a.due],
+      );
+      await db.query(
+        "INSERT INTO supplier_ingredients(supplier_id,ingredient_id,restaurant_id) VALUES($1,$2,$3) ON CONFLICT DO NOTHING",
+        [a.supplier, a.ingredient, r],
       );
       break;
     case "receive": {

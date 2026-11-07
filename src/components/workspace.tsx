@@ -283,6 +283,7 @@ export function Workspace() {
       if (!r.ok) throw new Error(d.error);
       setError("");
       await load();
+      return d.result as unknown;
       return d.result;
     } catch (e) {
       setError((e as Error).message);

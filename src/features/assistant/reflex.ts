@@ -4,6 +4,8 @@
    1 crédit et n’a presque aucun coût de fonctionnement. Ce qu’il ne comprend
    pas part à l’IA générative. */
 import { searchGuide } from "./knowledge";
+import { manage } from "./manage";
+import { findIngredient, supplierFor } from "./operations";
 import {
   orderProposal,
   paymentProposal,
@@ -125,12 +127,15 @@ function capabilities(ctx: AssistantContext) {
       `Bonjour ${ctx.user.name.split(" ")[0]}, je suis Cuisine IA. Parlez-moi comme à un second :`,
       "• « Commande table 4 : deux couscous agneau et un thé à la menthe »",
       "• « Encaisse la table 4 en espèces » · « Sers la table 2 »",
+      "• « Aide-moi à gérer les stocks » · « Achète 3 kg de fraises chez Primeurs Martin »",
+      "• « Ajoute le fournisseur Verger Bio qui vend des fraises » · « On a reçu les tomates »",
+      "• « Passe le couscous à 19 € » · « Planifie Sarah demain de 18h à 23h »",
       "• « Qu’est-ce qui manque en stock ? » · « Chiffre du jour »",
       "• « Réservations de ce soir » · « Comment créer un code promo ? »",
       "Je prépare chaque action, vous confirmez d’un geste ou d’un « oui » en mode vocal.",
     ].join("\n"),
     {
-      suggestions: ["Commandes en cours", "Tables libres", "Chiffre du jour", "Stocks bas"],
+      suggestions: ["Aide-moi à gérer les stocks", "Commandes en cours", "Livraisons attendues", "Chiffre du jour"],
     },
     "free",
   );
@@ -149,7 +154,7 @@ export function reflex(input: string, ctx: AssistantContext): ReflexResult | nul
 
   if (
     /^(bonjour|salut|hello|coucou|bonsoir|hey)\b/.test(text) && text.split(" ").length <= 3 ||
-    /\b(que sais tu faire|qu est ce que tu sais|tu sers a quoi|aide moi|help)\b/.test(text)
+    (/\b(que sais tu faire|qu est ce que tu sais|tu sers a quoi)\b/.test(text) || /^(aide moi|aide|help)$/.test(text))
   )
     return capabilities(ctx);
 
@@ -238,6 +243,42 @@ export function reflex(input: string, ctx: AssistantContext): ReflexResult | nul
       },
     );
   }
+
+  // Qui vend quoi ?
+  const sells = text.match(/\b(?:qui vend|quel(?:s)? fournisseurs? (?:vend\w*|a|ont|livre\w*)|ou acheter|chez qui (?:acheter|commander))\s+(?:des |du |de la |de l |les |le |la )?(.+?)\s*$/);
+  if (sells && !/\b(ajoute|cree|creer|nouveau|enregistre)\w*\b/.test(text)) {
+    const item = sells[1];
+    const ingredient = findIngredient(ctx, item);
+    const found = supplierFor(ctx, ingredient?.id ?? null, item);
+    return answer(
+      found.suppliers.length
+        ? `**${found.suppliers.map((s) => s.name).join(", ")}**${found.reason === "spécialité" ? " (déduit de leur spécialité)" : ""} pour ${ingredient?.name.toLowerCase() ?? item}.`
+        : `Aucun fournisseur n’est associé à ${ingredient?.name.toLowerCase() ?? item}. Dites « ${ctx.suppliers[0]?.name ?? "Primeurs Martin"} vend des ${item} » pour l’ajouter à son catalogue, ou « ajoute le fournisseur … qui vend des ${item} ».`,
+      {
+        suggestions: found.suppliers.slice(0, 2).map((s) => `Commande 2 kg de ${item} chez ${s.name}`),
+        navigate: "suppliers",
+      },
+    );
+  }
+
+  // Livraisons attendues
+  if (/\b(livraisons?|commandes? fournisseurs?|achats?)\b/.test(text) && /\b(attendues?|en cours|prevues?|quand|liste|arrivent)\b/.test(text)) {
+    if (!ctx.purchases.length)
+      return answer("Aucune livraison attendue.", { suggestions: ["Aide-moi à gérer les stocks"], navigate: "deliveries" });
+    return answer(
+      [
+        `**${ctx.purchases.length} livraison(s) attendue(s)**`,
+        ...ctx.purchases.slice(0, 10).map(
+          (p) => `• ${new Date(`${p.due_on}T12:00:00Z`).toLocaleDateString("fr-FR", { weekday: "short", day: "numeric", month: "short", timeZone: "UTC" })} — ${p.ingredient} · ${p.quantity - p.received} ${p.unit} · ${p.supplier}`,
+        ),
+      ].join("\n"),
+      { navigate: "deliveries", suggestions: ctx.purchases.slice(0, 2).map((p) => `On a reçu ${p.ingredient.toLowerCase()}`) },
+    );
+  }
+
+  // Gestion : achats, fournisseurs, stocks, carte, clients, équipe, promos
+  const managed = manage(input, ctx);
+  if (managed) return { ...managed, engine: "reflex" };
 
   // Prise de commande
   const orderVerb = /\b(commande\w*|ajoute\w*|rajoute\w*|mets?|note\w*|prends?|envoie\w*|lance\w*|sers?|veut|voudrai\w*|pour la table)\b/.test(text);

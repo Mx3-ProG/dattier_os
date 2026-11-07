@@ -8,12 +8,36 @@ Cuisine IA est l’assistant intégré au poste de travail (`/dashboard`), à l�
 | --- | --- | --- |
 | Moteur réflexe | `src/features/assistant/reflex.ts` | Règles en français. Couvre les commandes dictées, les règlements, les stocks, les ventes, les réservations, la navigation et le mode d’emploi. Instantané, coût fournisseur nul. |
 | IA générative | `src/features/assistant/llm.ts` | Claude via `@anthropic-ai/sdk`. Ses outils `propose_*` ne font que fabriquer des cartes d’action. Le prompt système et le guide sont mis en cache. |
+| Gestion | `src/features/assistant/manage.ts`, `operations.ts`, `parse.ts` | Achats et fournisseurs, réassort, réceptions, pertes, carte et recettes, clients et fidélité, dépenses, planning, pointage, promos flash, messages clients. Lit les quantités, prix, dates et horaires dits à voix haute. |
 | Actions | `src/features/assistant/proposals.ts` | Valident les actions contre la carte, les tables, les commandes et les droits. Elles produisent les corps exacts de `POST /api/v1/action`. |
 | Crédits | `database/migrations/026_ai_credits.sql` | Portefeuille par organisation et journal. Le débit est atomique et chaque mouvement enregistre son coût fournisseur réel. |
 | API | `src/app/api/restaurants/[restaurant]/assistant/route.ts` | `GET` renvoie le solde, les packs et l’historique. `POST {kind:"ask"}` envoie une question, `POST {kind:"pack"}` une demande de recharge. |
 | Interface | `src/components/assistant/cuisine-ia.tsx` | Panneau de conversation, cartes d’action, suggestions, mode vocal (Web Speech) et recharge. |
 
 Pour la sécurité, l’assistant ne voit que le snapshot de l’utilisateur, donc uniquement ses droits. Il n’exécute rien seul. Chaque action confirmée repasse par `perform`, qui revérifie les permissions, les stocks et les transitions.
+
+## Gestion de bout en bout
+
+Exemple : « Aide-moi à gérer les stocks et à acheter des fraises ».
+
+1. **Plusieurs demandes dans une phrase.** Cuisine IA propose le réassort de tout ce qui est sous le seuil, chacun chez son fournisseur habituel. Pour les fraises, elle demande la quantité.
+2. **Recherche du fournisseur**, dans cet ordre :
+   - le catalogue fournisseur (table `supplier_ingredients`, migration 030) ;
+   - à défaut, l’historique des commandes ;
+   - à défaut, la spécialité du fournisseur (« primeur », « maraîcher »…) ;
+   - s’il en reste plusieurs ou aucun, elle demande lequel choisir.
+3. **Ce qui manque est créé dans la même carte**, et chaque étape s’appuie sur la précédente :
+   - l’ingrédient d’abord, puis le fournisseur, puis la commande ;
+   - une valeur `"$N"` dans une action désigne l’identifiant créé par l’étape N ;
+   - après une erreur, seules les étapes non faites sont rejouées.
+4. **Ce que seul l’utilisateur sait est demandé** : quantité, prix, recette, contact, horaires.
+   - La phrase en attente (`followUp`) est complétée par la réponse suivante : « Commande 5 kg de farine chez » + « Minoterie Dupuis ».
+   - Une nouvelle demande complète reste prioritaire sur la question en attente.
+5. **Chaque commande fournisseur enrichit le catalogue** : la prochaine fois, Cuisine IA sait qui vend quoi.
+
+En mode vocal :
+- l’écoute est continue et attend un vrai silence avant d’envoyer, avec un délai plus long après « et », « de » ou « chez » ;
+- « oui » confirme toutes les cartes de la dernière réponse, « la première » une seule, « non » les annule.
 
 ## Configuration
 

@@ -107,6 +107,8 @@ export type Supplier = {
   name: string;
   contact: string;
   lead_days: number;
+  /** Ingrédients vendus par ce fournisseur (catalogue fournisseur). */
+  ingredient_ids?: string[];
 };
 export type Purchase = {
   id: string;
