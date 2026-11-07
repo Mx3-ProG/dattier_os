@@ -1,8 +1,11 @@
-const CACHE = "atacuisine-shell-v3";
+const CACHE = "atacuisine-shell-v4";
 self.addEventListener("install", (event) => {
   event.waitUntil(
     caches.open(CACHE).then(async (cache) => {
-      const response = await fetch("/offline", { cache: "reload" });
+      const response = await fetch("/offline", {
+        cache: "reload",
+        credentials: "omit",
+      });
       if (!response.ok) throw new Error("Offline shell unavailable");
       const html = await response.clone().text();
       await cache.put("/offline", response);

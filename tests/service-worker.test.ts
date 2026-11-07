@@ -9,10 +9,12 @@ function worker(offline = false) {
     ["https://example.test/_next/static/style.css", new Response("old styles")],
   ]);
   const deleted: string[] = [];
+  const requests: { url: string; options?: RequestInit }[] = [];
   const cache = {
+    addAll: async () => {},
     match: async (request: Request) => stored.get(request.url)?.clone(),
-    put: async (request: Request, response: Response) => {
-      stored.set(request.url, response);
+    put: async (request: Request | string, response: Response) => {
+      stored.set(typeof request === "string" ? request : request.url, response);
     },
   };
   vm.runInNewContext(readFileSync("public/sw.js", "utf8"), {
@@ -31,12 +33,13 @@ function worker(offline = false) {
         deleted.push(key);
       },
     },
-    fetch: async () => {
+    fetch: async (url: string, options?: RequestInit) => {
+      requests.push({ url, options });
       if (offline) throw new Error("offline");
       return new Response("new styles");
     },
   });
-  return { listeners, stored, deleted };
+  return { listeners, stored, deleted, requests };
 }
 
 test("updated styles replace a previously cached asset while online", async () => {
@@ -75,4 +78,18 @@ test("activation preserves caches owned by other applications", async () => {
   });
   await completion;
   assert.deepEqual(deleted, ["atacuisine-shell-v2"]);
+});
+
+test("la page de secours hors ligne est chargée sans identité ni thème de compte", async () => {
+  const { listeners, requests, stored } = worker();
+  let completion!: Promise<unknown>;
+  listeners.get("install")!({
+    waitUntil: (value: Promise<unknown>) => {
+      completion = value;
+    },
+  });
+  await completion;
+  assert.equal(requests[0].url, "/offline");
+  assert.equal(requests[0].options?.credentials, "omit");
+  assert.ok(stored.has("/offline"));
 });

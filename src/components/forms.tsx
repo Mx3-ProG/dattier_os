@@ -1,4 +1,6 @@
 "use client";
+import { usePublicAppearance } from "@/components/cms-site/public-appearance";
+import { useAppearanceStyle } from "@/components/appearance/appearance";
 import * as Dialog from "@radix-ui/react-dialog";
 import { X } from "lucide-react";
 import { useState } from "react";
@@ -97,6 +99,8 @@ export function Modal({
   footer?: React.ReactNode;
   page?: boolean;
 }) {
+  const appearanceStyle = useAppearanceStyle();
+  const publicAppearance = usePublicAppearance();
   if (page)
     return (
       <section className="modal-page" aria-labelledby="checkout-title">
@@ -123,7 +127,9 @@ export function Modal({
       <Dialog.Portal>
         <Dialog.Overlay className="overlay" />
         <Dialog.Content
-          className={`modal ${footer ? "modal-with-footer" : ""}`}
+          style={publicAppearance?.style || appearanceStyle}
+          data-public-mode={publicAppearance?.mode}
+          className={`modal ${publicAppearance ? "public-theme-scope" : ""} ${appearanceStyle ? "appearance-scope" : ""} ${footer ? "modal-with-footer" : ""}`}
           // La visite guidée se superpose aux fenêtres : ses clics ne les ferment pas.
           onInteractOutside={(e) => {
             if (

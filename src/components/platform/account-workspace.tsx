@@ -1,4 +1,8 @@
 "use client";
+import {
+  AppearanceScope,
+  AppearanceButton,
+} from "@/components/appearance/appearance";
 import Link from "next/link";
 import { useState, type ReactNode } from "react";
 import {
@@ -13,11 +17,13 @@ import {
 } from "lucide-react";
 export function AccountWorkspace({
   children,
+  userId,
   name,
   restaurants,
   canCreate,
 }: {
   children: ReactNode;
+  userId?: string;
   name?: string;
   restaurants: { id: string; name: string; plan: number }[];
   canCreate: boolean;
@@ -25,7 +31,10 @@ export function AccountWorkspace({
   const [mobile, setMobile] = useState(false);
   const first = restaurants.find((r) => r.plan > 0);
   return (
-    <div className="workspace restaurant-workspace account-workspace">
+    <AppearanceScope
+      userId={userId}
+      className="workspace restaurant-workspace account-workspace"
+    >
       <aside
         className={`sidebar ${mobile ? "open" : ""}`}
         id="account-navigation"
@@ -36,6 +45,7 @@ export function AccountWorkspace({
           </span>
           atacuisine
         </Link>
+        <AppearanceButton />
         <button
           className="icon-button admin-sidebar-close"
           aria-label="Fermer la navigation"
@@ -141,6 +151,6 @@ export function AccountWorkspace({
         </header>
         {children}
       </div>
-    </div>
+    </AppearanceScope>
   );
 }

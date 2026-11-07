@@ -1,4 +1,10 @@
 "use client";
+import { moduleCategory } from "@/features/appearance/categories";
+import { CategoryBadge } from "@/components/appearance/category-badge";
+import {
+  AppearanceScope,
+  AppearanceButton,
+} from "@/components/appearance/appearance";
 
 import Link from "next/link";
 import {
@@ -26,6 +32,7 @@ import {
   type RestaurantModuleId,
 } from "@/features/platform/admin-navigation";
 import { CuisineIa } from "@/components/assistant/cuisine-ia";
+import { AdminTutorial } from "@/components/tutorial/tour";
 import "./platform.css";
 
 const moduleIcons = {
@@ -95,7 +102,7 @@ export function RestaurantAdminShell({
     return () => window.removeEventListener("keydown", close);
   }, [mobile]);
   return (
-    <div
+    <AppearanceScope
       className={`workspace restaurant-workspace ${isSite ? "web-studio-workspace" : ""}`}
     >
       <aside
@@ -108,6 +115,7 @@ export function RestaurantAdminShell({
           </span>
           atacuisine
         </Link>
+        <AppearanceButton />
         <button
           className="icon-button admin-sidebar-close"
           aria-label="Fermer la navigation"
@@ -131,7 +139,9 @@ export function RestaurantAdminShell({
             return (
               <Link
                 key={id}
+                data-activity-category={moduleCategory(id)}
                 className={`restaurant-nav-link ${activeModule === id ? "active" : ""}`}
+                data-tour={`admin-nav-${id}`}
                 href={restaurantModuleHref(restaurant, id)}
                 aria-current={activeModule === id ? "page" : undefined}
                 onClick={() => setMobile(false)}
@@ -149,6 +159,7 @@ export function RestaurantAdminShell({
           {can(userRoles, "orders") && (
             <Link
               className="restaurant-nav-link"
+              data-tour="admin-offline"
               href={`/offline?restaurant=${encodeURIComponent(restaurant)}`}
             >
               <Wifi size={18} />
@@ -206,6 +217,9 @@ export function RestaurantAdminShell({
         <main
           className={`restaurant-workspace-content ${isSite ? "studio-main" : "platform"} ${contentClassName || ""}`}
         >
+          <CategoryBadge
+            category={moduleCategory(activeModule || "overview")}
+          />
           {!isSite && (
             <div className="restaurant-page-heading">
               <span>{restaurantName} · MON RESTAURANT</span>
@@ -224,6 +238,10 @@ export function RestaurantAdminShell({
         )}
       </div>
       <CuisineIa restaurant={restaurant} />
-    </div>
+      <AdminTutorial
+        restaurant={restaurant}
+        surface={`admin:${activeModule ?? ""}`}
+      />
+    </AppearanceScope>
   );
 }

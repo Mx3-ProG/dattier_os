@@ -67,7 +67,7 @@
   place-items: center;
   gap: 16px;
   padding: 24px;
-  background: #26201fe6;
+  background: var(--public-accent, #26201fe6);
 }
 .site-lightbox img {
   max-width: min(1100px, 100%);
@@ -110,7 +110,7 @@
 }
 .site-video-caption {
   margin-top: 10px;
-  font-size: 13px;
+  font-size: max(var(--appearance-min-text, 0px), calc((13px) * var(--appearance-text-scale, 1)));
   color: var(--site-muted, #6d5c5b);
 }
 .site-faq > div {
@@ -120,10 +120,10 @@
   max-width: 860px;
 }
 .site-faq details {
-  border: 1px solid #ead8d0;
+  border: 1px solid var(--appearance-line, #ead8d0);
   border-radius: 14px;
   padding: 16px 20px;
-  background: #fffdfb;
+  background: var(--appearance-surface, #fffdfb);
 }
 .site-faq summary {
   cursor: pointer;
@@ -147,7 +147,7 @@
   background: var(--site-ink, #26201f);
 }
 .site-cta.tone-light {
-  background: #fff0f7;
+  background: var(--appearance-surface, #fff0f7);
 }
 .site-cta p {
   margin: 12px auto 22px;
@@ -175,12 +175,12 @@
   gap: 10px;
   margin: 0 0 24px;
   padding: 18px 20px;
-  border: 1px solid #ead8d0;
+  border: 1px solid var(--appearance-line, #ead8d0);
   border-radius: 14px;
-  background: #fffdfb;
+  background: var(--appearance-surface, #fffdfb);
 }
 .donut-legal-identity dt {
-  font-size: 11px;
+  font-size: max(var(--appearance-min-text, 0px), calc((11px) * var(--appearance-text-scale, 1)));
   font-weight: 800;
   letter-spacing: 1px;
   text-transform: uppercase;

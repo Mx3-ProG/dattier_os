@@ -93,6 +93,7 @@ const faq = [
 
 export function GuidePage({ demo }: { demo: boolean }) {
   const toc = [
+    { id: "bien-demarrer", label: "Bien démarrer, pas à pas" },
     { id: "comprendre", label: "Comprendre atacuisine" },
     { id: "service", label: "Le cycle d’un service" },
     { id: "roles", label: "Qui fait quoi" },
@@ -168,6 +169,39 @@ export function GuidePage({ demo }: { demo: boolean }) {
         <div className="guide-layout">
           <GuideToc items={toc} />
           <div className="guide-body">
+            <section id="bien-demarrer" className="guide-section">
+              <span className="landing-eyebrow">Premier jour</span>
+              <h2>Bien démarrer, pas à pas</h2>
+              <p>
+                Le parcours que la visite interactive propose en premier : du
+                compte à la première table placée, dans l’ordre où les choses se
+                font. Chaque étape renvoie à son chapitre détaillé.
+              </p>
+              <ol className="guide-starter">
+                {chapters
+                  .filter((c) => c.starter)
+                  .map((c) => {
+                    const Icon = chapterIcons[c.icon] || Sparkles;
+                    return (
+                      <li key={c.id}>
+                        <a href={`#${c.id}`}>
+                          <Icon size={18} aria-hidden />
+                          <span>
+                            <b>{c.title}</b>
+                            <small>{c.summary}</small>
+                          </span>
+                        </a>
+                      </li>
+                    );
+                  })}
+              </ol>
+              <Link className="guide-practice" href={tour("starter")}>
+                <Play size={15} aria-hidden /> Lancer « Bien démarrer » dans le
+                poste
+                <ArrowRight size={15} aria-hidden />
+              </Link>
+            </section>
+
             <section id="comprendre" className="guide-section">
               <span className="landing-eyebrow">Les bases</span>
               <h2>Comprendre atacuisine en deux minutes</h2>

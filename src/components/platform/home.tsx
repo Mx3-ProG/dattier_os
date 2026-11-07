@@ -12,7 +12,7 @@ import { can, type Role } from "@/lib/permissions";
 import "./platform.css";
 import "./access.css";
 type Overview = {
-  user: { name: string };
+  user: { id: string; name: string };
   organizations: {
     id: string;
     name: string;
@@ -86,6 +86,7 @@ export function PlatformHome() {
   );
   return (
     <AccountWorkspace
+      userId={data?.user.id}
       name={data?.user.name}
       restaurants={data?.restaurants || []}
       canCreate={canCreate}

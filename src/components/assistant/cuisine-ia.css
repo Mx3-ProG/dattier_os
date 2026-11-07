@@ -9,7 +9,7 @@
   --cia-terracotta: var(--terracotta, #ac6848);
   --cia-muted: var(--muted, #595f55);
   --cia-bottom: 24px;
-  font-family: inherit;
+  font-family: var(--appearance-font, inherit);
 }
 .cia-launcher {
   position: fixed;
@@ -22,7 +22,7 @@
   padding: 12px 18px 12px 14px;
   border: 0;
   border-radius: 999px;
-  background: linear-gradient(135deg, #2f4a3a, #4c6b55 55%, #ac6848);
+  background: linear-gradient(135deg, var(--appearance-accent, #2f4a3a), var(--appearance-accent, #4c6b55) 55%, var(--appearance-accent, #ac6848));
   color: #fff;
   font-weight: 700;
   box-shadow: 0 10px 30px rgba(40, 59, 50, 0.32);
@@ -57,7 +57,7 @@
   align-items: center;
   gap: 10px;
   padding: 12px 12px 12px 14px;
-  background: linear-gradient(135deg, #2f4a3a, #45634f);
+  background: linear-gradient(135deg, var(--appearance-accent, #2f4a3a), var(--appearance-accent, #45634f));
   color: #fff;
 }
 .cia-mark {
@@ -66,7 +66,7 @@
   width: 34px;
   height: 34px;
   border-radius: 11px;
-  background: rgba(255, 255, 255, 0.16);
+  background: var(--appearance-surface, rgba(255, 255, 255, 0.16));
 }
 .cia-title {
   display: grid;
@@ -79,19 +79,19 @@
 }
 .cia-title small {
   color: rgb(255 255 255 / 82%);
-  font-size: 12px;
+  font-size: max(var(--appearance-min-text, 0px), calc((12px) * var(--appearance-text-scale, 1)));
 }
 .cia-credits {
   display: inline-flex;
   align-items: center;
   gap: 5px;
   padding: 6px 10px;
-  border: 1px solid rgba(255, 255, 255, 0.3);
+  border: 1px solid var(--appearance-line, rgba(255, 255, 255, 0.3));
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.12);
+  background: var(--appearance-surface, rgba(255, 255, 255, 0.12));
   color: #fff;
   font-weight: 700;
-  font-size: 13px;
+  font-size: max(var(--appearance-min-text, 0px), calc((13px) * var(--appearance-text-scale, 1)));
 }
 .cia-credits.low {
   background: var(--cia-terracotta);
@@ -108,7 +108,7 @@
   color: #fff;
 }
 .cia-icon:hover {
-  background: rgba(255, 255, 255, 0.14);
+  background: var(--appearance-surface, rgba(255, 255, 255, 0.14));
 }
 .cia-body {
   flex: 1;
@@ -117,12 +117,12 @@
   display: flex;
   flex-direction: column;
   gap: 12px;
-  background: #faf9f5;
+  background: var(--appearance-bg, #faf9f5);
   overscroll-behavior: contain;
 }
 .cia-empty h2 {
   margin: 4px 0 6px;
-  font-size: 19px;
+  font-size: max(var(--appearance-min-text, 0px), calc((19px) * var(--appearance-text-scale, 1)));
   line-height: 1.25;
 }
 .cia-empty p {
@@ -141,12 +141,12 @@
   border-radius: 999px;
   background: var(--cia-paper);
   color: var(--cia-ink);
-  font-size: 13px;
+  font-size: max(var(--appearance-min-text, 0px), calc((13px) * var(--appearance-text-scale, 1)));
   text-align: left;
 }
 .cia-chips button:hover {
   border-color: var(--cia-green);
-  background: #f1f4ef;
+  background: var(--appearance-bg, #f1f4ef);
 }
 .cia-voice-cta {
   display: inline-flex;
@@ -205,19 +205,19 @@
   gap: 4px;
   margin-top: 6px;
   color: var(--cia-muted);
-  font-size: 11px;
+  font-size: max(var(--appearance-min-text, 0px), calc((11px) * var(--appearance-text-scale, 1)));
 }
 .cia-card {
   margin-top: 8px;
   padding: 10px 12px;
-  border: 1px solid #cfdacd;
+  border: 1px solid var(--appearance-line, #cfdacd);
   border-left: 4px solid var(--cia-green);
   border-radius: 12px;
-  background: #f4f7f2;
+  background: var(--appearance-bg, #f4f7f2);
 }
 .cia-card.done {
-  border-left-color: #3f8a55;
-  background: #eef6ef;
+  border-left-color: var(--appearance-line, #3f8a55);
+  background: var(--appearance-bg, #eef6ef);
 }
 .cia-card.dismissed {
   opacity: 0.6;
@@ -234,14 +234,14 @@
   font-weight: 700;
 }
 .cia-warn {
-  color: #8a4b2c;
-  font-size: 13px;
+  color: var(--appearance-muted, #8a4b2c);
+  font-size: max(var(--appearance-min-text, 0px), calc((13px) * var(--appearance-text-scale, 1)));
 }
 .cia-done {
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  color: #2f7444;
+  color: var(--appearance-muted, #2f7444);
   font-weight: 700;
 }
 .cia-muted {
@@ -292,7 +292,7 @@
 .cia-links a {
   color: var(--cia-terracotta);
   font-weight: 700;
-  font-size: 13px;
+  font-size: max(var(--appearance-min-text, 0px), calc((13px) * var(--appearance-text-scale, 1)));
 }
 .cia-typing {
   display: flex;
@@ -331,7 +331,7 @@
   resize: none;
   font: inherit;
   color: var(--cia-ink);
-  background: #fbfbf8;
+  background: var(--appearance-bg, #fbfbf8);
 }
 .cia-row textarea:focus {
   outline: 2px solid var(--cia-green);
@@ -367,15 +367,15 @@
   display: block;
   margin-top: 6px;
   color: var(--cia-muted);
-  font-size: 11px;
+  font-size: max(var(--appearance-min-text, 0px), calc((11px) * var(--appearance-text-scale, 1)));
   text-align: center;
 }
 .cia-notice {
   margin: 0 0 8px;
   padding: 8px 10px;
   border-radius: 10px;
-  background: #f4efe4;
-  font-size: 13px;
+  background: var(--appearance-bg, #f4efe4);
+  font-size: max(var(--appearance-min-text, 0px), calc((13px) * var(--appearance-text-scale, 1)));
 }
 .cia-low {
   width: 100%;
@@ -383,25 +383,25 @@
   padding: 7px 10px;
   border: 0;
   border-radius: 10px;
-  background: #f6e7de;
-  color: #7b3f22;
+  background: var(--appearance-bg, #f6e7de);
+  color: var(--appearance-muted, #7b3f22);
   font-weight: 700;
-  font-size: 13px;
+  font-size: max(var(--appearance-min-text, 0px), calc((13px) * var(--appearance-text-scale, 1)));
 }
 .cia-wallet h3 {
   margin: 8px 0 0;
-  font-size: 14px;
+  font-size: max(var(--appearance-min-text, 0px), calc((14px) * var(--appearance-text-scale, 1)));
 }
 .cia-balance {
   display: grid;
   gap: 2px;
   padding: 14px;
   border-radius: 14px;
-  background: linear-gradient(135deg, #2f4a3a, #4c6b55);
+  background: linear-gradient(135deg, var(--appearance-accent, #2f4a3a), var(--appearance-accent, #4c6b55));
   color: #fff;
 }
 .cia-balance strong {
-  font-size: 26px;
+  font-size: max(var(--appearance-min-text, 0px), calc((26px) * var(--appearance-text-scale, 1)));
 }
 .cia-balance span,
 .cia-balance strong {
@@ -429,16 +429,16 @@
   border: 2px solid var(--cia-terracotta);
 }
 .cia-packs strong {
-  font-size: 14px;
+  font-size: max(var(--appearance-min-text, 0px), calc((14px) * var(--appearance-text-scale, 1)));
 }
 .cia-price {
-  font-size: 17px;
+  font-size: max(var(--appearance-min-text, 0px), calc((17px) * var(--appearance-text-scale, 1)));
   font-weight: 800;
   color: var(--cia-green);
 }
 .cia-packs small {
   color: var(--cia-muted);
-  font-size: 11px;
+  font-size: max(var(--appearance-min-text, 0px), calc((11px) * var(--appearance-text-scale, 1)));
   min-height: 30px;
 }
 .cia-packs button {
@@ -449,7 +449,7 @@
   background: var(--cia-green);
   color: #fff;
   font-weight: 700;
-  font-size: 12px;
+  font-size: max(var(--appearance-min-text, 0px), calc((12px) * var(--appearance-text-scale, 1)));
 }
 .cia-packs button:disabled {
   background: var(--cia-line);
@@ -463,14 +463,14 @@
   border-radius: 999px;
   background: var(--cia-terracotta);
   color: #fff;
-  font-size: 10px;
+  font-size: max(var(--appearance-min-text, 0px), calc((10px) * var(--appearance-text-scale, 1)));
   font-weight: 700;
 }
 .cia-ledger {
   list-style: none;
   margin: 0;
   padding: 0;
-  font-size: 13px;
+  font-size: max(var(--appearance-min-text, 0px), calc((13px) * var(--appearance-text-scale, 1)));
 }
 .cia-ledger li {
   display: flex;
@@ -487,7 +487,7 @@
   color: var(--cia-muted);
 }
 .cia-ledger b.plus {
-  color: #2f7444;
+  color: var(--appearance-muted, #2f7444);
 }
 .cia-back {
   padding: 10px;
@@ -580,8 +580,8 @@
 }
 
 .cia-settings { display: flex; flex-direction: column; gap: 14px; }
-.cia-settings h2 { font-size: 20px; margin: 0; }
-.cia-settings p { font-size: 13px; line-height: 1.6; margin: 0; }
-.cia-settings label { font-size: 14px; font-weight: 600; }
-.cia-settings select { width: 100%; min-width: 0; padding: 12px; border: 1px solid #d6d3d1; border-radius: 10px; background: white; color: #292524; }
+.cia-settings h2 { font-size: max(var(--appearance-min-text, 0px), calc((20px) * var(--appearance-text-scale, 1))); margin: 0; }
+.cia-settings p { font-size: max(var(--appearance-min-text, 0px), calc((13px) * var(--appearance-text-scale, 1))); line-height: 1.6; margin: 0; }
+.cia-settings label { font-size: max(var(--appearance-min-text, 0px), calc((14px) * var(--appearance-text-scale, 1))); font-weight: 600; }
+.cia-settings select { width: 100%; min-width: 0; padding: 12px; border: 1px solid var(--appearance-line, #d6d3d1); border-radius: 10px; background: var(--appearance-surface, white); color: var(--appearance-ink, #292524); }
 .cia-settings input[type="range"] { width: 100%; min-height: 32px; }

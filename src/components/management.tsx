@@ -1,4 +1,9 @@
 "use client";
+import {
+  activityPresentation,
+  activityCategories,
+} from "@/features/appearance/categories";
+import { CategoryBadge } from "./appearance/category-badge";
 import { Recipes } from "./recipes";
 import { Catalog } from "./catalog";
 import { Customers } from "./customers";
@@ -28,6 +33,7 @@ export function Management({
   act: Act;
 }) {
   const router = useRouter();
+  const [activityFilter, setActivityFilter] = useState("all");
   const [editor, setEditor] = useState<Editor | null>(null),
     [query, setQuery] = useState("");
   const edit = (title: string, fields: Field[], submit: Editor["submit"]) =>
@@ -425,7 +431,10 @@ export function Management({
                     <small>
                       Vend :{" "}
                       {s.ingredient_ids
-                        .map((id) => data.ingredients.find((i) => i.id === id)?.name)
+                        .map(
+                          (id) =>
+                            data.ingredients.find((i) => i.id === id)?.name,
+                        )
                         .filter(Boolean)
                         .join(", ")}
                     </small>
@@ -635,14 +644,60 @@ export function Management({
     body = (
       <>
         <h2>Le fil du restaurant</h2>
+        <div
+          className="activity-filters"
+          role="group"
+          aria-label="Filtrer les activités"
+        >
+          <button
+            className="btn secondary"
+            aria-pressed={activityFilter === "all"}
+            onClick={() => setActivityFilter("all")}
+          >
+            Toutes les activités
+          </button>
+          {Object.entries(activityCategories).map(([key, value]) => (
+            <button
+              className="activity-category"
+              data-activity-category={key}
+              key={key}
+              aria-pressed={activityFilter === key}
+              onClick={() => setActivityFilter(key)}
+            >
+              {value.label}
+            </button>
+          ))}
+        </div>
         <div className="card timeline">
           {data.audit
-            .filter((e) => matches(e.action + " " + e.name))
+            .filter(
+              (e) =>
+                activityFilter === "all" ||
+                activityPresentation(e.action).category === activityFilter,
+            )
+            .filter((e) =>
+              matches(
+                e.action +
+                  " " +
+                  e.name +
+                  " " +
+                  activityPresentation(e.action).label +
+                  " " +
+                  activityCategories[activityPresentation(e.action).category]
+                    .label,
+              ),
+            )
             .map((e) => (
-              <div key={e.id}>
+              <div
+                key={e.id}
+                data-activity-category={activityPresentation(e.action).category}
+              >
                 <span className="timeline-dot" />
                 <div>
-                  <b>{e.action}</b>
+                  <CategoryBadge
+                    category={activityPresentation(e.action).category}
+                  />
+                  <b title={e.action}>{activityPresentation(e.action).label}</b>
                   <small>
                     {e.name} · {dateTime(e.created_at)}{" "}
                     {e.object_id && `· #${e.object_id.slice(0, 6)}`}

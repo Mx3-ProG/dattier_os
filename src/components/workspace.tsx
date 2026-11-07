@@ -1,4 +1,10 @@
 "use client";
+import { moduleCategory } from "@/features/appearance/categories";
+import { CategoryBadge } from "./appearance/category-badge";
+import {
+  AppearanceScope,
+  AppearanceButton,
+} from "@/components/appearance/appearance";
 import { UtensilsLoader } from "@/components/brand/utensils";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
@@ -351,7 +357,7 @@ export function Workspace() {
       </main>
     );
   return (
-    <div className="workspace">
+    <AppearanceScope userId={data.user.id} className="workspace">
       <aside className={`sidebar ${mobile ? "open" : ""}`}>
         <Link href="/dashboard" className="brand">
           <span className="brand-mark">
@@ -359,6 +365,7 @@ export function Workspace() {
           </span>
           atacuisine
         </Link>
+        <AppearanceButton />
         <div className="restaurant-switch" data-tour="restaurant-switch">
           <small>VOTRE ÉTABLISSEMENT</small>
           <select
@@ -385,6 +392,7 @@ export function Workspace() {
               <button
                 className={current?.id === m.id ? "active" : ""}
                 data-tour={`nav-${m.id}`}
+                data-activity-category={moduleCategory(m.id)}
                 onClick={() => navigate(m.id)}
               >
                 <m.icon size={18} />
@@ -521,7 +529,11 @@ export function Workspace() {
             ))}
           </section>
         )}
-        <main className="content">
+        <main
+          className="content"
+          data-activity-category={moduleCategory(current?.id || "overview")}
+        >
+          <CategoryBadge category={moduleCategory(current?.id || "overview")} />
           {error && (
             <div className="error" role="alert">
               {error}
@@ -636,6 +648,6 @@ export function Workspace() {
         open={guide}
         setOpen={setGuide}
       />
-    </div>
+    </AppearanceScope>
   );
 }

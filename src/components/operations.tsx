@@ -1,4 +1,5 @@
 "use client";
+import { CategoryBadge } from "./appearance/category-badge";
 import { can } from "@/lib/permissions";
 import { useEffect, useState } from "react";
 import {
@@ -164,8 +165,10 @@ export function Dining({ data, act }: { data: Snapshot; act: Act }) {
       ? null
       : new URLSearchParams(window.location.search).get("focus");
   useEffect(() => {
-    const table = focus && data.tables.find((t) => t.id === focus && !t.archived_at);
-    if (table && !["cleaning", "unavailable"].includes(table.status)) setSelected(table);
+    const table =
+      focus && data.tables.find((t) => t.id === focus && !t.archived_at);
+    if (table && !["cleaning", "unavailable"].includes(table.status))
+      setSelected(table);
     // Only once, when arriving from a scan.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [focus]);
@@ -226,7 +229,11 @@ export function Dining({ data, act }: { data: Snapshot; act: Act }) {
           description="Scanné par un client : la commande à table. Par l’équipe : la table s’ouvre dans le plan de salle."
           close={() => setQrOpen(false)}
         >
-          <QrPortfolio restaurant={data.restaurant.id} only={["salle"]} compact />
+          <QrPortfolio
+            restaurant={data.restaurant.id}
+            only={["salle"]}
+            compact
+          />
         </Modal>
       )}
       {view === "layout" && canLayout ? (
@@ -335,8 +342,8 @@ export function OrderList({
       ? null
       : new URLSearchParams(window.location.search).get("focus");
   const [filter, setFilter] = useState(() =>
-    focus && data.orders.some((o) => o.id === focus) ? "all" : "active",
-  ),
+      focus && data.orders.some((o) => o.id === focus) ? "all" : "active",
+    ),
     [payment, setPayment] = useState<string | null>(null);
   const filtered = data.orders.filter((o) =>
     compact
@@ -370,6 +377,7 @@ export function OrderList({
         )}
         {filtered.map((o) => (
           <article
+            data-activity-category="operations"
             className={`card order-card ${focus === o.id ? "is-focus" : ""}`}
             key={o.id}
             ref={(el) => {
@@ -636,7 +644,12 @@ export function Kds({
           </div>
         )}
         {orders.map((o) => (
-          <article className="card kds-card" key={o.id}>
+          <article
+            className="card kds-card"
+            data-activity-category="operations"
+            key={o.id}
+          >
+            <CategoryBadge category="operations" />
             <header>
               <div className="station-icon">
                 {station === "kitchen" ? <ChefHat /> : <Wine />}

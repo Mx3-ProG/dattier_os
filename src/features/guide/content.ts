@@ -8,6 +8,7 @@ import {
   type Permission,
   type Role,
 } from "@/lib/permissions";
+import * as onboarding from "./onboarding";
 
 export type TourStep = {
   /** Module du poste de travail à ouvrir avant l’étape (le premier autorisé si plusieurs). */
@@ -28,6 +29,8 @@ export type TourStep = {
   fallback?: string;
   /** Lien proposé dans la bulle ; {restaurant} est remplacé par l’établissement courant. */
   link?: { label: string; href: string };
+  /** Page de l’étape : le poste (par défaut) ou "admin:<module>" de l’administration. */
+  page?: string;
 };
 
 export type GuideSection = {
@@ -48,9 +51,11 @@ export type Chapter = {
   minutes: number;
   steps: TourStep[];
   guide: { lead: string; sections: GuideSection[]; tip?: string };
+  /** Fait partie du parcours « Bien démarrer », proposé en premier. */
+  starter?: boolean;
 };
 
-export const chapters: Chapter[] = [
+const core: Chapter[] = [
   {
     id: "start",
     title: "Premiers pas dans le poste de travail",
@@ -1059,6 +1064,51 @@ export const chapters: Chapter[] = [
     },
   },
 ];
+
+const byId = new Map(
+  [
+    ...core,
+    onboarding.account,
+    onboarding.appearance,
+    onboarding.setup,
+    onboarding.invite,
+    onboarding.ingredients,
+    onboarding.tables,
+    onboarding.seo,
+    onboarding.offline,
+  ].map((c) => [c.id, c]),
+);
+/** Ordre de la visite : d’abord « Bien démarrer », pas à pas, puis le service. */
+const order = [
+  "account",
+  "appearance",
+  "start",
+  "setup",
+  "invite",
+  "ingredients",
+  "menu",
+  "tables",
+  "overview",
+  "floor",
+  "order",
+  "kitchen",
+  "payment",
+  "reservations",
+  "stocks",
+  "purchases",
+  "customers",
+  "team",
+  "finance",
+  "online",
+  "seo",
+  "offline",
+  "admin",
+];
+const starters = new Set(["start", "menu"]);
+export const chapters: Chapter[] = [
+  ...order.map((id) => byId.get(id)!),
+  ...core.filter((c) => !order.includes(c.id)),
+].map((c) => (starters.has(c.id) ? { ...c, starter: true } : c));
 
 /** Le parcours est-il accessible à ce profil ? */
 export const chapterAllowed = (

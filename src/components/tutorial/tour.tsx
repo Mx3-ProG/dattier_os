@@ -3,12 +3,14 @@
    réel, une bulle d’explication, et des étapes où l’utilisateur agit lui-même.
    Le contenu vient de features/guide/content.ts, partagé avec la page /guide. */
 import Link from "next/link";
+import { useAppearanceStyle } from "@/components/appearance/appearance";
 import {
   useCallback,
   useEffect,
   useLayoutEffect,
   useRef,
   useState,
+  type ReactNode,
 } from "react";
 import {
   ArrowLeft,
@@ -24,6 +26,11 @@ import {
   X,
 } from "lucide-react";
 import { roleLabels } from "@/lib/permissions";
+import {
+  availableRestaurantModules,
+  restaurantModuleHref,
+  type RestaurantModuleId,
+} from "@/features/platform/admin-navigation";
 import { openCuisineIa } from "../assistant/cuisine-ia";
 import type { Snapshot } from "@/lib/types";
 import {
@@ -36,8 +43,37 @@ import {
 import { chapterIcons } from "./icons";
 import "./tutorial.css";
 
+/** Each tutorial surface receives the live account theme, including previews. */
+function TourLayer({
+  className,
+  children,
+}: {
+  className: string;
+  children: ReactNode;
+}) {
+  const style = useAppearanceStyle();
+  return (
+    <div
+      className={`${className} appearance-scope`}
+      style={style}
+      data-tour-layer
+    >
+      {children}
+    </div>
+  );
+}
+
 type Progress = { done: string[]; seen: boolean };
-type Run = { queue: string[]; chapter: number; step: number };
+type Run = {
+  queue: string[];
+  chapter: number;
+  step: number;
+  /** Modules autorisés au lancement : les étapes restent les mêmes d’une page à l’autre. */
+  modules: string[];
+  adminModules: string[];
+};
+/** Ce que la visite lit du profil, sur le poste comme dans l’administration. */
+type TutorialData = Pick<Snapshot, "user" | "demo" | "plan">;
 type Rect = { top: number; left: number; width: number; height: number };
 
 const storageKey = (user: string) => `atacuisine-tour:v1:${user}`;
@@ -56,6 +92,41 @@ function writeProgress(user: string, p: Progress) {
     localStorage.setItem(storageKey(user), JSON.stringify(p));
   } catch {}
 }
+
+// Une visite qui change de page (poste ↔ administration) reprend là où elle était.
+const pendingKey = "atacuisine-tour-run:v1";
+function savePending(user: string, run: Run) {
+  try {
+    sessionStorage.setItem(pendingKey, JSON.stringify({ user, run }));
+  } catch {}
+}
+function readPending(user?: string): Run | null {
+  try {
+    const raw = sessionStorage.getItem(pendingKey);
+    if (!raw) return null;
+    const p = JSON.parse(raw) as { user: string; run: Run };
+    return user && p.user !== user ? null : p.run;
+  } catch {
+    return null;
+  }
+}
+function clearPending() {
+  try {
+    sessionStorage.removeItem(pendingKey);
+  } catch {}
+}
+const stepPage = (step: TourStep) => step.page ?? "dashboard";
+function pageUrl(page: string, restaurant: string) {
+  if (page.startsWith("admin:"))
+    return restaurantModuleHref(
+      restaurant,
+      page.slice(6) as RestaurantModuleId,
+    );
+  return `/dashboard?restaurant=${encodeURIComponent(restaurant)}`;
+}
+/** Fenêtres que la visite peut refermer avant une étape. */
+const closers =
+  '.modal [aria-label="Fermer"], [aria-label="Fermer la personnalisation"]';
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 const visible = (el: Element) => {
@@ -84,18 +155,24 @@ const sameRect = (a: Rect | null, b: Rect | null) =>
 export function Tutorial({
   data,
   restaurant,
-  modules,
+  modules: ownModules,
   navigate,
   open,
   setOpen,
+  surface = "dashboard",
+  resumeOnly = false,
 }: {
-  data: Snapshot;
+  data: TutorialData;
   restaurant: string;
   /** Modules du poste autorisés pour ce profil. */
   modules: string[];
   navigate: (module: string) => void;
   open: boolean;
   setOpen: (open: boolean) => void;
+  /** Page affichée : "dashboard" ou "admin:<module>". */
+  surface?: string;
+  /** Dans l’administration, la visite ne fait que reprendre un parcours en cours. */
+  resumeOnly?: boolean;
 }) {
   const user = data.user.id;
   const userRoles = data.user.roles ?? data.user.role;
@@ -104,18 +181,36 @@ export function Tutorial({
     [welcome, setWelcome] = useState(false),
     [run, setRun] = useState<Run | null>(null),
     [finished, setFinished] = useState<string[] | null>(null);
+  const modules = run?.modules ?? ownModules;
+  const ownAdmin = availableRestaurantModules(
+    [userRoles].flat(),
+    data.plan,
+  ).map((m) => m.id as string);
+  const adminModules = run?.adminModules ?? ownAdmin;
+  const adminKey = adminModules.join(),
+    moduleKey = modules.join();
 
-  // Étapes réellement jouables pour ce profil (modules et liens de menu autorisés).
+  // Étapes réellement jouables pour ce profil (modules, pages et liens de menu autorisés).
   const playable = useCallback(
-    (c: Chapter) =>
-      c.steps.filter((s) => {
+    (c: Chapter) => {
+      const mods = moduleKey.split(","),
+        admin = adminKey.split(",");
+      return c.steps.filter((s) => {
         const wanted = s.module ? [s.module].flat() : [];
-        if (wanted.length && !wanted.some((m) => modules.includes(m)))
+        if (wanted.length && !wanted.some((m) => mods.includes(m)))
+          return false;
+        const page = stepPage(s);
+        if (page.startsWith("admin:") && !admin.includes(page.slice(6)))
           return false;
         const nav = s.target?.match(/^\[data-tour="nav-([a-z]+)"\]$/);
-        return !nav || modules.includes(nav[1]);
-      }),
-    [modules],
+        if (nav && !mods.includes(nav[1])) return false;
+        const adminNav = s.target?.match(
+          /^\[data-tour="admin-nav-([a-z]+)"\]$/,
+        );
+        return !adminNav || admin.includes(adminNav[1]);
+      });
+    },
+    [moduleKey, adminKey],
   );
 
   const save = useCallback(
@@ -135,9 +230,17 @@ export function Tutorial({
       setOpen(false);
       setWelcome(false);
       setFinished(null);
-      setRun({ queue: ids, chapter: 0, step: 0 });
+      setRun({
+        queue: ids,
+        chapter: 0,
+        step: 0,
+        modules: ownModules,
+        adminModules: ownAdmin,
+      });
     },
-    [available, playable, setOpen],
+    // ownAdmin se déduit des rôles et de l’offre, déjà suivis par playable.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [available, playable, setOpen, ownModules],
   );
 
   // Première visite : accueil ; ?tour=all|<parcours> lance directement la visite.
@@ -148,11 +251,23 @@ export function Tutorial({
   useEffect(() => {
     const stored = readProgress(user);
     const asked = new URLSearchParams(window.location.search).get("tour");
+    const pending = readPending(user);
     const timer = setTimeout(() => {
       setProgress(stored);
-      if (asked) {
+      if (pending) {
+        // Consommée seulement ici : un effet relancé (mode strict) la retrouve.
+        clearPending();
+        setRun(pending);
+      } else if (resumeOnly) return;
+      else if (asked) {
         const { start, available } = boot.current;
-        start(asked === "all" ? available.map((c) => c.id) : [asked]);
+        start(
+          asked === "all"
+            ? available.map((c) => c.id)
+            : asked === "starter"
+              ? available.filter((c) => c.starter).map((c) => c.id)
+              : [asked],
+        );
         writeProgress(user, { ...stored, seen: true });
         // Un rechargement ne relance pas la visite.
         const url = new URL(window.location.href);
@@ -161,7 +276,7 @@ export function Tutorial({
       } else if (!stored.seen) setWelcome(true);
     }, 600);
     return () => clearTimeout(timer);
-  }, [user]);
+  }, [user, resumeOnly]);
 
   const chapter = run
     ? available.find((c) => c.id === run.queue[run.chapter])
@@ -174,9 +289,9 @@ export function Tutorial({
     [ready, setReady] = useState(false);
   const target = useRef<HTMLElement | null>(null);
   // Le poste recrée ces valeurs à chaque rafraîchissement : l’étape ne doit pas repartir.
-  const latest = useRef({ modules, navigate });
+  const latest = useRef({ modules, navigate, run, surface, restaurant });
   useEffect(() => {
-    latest.current = { modules, navigate };
+    latest.current = { modules, navigate, run, surface, restaurant };
   });
 
   const finishChapter = useCallback(() => {
@@ -224,11 +339,17 @@ export function Tutorial({
     setRect(null);
     target.current = null;
     void (async () => {
+      // Étape sur une autre page : on y va, la visite reprend à l’arrivée.
+      const page = stepPage(step);
+      if (page !== latest.current.surface) {
+        const { run, restaurant } = latest.current;
+        if (run) savePending(user, run);
+        window.location.assign(pageUrl(page, restaurant));
+        return;
+      }
       if (step.closeModal) {
-        document
-          .querySelector<HTMLElement>('.modal [aria-label="Fermer"]')
-          ?.click();
-        await sleep(160);
+        document.querySelector<HTMLElement>(closers)?.click();
+        await sleep(200);
       }
       const wanted = step.module ? [step.module].flat() : [];
       const open = wanted.find((m) => latest.current.modules.includes(m));
@@ -261,7 +382,7 @@ export function Tutorial({
     return () => {
       alive = false;
     };
-  }, [step]);
+  }, [step, user]);
 
   // Suit la position de l’élément (défilement, fenêtres, rafraîchissements).
   useEffect(() => {
@@ -323,6 +444,10 @@ export function Tutorial({
           role={roleLabels[data.user.role]}
           count={available.length}
           minutes={available.reduce((s, c) => s + c.minutes, 0)}
+          starter={available.filter((c) => c.starter)}
+          startStarter={() =>
+            start(available.filter((c) => c.starter).map((c) => c.id))
+          }
           startAll={() => start(available.map((c) => c.id))}
           choose={() => {
             setWelcome(false);
@@ -374,7 +499,9 @@ export function Tutorial({
           close={() => setFinished(null)}
           openCenter={() => {
             setFinished(null);
-            setOpen(true);
+            if (resumeOnly)
+              window.location.assign(pageUrl("dashboard", restaurant));
+            else setOpen(true);
           }}
         />
       )}
@@ -463,7 +590,7 @@ function Spotlight({
   const Icon = chapterIcons[chapter.icon] || Sparkles;
   const href = step.link?.href.replace("{restaurant}", restaurant);
   return (
-    <div className="tour-layer" data-tour-layer>
+    <TourLayer className="tour-layer">
       {rect ? (
         <>
           <svg className="tour-mask" aria-hidden>
@@ -583,7 +710,7 @@ function Spotlight({
           </div>
         </footer>
       </div>
-    </div>
+    </TourLayer>
   );
 }
 
@@ -592,6 +719,8 @@ function Welcome({
   role,
   count,
   minutes,
+  starter,
+  startStarter,
   startAll,
   choose,
   later,
@@ -600,12 +729,14 @@ function Welcome({
   role: string;
   count: number;
   minutes: number;
+  starter: Chapter[];
+  startStarter: () => void;
   startAll: () => void;
   choose: () => void;
   later: () => void;
 }) {
   return (
-    <div className="tour-modal-wrap" data-tour-layer>
+    <TourLayer className="tour-modal-wrap">
       <div
         className="tour-welcome"
         role="dialog"
@@ -618,14 +749,21 @@ function Welcome({
         <span className="eyebrow">Visite guidée</span>
         <h2 id="tour-welcome-title">Bienvenue, {name}.</h2>
         <p>
-          Vous êtes connecté en tant que <b>{role}</b>. Nous avons préparé{" "}
-          {count} parcours interactifs adaptés à votre métier : vous suivez le
-          service sur les vrais écrans, et vous pouvez agir vous-même à chaque
-          étape.
+          Vous êtes connecté en tant que <b>{role}</b>. Nous allons vous
+          accompagner pas à pas sur les vrais écrans : vous agissez vous-même à
+          chaque étape, et la visite vous emmène là où il faut.
         </p>
+        {starter.length > 0 && (
+          <ol className="tour-starter">
+            {starter.map((c) => (
+              <li key={c.id}>{c.title}</li>
+            ))}
+          </ol>
+        )}
         <ul>
           <li>
-            <Check size={15} /> Environ {minutes} minutes pour tout voir
+            <Check size={15} /> {count} parcours en tout, environ {minutes}{" "}
+            minutes
           </li>
           <li>
             <Check size={15} /> Reprenez quand vous voulez depuis le bouton
@@ -636,9 +774,20 @@ function Welcome({
           </li>
         </ul>
         <div className="tour-welcome-actions">
-          <button className="tour-primary" onClick={startAll} autoFocus>
-            <Play size={15} /> Démarrer la visite complète
-          </button>
+          {starter.length > 0 ? (
+            <>
+              <button className="tour-primary" onClick={startStarter} autoFocus>
+                <Play size={15} /> Bien démarrer, pas à pas
+              </button>
+              <button className="tour-secondary" onClick={startAll}>
+                Visite complète
+              </button>
+            </>
+          ) : (
+            <button className="tour-primary" onClick={startAll} autoFocus>
+              <Play size={15} /> Démarrer la visite complète
+            </button>
+          )}
           <button className="tour-secondary" onClick={choose}>
             Choisir un parcours
           </button>
@@ -647,7 +796,7 @@ function Welcome({
           Plus tard
         </button>
       </div>
-    </div>
+    </TourLayer>
   );
 }
 
@@ -659,7 +808,7 @@ function Center({
   reset,
   playable,
 }: {
-  data: Snapshot;
+  data: TutorialData;
   progress: Progress;
   close: () => void;
   start: (queue: string[]) => void;
@@ -678,7 +827,7 @@ function Center({
     return () => window.removeEventListener("keydown", onKey);
   }, [close]);
   return (
-    <div className="tour-center-wrap" data-tour-layer>
+    <TourLayer className="tour-center-wrap">
       <button
         className="tour-center-scrim"
         aria-label="Fermer le guide"
@@ -744,8 +893,8 @@ function Center({
             <div>
               <b>Une question ? Demandez à Cuisine IA</b>
               <small>
-                Elle répond à partir de ce guide et de votre service en cours,
-                à l’écrit ou à la voix, et prépare les actions pour vous.
+                Elle répond à partir de ce guide et de votre service en cours, à
+                l’écrit ou à la voix, et prépare les actions pour vous.
               </small>
             </div>
           </div>
@@ -829,7 +978,7 @@ function Center({
           )}
         </footer>
       </aside>
-    </div>
+    </TourLayer>
   );
 }
 
@@ -845,7 +994,7 @@ function Finished({
   openCenter: () => void;
 }) {
   return (
-    <div className="tour-modal-wrap" data-tour-layer>
+    <TourLayer className="tour-modal-wrap">
       <div
         className="tour-welcome"
         role="dialog"
@@ -881,6 +1030,44 @@ function Finished({
           </button>
         </div>
       </div>
-    </div>
+    </TourLayer>
+  );
+}
+
+/** Reprend dans l’administration du restaurant une visite commencée ailleurs. */
+export function AdminTutorial({
+  restaurant,
+  surface,
+}: {
+  restaurant: string;
+  surface: string;
+}) {
+  const [data, setData] = useState<TutorialData | null>(null);
+  useEffect(() => {
+    if (!readPending()) return;
+    let alive = true;
+    void fetch(`/api/v1/state?restaurant=${encodeURIComponent(restaurant)}`)
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d: Snapshot | null) => {
+        if (alive && d) setData({ user: d.user, demo: d.demo, plan: d.plan });
+      })
+      .catch(() => {});
+    return () => {
+      alive = false;
+    };
+  }, [restaurant]);
+  const noop = useCallback(() => {}, []);
+  if (!data) return null;
+  return (
+    <Tutorial
+      data={data}
+      restaurant={restaurant}
+      modules={[]}
+      navigate={noop}
+      open={false}
+      setOpen={noop}
+      surface={surface}
+      resumeOnly
+    />
   );
 }

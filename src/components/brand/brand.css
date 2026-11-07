@@ -1,8 +1,8 @@
 /* Couverts Dattier : loader animé et pages système (404). Palette de landing.css. */
 .dattier-loader {
-  --dl-ink: #344d3e;
-  --dl-accent: #ac6848;
-  --dl-text: #5b6556;
+  --dl-ink: var(--appearance-link, #344d3e);
+  --dl-accent: var(--appearance-link, #ac6848);
+  --dl-text: var(--appearance-ink, #5b6556);
   display: grid;
   place-items: center;
   align-content: center;
@@ -14,7 +14,7 @@
   position: fixed;
   inset: 0;
   z-index: 50;
-  background: #f8f5ed;
+  background: var(--appearance-bg, #f8f5ed);
 }
 .dattier-loader-stage {
   position: relative;
@@ -47,13 +47,13 @@
   height: 8px;
   margin-top: 4px;
   border-radius: 50%;
-  background: rgba(52, 77, 62, 0.16);
+  background: var(--appearance-accent, rgba(52, 77, 62, 0.16));
   animation: dattier-shadow 2.4s cubic-bezier(0.55, 0, 0.35, 1) infinite;
 }
 .dattier-loader-label {
   margin: 0;
-  font-family: "Dattier Fraunces", Georgia, serif;
-  font-size: 17px;
+  font-family: var(--appearance-font, "Dattier Fraunces", Georgia, serif);
+  font-size: max(var(--appearance-min-text, 0px), calc((17px) * var(--appearance-text-scale, 1)));
   color: var(--dl-text);
   letter-spacing: 0.01em;
 }
@@ -175,9 +175,9 @@
   place-items: center;
   padding: 48px 16px;
   background:
-    radial-gradient(circle at 50% 28%, #eee5d6 0, transparent 55%), #f8f5ed;
-  color: #2f4034;
-  font-family: "Dattier Inter", Arial, Helvetica, sans-serif;
+    radial-gradient(circle at 50% 28%, var(--appearance-soft, #eee5d6) 0, transparent 55%), var(--appearance-bg, #f8f5ed);
+  color: var(--appearance-ink, #2f4034);
+  font-family: var(--appearance-font, "Dattier Inter", Arial, Helvetica, sans-serif);
   text-align: center;
 }
 .dattier-404-card {
@@ -192,22 +192,22 @@
   gap: 8px;
   font-weight: 700;
   letter-spacing: 0.08em;
-  font-size: 13px;
-  color: #344d3e;
+  font-size: max(var(--appearance-min-text, 0px), calc((13px) * var(--appearance-text-scale, 1)));
+  color: var(--appearance-ink, #344d3e);
   margin-bottom: 18px;
 }
 .dattier-404-brand span {
-  color: #9a6646;
+  color: var(--appearance-muted, #9a6646);
 }
 .dattier-404-code {
   display: flex;
   align-items: center;
   gap: 6px;
-  font-family: "Dattier Fraunces", Georgia, serif;
-  font-size: clamp(88px, 22vw, 148px);
+  font-family: var(--appearance-font, "Dattier Fraunces", Georgia, serif);
+  font-size: max(var(--appearance-min-text, 0px), calc((clamp(88px, 22vw, 148px)) * var(--appearance-text-scale, 1)));
   line-height: 1;
   font-weight: 600;
-  color: #344d3e;
+  color: var(--appearance-ink, #344d3e);
   letter-spacing: -0.04em;
 }
 /* Le « 0 » central est une assiette vide, couverts posés en X. */
@@ -217,8 +217,8 @@
   width: 0.78em;
   height: 0.78em;
   border-radius: 50%;
-  background: #fdfbf6;
-  border: 0.06em solid #344d3e;
+  background: var(--appearance-surface, #fdfbf6);
+  border: 0.06em solid var(--appearance-line, #344d3e);
   box-shadow:
     inset 0 0 0 0.07em #fdfbf6,
     inset 0 0 0 0.085em #e3dece,
@@ -227,20 +227,20 @@
 .dattier-404-plate svg {
   width: 52%;
   height: 52%;
-  color: #9a6646;
+  color: var(--appearance-muted, #9a6646);
 }
 .dattier-404 h1 {
   margin: 8px 0 0;
-  font-family: "Dattier Fraunces", Georgia, serif;
-  font-size: clamp(24px, 5vw, 32px);
+  font-family: var(--appearance-font, "Dattier Fraunces", Georgia, serif);
+  font-size: max(var(--appearance-min-text, 0px), calc((clamp(24px, 5vw, 32px)) * var(--appearance-text-scale, 1)));
   font-weight: 600;
   letter-spacing: -0.02em;
-  color: #2f4034;
+  color: var(--appearance-ink, #2f4034);
 }
 .dattier-404 p {
   margin: 0;
-  color: #5b6556;
-  font-size: 16px;
+  color: var(--appearance-ink, #5b6556);
+  font-size: max(var(--appearance-min-text, 0px), calc((16px) * var(--appearance-text-scale, 1)));
   line-height: 1.6;
 }
 .dattier-404-actions {
@@ -258,26 +258,26 @@
   padding: 0 20px;
   border-radius: 999px;
   font-weight: 600;
-  font-size: 15px;
-  border: 1px solid #344d3e;
+  font-size: max(var(--appearance-min-text, 0px), calc((15px) * var(--appearance-text-scale, 1)));
+  border: 1px solid var(--appearance-line, #344d3e);
   transition:
     background 0.15s,
     color 0.15s,
     transform 0.15s;
 }
 .dattier-404-btn.primary {
-  background: #344d3e;
+  background: var(--appearance-accent, #344d3e);
   color: #fdfbf6;
 }
 .dattier-404-btn.primary:hover {
-  background: #243c2d;
+  background: var(--appearance-accent, #243c2d);
 }
 .dattier-404-btn.ghost {
-  color: #344d3e;
+  color: var(--appearance-ink, #344d3e);
   background: transparent;
 }
 .dattier-404-btn.ghost:hover {
-  background: #eee5d6;
+  background: var(--appearance-soft, #eee5d6);
 }
 .dattier-404-btn:active {
   transform: translateY(1px);

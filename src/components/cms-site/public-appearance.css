@@ -1,0 +1,251 @@
+:is(.donut-site, .public-theme-scope)[data-public-mode="dark"] {
+  --public-bg: var(--public-night-bg);
+  --public-surface: var(--public-night-surface);
+  --public-soft: var(--public-night-soft);
+  --public-ink: var(--public-night-ink);
+  --public-muted: var(--public-night-muted);
+  --public-line: var(--public-night-line);
+  --public-accent: var(--public-night-accent);
+  --public-on-accent: var(--public-night-on-accent);
+  --public-link: var(--public-night-link);
+  --public-success-bg: var(--public-night-success-bg);
+  --public-success-ink: var(--public-night-success-ink);
+  --public-danger-bg: var(--public-night-danger-bg);
+  --public-danger-ink: var(--public-night-danger-ink);
+  --public-warning-bg: var(--public-night-warning-bg);
+  --public-warning-ink: var(--public-night-warning-ink);
+  --bg: var(--public-bg);
+  --paper: var(--public-surface);
+  --ink: var(--public-ink);
+  --muted: var(--public-muted);
+  --green: var(--public-accent);
+  --line: var(--public-line);
+  --sand: var(--public-soft);
+  --cream: var(--public-bg);
+  --pink: var(--public-accent);
+  --pink-dark: var(--public-accent);
+  --cyan: var(--public-soft);
+  --site-accent: var(--public-soft);
+  --site-ink: var(--public-ink);
+  --site-muted: var(--public-muted);
+  color-scheme: dark;
+  background: var(--public-bg);
+  color: var(--public-ink);
+}
+@media (prefers-color-scheme: dark) {
+  :is(.donut-site, .public-theme-scope)[data-public-mode="system"] {
+    --public-bg: var(--public-night-bg);
+    --public-surface: var(--public-night-surface);
+    --public-soft: var(--public-night-soft);
+    --public-ink: var(--public-night-ink);
+    --public-muted: var(--public-night-muted);
+    --public-line: var(--public-night-line);
+    --public-accent: var(--public-night-accent);
+    --public-on-accent: var(--public-night-on-accent);
+    --public-link: var(--public-night-link);
+    --public-success-bg: var(--public-night-success-bg);
+    --public-success-ink: var(--public-night-success-ink);
+    --public-danger-bg: var(--public-night-danger-bg);
+    --public-danger-ink: var(--public-night-danger-ink);
+    --public-warning-bg: var(--public-night-warning-bg);
+    --public-warning-ink: var(--public-night-warning-ink);
+    --bg: var(--public-bg);
+    --paper: var(--public-surface);
+    --ink: var(--public-ink);
+    --muted: var(--public-muted);
+    --green: var(--public-accent);
+    --line: var(--public-line);
+    --sand: var(--public-soft);
+    --cream: var(--public-bg);
+    --pink: var(--public-accent);
+    --pink-dark: var(--public-accent);
+    --cyan: var(--public-soft);
+    --site-accent: var(--public-soft);
+    --site-ink: var(--public-ink);
+    --site-muted: var(--public-muted);
+    color-scheme: dark;
+    background: var(--public-bg);
+    color: var(--public-ink);
+  }
+}
+
+.public-mode-switch {
+  display: flex;
+  gap: 4px;
+  flex-shrink: 0;
+}
+.public-mode-switch button {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  min-height: 44px;
+  padding: 8px;
+  border: 1px solid var(--public-line, #777);
+  border-radius: 9px;
+  color: var(--public-ink, var(--site-ink));
+  background: var(--public-surface, var(--cream));
+  font: inherit;
+  font-size: 14px;
+}
+.public-mode-switch button[aria-pressed="true"] {
+  outline: 2px solid var(--public-link, var(--pink));
+  outline-offset: -2px;
+}
+.public-mode-switch button:focus-visible {
+  outline: 3px solid var(--public-link, var(--pink));
+  outline-offset: 3px;
+}
+.public-theme-scope {
+  --paper: var(--public-surface, #fff);
+  --ink: var(--public-ink, #283b32);
+  --muted: var(--public-muted, #595f55);
+  --green: var(--public-accent, #344d3e);
+  --line: var(--public-line, #e9e9e1);
+  background: var(--paper);
+  color: var(--ink);
+  color-scheme: light;
+}
+.donut-site[data-public-mode="dark"] input,
+.donut-site[data-public-mode="dark"] select,
+.donut-site[data-public-mode="dark"] textarea,
+.public-theme-scope[data-public-mode="dark"] :is(input, select, textarea) {
+  background: var(--public-surface);
+  color: var(--public-ink);
+  border-color: var(--public-line);
+}
+.public-theme-scope .primary {
+  background: var(--public-accent, var(--green));
+  color: var(--public-on-accent, #fff);
+}
+.donut-site[data-public-mode="dark"] .donut-button:not(.outline):not(.dark) {
+  background: var(--public-accent, var(--pink));
+  color: var(--public-on-accent, #fff);
+}
+.donut-site[data-public-mode="dark"] :is(.donut-error, .auth-error) {
+  background: var(--public-danger-bg);
+  color: var(--public-danger-ink);
+}
+.donut-site[data-public-mode="dark"]
+  :is(
+    .donut-header,
+    .donut-footer,
+    .donut-faq,
+    .donut-promise,
+    .donut-contact
+  ) {
+  background: var(--public-surface);
+}
+.donut-site[data-public-mode="dark"]
+  :is(.donut-hero, .donut-products, .donut-story) {
+  background-color: var(--public-bg);
+}
+.donut-site[data-public-mode="dark"] .donut-footer :is(a, p, small) {
+  color: var(--public-ink);
+}
+.donut-site[data-public-mode="dark"] :focus-visible,
+.public-theme-scope[data-public-mode="dark"] :focus-visible {
+  outline-color: var(--public-link);
+}
+@media (max-width: 640px) {
+  .public-mode-switch button span {
+    display: none;
+  }
+  .public-mode-switch button {
+    min-width: 44px;
+    justify-content: center;
+  }
+  .donut-nav-actions {
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+}
+@media print {
+  .public-mode-switch {
+    display: none;
+  }
+  .donut-site[data-public-mode],
+  .public-theme-scope[data-public-mode] {
+    --public-bg: #fff;
+    --public-surface: #fff;
+    --public-ink: #111;
+    --public-muted: #444;
+    --cream: #fff;
+    --site-ink: #111;
+    --site-muted: #444;
+    color-scheme: light;
+  }
+}
+@media (prefers-color-scheme: dark) {
+  .donut-site[data-public-mode="system"] input,
+  .donut-site[data-public-mode="system"] select,
+  .donut-site[data-public-mode="system"] textarea,
+  .public-theme-scope[data-public-mode="system"] :is(input, select, textarea) {
+    background: var(--public-surface);
+    color: var(--public-ink);
+    border-color: var(--public-line);
+  }
+  .donut-site[data-public-mode="system"]
+    .donut-button:not(.outline):not(.dark) {
+    background: var(--public-accent, var(--pink));
+    color: var(--public-on-accent, #fff);
+  }
+  .donut-site[data-public-mode="system"] :is(.donut-error, .auth-error) {
+    background: var(--public-danger-bg);
+    color: var(--public-danger-ink);
+  }
+  .donut-site[data-public-mode="system"]
+    :is(
+      .donut-header,
+      .donut-footer,
+      .donut-faq,
+      .donut-promise,
+      .donut-contact
+    ) {
+    background: var(--public-surface);
+  }
+  .donut-site[data-public-mode="system"]
+    :is(.donut-hero, .donut-products, .donut-story) {
+    background-color: var(--public-bg);
+  }
+  .donut-site[data-public-mode="system"] .donut-footer :is(a, p, small) {
+    color: var(--public-ink);
+  }
+  .donut-site[data-public-mode="system"] :focus-visible,
+  .public-theme-scope[data-public-mode="system"] :focus-visible {
+    outline-color: var(--public-link);
+  }
+}
+
+.donut-site[data-public-mode="dark"] :is(p, small, label, legend),
+.public-theme-scope[data-public-mode="dark"] :is(p, small, label, legend) {
+  color: var(--public-muted);
+}
+@media (prefers-color-scheme: dark) {
+  .donut-site[data-public-mode="system"] :is(p, small, label, legend),
+  .public-theme-scope[data-public-mode="system"] :is(p, small, label, legend) {
+    color: var(--public-muted);
+  }
+}
+.donut-site .donut-product[aria-disabled="true"] {
+  opacity: 1;
+}
+.donut-site :is(h1, h2, h3) {
+  overflow-wrap: anywhere;
+}
+
+/* Booking is also embedded in CMS sites, outside the legacy .public-site shell. */
+.donut-site {
+  --pub-bg: var(--public-bg, var(--cream));
+  --pub-surface: var(--public-surface, #fdfbf6);
+  --pub-ink: var(--public-ink, var(--site-ink));
+  --pub-text: var(--public-muted, #5b6556);
+  --pub-muted: var(--public-muted, #535d4d);
+  --pub-green: var(--public-accent, #344d3e);
+  --pub-green-dark: var(--public-accent, #243c2d);
+  --pub-accent: var(--public-link, #9a6646);
+  --pub-line: var(--public-line, #e3dece);
+}
+.donut-site .booking-head .eyebrow {
+  color: var(--pub-muted);
+  font-size: 14px;
+}

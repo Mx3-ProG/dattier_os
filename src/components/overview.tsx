@@ -1,4 +1,6 @@
 "use client";
+import { activityPresentation } from "@/features/appearance/categories";
+import { CategoryBadge } from "./appearance/category-badge";
 import {
   Area,
   AreaChart,
@@ -133,23 +135,40 @@ export function Overview({
               >
                 <defs>
                   <linearGradient id="sales" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#b56643" stopOpacity={0.24} />
-                    <stop offset="100%" stopColor="#b56643" stopOpacity={0} />
+                    <stop
+                      offset="0%"
+                      stopColor="var(--appearance-link, #b56643)"
+                      stopOpacity={0.24}
+                    />
+                    <stop
+                      offset="100%"
+                      stopColor="var(--appearance-link, #b56643)"
+                      stopOpacity={0}
+                    />
                   </linearGradient>
                 </defs>
-                <CartesianGrid vertical={false} stroke="#eee9e1" />
+                <CartesianGrid
+                  vertical={false}
+                  stroke="var(--appearance-line, #eee9e1)"
+                />
                 <XAxis
                   dataKey="day"
                   tickFormatter={(v) => v.slice(8)}
                   axisLine={false}
                   tickLine={false}
-                  tick={{ fontSize: 11, fill: "#89887d" }}
+                  tick={{
+                    fontSize: 11,
+                    fill: "var(--appearance-muted, #89887d)",
+                  }}
                 />
                 <YAxis
                   tickFormatter={(v) => `${v / 100} €`}
                   axisLine={false}
                   tickLine={false}
-                  tick={{ fontSize: 11, fill: "#89887d" }}
+                  tick={{
+                    fontSize: 11,
+                    fill: "var(--appearance-muted, #89887d)",
+                  }}
                   width={55}
                 />
                 <Tooltip formatter={(v) => money(Number(v))} />
@@ -158,7 +177,7 @@ export function Overview({
                   type="monotone"
                   dataKey="total"
                   name="CA déclaré"
-                  stroke="#ad6545"
+                  stroke="var(--appearance-link, #ad6545)"
                   strokeWidth={2.5}
                   fill="url(#sales)"
                 />
@@ -266,7 +285,14 @@ export function Overview({
       </div>
       <div className="three-grid">
         {data.notifications.slice(0, 3).map((n) => (
-          <article className="card news" key={n.id}>
+          <article
+            className="card news"
+            data-activity-category={activityPresentation(n.message).category}
+            key={n.id}
+          >
+            <CategoryBadge
+              category={activityPresentation(n.message).category}
+            />
             <span className="dot" />
             <p>{n.message}</p>
             <small>{dateTime(n.created_at)}</small>

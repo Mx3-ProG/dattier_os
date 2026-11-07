@@ -1,4 +1,5 @@
 "use client";
+import { PublicAppearance, PublicModeSwitch } from "./public-appearance";
 import { TemplateExtras } from "./template-extras";
 import "./templates.css";
 import { ProductRecommendations } from "../product-recommendations";
@@ -1411,7 +1412,7 @@ export function DonutStore({
     );
   }
   return (
-    <div
+    <PublicAppearance theme={config.theme}
       className={`donut-site${preview ? " is-cms-preview" : ""}`}
       data-template={config.theme.presentation?.layout}
       data-sticky-header={config.theme.presentation?.stickyHeader}
@@ -1485,6 +1486,7 @@ export function DonutStore({
           <Link href="/compte">{header.navAccount}</Link>
         </nav>
         <div className="donut-nav-actions">
+          <PublicModeSwitch />
           <Link
             className="donut-account-link"
             href="/compte"
@@ -2275,6 +2277,6 @@ export function DonutStore({
           </div>
         </Modal>
       )}
-    </div>
+    </PublicAppearance>
   );
 }
