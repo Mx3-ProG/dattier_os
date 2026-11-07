@@ -42,6 +42,7 @@ import { prepLabels } from "@/features/commerce/client";
 import { money } from "@/lib/domain";
 import { CookieConsent } from "./cookie-consent";
 import { CustomerAccount } from "./customer-account";
+import { OrderQrCard } from "./account/qr-sheet";
 import { CustomerAuth } from "./customer-auth";
 import type { CustomerIdentity } from "./customer-auth";
 import { LegalPage } from "./legal-pages";
@@ -211,7 +212,28 @@ export function DonutStore({
     [consumption, setConsumption] = useState("takeaway"),
     [payment, setPayment] = useState("counter"),
     [slot, setSlot] = useState(""),
-    [receipt, setReceipt] = useState<ShopOrder | null>(null);
+    [receipt, setReceipt] = useState<ShopOrder | null>(null),
+    // Table QR scanned (?table=7): orders go to that table, served on site.
+    [tableNumber, setTableNumber] = useState<number | null>(null);
+  useEffect(() => {
+    const key = `atacuisine-table:${restaurant}`;
+    try {
+      const fromUrl = Number(new URLSearchParams(location.search).get("table"));
+      if (Number.isInteger(fromUrl) && fromUrl > 0) {
+        sessionStorage.setItem(key, String(fromUrl));
+        setTableNumber(fromUrl);
+        setConsumption("onsite");
+        return;
+      }
+      const saved = Number(sessionStorage.getItem(key));
+      if (Number.isInteger(saved) && saved > 0) {
+        setTableNumber(saved);
+        setConsumption("onsite");
+      }
+    } catch {
+      /* Storage unavailable: table mode only for this page. */
+    }
+  }, [restaurant]);
   const refresh = useCallback(async () => {
     const r = await fetch("/api/shop/catalog");
     const d = await r.json();
@@ -1209,6 +1231,11 @@ export function DonutStore({
                     <b>− {money(receipt.discount)}</b>
                   </div>
                 )}
+                {!preview && (
+                  <OrderQrCard
+                    storageKey={`atacuisine-receipt:${restaurant}`}
+                  />
+                )}
                 <div className="donut-points-earned">
                   <Star size={22} fill="currentColor" />
                   <span>
@@ -1369,6 +1396,27 @@ export function DonutStore({
       <a className="donut-skip" href="#main">
         Aller au contenu
       </a>
+      {tableNumber && !preview && (
+        <div className="donut-table-banner" role="status">
+          <span>
+            Commande à table · <b>Table {tableNumber}</b> · servie sur place
+          </span>
+          <button
+            type="button"
+            onClick={() => {
+              try {
+                sessionStorage.removeItem(`atacuisine-table:${restaurant}`);
+              } catch {
+                /* Nothing to forget. */
+              }
+              setTableNumber(null);
+              setConsumption("takeaway");
+            }}
+          >
+            Quitter
+          </button>
+        </div>
+      )}
       {(branding.announcement || branding.announcementHighlight) && (
         <div
           className="donut-announcement"
@@ -2025,7 +2073,8 @@ export function DonutStore({
                           key,
                           customer: customerIdentity.name,
                           email: customerIdentity.email,
-                          consumption,
+                          consumption: tableNumber ? "onsite" : consumption,
+                          table: tableNumber ?? undefined,
                           payment,
                           slot,
                           promo: values.get("promo"),

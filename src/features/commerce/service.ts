@@ -381,12 +381,21 @@ export function commerce(SHOP: string) {
         )
       : null;
     const total = subtotal - (promo?.discount ?? 0);
+    // Ordered from a table QR: the kitchen sees the table, served on site.
+    if (a.table)
+      await one(
+        db,
+        "SELECT id FROM dining_tables WHERE restaurant_id=$1 AND number=$2 AND archived_at IS NULL",
+        [SHOP, a.table],
+      ).catch(() => {
+        throw new Error("Cette table n’existe plus : demandez un nouveau QR code à l’équipe.");
+      });
     const id = await createOrder(
       db,
       {
         restaurant: SHOP,
         channel: "takeaway",
-        customer: a.customer,
+        customer: a.table ? `${a.customer} · Table ${a.table}` : a.customer,
         contact: a.email,
         desiredAt: a.slot,
         key: a.key,
@@ -422,7 +431,7 @@ export function commerce(SHOP: string) {
         id,
         token,
         hash,
-        a.consumption,
+        a.table ? "onsite" : a.consumption,
         a.payment,
         total,
         subtotal,

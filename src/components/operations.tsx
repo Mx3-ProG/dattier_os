@@ -1,6 +1,6 @@
 "use client";
 import { can } from "@/lib/permissions";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Plus,
   Minus,
@@ -10,12 +10,14 @@ import {
   Check,
   ChefHat,
   Wine,
+  QrCode,
 } from "lucide-react";
 import type { Snapshot, Table, MenuItem } from "@/lib/types";
 import { money, dateTime } from "@/lib/domain";
 import { Button } from "./ui/button";
 import { Badge, Form, Modal, type Act } from "./forms";
 import { FloorEditor } from "./floor-editor";
+import { QrButton, QrPortfolio } from "./qr/qr-portfolio";
 export function Composer({
   data,
   table,
@@ -153,8 +155,20 @@ export function Composer({
 }
 export function Dining({ data, act }: { data: Snapshot; act: Act }) {
   const [selected, setSelected] = useState<Table | null>(null),
-    [view, setView] = useState<"service" | "layout">("service");
+    [view, setView] = useState<"service" | "layout">("service"),
+    [qrOpen, setQrOpen] = useState(false);
   const tables = data.tables.filter((t) => !t.archived_at);
+  // A table QR scanned by the team opens that table directly (?focus=<table>).
+  const focus =
+    typeof window === "undefined"
+      ? null
+      : new URLSearchParams(window.location.search).get("focus");
+  useEffect(() => {
+    const table = focus && data.tables.find((t) => t.id === focus && !t.archived_at);
+    if (table && !["cleaning", "unavailable"].includes(table.status)) setSelected(table);
+    // Only once, when arriving from a scan.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [focus]);
   // Droit d’aménager décidé par le propriétaire, membre par membre (vérifié côté serveur).
   const canLayout = data.floorPlan.canArrange;
   // Zones dans l’ordre du plan ; une table sans zone connue garde son ancien nom.
@@ -196,6 +210,24 @@ export function Dining({ data, act }: { data: Snapshot; act: Act }) {
             </button>
           ))}
         </div>
+      )}
+      <div className="qr-floor-bar">
+        <span className="muted">
+          {tables.length} table{tables.length > 1 ? "s" : ""} · un QR code par
+          table, créé ou retiré automatiquement avec la table.
+        </span>
+        <Button variant="secondary" onClick={() => setQrOpen(true)}>
+          <QrCode size={16} /> Gérer les QR codes
+        </Button>
+      </div>
+      {qrOpen && (
+        <Modal
+          title="QR codes des tables"
+          description="Scanné par un client : la commande à table. Par l’équipe : la table s’ouvre dans le plan de salle."
+          close={() => setQrOpen(false)}
+        >
+          <QrPortfolio restaurant={data.restaurant.id} only={["salle"]} compact />
+        </Modal>
       )}
       {view === "layout" && canLayout ? (
         <FloorEditor data={data} act={act} />
@@ -297,7 +329,14 @@ export function OrderList({
   act: Act;
   compact?: boolean;
 }) {
-  const [filter, setFilter] = useState("active"),
+  // An order QR scanned by the team lands here with ?focus=<order>.
+  const focus =
+    typeof window === "undefined"
+      ? null
+      : new URLSearchParams(window.location.search).get("focus");
+  const [filter, setFilter] = useState(() =>
+    focus && data.orders.some((o) => o.id === focus) ? "all" : "active",
+  ),
     [payment, setPayment] = useState<string | null>(null);
   const filtered = data.orders.filter((o) =>
     compact
@@ -330,7 +369,13 @@ export function OrderList({
           </div>
         )}
         {filtered.map((o) => (
-          <article className="card order-card" key={o.id}>
+          <article
+            className={`card order-card ${focus === o.id ? "is-focus" : ""}`}
+            key={o.id}
+            ref={(el) => {
+              if (el && focus === o.id) el.scrollIntoView({ block: "center" });
+            }}
+          >
             <header>
               <div>
                 <small>#{o.id.slice(0, 6)}</small>
@@ -338,7 +383,15 @@ export function OrderList({
                   {o.table_number ? `Table ${o.table_number}` : "À emporter"}
                 </h3>
               </div>
-              <Badge status={o.status} />
+              <div className="order-card-tools">
+                <QrButton
+                  restaurant={data.restaurant.id}
+                  kind="order"
+                  refId={o.id}
+                  label={`Commande #${o.id.slice(0, 6)}`}
+                />
+                <Badge status={o.status} />
+              </div>
             </header>
             <small>
               <Clock size={13} /> {dateTime(o.created_at)} ·{" "}
@@ -605,6 +658,13 @@ export function Kds({
                   min
                 </small>
               </div>
+              <QrButton
+                restaurant={data.restaurant.id}
+                kind="order"
+                refId={o.id}
+                label={`Ticket #${o.id.slice(0, 6)}`}
+                className="kds-qr"
+              />
             </header>
             {o.items
               .filter(

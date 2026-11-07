@@ -12,6 +12,7 @@ import {
   UserPlus,
 } from "lucide-react";
 import { useTenantSite } from "../context";
+import { useCustomerQr } from "./qr-sheet";
 import { shortDate, type Account } from "./shared";
 
 export function ReferralCard({
@@ -35,18 +36,21 @@ export function ReferralCard({
     const path = href(`/compte?parrain=${code}`);
     return path.startsWith("http") ? path : window.location.origin + path;
   }, [code, href]);
+  // The QR uses the traced link (scans counted in the restaurant's portfolio).
+  const tracked = useCustomerQr("referral");
   useEffect(() => {
-    if (!link || !showQr) return;
+    const value = tracked.url || link;
+    if (!value || !showQr) return;
     let cancelled = false;
     void import("qrcode").then((QRCode) =>
-      QRCode.toString(link, { type: "svg", margin: 1 })
+      QRCode.toString(value, { type: "svg", margin: 1 })
         .then((svg) => !cancelled && setQr(svg))
         .catch(() => setQr("")),
     );
     return () => {
       cancelled = true;
     };
-  }, [link, showQr]);
+  }, [link, showQr, tracked.url]);
   const message = `Je t’offre ${s.welcome || "un cadeau de bienvenue"} pour ta première commande, avec mon lien :`;
   async function create() {
     setBusy(true);

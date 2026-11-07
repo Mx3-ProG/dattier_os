@@ -31,11 +31,13 @@ import {
   rateLimit,
 } from "@/features/platform/http";
 import { createHash } from "node:crypto";
+import { ensureQr, labelFor } from "@/features/qr/service";
+import { rows } from "@/lib/database/db";
 type Context = { params: Promise<{ restaurant: string; action: string }> };
 async function routeGET(req: NextRequest, c: Context) {
   try {
     const { restaurant, action } = await c.params;
-    const user = ["account", "customer-session"].includes(action)
+    const user = ["account", "customer-session", "qr"].includes(action)
       ? await actor()
       : undefined;
     return await withDatabaseContext(
@@ -78,6 +80,70 @@ async function routeGET(req: NextRequest, c: Context) {
                   params.code || "",
                 ),
               };
+            if (action === "qr") {
+              // Customer-side codes: an order (proved by its tracking token),
+              // or the logged-in customer's card, referral, booking or gift.
+              const kind = params.kind;
+              if (kind === "order") {
+                const order = await shop.receipt(
+                  db,
+                  req.headers.get("x-order-token") || "",
+                );
+                const q = await ensureQr(
+                  db,
+                  restaurant,
+                  "order",
+                  order.order_id,
+                  await labelFor(db, restaurant, "order", order.order_id),
+                );
+                return { token: q.token };
+              }
+              if (!user) throw new Error("Connexion client requise.");
+              const customer = await customerForActor(db, restaurant, user);
+              if (kind === "customer" || kind === "referral") {
+                const q = await ensureQr(
+                  db,
+                  restaurant,
+                  kind,
+                  customer,
+                  await labelFor(db, restaurant, kind, customer),
+                );
+                return { token: q.token };
+              }
+              if (kind === "reservation") {
+                const own = await rows(
+                  db,
+                  "SELECT id FROM reservations WHERE id=$1 AND restaurant_id=$2 AND customer_id=$3",
+                  [params.ref || "", restaurant, customer],
+                );
+                if (!own.length) throw new Error("Réservation introuvable.");
+                const q = await ensureQr(
+                  db,
+                  restaurant,
+                  "reservation",
+                  params.ref,
+                  await labelFor(db, restaurant, "reservation", params.ref),
+                );
+                return { token: q.token };
+              }
+              if (kind === "promo") {
+                const promo = await rows<{ id: string; code: string; name: string }>(
+                  db,
+                  "SELECT p.id,p.code,c.name FROM promo_codes p JOIN customers c ON c.id=p.customer_id WHERE p.code=$1 AND p.restaurant_id=$2 AND p.customer_id=$3",
+                  [String(params.ref || "").toUpperCase(), restaurant, customer],
+                );
+                if (!promo.length) throw new Error("Code introuvable.");
+                const q = await ensureQr(
+                  db,
+                  restaurant,
+                  "promo",
+                  promo[0].id,
+                  `${promo[0].code} · ${promo[0].name}`,
+                );
+                return { token: q.token };
+              }
+              throw new Error("QR code inconnu.");
+            }
             if (action === "customer-session" && user) {
               await customerForActor(db, restaurant, user);
               return { id: user.id, name: user.name, email: user.email };

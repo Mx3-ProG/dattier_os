@@ -5,6 +5,7 @@ import { money } from "@/lib/domain";
 import { Button } from "./ui/button";
 import { Mail, MessageSquare } from "lucide-react";
 import { Form, Modal, type Field, type Act } from "./forms";
+import { QrButton } from "./qr/qr-portfolio";
 import {
   MessageComposer,
   contactsOf,
@@ -19,6 +20,11 @@ const when = (iso: string) =>
     minute: "2-digit",
   });
 export function Customers({ data, act }: { data: Snapshot; act: Act }) {
+  // Member card scanned by the team: the customer is highlighted (?focus=<id>).
+  const focus =
+    typeof window === "undefined"
+      ? null
+      : new URLSearchParams(window.location.search).get("focus");
   const [editor, setEditor] = useState<{
       title: string;
       fields: Field[];
@@ -290,8 +296,23 @@ export function Customers({ data, act }: { data: Snapshot; act: Act }) {
               .map((c) => {
                 const k = contactsOf(c);
                 return (
-                  <tr key={c.id}>
-                    <td>{c.name}</td>
+                  <tr
+                    key={c.id}
+                    className={focus === c.id ? "is-focus" : ""}
+                    ref={(el) => {
+                      if (el && focus === c.id)
+                        el.scrollIntoView({ block: "center" });
+                    }}
+                  >
+                    <td>
+                      <QrButton
+                        restaurant={data.restaurant.id}
+                        kind="customer"
+                        refId={c.id}
+                        label={`Carte membre ${c.name}`}
+                      />{" "}
+                      {c.name}
+                    </td>
                     <td>{c.contact}</td>
                     <td>{k.consent ? "Accord recueilli" : "Non"}</td>
                     <td>{c.points}</td>

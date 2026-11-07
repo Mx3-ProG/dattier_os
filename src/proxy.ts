@@ -64,6 +64,7 @@ export async function proxy(req: NextRequest) {
     if (
       pathname.startsWith("/api/") ||
       pathname.startsWith("/_next/") ||
+      pathname.startsWith("/q/") ||
       pathname === "/source"
     )
       return NextResponse.next(forwarded(req, null));

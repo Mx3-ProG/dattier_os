@@ -27,6 +27,7 @@ import {
 } from "./account/rewards";
 import { ReferralCard } from "./account/referral";
 import { longDate, SectionTitle, type Account, type ReorderItem } from "./account/shared";
+import { CustomerQrSheet, QrPill } from "./account/qr-sheet";
 
 const reviewSuggestions = [
   "J’ai vraiment aimé cette commande, tout était délicieux !",
@@ -105,6 +106,7 @@ export function CustomerAccount({
   const [reviewText, setReviewText] = useState(reviewSuggestions[0]);
   const [reviewBusy, setReviewBusy] = useState(false);
   const [reviewedOrder, setReviewedOrder] = useState("");
+  const [bookingQr, setBookingQr] = useState<string | null>(null);
 
   const openReview = (order: ShopOrder) => {
     const first = order.items.find((item) => item.status !== "cancelled");
@@ -422,8 +424,13 @@ export function CustomerAccount({
                       <b>{longDate(b.starts_at)}</b>
                       <small>{b.guests} pers.</small>
                     </span>
-                    <span className={`ca-status ${b.status === "arrived" ? "is-done" : ""}`}>
-                      {bookingStatus[b.status] ?? b.status}
+                    <span className="ca-gift-tools">
+                      <span className={`ca-status ${b.status === "arrived" ? "is-done" : ""}`}>
+                        {bookingStatus[b.status] ?? b.status}
+                      </span>
+                      {["requested", "confirmed"].includes(b.status) && (
+                        <QrPill label="QR de ma réservation" onClick={() => setBookingQr(b.id)} />
+                      )}
                     </span>
                   </li>
                 ))}
@@ -438,6 +445,15 @@ export function CustomerAccount({
         </div>
       )}
 
+      {bookingQr && (
+        <CustomerQrSheet
+          kind="reservation"
+          refId={bookingQr}
+          title="Ma réservation"
+          description="Montrez ce QR code à votre arrivée : l’équipe vous installe en un scan."
+          close={() => setBookingQr(null)}
+        />
+      )}
       <p className="ca-note">
         Les points n’ont pas de valeur monétaire. Consultez les{" "}
         <Link href="/conditions-generales-vente">conditions du programme</Link>.

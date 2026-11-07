@@ -20,6 +20,7 @@ import type { Snapshot } from "@/lib/types";
 import { money, dateTime } from "@/lib/domain";
 import { Badge } from "./forms";
 import { Button } from "./ui/button";
+import { QrOverviewCard } from "./qr/qr-portfolio";
 export function Overview({
   data,
   navigate,
@@ -252,6 +253,10 @@ export function Overview({
           ))}
           <p className="muted">Calculé à partir des commandes réglées.</p>
         </section>
+        <QrOverviewCard
+          restaurant={data.restaurant.id}
+          onOpen={() => navigate("qr")}
+        />
       </div>
       <div className="section-heading">
         <h2>Dernières nouvelles</h2>

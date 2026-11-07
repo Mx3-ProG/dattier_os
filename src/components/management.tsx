@@ -10,6 +10,7 @@ import { money, dateTime } from "@/lib/domain";
 import { roleLabels } from "@/lib/permissions";
 import { Button } from "./ui/button";
 import { Form, Modal, Badge, type Act, type Field } from "./forms";
+import { QrButton } from "./qr/qr-portfolio";
 type Editor = {
   title: string;
   fields: Field[];
@@ -32,6 +33,11 @@ export function Management({
   const edit = (title: string, fields: Field[], submit: Editor["submit"]) =>
     setEditor({ title, fields, submit });
   const matches = (s: string) => s.toLowerCase().includes(query.toLowerCase());
+  // Object opened from a QR scan (?focus=<id>): highlighted and scrolled to.
+  const focus =
+    typeof window === "undefined"
+      ? null
+      : new URLSearchParams(window.location.search).get("focus");
   let body: React.ReactNode = null;
   if (module === "stocks")
     body = (
@@ -242,7 +248,14 @@ export function Management({
               {data.reservations
                 .filter((r) => matches(r.name))
                 .map((r) => (
-                  <tr key={r.id}>
+                  <tr
+                    key={r.id}
+                    className={focus === r.id ? "is-focus" : ""}
+                    ref={(el) => {
+                      if (el && focus === r.id)
+                        el.scrollIntoView({ block: "center" });
+                    }}
+                  >
                     <td>
                       <b>{r.name}</b>
                       <small>{r.contact}</small>
@@ -258,6 +271,12 @@ export function Management({
                       <Badge status={r.status} />
                     </td>
                     <td>
+                      <QrButton
+                        restaurant={data.restaurant.id}
+                        kind="reservation"
+                        refId={r.id}
+                        label={`Réservation ${r.name}`}
+                      />
                       {["requested", "confirmed", "arrived"].includes(
                         r.status,
                       ) && (

@@ -83,6 +83,8 @@ export const checkoutSchema = z.object({
   customer: z.string().trim().min(2).max(100),
   email: z.string().email().max(150),
   consumption: z.enum(["onsite", "takeaway"]),
+  /** Table number when ordering from a table QR code. */
+  table: z.coerce.number().int().min(1).max(999).optional(),
   payment: z.enum(["counter", "stripe"]),
   promo: z.string().trim().max(40).optional().default(""),
   loyaltyConsent: z.boolean().default(false),

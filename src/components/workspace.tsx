@@ -29,6 +29,7 @@ import {
   Leaf,
   ShieldCheck,
   GraduationCap,
+  QrCode,
 } from "lucide-react";
 import { can, type Permission, roleLabels } from "@/lib/permissions";
 import type { Snapshot } from "@/lib/types";
@@ -42,6 +43,7 @@ const Finance = dynamic(() => import("./overview").then((m) => m.Finance));
 import { dateTime } from "@/lib/domain";
 import { Tutorial } from "./tutorial/tour";
 import { CuisineIa } from "./assistant/cuisine-ia";
+import { QrPortfolio } from "./qr/qr-portfolio";
 const modules = [
   {
     id: "overview",
@@ -56,6 +58,13 @@ const modules = [
     group: "PILOTAGE",
     icon: Activity,
     permission: "audit",
+  },
+  {
+    id: "qr",
+    name: "QR codes",
+    group: "PILOTAGE",
+    icon: QrCode,
+    permission: undefined,
   },
   {
     id: "dining",
@@ -539,6 +548,8 @@ export function Workspace() {
               station={current.id === "kitchen" ? "kitchen" : "bar"}
               act={act}
             />
+          ) : current?.id === "qr" ? (
+            <QrPortfolio restaurant={restaurant} />
           ) : current?.id === "finance" ? (
             <Finance data={data} />
           ) : (

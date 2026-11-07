@@ -1268,3 +1268,41 @@ button.ca-card:active {
     margin-inline: auto;
   }
 }
+
+/* QR client : carte membre, cadeaux, réservations */
+.ca-qr-pill {
+  display: inline-grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  flex: none;
+  border: 0;
+  border-radius: 12px;
+  background: var(--ca-fill);
+  color: var(--ca-ink);
+}
+.ca-gift-tools {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.ca-qr-sheet {
+  display: grid;
+  justify-items: center;
+  gap: 10px;
+}
+.ca-qr-big {
+  padding: 14px;
+  border-radius: 22px;
+  box-shadow: var(--ca-shadow);
+}
+.ca-qr-placeholder {
+  display: grid;
+  place-items: center;
+  width: 240px;
+  height: 240px;
+  border-radius: 22px;
+  background: var(--ca-fill);
+  color: var(--ca-muted);
+}

@@ -4,6 +4,7 @@ import { Check, Copy, Gift, Lock, PiggyBank, Ticket } from "lucide-react";
 import { money } from "@/lib/domain";
 import { levels } from "@/features/commerce/engagement-rules";
 import { useTenantSite } from "../context";
+import { CustomerQrSheet, QrPill } from "./qr-sheet";
 import {
   badgeIcons,
   SectionTitle,
@@ -48,7 +49,8 @@ export function RewardsWallet({
     [claimed, setClaimed] = useState<{ name: string; code: string } | null>(
       null,
     ),
-    [confirm, setConfirm] = useState<Account["rewards"][number] | null>(null);
+    [confirm, setConfirm] = useState<Account["rewards"][number] | null>(null),
+    [qrCode, setQrCode] = useState("");
   const { points, loyaltyConsent } = account.customer;
   const sorted = [...account.rewards].sort(
     (a, b) => a.points_cost - b.points_cost,
@@ -157,7 +159,10 @@ export function RewardsWallet({
                   </b>
                   <small>Valable jusqu’au {shortDate(g.expires_on)}</small>
                 </span>
-                <CopyCode code={g.code} />
+                <span className="ca-gift-tools">
+                  <CopyCode code={g.code} />
+                  <QrPill label={`QR du code ${g.code}`} onClick={() => setQrCode(g.code)} />
+                </span>
               </li>
             ))}
           </ul>
@@ -165,6 +170,15 @@ export function RewardsWallet({
             Saisissez le code dans votre panier au moment de commander.
           </p>
         </div>
+      )}
+      {qrCode && (
+        <CustomerQrSheet
+          kind="promo"
+          refId={qrCode}
+          title={qrCode}
+          description="Montrez ce QR code au comptoir, ou saisissez le code dans votre panier."
+          close={() => setQrCode("")}
+        />
       )}
       {confirm && (
         <Sheet

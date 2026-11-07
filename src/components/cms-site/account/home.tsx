@@ -8,7 +8,10 @@ import {
   Sparkles,
   Zap,
 } from "lucide-react";
+import { useState } from "react";
+import { QrCode } from "lucide-react";
 import { money } from "@/lib/domain";
+import { CustomerQrSheet } from "./qr-sheet";
 import { TenantLink as Link } from "../context";
 import {
   countdown,
@@ -37,6 +40,7 @@ export function AccountHero({
   const available = rewards.filter((r) => r.points_cost <= customer.points);
   const ringValue = next ? customer.points / next.points_cost : 1;
   const first = customer.name.trim().split(/\s+/)[0];
+  const [card, setCard] = useState(false);
   return (
     <section className="ca-hero" id="fidelite">
       <div className="ca-hero-text">
@@ -76,7 +80,18 @@ export function AccountHero({
           <Link href="/reservations" className="ca-button ca-button-soft">
             <CalendarDays size={18} /> Réserver une table
           </Link>
+          <button className="ca-button ca-button-soft" onClick={() => setCard(true)}>
+            <QrCode size={18} /> Ma carte membre
+          </button>
         </div>
+        {card && (
+          <CustomerQrSheet
+            kind="customer"
+            title="Ma carte membre"
+            description="Présentez-la en caisse : l’équipe retrouve votre compte et vos points en un scan."
+            close={() => setCard(false)}
+          />
+        )}
       </div>
       <div className="ca-hero-ring">
         <Ring value={ringValue}>
