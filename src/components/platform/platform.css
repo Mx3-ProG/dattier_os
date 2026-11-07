@@ -414,7 +414,8 @@
   color: var(--admin-muted);
   font-size: 12px;
 }
-.admin-shell-context > a { white-space: nowrap; }
+.admin-shell-context > a { flex-shrink: 0; white-space: nowrap; }
+.admin-shell-context > svg { flex-shrink: 0; }
 .admin-shell-context strong {
   overflow: hidden;
   color: #344a3d;
@@ -666,8 +667,11 @@
   }
   .restaurant-admin-shell { padding-bottom: calc(66px + env(safe-area-inset-bottom)); }
   .admin-action-dock { padding-inline: 8px; }
+}
+/* Téléphone et tablette portrait : icônes seules dans le dock (les libellés se
+   chevauchent sous ~820 px), le libellé reste lu par les lecteurs d'écran. */
+@media (max-width: 820px) {
   .admin-action-dock-inner { justify-content: space-between; gap: 4px; }
-  /* Téléphone : icônes seules, le libellé reste lu par les lecteurs d'écran. */
   .admin-dock-item {
     flex: 1 1 0;
     min-width: 44px;
