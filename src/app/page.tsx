@@ -12,5 +12,6 @@ export function generateMetadata(): Metadata {
   };
 }
 export default function Page() {
-  return <Landing demo={demoEnabled()} />;
+  const demo = demoEnabled();
+  return <Landing demo={demo} demoHref={demo ? "/demo" : process.env.ATACUISINE_PUBLIC_DEMO_URL} />;
 }

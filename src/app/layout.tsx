@@ -1,3 +1,5 @@
+import Link from "next/link";
+import { demoEnabled } from "@/lib/database/db";
 import type { Metadata } from "next";
 import { headers } from "next/headers";
 import { SITE_HEADER, DEFAULT_LOCALE } from "@/features/seo/locale";
@@ -25,7 +27,17 @@ export default async function Layout({
   const lang = site ? await siteLanguage(site) : DEFAULT_LOCALE.language;
   return (
     <html lang={lang}>
-      <body>{children}</body>
+      <body>
+        {children}
+        {demoEnabled() && (
+          <Link
+            className="demo-purchase-link"
+            href={process.env.ATACUISINE_PURCHASE_URL || "/#offres"}
+          >
+            Voir les offres
+          </Link>
+        )}
+      </body>
     </html>
   );
 }

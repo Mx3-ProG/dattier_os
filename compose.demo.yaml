@@ -1,0 +1,10 @@
+services:
+  demo:
+    build: .
+    environment:
+      ATACUISINE_DEMO: "true"
+      ATACUISINE_DATA_DIR: /tmp/atacuisine-demo
+      APP_URL: ${DEMO_APP_URL:?Indiquer l’URL HTTPS publique de la démo}
+      ATACUISINE_PURCHASE_URL: ${ATACUISINE_PURCHASE_URL:?Indiquer l’URL des offres du site commercial}
+    ports:
+      - "127.0.0.1:${DEMO_PORT:-3100}:3000"

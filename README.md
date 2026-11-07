@@ -58,3 +58,22 @@ Le mode hors ligne fonctionne par appareils indépendants : aucun transfert auto
 ### Studio du site et sécurité
 
 Après connexion, « Mon site web » ouvre l’éditeur complet repris des Temps des Donuts. Il permet d’ajouter des sections et pages, de personnaliser Ma story, l’identité, les polices et le référencement, puis de prévisualiser, publier et restaurer une version. « Sécurité opérationnelle » ouvre le journal, les incidents, corrections et archives, avec accès limité au restaurant courant. Voir [l’état détaillé](docs/platform/IMPLEMENTATION_STATUS.md).
+
+### Démo publique
+
+La démo tourne sur une instance Docker dédiée, accessible via un proxy HTTPS sur
+un sous-domaine distinct. Elle utilise les profils fictifs et une base locale
+partagée par les visiteurs. Les modifications disparaissent quand le conteneur
+est recréé.
+
+```sh
+DEMO_APP_URL=https://demo.example.com \
+ATACUISINE_PURCHASE_URL=https://app.example.com/#offres \
+docker compose -f compose.demo.yaml up -d --build
+```
+
+Sur l’hôte Docker, dirigez le proxy HTTPS vers `127.0.0.1:3100`. Sur
+l’instance commerciale, configurez
+`ATACUISINE_PUBLIC_DEMO_URL=https://demo.example.com/demo` pour afficher le
+lien « Essayer la démo ». Gardez les paramètres de production (PostgreSQL,
+identité, paiement et messagerie) sur l’instance commerciale.

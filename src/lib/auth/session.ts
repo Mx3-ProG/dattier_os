@@ -4,7 +4,7 @@ import { cookies } from "next/headers";
 import { getDb, demoEnabled, one, rows, type DB } from "../database/db";
 import type { Role } from "../permissions";
 import { bindActor } from "@/features/ops-security/context";
-import { oidcActor } from "./oidc";
+import { appOrigin, oidcActor } from "./oidc";
 export type Actor = {
   id: string;
   name: string;
@@ -28,7 +28,7 @@ export async function login(id: string) {
   (await cookies()).set("atacuisine_session", token, {
     httpOnly: true,
     sameSite: "strict",
-    secure: !!process.env.VERCEL,
+    secure: appOrigin().startsWith("https:"),
     path: "/",
     maxAge: 43200,
   });

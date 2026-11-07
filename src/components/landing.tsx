@@ -90,19 +90,19 @@ const faq = [
   },
 ];
 
-function Cta({ demo, inverse }: { demo: boolean; inverse?: boolean }) {
+function Cta({ demoHref, inverse }: { demoHref?: string; inverse?: boolean }) {
   return (
     <div className="landing-cta">
-      {demo && (
+      {demoHref && (
         <Link
           className={`landing-btn ${inverse ? "light" : "primary"}`}
-          href="/demo"
+          href={demoHref}
         >
           Essayer la démo <ArrowUpRight size={16} aria-hidden />
         </Link>
       )}
       <Link
-        className={`landing-btn ${demo ? "outline" : inverse ? "light" : "primary"}`}
+        className={`landing-btn ${demoHref ? "outline" : inverse ? "light" : "primary"}`}
         href="/platform"
       >
         Créer mon compte
@@ -111,7 +111,7 @@ function Cta({ demo, inverse }: { demo: boolean; inverse?: boolean }) {
   );
 }
 
-export function Landing({ demo }: { demo: boolean }) {
+export function Landing({ demo, demoHref }: { demo: boolean; demoHref?: string }) {
   return (
     <div className="landing">
       <a className="skip-link" href="#contenu">
@@ -147,7 +147,7 @@ export function Landing({ demo }: { demo: boolean }) {
               boutique : un même outil pour la salle, la cuisine, le bar et la
               direction. Une information saisie une fois est à jour partout.
             </p>
-            <Cta demo={demo} />
+            <Cta demoHref={demoHref} />
             <p className="landing-note">
               Clean Code (AGPL-3.0) · Données cloisonnées par structure ·
               Auto-hébergeable
@@ -352,7 +352,7 @@ export function Landing({ demo }: { demo: boolean }) {
               ? "Découvrez atacuisine sur un restaurant de démonstration, puis créez votre espace."
               : "Créez votre espace, ajoutez votre structure et ouvrez le service."}
           </p>
-          <Cta demo={demo} inverse />
+          <Cta demoHref={demoHref} inverse />
         </section>
       </main>
 
@@ -361,7 +361,7 @@ export function Landing({ demo }: { demo: boolean }) {
           <UtensilsCrossed size={18} aria-hidden /> atacuisine
         </span>
         <nav aria-label="Liens utiles">
-          {demo && <Link href="/demo">Démonstration</Link>}
+          {demoHref && <Link href={demoHref}>Démonstration</Link>}
           {demo && <Link href="/site-demo">Exemple de site restaurant</Link>}
           <Link href="/platform">Espace client</Link>
           <Link href="/source">Code source et licence</Link>

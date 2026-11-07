@@ -1,8 +1,14 @@
 import { notFound } from "next/navigation";
 import { demoEnabled } from "@/lib/database/db";
 import { Demo } from "@/components/demo";
+import { safeReturnTo } from "@/lib/auth/oidc";
 export const dynamic = "force-dynamic";
-export default function Page() {
+export default async function Page({
+  searchParams,
+}: {
+  searchParams: Promise<{ returnTo?: string | string[] }>;
+}) {
   if (!demoEnabled()) notFound();
-  return <Demo />;
+  const { returnTo } = await searchParams;
+  return <Demo returnTo={typeof returnTo === "string" ? safeReturnTo(returnTo) : undefined} />;
 }
