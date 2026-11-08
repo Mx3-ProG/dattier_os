@@ -29,7 +29,7 @@ const modules: [string, Permission | null][] = [
   ["overview", "finance"], ["activity", "audit"], ["dining", "orders"], ["orders", "orders"],
   ["kitchen", "kitchen"], ["bar", "bar"], ["reservations", "reservations"], ["stocks", "stock"],
   ["recipes", "stock"], ["suppliers", "purchases"], ["deliveries", "purchases"], ["team", "team"],
-  ["attendance", null], ["finance", "finance"], ["expenses", "finance"], ["customers", "customers"],
+  ["attendance", null], ["finance", "finance"], ["accounting", "finance"], ["expenses", "finance"], ["customers", "customers"],
   ["menu", "catalog"], ["settings", "settings"],
 ];
 

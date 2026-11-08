@@ -155,7 +155,7 @@ const core: Chapter[] = [
         module: "overview",
         target: ".metrics",
         title: "Les indicateurs clés",
-        body: "CA déclaré aujourd’hui, commandes en cours (et demandes à confirmer), tables occupées et préparations prêtes à servir.",
+        body: "Encaissé aujourd’hui, commandes en cours (et demandes à confirmer), tables occupées et préparations prêtes à servir.",
       },
       {
         module: "overview",
@@ -176,7 +176,7 @@ const core: Chapter[] = [
         {
           title: "Ce que vous y trouvez",
           points: [
-            "Indicateurs : CA déclaré aujourd’hui, commandes en cours et demandes à confirmer, tables occupées, préparations prêtes.",
+            "Indicateurs : encaissé aujourd’hui, commandes en cours et demandes à confirmer, tables occupées, préparations prêtes.",
             "Le rythme des ventes : graphique des ventes dans le temps.",
             "Objectif du jour : jauge de progression vers l’objectif fixé dans Établissements.",
             "À la une du service et les favoris de la maison : commandes en cours et produits les plus vendus.",
@@ -876,7 +876,7 @@ const core: Chapter[] = [
         module: "finance",
         target: ".metrics",
         title: "Le pilotage financier",
-        body: "CA déclaré toutes dates, ticket moyen par déclaration, dépenses déclarées et coût matière théorique des produits vendus.",
+        body: "Encaissements déclarés TTC toutes dates, ticket moyen par déclaration, dépenses déclarées et coût matière théorique des produits vendus.",
       },
       {
         module: "finance",
@@ -899,15 +899,16 @@ const core: Chapter[] = [
         {
           title: "Ce que vous pouvez faire",
           points: [
-            "Consulter le CA déclaré, le ticket moyen, les dépenses et le coût matière théorique.",
+            "Consulter les encaissements déclarés, le ticket moyen, les dépenses et le coût matière théorique.",
             "Retrouver l’historique des règlements, avec leurs remises.",
             "Exporter les règlements en CSV.",
             "Enregistrer les dépenses opérationnelles.",
+            "Dans Opérations à vérifier : déclarer le régime de TVA et le taux de chaque produit, sur place et à emporter. Chaque règlement prépare alors son écriture, et ce qui reste incertain vous est présenté.",
           ],
         },
         {
           title: "Limites",
-          text: "Les exports sont des données à rapprocher : atacuisine n’est ni un logiciel de comptabilité ni une caisse certifiée.",
+          text: "Les exports et les écritures sont une pré-comptabilité à valider par votre expert-comptable : atacuisine n’est ni un logiciel de comptabilité ni une caisse certifiée. Aucun taux de TVA n’est déduit à votre place.",
         },
       ],
     },

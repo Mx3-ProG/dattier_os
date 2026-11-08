@@ -12,6 +12,7 @@
 - Ingrédients, conversions, recettes des suppléments, inventaires et achats multilignes avec réceptions partielles ; transferts internes au restaurant par service.
 - Appareils hors ligne, quotas de lots, file IndexedDB, synchronisation dédupliquée et conflits conservés.
 - Boîte d’envoi persistante, worker, exports de ventes/pointages, chiffrement des secrets de connecteurs et vérification d’enveloppes signées.
+- Pré-comptabilité des règlements : régime et taux de TVA déclarés par l’établissement, TVA figée sur la ligne vendue, événements et écritures en ajout seul, chaîne d’empreintes, contre-passation, centre « Opérations à vérifier » et politiques RLS financières (`docs/platform/FINANCIAL_AUDIT.md`).
 - Forfaits par organisation, contrôle du nombre d’établissements et gestion manuelle du pilote.
 - Composition auto-hébergeable, migrations séparées et outils de sauvegarde/import/charge.
 

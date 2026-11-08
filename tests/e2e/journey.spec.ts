@@ -83,7 +83,7 @@ test("parcours complet, réservations publiques, responsive et accès serveur", 
     page.getByRole("cell", { name: "consumption", exact: true }).first(),
   ).toBeVisible();
   await profile(page, "Nadia");
-  await expect(page.getByText("CA déclaré aujourd’hui")).toBeVisible();
+  await expect(page.getByText("Encaissé aujourd’hui")).toBeVisible();
   await page.screenshot({
     path: "docs/dashboard-desktop.png",
     animations: "disabled",

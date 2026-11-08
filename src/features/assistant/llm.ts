@@ -338,7 +338,7 @@ function contextJson(ctx: AssistantContext) {
     reservations: ctx.reservations.map((r) => [r.id, r.starts_at, r.name, r.guests, r.status]),
     encaisse_aujourdhui: ctx.paidToday,
     reglements_aujourdhui: ctx.paymentsToday,
-    ventes_par_jour: ctx.sales,
+    encaissements_par_jour: ctx.sales,
     nombre_clients: ctx.customers,
     fournisseurs: ctx.suppliers.map((x) => ({
       nom: x.name,

@@ -1,5 +1,6 @@
 import { createHash, randomBytes, randomUUID } from "node:crypto";
 import { z } from "zod";
+import { processPayment } from "@/features/finance/books";
 import { one, rows, type DB } from "@/lib/database/db";
 import { menu } from "@/lib/snapshot";
 import {
@@ -7,6 +8,7 @@ import {
   reserve,
   log,
   changeItem,
+  completeSettledOrder,
 } from "@/features/orders/service";
 import { requirePermission } from "@/lib/permissions";
 import type { Actor } from "@/lib/auth/session";
@@ -409,10 +411,11 @@ export function commerce(SHOP: string) {
       [id],
     );
     for (let n = 0; n < items.length; n++) {
-      await db.query("UPDATE order_items SET price=$2 WHERE id=$1", [
-        items[n].id,
-        lines[n].price,
-      ]);
+      // Les options choisies comptent aussi dans le prix et le coût matière.
+      await db.query(
+        "UPDATE order_items SET price=$2,material_cost=material_cost+(SELECT coalesce(sum(o.quantity*i.cost),0) FROM option_recipes o JOIN ingredients i ON i.id=o.ingredient_id WHERE o.menu_id=$3 AND o.choice_id=ANY($4::text[])) WHERE id=$1",
+        [items[n].id, lines[n].price, items[n].menu_id, a.items[n].choices],
+      );
       await reserve(
         db,
         SHOP,
@@ -445,6 +448,8 @@ export function commerce(SHOP: string) {
         authenticatedCustomerId ? flashBonus : 0,
       ],
     );
+    // Le mode de consommation n’est connu qu’ici : il fixe le taux de chaque ligne.
+    await db.query("SELECT app.fin_freeze_order_vat($1,true)", [id]);
     if (promo) await recordCheckoutPromo(db, promo, id, customerId);
     const order = await receipt(db, token),
       s = await settings(db);
@@ -485,6 +490,9 @@ export function commerce(SHOP: string) {
       payment_status: string;
       payment_method: string;
       total: number;
+      discount: number;
+      promo_id: string | null;
+      customer_id: string | null;
       status: string;
     }>(
       db,
@@ -495,15 +503,27 @@ export function commerce(SHOP: string) {
       throw new Error("Un paiement Stripe doit être confirmé par Stripe.");
     if (o.status === "cancelled") throw new Error("Commande annulée.");
     if (o.payment_status === "paid") return;
+    const declaration = randomUUID();
     await db.query(
-      "INSERT INTO payment_declarations(id,order_id,amount,method,actor) VALUES($1,$2,$3,$4,$5)",
-      [randomUUID(), id, o.total, method, user.id],
+      "INSERT INTO payment_declarations(id,order_id,amount,method,actor,discount,promo_id,customer_id) VALUES($1,$2,$3,$4,$5,$6,$7,$8)",
+      [
+        declaration,
+        id,
+        o.total,
+        method,
+        user.id,
+        o.discount,
+        o.promo_id,
+        o.customer_id,
+      ],
     );
     await db.query(
       "UPDATE shop_orders SET payment_status='paid' WHERE order_id=$1",
       [id],
     );
-    await log(db, SHOP, user.id, "Encaissement comptoir déclaré (démo)", id);
+    await completeSettledOrder(db, id);
+    if (o.total > 0) await processPayment(db, SHOP, declaration);
+    await log(db, SHOP, user.id, "Encaissement comptoir déclaré", id);
     await awardOrderPoints(db, SHOP, id);
   }
   async function transition(db: DB, id: string, target: string, user: Actor) {

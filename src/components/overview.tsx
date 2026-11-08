@@ -76,7 +76,7 @@ export function Overview({
       <div className="metrics">
         {[
           {
-            title: "CA déclaré aujourd’hui",
+            title: "Encaissé aujourd’hui",
             value: money(revenue),
             detail: data.demo
               ? "Règlements déclarés · démo"
@@ -176,7 +176,7 @@ export function Overview({
                   isAnimationActive={false}
                   type="monotone"
                   dataKey="total"
-                  name="CA déclaré"
+                  name="Encaissements déclarés"
                   stroke="var(--appearance-link, #ad6545)"
                   strokeWidth={2.5}
                   fill="url(#sales)"
@@ -304,8 +304,7 @@ export function Overview({
 }
 export function Finance({ data }: { data: Snapshot }) {
   const total = data.payments.reduce((s, p) => s + p.amount, 0),
-    expenses = data.expenses.reduce((s, e) => s + e.amount, 0),
-    paid = data.orders.filter((o) => o.status === "paid");
+    expenses = data.expenses.reduce((s, e) => s + e.amount, 0);
   const exportCsv = () => {
     const csv =
       "date;montant_eur\n" +
@@ -317,7 +316,9 @@ export function Finance({ data }: { data: Snapshot }) {
     );
     const a = document.createElement("a");
     a.href = url;
-    a.download = "atacuisine-reglements-demo.csv";
+    a.download = data.demo
+      ? "atacuisine-reglements-demo.csv"
+      : "atacuisine-reglements.csv";
     a.click();
     URL.revokeObjectURL(url);
   };
@@ -327,15 +328,15 @@ export function Finance({ data }: { data: Snapshot }) {
         <div>
           <h2>Pilotage financier</h2>
           <p>
-            Données opérationnelles fictives · aucun justificatif comptable
-            certifié.
+            {data.demo ? "Données fictives · " : "Données opérationnelles · "}
+            aucun justificatif comptable certifié.
           </p>
         </div>
         <Button onClick={exportCsv}>Exporter les règlements CSV</Button>
       </div>
       <div className="metrics">
         <article className="metric card">
-          <span>CA déclaré · toutes dates</span>
+          <span>Encaissements déclarés TTC · toutes dates</span>
           <strong>{money(total)}</strong>
         </article>
         <article className="metric card">
@@ -347,23 +348,13 @@ export function Finance({ data }: { data: Snapshot }) {
           <strong>{money(expenses)}</strong>
         </article>
         <article className="metric card">
-          <span>Coût matière théorique vendu</span>
-          <strong>
-            {money(
-              paid
-                .flatMap((o) => o.items)
-                .filter((i) => i.status === "served")
-                .reduce(
-                  (s, i) => s + (i.material_cost || 0) * 100 * i.quantity,
-                  0,
-                ),
-            )}
-          </strong>
+          <span>Coût matière théorique vendu · toutes dates</span>
+          <strong>{money(data.materialCostSold)}</strong>
         </article>
       </div>
       <p className="note">
-        Les bases HT/TTC ne sont pas validées. Aucune marge comptable n’est
-        calculée à partir de ces montants.
+        Ces montants sont des encaissements TTC, pas un chiffre d’affaires HT.
+        Aucune marge comptable n’est calculée à partir de ces montants.
       </p>
       <div className="card table-scroll">
         <table>

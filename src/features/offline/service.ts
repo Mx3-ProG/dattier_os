@@ -357,6 +357,9 @@ export async function offlinePerform(
           "INSERT INTO shop_orders(order_id,token,request_hash,consumption,payment_method,total,subtotal) VALUES($1,$2,$3,'onsite','counter',$4,$4)",
           [event.order, randomBytes(32).toString("hex"), hash, total],
         );
+        await db.query("SELECT app.fin_freeze_order_vat($1,true)", [
+          event.order,
+        ]);
       } else {
         if (event.kind === "cancelled") {
           const payment = await one<{ payment_status: string }>(

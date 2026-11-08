@@ -22,6 +22,7 @@ import {
   Users,
   Clock,
   Wallet,
+  ClipboardCheck,
   Receipt,
   Heart,
   Settings,
@@ -46,6 +47,9 @@ const Overview = dynamic(() => import("./overview").then((m) => m.Overview), {
   loading: () => <p>Chargement du tableau de bord…</p>,
 });
 const Finance = dynamic(() => import("./overview").then((m) => m.Finance));
+const FinanceCenter = dynamic(() =>
+  import("./finance-center").then((m) => m.FinanceCenter),
+);
 import { dateTime } from "@/lib/domain";
 import { Tutorial } from "./tutorial/tour";
 import { CuisineIa } from "./assistant/cuisine-ia";
@@ -154,6 +158,13 @@ const modules = [
     name: "Finances & rapports",
     group: "PILOTAGE FINANCIER",
     icon: Wallet,
+    permission: "finance",
+  },
+  {
+    id: "accounting",
+    name: "Opérations à vérifier",
+    group: "PILOTAGE FINANCIER",
+    icon: ClipboardCheck,
     permission: "finance",
   },
   {
@@ -564,6 +575,8 @@ export function Workspace() {
             <QrPortfolio restaurant={restaurant} />
           ) : current?.id === "finance" ? (
             <Finance data={data} />
+          ) : current?.id === "accounting" ? (
+            <FinanceCenter key={restaurant} restaurant={restaurant} />
           ) : (
             <Management
               key={`${current?.id}-${restaurant}`}

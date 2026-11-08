@@ -22,6 +22,14 @@ Contraintes : quantités positives, stock réservé ≤ physique, unicité de se
 
 Le stock historique du seed est consommé et historisé, les ventes viennent des déclarations liées aux commandes. Les horodatages historiques sont fictifs. L’horloge de PostgreSQL gouverne la validité des lots ; dates financières affichées Europe/Paris.
 
+## Pré-comptabilité
+
+Migration `036_finance_core.sql`, avec son retour arrière `down/036_finance_core.sql`, réservé à la préproduction car il détruit les écritures. Détails et limites : `docs/platform/FINANCIAL_AUDIT.md`.
+
+- Un trigger sur `payment_declarations` crée l’événement `fin_events`, quel que soit le chemin d’insertion. Les règlements et le journal sont en ajout seul.
+- `processPayment` (`src/features/finance/books.ts`) écrit dans la transaction du règlement, ou ouvre une ligne dans `fin_review_items` s’il manque une information. L’unicité par événement empêche toute seconde écriture.
+- Écritures créées uniquement par les fonctions `app.fin_*`. Lecture réservée aux rôles financiers ; le canal public ne voit rien. Une nouvelle table financière suit le même modèle, jamais la politique générale `tenant_access`.
+
 ## Réinitialisation et sauvegarde
 
 Paramètres → Réinitialiser, confirmation obligatoire, propriétaire/admin seulement. La route est désactivée hors démo. Elle vide exclusivement la base locale dédiée et recharge le seed dans une transaction ; elle révoque les sessions locales. Aucun connecteur distant n’est appelé.

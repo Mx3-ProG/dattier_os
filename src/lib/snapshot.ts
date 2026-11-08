@@ -226,6 +226,16 @@ export async function snapshot(
           [r],
         )
       : [],
+    // Même périmètre que les encaissements : toutes dates, sans limite d’affichage.
+    materialCostSold: allowed("finance")
+      ? (
+          await one<{ cost: number }>(
+            db,
+            "SELECT coalesce(sum(i.material_cost*i.quantity),0)::float*100 AS cost FROM order_items i JOIN orders o ON o.id=i.order_id WHERE o.restaurant_id=$1 AND o.status='paid' AND i.status='served'",
+            [r],
+          )
+        ).cost
+      : 0,
     payments: allowed("finance")
       ? await rows(
           db,

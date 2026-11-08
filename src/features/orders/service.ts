@@ -1,4 +1,5 @@
 import { requirePlan } from "@/features/platform/entitlements";
+import { processPayment } from "@/features/finance/books";
 import { mirrorAudit } from "@/features/ops-security/events";
 import { redeemPromo } from "@/features/loyalty/service";
 import { createHash, randomUUID as uuid } from "node:crypto";
@@ -248,6 +249,7 @@ export async function createOrder(
         user?.id ?? null,
       );
   }
+  await db.query("SELECT app.fin_freeze_order_vat($1)", [id]);
   await log(
     db,
     input.restaurant,
@@ -264,6 +266,16 @@ export async function createOrder(
   );
   return id;
 }
+/**
+ * Une commande boutique peut être réglée avant d’être servie : elle reste
+ * « active » pour la cuisine, puis passe à « paid » une fois tout servi ou annulé.
+ */
+export async function completeSettledOrder(db: DB, orderId: string) {
+  await db.query(
+    "UPDATE orders o SET status='paid' WHERE o.id=$1 AND o.status='active' AND EXISTS(SELECT 1 FROM shop_orders c WHERE c.order_id=o.id AND c.payment_status='paid') AND NOT EXISTS(SELECT 1 FROM order_items i WHERE i.order_id=o.id AND i.status NOT IN ('served','cancelled'))",
+    [orderId],
+  );
+}
 export async function changeItem(
   db: DB,
   r: string,
@@ -271,9 +283,14 @@ export async function changeItem(
   target: string,
   user: Actor,
 ) {
-  const item = await one<{ status: string; station: string; order_id: string }>(
+  const item = await one<{
+    status: string;
+    station: string;
+    order_id: string;
+    order_status: string;
+  }>(
     db,
-    "SELECT i.* FROM order_items i JOIN orders o ON o.id=i.order_id WHERE i.id=$1 AND o.restaurant_id=$2 AND o.status='active' FOR UPDATE",
+    "SELECT i.*,o.status AS order_status FROM order_items i JOIN orders o ON o.id=i.order_id WHERE i.id=$1 AND o.restaurant_id=$2 AND o.status IN ('active','paid') FOR UPDATE OF i",
     [id, r],
   );
   requirePermission(
@@ -285,6 +302,7 @@ export async function changeItem(
         : "kitchen",
   );
   if (item.status === target) return;
+  if (item.order_status === "paid") throw new Error("Commande déjà réglée.");
   if (target === "cancelled" && ["served", "cancelled"].includes(item.status))
     throw new Error("Produit déjà servi ou annulé.");
   if (
@@ -371,6 +389,7 @@ export async function changeItem(
     }
   }
   await db.query("UPDATE order_items SET status=$2 WHERE id=$1", [id, target]);
+  await completeSettledOrder(db, item.order_id);
   await log(db, r, user.id, `Préparation : ${target}`, id);
   if (target === "ready")
     await notify(
@@ -429,11 +448,12 @@ export async function pay(
     ? await redeemPromo(db, r, customer!, promo, total)
     : null;
   const net = total - (reward?.discount ?? 0);
+  const declaration = uuid();
   if (total > 0)
     await db.query(
       "INSERT INTO payment_declarations(id,session_id,order_id,amount,method,actor,customer_id,promo_id,discount) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9)",
       [
-        uuid(),
+        declaration,
         order.session_id,
         order.session_id ? null : orderId,
         net,
@@ -459,6 +479,7 @@ export async function pay(
       [order.session_id],
     );
   }
+  if (total > 0) await processPayment(db, r, declaration);
   await log(
     db,
     r,

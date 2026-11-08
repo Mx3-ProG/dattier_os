@@ -53,6 +53,7 @@ export const navigation: [RegExp, string, string][] = [
   [/\b(presences?|pointage)\b/, "attendance", "les présences"],
   [/\b(finances?|rapports?)\b/, "finance", "les finances"],
   [/\bdepenses?\b/, "expenses", "les dépenses"],
+  [/\b(operations? a verifier|comptabilite|ecritures?|tva)\b/, "accounting", "les opérations à vérifier"],
   [/\b(clients?|fidelite)\b/, "customers", "les clients"],
   [/\b(la carte|menu)\b/, "menu", "la carte"],
   [/\b(etablissements?|parametres?|reglages?)\b/, "settings", "les établissements"],
