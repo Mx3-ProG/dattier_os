@@ -4,7 +4,7 @@
 
 Effort total estimé : **14 à 20 jours de développement**, plus 1 à 2 semaines d'observation de la CSP. La CSP (lot 2) peut être livrée seule en 3 à 4 jours.
 
-Cette analyse porte sur le worktree `claude/tenant-isolation` (commit `b3c28b0` et changements non commités), le plus avancé. Il utilise les noms `atacuisine_*` là où `main` utilise `dattier_*` : les noms de cookies dépendront de la réconciliation des branches. Aucun prototype n'a été exécuté, et les chiffres sont des estimations.
+Cette analyse porte sur `claude/tenant-isolation`, la branche la plus avancée au moment de l'audit. Ses changements alors non commités sont depuis dans le commit `922fbb2`, et les fichiers audités n'y ont pas changé. Il utilise les noms `atacuisine_*` là où `main` utilise `dattier_*` : les noms de cookies dépendront de la réconciliation des branches. Aucun prototype n'a été exécuté, et les chiffres sont des estimations.
 
 ## Le problème
 
@@ -134,7 +134,7 @@ Points d'attention :
 | **7. Serrage final** | Hôtes de site limités aux API publiques, `frame-ancestors 'none'`, documentation | 0,5 à 1 j |
 | **Total** | | **14 à 20 j** |
 
-Ordre conseillé : 1 et 2 d'abord (indépendants, utiles immédiatement), puis 3 à 5 derrière `SITES_BASE_DOMAIN`, enfin 6 et 7. Le travail doit démarrer après la réconciliation de `main` et de `claude/tenant-isolation`.
+Ordre conseillé : 1 et 2 d'abord (indépendants, utiles immédiatement), puis 3 à 5 derrière `SITES_BASE_DOMAIN`, enfin 6 et 7. Le travail doit démarrer après la réconciliation de `main` et de la branche de consolidation, encore en cours. Les migrations des lots 3 et 4 (`site_slug`, `site_login_codes`) prendront leur numéro après celle de la réconciliation, prévue en 063 : numéroter au moment de la fusion.
 
 ## Migration des liens
 
