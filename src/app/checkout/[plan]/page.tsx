@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { Gift, UtensilsCrossed } from "lucide-react";
+import { Gift, Store } from "lucide-react";
 import { cookies } from "next/headers";
 import { plans, referralCookie } from "@/features/platform/pricing";
 import { actor } from "@/lib/auth/session";
@@ -39,7 +39,7 @@ export default async function Page({ params }: { params: Promise<{ plan: string 
   return (
     <main className="access-shell">
       <nav className="access-nav" aria-label="Souscription">
-        <Link href="/" className="access-brand"><UtensilsCrossed size={22} /> STUDIO OS</Link>
+        <Link href="/" className="access-brand"><Store size={22} /> STUDIO OS</Link>
         <Link href="/#offres">Changer d’offre</Link>
         {user && <form action="/auth/logout" method="post"><button>Se déconnecter</button></form>}
       </nav>
@@ -48,6 +48,7 @@ export default async function Page({ params }: { params: Promise<{ plan: string 
           <span className="access-label">Votre abonnement</span>
           <h1>{offer.title}</h1>
           <p className="access-price"><strong>{offer.price} €</strong> HT / mois</p>
+          <p>3 jours d’essai gratuits dès la création de votre espace. Aucun paiement initial. Sans engagement.</p>
           <p>{offer.description}</p>
           <p>Premier établissement inclus.</p>
           {referrer && (
@@ -61,14 +62,14 @@ export default async function Page({ params }: { params: Promise<{ plan: string 
           {user ? (
             <>
               <span className="access-label">Connecté en tant que {user.name}</span>
-              <h2>Préparer votre établissement</h2>
-              <p>Après l’envoi de votre demande, la facturation et l’activation sont traitées manuellement.</p>
+              <h2>Créer votre espace de commerce</h2>
+              <p>Votre essai démarre à la création de l’espace et dure 3 jours. Après l’essai, l’abonnement payant est activé manuellement. Aucun prélèvement automatique ne démarre à la fin de l’essai. Vous pouvez arrêter l’essai ou résilier depuis votre espace à tout moment.</p>
               <SubscriptionForm plan={offer.price} />
             </>
           ) : (
             <>
               <span className="access-label">Votre compte</span>
-              <h2>Continuer la souscription</h2>
+              <h2>Commencer vos 3 jours gratuits</h2>
               <p>Votre offre sera conservée pendant la connexion.</p>
               <Link className="access-primary" href={demoEnabled() ? login : `${login}&mode=register`}>
                 {demoEnabled() ? "Choisir un profil de démonstration" : "Créer un compte"}

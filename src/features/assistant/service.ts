@@ -80,7 +80,7 @@ async function buildContext(db: DB, restaurant: string, user: Actor, balance: nu
   const s = await snapshot(db, user, restaurant);
   const roles = s.user.roles ?? s.user.role;
   const allowed = (p: Permission) =>
-    (s.plan >= 69 || !["finance", "customers", "website", "payroll"].includes(p)) && can(roles, p);
+    (s.plan >= 39 || !["finance", "customers", "website", "payroll"].includes(p)) && can(roles, p);
   return assistantContext(
     s,
     modules.filter(([, p]) => !p || allowed(p)).map(([id]) => id),

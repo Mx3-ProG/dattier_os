@@ -60,6 +60,8 @@ const migrations: [number, string][] = [
   [72, "072_estimation.sql"],
   [73, "073_paid_feature_addons.sql"],
   [74, "074_paid_feature_access.sql"],
+  [75, "075_single_plan.sql"],
+  [76, "076_three_day_trial.sql"],
 ];
 /** Applies every additive migration not yet recorded, inside the caller's transaction. */
 export async function applyMigrations(tx: DB) {

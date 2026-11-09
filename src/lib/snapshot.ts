@@ -42,12 +42,12 @@ export async function snapshot(
   };
   const paidAddons=(await rows<{addon:string}>(db,
     `SELECT addon FROM unnest(ARRAY['invoices','attendance','client-invoices','payroll',
-      'offline-conflicts','connections','qr','loyalty']) AS addon
+      'offline-conflicts','connections','qr','loyalty','domain']) AS addon
      WHERE app.addon_installed($1,addon)`,[r])).map(row=>row.addon);
   const allowed = (p: Parameters<typeof can>[1]) =>
     (p === "customers" ? paidAddons.includes("loyalty") :
       p === "payroll" ? paidAddons.includes("payroll") :
-      plan >= 69 || !["finance", "website"].includes(p)) &&
+      plan >= 39 || !["finance", "website"].includes(p)) &&
     can(user.roles ?? user.role, p);
   const floorVisible =
     activeModules.floor &&
@@ -212,11 +212,11 @@ export async function snapshot(
       : [],
     engagement: allowed("customers") ? await engagementSettings(db, r) : null,
     flashPromotions:
-      plan >= 69 && can(user.roles ?? user.role, "catalog")
+      plan >= 39 && can(user.roles ?? user.role, "catalog")
         ? await adminFlashPromotions(db, r)
         : [],
     checkoutCustomers:
-      plan >= 69 && allowed("payments")
+      plan >= 39 && allowed("payments")
         ? await rows(
             db,
             "SELECT id,name FROM customers WHERE restaurant_id=$1 ORDER BY name",

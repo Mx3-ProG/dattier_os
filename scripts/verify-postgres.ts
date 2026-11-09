@@ -110,10 +110,10 @@ try {
       ),
     );
   await assert.rejects(addRestaurant("En attente"), /avant activation/);
-  await db.query("SELECT app.configure_organization_plan('qa-other-org',69,2)");
+  await db.query("SELECT app.configure_organization_plan('qa-other-org',39,2)");
   await assert.rejects(
     app("qa-other", "qa-other-r", (tx) =>
-      tx.query("SELECT app.configure_organization_plan('qa-other-org',99,3)"),
+      tx.query("SELECT app.configure_organization_plan('qa-other-org',39,3)"),
     ),
     /permission denied/,
   );

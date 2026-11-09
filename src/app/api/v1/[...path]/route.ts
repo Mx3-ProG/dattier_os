@@ -105,7 +105,7 @@ async function handleGet(req: NextRequest) {
     }
     if (endpoint === "public") {
       const r = tenant(req.nextUrl.searchParams.get("restaurant"));
-      await requirePlan(db, r, 69);
+      await requirePlan(db, r, 39);
       return NextResponse.json({
         restaurants: await rows(
           db,

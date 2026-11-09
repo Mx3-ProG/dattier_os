@@ -196,7 +196,7 @@ export function Catalog({ data, act }: { data: Snapshot; act: Act }) {
               <Button variant="secondary" onClick={() => setEdit(m.id)}>
                 Modifier le produit
               </Button>
-              {!m.archived_at && data.plan >= 69 && (
+              {!m.archived_at && data.plan >= 39 && (
                 <Button variant="ghost" onClick={() => setFlashFor(m.id)}>
                   <Zap size={15} />
                   {flashOf(m.id) ? "Promo flash programmée" : "Promo flash"}

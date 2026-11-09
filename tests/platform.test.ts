@@ -116,7 +116,7 @@ test("initialisation multi-restaurant sans recopier les comptes et stocks de dé
   await assert.rejects(add(), /avant activation/);
   await db.query("SELECT app.configure_organization_plan('other-org',39,1)");
   await assert.rejects(add(), /Quota/);
-  await db.query("SELECT app.configure_organization_plan('other-org',69,2)");
+  await db.query("SELECT app.configure_organization_plan('other-org',39,2)");
   const result = (await asUser("other", "other-r", (tx) =>
     platformPerform(
       tx,
@@ -130,7 +130,11 @@ test("initialisation multi-restaurant sans recopier les comptes et stocks de dé
   )) as { restaurant: string };
   assert.ok(result.restaurant);
   await assert.rejects(add(), /Quota/);
-  for (const plan of [39, 69, 99] as const) {
+  await assert.rejects(
+    db.query("SELECT app.configure_organization_plan('other-org',69,2)"),
+    /organization_plans_plan_check/,
+  );
+  for (const plan of [39] as const) {
     await db.query("SELECT app.configure_organization_plan('other-org',$1,2)", [
       plan,
     ]);
@@ -142,19 +146,14 @@ test("initialisation multi-restaurant sans recopier les comptes et stocks de dé
         ),
         plan,
       );
-      if (plan < 99)
-        await assert.rejects(
-          asUser("other", restaurant, (tx) => requirePlan(tx, restaurant, 99)),
-          /non autorisé/,
-        );
     }
   }
   await assert.rejects(
-    db.query("SELECT app.configure_organization_plan('other-org',99,1)"),
+    db.query("SELECT app.configure_organization_plan('other-org',39,1)"),
     /Sélectionnez/,
   );
   await db.query(
-    "SELECT app.configure_organization_plan('other-org',99,1,ARRAY[$1])",
+    "SELECT app.configure_organization_plan('other-org',39,1,ARRAY[$1])",
     [result.restaurant],
   );
   await assert.rejects(
@@ -408,12 +407,12 @@ test("parrainage : lien, récompenses, paliers, défi, classement et notificatio
   await db.query("SELECT app.configure_organization_plan($1,39,1)", [filleuls[2]]);
   assert.equal(monthlyPrice(39, 1, 3), 0, "3 filleuls : forfait 39 € offert");
   await db.query("SELECT app.configure_organization_plan($1,39,1)", [filleuls[3]]);
-  await db.query("SELECT app.configure_organization_plan($1,69,1)", [filleuls[4]]);
+  await db.query("SELECT app.configure_organization_plan($1,39,1)", [filleuls[4]]);
   state = await summary();
   assert.equal(state.paying_referrals, 5);
   assert.equal(state.activated_total, 5);
   assert.equal(state.credits, 6, "1 mois par filleul et un seul défi par mois");
-  assert.equal(await access(), 69, "5 filleuls : fonctions du forfait 69 € débloquées");
+  assert.equal(await access(), 39, "5 filleuls : aucune formule supérieure à débloquer");
   const notified = await one<{ n: number }>(
     db,
     "SELECT count(*)::int AS n FROM notifications WHERE restaurant_id='parrain-r' AND message LIKE 'Parrainage :%'",
@@ -425,7 +424,7 @@ test("parrainage : lien, récompenses, paliers, défi, classement et notificatio
   assert.equal(await access(), 39);
   await db.query("SELECT app.configure_organization_plan($1,39,1)", [filleuls[0]]);
   assert.equal((await summary()).credits, 6);
-  assert.equal(await access(), 69);
+  assert.equal(await access(), 39);
   // Leaderboard: anonymous by default, named once the referrer opts in.
   const board = (as: string, org: string) =>
     asUser(as, "", (tx) =>

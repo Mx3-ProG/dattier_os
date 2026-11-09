@@ -6,11 +6,11 @@ import {
 } from "../src/core/modules/runtime";
 import { addonCatalog } from "../src/features/addons/catalog";
 
-test("restaurant commercial mapping preserves Basic, Pro and Premium inclusions", () => {
+test("restaurant commercial mapping includes floor and booking in the single subscription", () => {
   assert.deepEqual(legacyRestaurantModules(0), []);
   assert.deepEqual(legacyRestaurantModules(39), ["floor", "table-booking"]);
-  assert.deepEqual(legacyRestaurantModules(69), ["floor", "table-booking"]);
-  assert.deepEqual(legacyRestaurantModules(99), ["floor", "table-booking"]);
+  assert.deepEqual(legacyRestaurantModules(69), []);
+  assert.deepEqual(legacyRestaurantModules(99), []);
   assert.deepEqual(legacyRestaurantModules(999), []);
   assert.equal(
     addonCatalog.find((addon) => addon.id === "floor")?.includedFrom,

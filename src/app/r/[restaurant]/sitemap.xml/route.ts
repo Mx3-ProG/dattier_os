@@ -26,7 +26,7 @@ export async function GET(
       getDb().then((db) =>
         db.transaction(async (tx) => {
           await tx.exec("SET LOCAL ROLE atacuisine_app");
-          if ((await restaurantPlan(tx, restaurant)) < 69) notFound();
+          if ((await restaurantPlan(tx, restaurant)) < 39) notFound();
           const config = await website(restaurant).getPublishedConfig(tx);
           const productIds =
             indexablePages(config).includes("carte") && !demoEnabled()

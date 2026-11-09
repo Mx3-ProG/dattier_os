@@ -8,7 +8,7 @@ import {
 import { rows } from "./db";
 export async function seed(db: DB) {
   await db.query(
-    "SELECT app.configure_organization_plan('legacy',99,greatest(2,count(*)::int+2)) FROM restaurants WHERE organization_id='legacy' AND archived_at IS NULL",
+    "SELECT app.configure_organization_plan('legacy',39,greatest(2,count(*)::int+2)) FROM restaurants WHERE organization_id='legacy' AND archived_at IS NULL",
   );
   await db.query(
     "INSERT INTO restaurants(id,name,address,phone,goal) VALUES ('bernay','Studio Restau','29 Rue du Général Leclerc, 27300 Bernay','02 32 46 12 11',150000),('atelier','L’Atelier — établissement fictif','Établissement de démonstration','',90000)",
@@ -16,7 +16,7 @@ export async function seed(db: DB) {
   // The sample establishments intentionally showcase paid modules without Stripe.
   await db.query(`INSERT INTO addon_legacy_grants(restaurant_id,addon_id)
     SELECT r.id,a.id FROM restaurants r CROSS JOIN unnest(ARRAY[
-      'invoices','attendance','client-invoices','payroll','offline-conflicts','connections','qr','loyalty'
+      'invoices','attendance','client-invoices','payroll','offline-conflicts','connections','qr','loyalty','domain'
     ]) AS a(id) WHERE r.id IN ('bernay','atelier') ON CONFLICT DO NOTHING`);
   const people = [
     ["slimane", "Slimane", "SUPER_ADMIN"],

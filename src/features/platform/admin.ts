@@ -26,13 +26,13 @@ export async function adminState(
   if (module === "shop") {
     requirePermission(user.roles ?? user.role, "orders");
     const plan = await restaurantPlan(db, r);
-    const shopEnabled = plan >= 99;
+    const shopEnabled = plan >= 39;
     return {
       shopEnabled,
       settings: shopEnabled ? await commerce(r).settings(db) : null,
       orders: await commerce(r).staffOrders(db, user),
       reviews:
-        plan >= 69
+        plan >= 39
           ? await rows(
               db,
               "SELECT p.*,m.name AS product,c.name AS customer FROM product_reviews p JOIN menu_items m ON m.id=p.menu_id JOIN customers c ON c.id=p.customer_id WHERE p.restaurant_id=$1 ORDER BY created_at DESC LIMIT 100",
@@ -214,7 +214,7 @@ export async function adminPerform(
       shop = commerce(r);
     if (input.action === "settings" || input.action === "product")
       await requireCommercialCapability(db, r, "online-orders");
-    if (input.action === "moderate") await requirePlan(db, r, 69);
+    if (input.action === "moderate") await requirePlan(db, r, 39);
     if (input.action === "settings")
       return shop.updateSettings(db, user, input.data);
     if (input.action === "product")

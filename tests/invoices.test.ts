@@ -603,7 +603,7 @@ test("droits : salle, public et autre établissement sans accès, sous le rôle 
   );
   await db.query("SELECT set_config('app.user_id','',false)");
   await db.query(
-    "UPDATE app.organization_plans SET plan=99 WHERE organization_id='inv-org'",
+    "UPDATE app.organization_plans SET plan=39 WHERE organization_id='inv-org'",
   );
   const other = { id: "inv-other", name: "Autre", role: "OWNER" as const };
   const otherRun = (fn: (tx: DB) => Promise<unknown>) =>

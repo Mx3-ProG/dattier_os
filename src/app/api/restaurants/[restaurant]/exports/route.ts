@@ -20,7 +20,7 @@ async function routeGET(
     if (a.from > a.to || Date.parse(a.to) - Date.parse(a.from) > 366 * 86400000)
       throw new Error("Période invalide.");
     const csv = await authenticated(restaurant, async (db, user) => {
-      if (a.kind === "sales") await requirePlan(db, restaurant, 69);
+      if (a.kind === "sales") await requirePlan(db, restaurant, 39);
       return exportCsv(db, restaurant, user, a.kind, a.from, a.to);
     });
     return new NextResponse(csv, {

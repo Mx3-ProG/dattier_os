@@ -158,70 +158,20 @@ test("rotation : angle enregistré, normalisé et refusé hors bornes", async ()
   await act(nadia, { action: "tableLifecycle", id, operation: "delete" });
 });
 
-test("limite : 50 tables actives en Essentiel, toutes zones confondues", async () => {
+test("abonnement Studio : aucun plafond de tables, hors abonnement le plafond SQL reste à 50", async () => {
   const [salle] = await zonesOf("bistrot");
-  const terrasse = (await act(
-    hugo,
-    { action: "saveZone", name: "Terrasse" },
-    "bistrot",
-  )) as unknown as string;
-  for (let n = 1; n <= 50; n++)
-    await act(hugo, table(n, n % 2 ? salle.id : terrasse), "bistrot");
-  await assert.rejects(
-    act(hugo, table(51, salle.id), "bistrot"),
-    /Forfait Exploitation : 50 tables actives au maximum/,
-  );
-  // Le plafond tient aussi en SQL, quel que soit le chemin d’écriture.
-  await assert.rejects(
-    db.query(
-      "INSERT INTO dining_tables(id,restaurant_id,number,capacity,zone_id) VALUES('bistrot-x','bistrot',99,2,$1)",
-      [salle.id],
-    ),
-    /50 tables actives/,
-  );
+  for (let n = 1; n <= 55; n++) await act(hugo, table(n, salle.id), "bistrot");
   const s = await db.transaction((tx) => snapshot(tx, hugo, "bistrot"));
   assert.deepEqual(
     { quota: s.floorPlan.quota, active: s.floorPlan.active },
-    { quota: 50, active: 50 },
+    { quota: null, active: 55 },
   );
-  // Archiver libère une place ; restaurer quand c’est plein est refusé.
-  const [first] = await rows<{ id: string }>(
+  const quota = await one<{ studio: number | null; none: number | null }>(
     db,
-    "SELECT id FROM dining_tables WHERE restaurant_id='bistrot' AND number=1",
+    "SELECT app.table_quota(39) AS studio, app.table_quota(0) AS none",
   );
-  await act(
-    hugo,
-    { action: "tableLifecycle", id: first.id, operation: "archive" },
-    "bistrot",
-  );
-  await act(hugo, table(51, salle.id), "bistrot");
-  await assert.rejects(
-    act(
-      hugo,
-      { action: "tableLifecycle", id: first.id, operation: "restore" },
-      "bistrot",
-    ),
-    /50 tables actives/,
-  );
-  // Premium : pas de plafond de tables (Le Dattier compte déjà 12 tables).
-  const [bernay] = await zonesOf("bernay");
-  for (let n = 100; n < 140; n++) await act(nadia, table(n, bernay.id));
-  assert.equal(
-    (await db.transaction((tx) => snapshot(tx, nadia, "bernay"))).floorPlan
-      .quota,
-    null,
-  );
-  assert.ok(
-    (
-      await one<{ n: number }>(
-        db,
-        "SELECT count(*)::int AS n FROM dining_tables WHERE restaurant_id='bernay' AND archived_at IS NULL",
-      )
-    ).n > 50,
-  );
-  await db.query(
-    "DELETE FROM dining_tables WHERE restaurant_id='bernay' AND number>=100",
-  );
+  assert.deepEqual({ ...quota }, { studio: null, none: 50 });
+  await db.query("DELETE FROM dining_tables WHERE restaurant_id='bistrot'");
 });
 
 test("droit d’aménager : retiré par le propriétaire, refusé côté serveur", async () => {

@@ -45,7 +45,7 @@ export function SubscriptionForm({ plan }: { plan: number }) {
 
   if (done) return (
     <div role="status">
-      <p>Votre demande a été enregistrée. Retrouvez son statut dans votre espace client.</p>
+      <p>Votre espace est prêt pour 3 jours d’essai gratuits. Retrouvez la date de fin dans votre espace client.</p>
       <Link className="access-primary" href="/platform">Ouvrir mon espace</Link>
     </div>
   );
@@ -53,10 +53,10 @@ export function SubscriptionForm({ plan }: { plan: number }) {
   return (
     <form className="access-form" onSubmit={submit}>
       <label>Nom de l’organisation<input name="organization" required minLength={2} maxLength={150} /></label>
-      <label>Nom du premier restaurant<input name="restaurant" required minLength={2} maxLength={150} /></label>
+      <label>Nom du premier commerce<input name="restaurant" required minLength={2} maxLength={150} /></label>
       {error && <p role="alert">{error}</p>}
       <button className="access-primary" disabled={busy}>
-        {busy ? "Envoi en cours…" : "Demander l’activation"}
+        {busy ? "Création en cours…" : "Commencer mes 3 jours gratuits"}
       </button>
     </form>
   );

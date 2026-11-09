@@ -26,25 +26,25 @@ export const restaurantModules: RestaurantModule[] = [
     id: "loyalty",
     label: "Fidélité",
     permissions: ["customers"],
-    minimumPlan: 69,
+    minimumPlan: 39,
   },
   {
     id: "site",
     label: "Mon site",
     permissions: ["catalog"],
-    minimumPlan: 69,
+    minimumPlan: 39,
   },
   {
     id: "domains",
     label: "Domaines",
     permissions: ["catalog"],
-    minimumPlan: 69,
+    minimumPlan: 39,
   },
   {
     id: "seo",
     label: "SEO et visibilité IA",
     permissions: ["website"],
-    minimumPlan: 69,
+    minimumPlan: 39,
   },
   {
     id: "inventory",
@@ -70,6 +70,7 @@ export function availableRestaurantModules(
       (module.id === "loyalty" ? addons.includes("loyalty") :
        module.id === "reconciliation" ? addons.includes("offline-conflicts") :
        module.id === "integrations" ? addons.includes("connections") :
+       module.id === "domains" ? plan >= 39 && addons.includes("domain") :
        plan >= (module.minimumPlan ?? 0)) &&
       module.permissions.some((permission) => can(roles, permission)),
   );

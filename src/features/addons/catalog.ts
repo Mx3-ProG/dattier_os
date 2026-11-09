@@ -26,7 +26,7 @@ export const addonCatalog = [
     id: "website",
     name: "Site internet",
     description: "Composez vos pages et publiez votre site personnalisé.",
-    includedFrom: 69,
+    includedFrom: 39,
     usage: false,
   },
   {
@@ -42,11 +42,12 @@ export const addonCatalog = [
   { id: "offline-conflicts", name: "Conflits hors ligne", description: "Résolution des conflits de synchronisation.", includedFrom: null, usage: false },
   { id: "connections", name: "Connexions", description: "Suivi des intégrations externes.", includedFrom: null, usage: false },
   { id: "qr", name: "QR codes", description: "Création et suivi de QR codes.", includedFrom: null, usage: false },
+  { id: "domain", name: "Domaine personnalisé", description: "Publiez votre site sur votre propre nom de domaine.", includedFrom: null, usage: false },
   {
     id: "online-orders",
     name: "Boutique en ligne",
     description: "Recevez des commandes avec panier et créneaux de retrait.",
-    includedFrom: 99,
+    includedFrom: 39,
     usage: false,
   },
 ] as const;
@@ -176,6 +177,7 @@ export const addonDetails: Record<
   payroll: { target: "payroll", action: "Ouvrir la paie", features: ["Préparer les variables de paie."], example: "Vérifier les variables mensuelles." },
   "offline-conflicts": { target: "security", action: "Ouvrir les conflits", features: ["Repérer et résoudre les opérations en conflit."], example: "Réconcilier une vente hors ligne." },
   connections: { target: "settings", action: "Ouvrir les connexions", features: ["Suivre les intégrations externes."], example: "Vérifier une connexion de caisse." },
+  domain: { target: "site", action: "Ouvrir mon site web", features: ["Relier votre propre nom de domaine au site.", "Vérifier le domaine par DNS.", "Choisir le domaine principal de votre site."], example: "Publier votre site sur www.votre-restaurant.fr." },
   qr: { target: "qr", action: "Ouvrir les QR codes", features: ["Créer et consulter les QR codes."], example: "Créer un QR code pour une table." },
 };
 /** UI shortcut only: both ownership and current workspace visibility are required. */

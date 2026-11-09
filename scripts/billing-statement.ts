@@ -43,7 +43,6 @@ try {
         `${row.paying} filleul(s) payant(s)`,
         price.free && "forfait offert",
         price.freeSeats && `${price.freeSeats} établissement(s) offert(s)`,
-        price.accessPlan > row.plan && `accès ${price.accessPlan} € débloqué`,
         row.credits && `${row.credits} mois offert(s) en réserve`,
         covered && (row.used_this_month ? "mois offert déjà utilisé ce mois-ci" : "mois offert utilisé"),
       ].filter(Boolean);

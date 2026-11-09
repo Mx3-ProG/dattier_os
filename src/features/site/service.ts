@@ -5,6 +5,7 @@ import { one, rows, type DB } from "@/lib/database/db";
 import { scope, type Actor } from "@/lib/auth/session";
 import { requirePermission } from "@/lib/permissions";
 import { log } from "@/features/orders/service";
+import { requirePaidAddon } from "@/features/platform/entitlements";
 const sectionSchema = z.object({
   id: z.uuid(),
   type: z.enum(["text", "image", "catalog"]),
@@ -123,6 +124,9 @@ export async function sitePerform(
   user = await scope(db, user, r);
   requirePermission(user.roles ?? user.role, "catalog");
   const a = siteAction.parse(raw);
+  // Removing a domain stays possible after the add-on ends.
+  if (["domain", "verifyDomain", "primaryDomain"].includes(a.action))
+    await requirePaidAddon(db, r, "domain");
   if (a.action === "domain") {
     const token = randomBytes(32).toString("hex");
     await db.query(

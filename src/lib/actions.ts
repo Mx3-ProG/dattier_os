@@ -209,7 +209,7 @@ export async function perform(
       (a.action === "pay" && (a.customer || a.promo)))
     await requirePaidAddon(db,r,"loyalty");
   if (["expense","messageCustomer"].includes(a.action))
-    await requirePlan(db, r, 69);
+    await requirePlan(db, r, 39);
   switch (a.action) {
     case "createProduct":
       return createProduct(db, r, user, a);

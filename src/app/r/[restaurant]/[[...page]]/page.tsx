@@ -46,8 +46,8 @@ const loadSite = cache(
             [restaurant],
           );
           if (
-            plan < 69 || !websiteInstalled ||
-            ((!shopInstalled || plan < 99) && ["commander", "checkout", "panier"].includes(raw))
+            plan < 39 || !websiteInstalled ||
+            ((!shopInstalled || plan < 39) && ["commander", "checkout", "panier"].includes(raw))
           )
             notFound();
           const cms = website(restaurant);
@@ -100,7 +100,7 @@ const loadSite = cache(
           return {
             product,
             redirect: null,
-            shopEnabled: plan >= 99 && shopInstalled,
+            shopEnabled: plan >= 39 && shopInstalled,
             estimationEnabled,
             restaurant,
             route,

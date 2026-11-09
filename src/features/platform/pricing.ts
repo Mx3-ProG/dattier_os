@@ -1,26 +1,28 @@
 import { referralPricing } from "./referrals";
+
+/** Single subscription: everything else is sold as monthly add-ons. */
+export const basePlan = 39 as const;
 export const plans = [
   {
-    price: 39,
-    title: "Exploitation",
+    price: basePlan,
+    title: "Studio",
     description:
-      "Salle, réservations, commandes, carte, stocks, achats et équipe.",
-  },
-  {
-    price: 69,
-    title: "Site et fidélité",
-    description:
-      "En plus, site personnalisable, domaines, référencement, fidélité, finances et rapports.",
-  },
-  {
-    price: 99,
-    title: "Boutique en ligne",
-    description:
-      "En plus, boutique, panier, créneaux et commandes avec règlement au comptoir.",
+      "Salle, réservations, commandes, carte, stocks, achats, équipe, site personnalisable, référencement, finances et rapports, boutique en ligne avec panier, créneaux et règlement au comptoir.",
+    features: [
+      "Salle et réservations",
+      "Commandes, carte et stocks",
+      "Achats et équipe",
+      "Site personnalisable et référencement",
+      "Finances et rapports",
+      "Boutique en ligne, panier et créneaux",
+      "Règlement au comptoir",
+    ],
   },
 ] as const;
 
-export type Plan = 0 | (typeof plans)[number]["price"];
+export type Plan = 0 | typeof basePlan;
+/** True when the establishment holds the active subscription. */
+export const subscribed = (plan: number) => plan >= basePlan;
 export { additionalRestaurantPrice } from "./referrals";
 /** Monthly price billed, after the referral tiers and offered establishments. */
 export const monthlyPrice = (plan: Plan, seats: number, payingReferrals = 0) =>

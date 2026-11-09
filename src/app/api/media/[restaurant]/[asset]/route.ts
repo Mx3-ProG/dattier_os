@@ -16,7 +16,7 @@ async function routeGET(
         const asset_ = await (
           await getDb()
         ).transaction(async (db) => {
-          await requirePlan(db, restaurant, 69);
+          await requirePlan(db, restaurant, 39);
           return resolveAsset(db, restaurant, asset);
         });
         if (!asset_) return new NextResponse(null, { status: 404 });

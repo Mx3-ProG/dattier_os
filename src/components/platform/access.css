@@ -70,6 +70,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
+  flex-wrap: wrap;
   gap: 16px;
   padding: 16px 20px;
   border: 1px solid var(--appearance-line, #e1e3d8);
@@ -83,6 +84,15 @@
 }
 .organization-summary > div > strong { font-size: max(var(--appearance-min-text, 0px), calc((14px) * var(--appearance-text-scale, 1))); }
 .organization-summary p { color: var(--appearance-muted, #727d70); font-size: max(var(--appearance-min-text, 0px), calc((11px) * var(--appearance-text-scale, 1))); text-align: right; }
+.organization-summary button {
+  padding: .55rem .9rem;
+  border: 1px solid var(--appearance-line, #d9ded4);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--appearance-ink, #18372d);
+  cursor: pointer;
+}
+.organization-summary button:disabled { opacity: .55; cursor: wait; }
 .referral-panel {
   margin-top: 8px;
   padding: 16px 20px;

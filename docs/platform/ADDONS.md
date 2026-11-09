@@ -10,6 +10,6 @@ Pour ajouter un addon fonctionnel, définir sa rubrique dans la navigation, reli
 
 ## Estimation
 
-L’add-on gratuit `estimation-studio` ajoute un scénario par établissement. Le super admin renseigne des produits ou services, un prix unitaire, un coût unitaire éventuel, des quantités et d’autres coûts prévus. Il peut importer un produit de la carte : les valeurs sont copiées lors de l’import et doivent ensuite être vérifiées. L’analyse interne affiche ventes, coûts et marge théorique ; si un coût unitaire manque, la marge est explicitement indisponible.
+L’add-on `estimation-studio` ajoute un scénario par établissement. Le super admin renseigne des produits ou services, un prix unitaire, un coût unitaire éventuel, des quantités et d’autres coûts prévus. Il peut importer un produit de la carte : les valeurs sont copiées lors de l’import et doivent ensuite être vérifiées. L’analyse interne affiche ventes, coûts et marge théorique ; si un coût unitaire manque, la marge est explicitement indisponible.
 
 La publication ajoute `/r/{établissement}/estimation` au site public. La fonction SQL `app.estimation_public` ne retourne que les noms, prix et bornes de quantité. Elle exige une configuration publiée, les addons Estimation et Site web installés, et l’établissement actif. La simulation publique n’enregistre aucune demande et n’est pas un devis ferme. La désinstallation masque la page et conserve le scénario.

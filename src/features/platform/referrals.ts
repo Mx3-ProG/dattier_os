@@ -1,12 +1,12 @@
 /**
- * Referral program rules. The database mirrors the tiers and the challenge in
- * database/migrations/024_referral_rewards.sql (app.referral_bonus_plan and
- * app.referral_plan_changed): change both together.
+ * Referral program rules. The database mirrors the tier and the challenge in
+ * database/migrations/075_single_plan.sql (app.referral_bonus_plan) and
+ * 024_referral_rewards.sql (app.referral_plan_changed): change both together.
  */
-export type PaidPlan = 39 | 69 | 99;
+export type PaidPlan = 39;
 
-/** Paying referrals that make each plan free (and unlock it for lower plans). */
-export const freeThreshold: Record<PaidPlan, number> = { 39: 3, 69: 5, 99: 10 };
+/** Paying referrals that make the subscription free. */
+export const freeThreshold: Record<PaidPlan, number> = { 39: 3 };
 /** Beyond the free tier, every this many referrals offers one extra establishment. */
 export const extraSeatEvery = 3;
 export const additionalRestaurantPrice = 39;
@@ -21,13 +21,9 @@ export const levels = [
   { name: "Légende", min: 20 },
 ] as const;
 
-const paidPlans: PaidPlan[] = [39, 69, 99];
-
-/** Highest plan unlocked by referrals (0 when none). */
+/** Plan unlocked by referrals (0 when none). */
 export function bonusPlan(paying: number): 0 | PaidPlan {
-  let unlocked: 0 | PaidPlan = 0;
-  for (const plan of paidPlans) if (paying >= freeThreshold[plan]) unlocked = plan;
-  return unlocked;
+  return paying >= freeThreshold[39] ? 39 : 0;
 }
 
 export function referralPricing(plan: 0 | PaidPlan, seats: number, paying = 0) {
@@ -41,16 +37,12 @@ export function referralPricing(plan: 0 | PaidPlan, seats: number, paying = 0) {
     : 0;
   const extraBilled = (extraSeats - freeSeats) * additionalRestaurantPrice;
   const base = free ? 0 : plan;
-  const accessPlan = Math.max(plan, bonusPlan(paying)) as PaidPlan;
-  // Next milestone: the free tier, then the next unlocked plan, then the next free establishment.
-  const higher = paidPlans.find((p) => p > accessPlan);
+  // Next milestone: the free tier, then the next free establishment.
   const nextGoal = !free
     ? { kind: "free" as const, target: threshold, plan }
-    : higher
-      ? { kind: "upgrade" as const, target: freeThreshold[higher], plan: higher }
-      : freeSeats < extraSeats
-        ? { kind: "seat" as const, target: threshold + (freeSeats + 1) * extraSeatEvery, plan }
-        : null;
+    : freeSeats < extraSeats
+      ? { kind: "seat" as const, target: threshold + (freeSeats + 1) * extraSeatEvery, plan }
+      : null;
   return {
     gross: plan + extraSeats * additionalRestaurantPrice,
     base,
@@ -58,7 +50,7 @@ export function referralPricing(plan: 0 | PaidPlan, seats: number, paying = 0) {
     freeSeats,
     extraBilled,
     total: base + extraBilled,
-    accessPlan,
+    accessPlan: plan,
     nextGoal,
   };
 }

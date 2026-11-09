@@ -23,6 +23,9 @@ type Overview = {
     occupied: number;
     requested_plan: number;
     paid_plan: Plan;
+    trial_ends_at: string | null;
+    trial_active: boolean;
+    cancelled_at: string | null;
     referral_code: string | null;
     paying_referrals: number | null;
     activated_total: number | null;
@@ -97,7 +100,7 @@ export function PlatformHome() {
         <header className="account-page-heading">
           <div>
             <span className="account-eyebrow">VOTRE ESPACE DE GESTION</span>
-            <h1>{data ? `Bonjour ${data.user.name}.` : "Mes restaurants"}</h1>
+            <h1>{data ? `Bonjour ${data.user.name}.` : "Mes établissements"}</h1>
             <p>Vos établissements, votre équipe, votre quotidien.</p>
           </div>
           {canCreate && (
@@ -117,7 +120,7 @@ export function PlatformHome() {
               </span>
             </div>
             <p>
-              Choisissez votre restaurant pour retrouver votre poste de travail
+              Choisissez votre établissement pour retrouver votre poste de travail
               et ses réglages.
             </p>
           </div>
@@ -150,11 +153,11 @@ export function PlatformHome() {
                         <Building2 size={24} />
                       </span>
                       <span className="account-plan">
-                        {plan ? "Espace actif" : "En attente d’activation"}
+                        {plan ? "Espace actif" : "Accès à activer"}
                       </span>
                     </div>
                     <h2>{r.name}</h2>
-                    <p>Votre service et votre administration, réunis.</p>
+                    <p>Votre activité et votre administration, réunies.</p>
                     {plan !== 0 && (
                       <div className="actions">
                         <a
@@ -164,7 +167,7 @@ export function PlatformHome() {
                           Ouvrir le poste de travail <ArrowUpRight size={16} />
                         </a>
                         <a href={`/restaurant/${r.id}`}>Administrer</a>
-                        {plan >= 69 && <a href={`/r/${r.id}`}>Voir le site</a>}
+                        {plan >= 39 && <a href={`/r/${r.id}`}>Voir le site</a>}
                         {can(r.user_roles, "orders") && (
                           <a href={`/offline?restaurant=${r.id}`}>
                             Préparer le hors ligne
@@ -179,6 +182,7 @@ export function PlatformHome() {
             {data.organizations.map((o) => {
               const paying = o.paying_referrals ?? 0;
               const price = referralPricing(o.paid_plan, o.seats, paying);
+              const trialActive = o.trial_active;
               return (
                 <div key={o.id}>
                   <article className="organization-summary">
@@ -189,16 +193,26 @@ export function PlatformHome() {
                     <p>
                       {o.paid_plan
                         ? [
-                            `Forfait ${o.paid_plan} €${price.free ? " offert" : ""}`,
-                            price.accessPlan > o.paid_plan &&
-                              `accès ${price.accessPlan} € débloqué`,
+                            `Abonnement Studio ${o.paid_plan} €${price.free ? " offert" : ""}`,
                             `${price.total} € HT / mois`,
                             `${o.occupied}/${o.seats} places utilisées`,
                           ]
                             .filter(Boolean)
                             .join(" · ")
-                        : `Forfait ${o.requested_plan} € HT / mois en attente d’activation`}
+                        : trialActive
+                          ? `Essai gratuit jusqu’au ${new Date(o.trial_ends_at!).toLocaleString("fr-FR", { dateStyle: "long", timeStyle: "short", timeZone: "Europe/Paris" })} · aucun paiement prélevé`
+                          : o.cancelled_at
+                            ? "Abonnement résilié · accès fermé"
+                            : "Essai terminé · abonnement en attente d’activation"}
                     </p>
+                    {(trialActive || o.paid_plan > 0) && o.role === "OWNER" && (
+                      <button type="button" disabled={busy} onClick={() => {
+                        if (window.confirm("Résilier maintenant ? L’accès à cet espace sera fermé immédiatement."))
+                          void submit({ action: "cancelSubscription", organization: o.id });
+                      }}>
+                        {trialActive ? "Arrêter mon essai" : "Résilier mon abonnement"}
+                      </button>
+                    )}
                   </article>
                   {o.paid_plan > 0 && o.referral_code && (
                     <ReferralPanel
@@ -282,11 +296,11 @@ export function PlatformHome() {
               <section>
                 <h2>Ouvrez votre premier espace</h2>
                 <p>
-                  Choisissez un forfait pour préparer votre organisation et
-                  votre premier restaurant.
+                  Souscrivez l’abonnement Studio pour préparer votre
+                  organisation et votre premier restaurant.
                 </p>
-                <Link className="button" href="/#offres">
-                  Choisir une offre
+                <Link className="button" href="/checkout/39">
+                  Souscrire
                 </Link>
               </section>
             )}

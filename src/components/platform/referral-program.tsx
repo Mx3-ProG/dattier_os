@@ -149,7 +149,6 @@ function ProgramBody({
         <p className="referral-hero-price">
           Votre abonnement : <strong>{pricing.total} € HT / mois</strong>
           {pricing.total < pricing.gross && <s>{pricing.gross} €</s>}
-          {pricing.accessPlan > org.paid_plan && <span> · fonctions {pricing.accessPlan} € débloquées</span>}
         </p>
       </header>
 
@@ -160,8 +159,8 @@ function ProgramBody({
           <ul className="referral-rules">
             <li><strong>Chaque filleul abonné</strong> : 1 mois offert pour vous.</li>
             <li><strong>Votre filleul</strong> : son 1er mois est offert.</li>
-            <li><strong>Forfait gratuit</strong> : 3 filleuls (39 €), 5 (69 €), 10 (99 €).</li>
-            <li><strong>Au-delà</strong> : forfait supérieur débloqué, puis 1 établissement offert tous les 3 filleuls.</li>
+            <li><strong>Abonnement gratuit</strong> : dès 3 filleuls abonnés.</li>
+            <li><strong>Au-delà</strong> : 1 établissement offert tous les 3 filleuls.</li>
           </ul>
         </section>
 

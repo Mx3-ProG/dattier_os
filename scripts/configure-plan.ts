@@ -6,7 +6,7 @@ const [organization, rawPlan, rawSeats, ...archive] = process.argv.slice(2);
 const input = z
   .object({
     organization: z.string().min(1),
-    plan: z.union([z.literal(0), z.literal(39), z.literal(69), z.literal(99)]),
+    plan: z.union([z.literal(0), z.literal(39)]),
     seats: z.number().int().positive(),
   })
   .parse({ organization, plan: Number(rawPlan), seats: Number(rawSeats) });

@@ -169,7 +169,7 @@ export function RestaurantAdminShell({
             </Link>
           )}
         </nav>
-        {plan >= 69 && (
+        {plan >= 39 && (
           <Link
             href={`/r/${encodeURIComponent(restaurant)}`}
             target="_blank"

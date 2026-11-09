@@ -949,3 +949,29 @@ test("SEO tableau de bord : analyse, historique, observations IA, droits et isol
   await member("nadia", "atelier", (tx) => seoPost(tx, "atelier", owner, { action: "deleteObservation", id }));
   assert.equal((await member("nadia", "bernay", (tx) => seoGet(tx, "bernay", owner))).observations.length, 1);
 });
+
+test("domaine personnalisé : add-on payant, acquis conservé, retrait toujours possible", async () => {
+  const resolve = async (host: string) =>
+    (await db.query<{ id: string | null }>("SELECT app.resolve_domain($1) AS id", [host])).rows[0].id;
+  // The sample establishments hold the domain add-on through a legacy grant.
+  assert.equal(await resolve("bernay-a.test"), "bernay");
+  await db.query("DELETE FROM addon_legacy_grants WHERE restaurant_id='bernay' AND addon_id='domain'");
+  assert.equal(await resolve("bernay-a.test"), null, "sans add-on, le domaine ne sert plus le site");
+  await assert.rejects(
+    db.transaction((tx) => sitePerform(tx, "bernay", owner, { action: "primaryDomain", hostname: "bernay-a.test" })),
+    /add-on n’est pas actif/,
+  );
+  await assert.rejects(
+    db.transaction((tx) => sitePerform(tx, "bernay", owner, { action: "domain", hostname: "bernay-c.test" })),
+    /add-on n’est pas actif/,
+  );
+  await db.query("INSERT INTO restaurant_domains(hostname,restaurant_id,verification_hash) VALUES('bernay-old.test','bernay','h')");
+  await db.transaction((tx) => sitePerform(tx, "bernay", owner, { action: "removeDomain", hostname: "bernay-old.test" }));
+  // An active subscription restores it.
+  await db.query(
+    "INSERT INTO addon_subscriptions(id,restaurant_id,addon,status,valid_until) VALUES('dom-sub','bernay','domain','active',now()+interval '1 month')",
+  );
+  assert.equal(await resolve("bernay-a.test"), "bernay");
+  await db.query("DELETE FROM addon_subscriptions WHERE id='dom-sub'");
+  await db.query("INSERT INTO addon_legacy_grants(restaurant_id,addon_id) VALUES('bernay','domain')");
+});

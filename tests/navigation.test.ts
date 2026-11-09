@@ -49,7 +49,7 @@ test("navigation requires each independent paid add-on as well as the member rol
   ];
   const paid: Record<string,string> = { qr:"qr", attendance:"attendance", hr:"attendance", billing:"client-invoices", invoices:"invoices", payroll:"payroll", customers:"loyalty" };
   for (const profile of profiles)
-    for (const plan of [-1, 0, 39, 69, 99])
+    for (const plan of [-1, 0, 39])
       for (const addons of [[], ["invoices"], ["bank"], ["invoices", "bank"]]) {
         const expected = arranged
           .filter(
@@ -57,7 +57,7 @@ test("navigation requires each independent paid add-on as well as the member rol
               !["audience", "estimation"].includes(m.id) &&
               (!paid[m.id] || addons.includes(paid[m.id])) &&
               (!m.permission ||
-              ((plan >= 69 ||
+              ((plan >= 39 ||
                 m.id === "invoices" || m.id === "billing" || m.id === "payroll" || m.id === "customers" ||
                 !["finance", "customers", "website", "payroll"].includes(m.permission)) &&
                 can(profile, m.permission))),
@@ -73,8 +73,9 @@ test("navigation requires each independent paid add-on as well as the member rol
       }
 });
 test("an invoice addon never bypasses role checks or unlocks bank and finance", () => {
+  // Finance is included in the subscription: only an unsubscribed workspace proves the add-on grants nothing more.
   const accountant = workspaceNavigation
-    .resolve({ roles: "ACCOUNTANT", plan: 39, addons: ["invoices"] })
+    .resolve({ roles: "ACCOUNTANT", plan: 0, addons: ["invoices"] })
     .map((m) => m.id);
   assert.ok(accountant.includes("invoices"));
   for (const id of ["overview", "bank", "finance", "billing"])

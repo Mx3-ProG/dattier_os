@@ -9,7 +9,7 @@ export type ModuleDecision = {
 
 /** Current restaurant offer: both existing modules are included from Basic. */
 export function legacyRestaurantModules(plan: number): string[] {
-  return plan === 39 || plan === 69 || plan === 99
+  return plan === 39
     ? ["floor", "table-booking"]
     : [];
 }

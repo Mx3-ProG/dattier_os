@@ -26,7 +26,7 @@ async function routeGET(
       () =>
         database.transaction(async (db) => {
           await db.exec("SET LOCAL ROLE atacuisine_app");
-          await requirePlan(db, restaurant, 69);
+          await requirePlan(db, restaurant, 39);
           const config = await website(restaurant).getPublishedConfig(db);
           return JSON.stringify(config).includes(
             `/api/cms/${restaurant}/media/${file}`,

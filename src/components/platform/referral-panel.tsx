@@ -44,14 +44,12 @@ export function goalOf(plan: PaidPlan, seats: number, paying: number) {
   const pricing = referralPricing(plan, seats, paying);
   const goal = pricing.nextGoal;
   if (!goal)
-    return { pricing, goal, label: "Tout est débloqué : votre forfait et vos établissements sont offerts." };
+    return { pricing, goal, label: "Tout est débloqué : votre abonnement et vos établissements sont offerts." };
   const left = goal.target - paying;
   const label =
     goal.kind === "free"
-      ? `Encore ${left} ${left > 1 ? "filleuls abonnés" : "filleul abonné"} et votre forfait ${goal.plan} € devient gratuit.`
-      : goal.kind === "upgrade"
-        ? `Forfait offert. Encore ${plural(left, "filleul")} et le forfait ${goal.plan} € est débloqué.`
-        : `Forfait offert. Encore ${plural(left, "filleul")} et un établissement supplémentaire est offert.`;
+      ? `Encore ${left} ${left > 1 ? "filleuls abonnés" : "filleul abonné"} et votre abonnement de ${goal.plan} € devient gratuit.`
+      : `Abonnement offert. Encore ${plural(left, "filleul")} et un établissement supplémentaire est offert.`;
   return { pricing, goal, label };
 }
 

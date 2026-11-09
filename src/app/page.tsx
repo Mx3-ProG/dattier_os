@@ -5,9 +5,9 @@ import "./landing.css";
 export const dynamic = "force-dynamic";
 export function generateMetadata(): Metadata {
   return {
-    title: "STUDIO OS · Moins de gestion, plus de passion",
+    title: "STUDIO OS · Votre commerce, votre temps, vos choix",
     description:
-      "Retrouvez du temps pour votre restaurant et pour vous. Service, équipe, site web et STUDIO VOICE : un quotidien plus simple, dès 39 € HT par mois.",
+      "Pilotez clients, ventes, stocks, équipe, site web et boutique en ligne au même endroit. Essayez STUDIO OS gratuitement pendant 3 jours, puis 39 € HT par mois sans engagement.",
     robots: { index: !demoEnabled(), follow: !demoEnabled() },
   };
 }

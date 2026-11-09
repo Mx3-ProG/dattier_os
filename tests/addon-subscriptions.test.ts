@@ -6,7 +6,7 @@ import { migrate } from "../src/lib/database/migrate";
 import { seed } from "../src/lib/database/seed";
 import { invoiceAccess, financeAccess } from "../src/features/invoices/service";
 
-test("independent supplier invoices: persistent expiry, duplicate protection, role boundaries and no finance upgrade", async () => {
+test("independent supplier invoices: persistent expiry, duplicate protection and role boundaries", async () => {
   const db = new PGlite();
   try {
     await db.exec(await readFile("database/migrations/001_core.sql", "utf8"));
@@ -40,7 +40,8 @@ test("independent supplier invoices: persistent expiry, duplicate protection, ro
     );
     await migrate(db);
 
-    await assert.rejects(financeAccess(db, "bernay", user), /forfait/);
+    // Finance is part of the single subscription, independently of the invoice add-on.
+    await financeAccess(db, "bernay", user);
     await assert.rejects(
       invoiceAccess(db, "bernay", {
         id: "sarah",

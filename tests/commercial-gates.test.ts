@@ -4,9 +4,9 @@ import { capabilities, type Capability } from "../src/core/modules/entitlements"
 import { requireCommercialCapability, requirePlan } from "../src/features/platform/entitlements";
 import type { DB } from "../src/lib/database/db";
 
-test("named gates preserve all existing thresholds and query the requested establishment", async () => {
-  const thresholds = { operations:39,website:69,loyalty:69,finance:69,"online-orders":99 } as const;
-  for (const plan of [null,0,39,69,99]) for (const capability of capabilities) {
+test("named gates follow the single subscription and query the requested establishment", async () => {
+  const thresholds = { operations:39,website:39,loyalty:39,finance:39,"online-orders":39 } as const;
+  for (const plan of [null,0,39]) for (const capability of capabilities) {
     const calls: unknown[][] = [];
     const db = { query: async (sql:string, params:unknown[]) => { calls.push(params); return { rows:sql.includes("addon_installed") ? [{installed:true}] : [{plan}] }; } } as unknown as DB;
     const old = await requirePlan(db,"site-a",thresholds[capability]).then(value=>({value}),error=>({error:error.message}));

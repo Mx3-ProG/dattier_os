@@ -6,7 +6,7 @@ import { authenticated } from "@/features/platform/http";
 import { one, rows } from "@/lib/database/db";
 import { scope } from "@/lib/auth/session";
 
-export const monthlyAddonIds = ["invoices","attendance","client-invoices","payroll","offline-conflicts","connections","qr","loyalty"] as const;
+export const monthlyAddonIds = ["invoices","attendance","client-invoices","payroll","offline-conflicts","connections","qr","loyalty","domain"] as const;
 export type MonthlyAddonId = (typeof monthlyAddonIds)[number];
 export const addonPriceId = (addon: MonthlyAddonId) =>
   process.env[`STUDIO_ADDON_${addon.replaceAll("-", "_").toUpperCase()}_PRICE_ID`] ?? "";

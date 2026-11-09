@@ -482,7 +482,7 @@ export function RestaurantHub({
                   </article>
                 ))}
               </section>
-              {plan >= 69 && (
+              {plan >= 39 && (
                 <section id="avis">
                   <h2>Avis à modérer</h2>
                   {(

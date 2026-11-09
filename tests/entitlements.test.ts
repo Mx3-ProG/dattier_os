@@ -1,14 +1,19 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { commercialRights, compareLegacyThreshold, type EntitlementContext } from "../src/core/modules/entitlements";
-const context: EntitlementContext = { organization: "a", establishment: "one", active: true, offer: "basic", now: 100, grants: [] };
-test("all current thresholds retain their decisions, including inactive plans", () => {
-  for (const plan of [0,39,69,99]) for (const minimum of [39,69,99]) {
-    const result = compareLegacyThreshold(plan,minimum);
+import { commercialRights, compareLegacyCapability, compareLegacyThreshold, type EntitlementContext } from "../src/core/modules/entitlements";
+const context: EntitlementContext = { organization: "a", establishment: "one", active: true, offer: "inactive", now: 100, grants: [] };
+test("the single subscription keeps the threshold decision, including inactive plans", () => {
+  for (const plan of [0,39]) {
+    const result = compareLegacyThreshold(plan,39);
     assert.ok(result.comparable && result.matches);
   }
-  assert.deepEqual(compareLegacyThreshold(99,0),{comparable:false});
-  assert.deepEqual(compareLegacyThreshold(100,99),{comparable:true,legacy:true,proposed:false,matches:false});
+  assert.deepEqual(compareLegacyThreshold(39,0),{comparable:false});
+  assert.deepEqual(compareLegacyThreshold(99,39),{comparable:true,legacy:true,proposed:false,matches:false});
+});
+test("the studio offer includes everything but the loyalty add-on", () => {
+  assert.deepEqual(commercialRights({...context,offer:"studio"}),["operations","website","finance","online-orders"]);
+  for (const capability of ["operations","website","finance","online-orders","loyalty"] as const)
+    assert.ok(compareLegacyCapability(39,capability).matches && !compareLegacyCapability(0,capability).legacy);
 });
 test("grants are isolated, bounded in time, deduplicated and cannot reactivate a suspended organization", () => {
   const grants = [

@@ -11,7 +11,7 @@ export const platformAction = z.discriminatedUnion("action", [
   z.object({
     action: z.literal("onboard"),
     organization: text,
-    plan: z.union([z.literal(39), z.literal(69), z.literal(99)]).default(39),
+    plan: z.literal(39).default(39),
     restaurant: text,
     referral: z
       .string()
@@ -20,6 +20,7 @@ export const platformAction = z.discriminatedUnion("action", [
       .catch(undefined),
   }),
   z.object({ action: z.literal("restaurant"), organization: id, name: text }),
+  z.object({ action: z.literal("cancelSubscription"), organization: id }),
   z.object({
     action: z.literal("invite"),
     restaurant: id,
@@ -101,7 +102,7 @@ export async function overview(db: DB, user: Actor) {
     ).allowed,
     organizations: await rows(
       db,
-      "SELECT o.*,m.role,p.*,s.referral_code,s.referrals,s.paying_referrals,s.activated_total,s.activated_month,s.credits FROM organizations o JOIN organization_memberships m ON m.organization_id=o.id CROSS JOIN LATERAL app.organization_plan(o.id) p LEFT JOIN LATERAL app.referral_summary(o.id) s ON true WHERE m.profile_id=$1 ORDER BY o.name",
+      "SELECT o.*,m.role,p.*,t.trial_ends_at,t.cancelled_at,t.trial_active,s.referral_code,s.referrals,s.paying_referrals,s.activated_total,s.activated_month,s.credits FROM organizations o JOIN organization_memberships m ON m.organization_id=o.id CROSS JOIN LATERAL app.organization_plan(o.id) p LEFT JOIN LATERAL app.organization_trial(o.id) t ON true LEFT JOIN LATERAL app.referral_summary(o.id) s ON true WHERE m.profile_id=$1 ORDER BY o.name",
       [user.id],
     ),
     restaurants: await rows(
@@ -132,9 +133,18 @@ export async function platformPerform(db: DB, user: Actor, raw: unknown) {
       org,
       a.plan,
     ]);
+    const trial = await one<{ trial_ends_at: string }>(
+      db,
+      "SELECT app.start_organization_trial($1) AS trial_ends_at",
+      [org],
+    );
     if (a.referral)
       await db.query("SELECT app.attach_referral($1,$2)", [org, a.referral]);
-    return { organization: org, restaurant: r };
+    return { organization: org, restaurant: r, trialEndsAt: trial.trial_ends_at };
+  }
+  if (a.action === "cancelSubscription") {
+    await db.query("SELECT app.cancel_organization_subscription($1)", [a.organization]);
+    return { cancelled: true };
   }
   if (a.action === "accept") {
     await db.query("SELECT app.accept_invitation($1)", [
@@ -185,7 +195,7 @@ export async function platformPerform(db: DB, user: Actor, raw: unknown) {
       "SELECT plan FROM app.organization_plan($1)",
       [a.organization],
     );
-    if (billing.plan < 69)
+    if (billing.plan < 39)
       throw new Error("Accès non autorisé avec le forfait actuel.");
     await db.query("SELECT app.set_loyalty_scope($1,$2)", [
       a.organization,

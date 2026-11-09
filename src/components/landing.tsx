@@ -1,4 +1,5 @@
 import { plans, additionalRestaurantPrice } from "@/features/platform/pricing";
+import { addonCatalog, addonMonthlyCents } from "@/features/addons/catalog";
 import Link from "next/link";
 import {
   ArrowUpRight,
@@ -9,7 +10,6 @@ import {
   Building2,
   CalendarDays,
   Check,
-  ChefHat,
   Code2,
   Globe,
   LayoutGrid,
@@ -21,34 +21,34 @@ import {
   Heart,
   Clock3,
   Users,
-  UtensilsCrossed,
+  Store,
 } from "lucide-react";
 
 const modules = [
   {
     icon: ReceiptText,
-    title: "Un service qui respire",
-    text: "Prise de commande en salle, à emporter et depuis le site. Les tickets partent directement en cuisine et au bar.",
+    title: "Des ventes qui avancent",
+    text: "Retrouvez vos commandes au même endroit, en boutique, sur place ou depuis votre site, selon votre activité.",
   },
   {
     icon: LayoutGrid,
-    title: "Gardez le fil en salle",
-    text: "Plan de salle à votre image, état des tables en direct et réaménagement en quelques gestes.",
+    title: "Gardez le fil de votre commerce",
+    text: "Suivez vos espaces, vos commandes et votre activité en direct. Pour la restauration, aménagez aussi votre salle et vos tables en quelques gestes.",
   },
   {
     icon: CalendarDays,
     title: "Accueillez l’esprit libre",
-    text: "Vos clients choisissent le jour, l’heure et leur table sur le plan. L’équipe retrouve la demande aussitôt.",
+    text: "Les demandes et réservations arrivent dans votre espace. Votre équipe sait ce qui l’attend.",
   },
   {
     icon: Boxes,
     title: "Anticipez les manques",
-    text: "Inventaires, achats et recettes. Un produit épuisé n’est plus proposé sur le site.",
+    text: "Gardez un œil sur vos stocks et vos achats. Votre catalogue suit le rythme de votre activité.",
   },
   {
     icon: Users,
     title: "Une équipe au diapason",
-    text: "Salle, cuisine, bar, direction : chacun son poste et ses accès, sur les mêmes données.",
+    text: "Vente, opérations, direction : chacun retrouve ses tâches et ses accès, sur les mêmes données.",
   },
   {
     icon: Globe,
@@ -58,7 +58,7 @@ const modules = [
   {
     icon: ShoppingBag,
     title: "Faites revenir vos clients",
-    text: "Commande en ligne, espace client et fidélité, rattachés à votre établissement.",
+    text: "Un site, une boutique en ligne et des fiches clients reliés à votre activité. La fidélité est disponible en option.",
   },
 ];
 
@@ -69,11 +69,11 @@ const steps = [
   },
   {
     title: "Ajoutez votre structure",
-    text: "Nom, carte, plan de salle. La création est guidée pas à pas.",
+    text: "Nom, catalogue, espace de travail. La création est guidée pas à pas.",
   },
   {
-    title: "Ouvrez le service",
-    text: "Invitez l’équipe, publiez votre site, prenez les premières commandes.",
+    title: "Lancez votre activité",
+    text: "Invitez l’équipe, composez votre site et commencez à suivre vos commandes.",
   },
 ];
 
@@ -83,36 +83,64 @@ const faq = [
     a: "Non. STUDIO VOICE prépare les actions et vous demande de les confirmer. Vous pouvez lui écrire ou lui parler, selon la compatibilité de votre navigateur. Les réponses utilisent des crédits, avec des recharges payantes distinctes de votre abonnement.",
   },
   {
-    q: "Puis-je avoir un abonnement à 0 € ?",
-    a: "Oui, grâce au parrainage : 3 filleuls payants offrent le forfait Exploitation, 5 le forfait Site et fidélité et 10 le forfait Boutique en ligne. Ce sont des avantages conditionnés aux filleuls payants, pas un forfait gratuit sans condition. Les crédits IA et les éventuels établissements supplémentaires restent séparés.",
+    q: "Puis-je essayer gratuitement et arrêter quand je veux ?",
+    a: "Oui. À la création de votre espace, vous disposez de 3 jours d’essai gratuits, sans paiement initial. À la fin, l’accès payant ne démarre qu’après activation de votre abonnement. Vous pouvez arrêter votre essai ou résilier votre abonnement à tout moment depuis votre espace, sans engagement. Les options et crédits IA sont facturés séparément.",
   },
   {
     q: "Puis-je essayer avant de créer mon compte ?",
-    a: "Oui. La démonstration ouvre un restaurant fictif complet : choisissez un métier (salle, cuisine, bar, direction) et vivez un service connecté.",
+    a: "Oui. La démonstration montre un restaurant fictif pour explorer concrètement les écrans et le travail d’une équipe.",
   },
   {
-    q: "Mes données sont-elles visibles par d’autres restaurants ?",
+    q: "Mes données sont-elles visibles par d’autres commerces ?",
     a: "Non. Chaque structure ne voit que ses propres données. Le cloisonnement est appliqué directement par la base de données, pas seulement par l’interface.",
   },
   {
     q: "J’ouvre une deuxième adresse, que se passe-t-il ?",
-    a: "Chaque forfait inclut un établissement. Ajoutez des établissements à 39 € HT par mois chacun. Ils bénéficient tous du forfait de votre organisation et conservent leurs propres données.",
+    a: "L’abonnement inclut un établissement. Ajoutez des établissements à 39 € HT par mois chacun. Ils bénéficient tous de l’abonnement de votre organisation et conservent leurs propres données.",
   },
   {
     q: "Le code est-il ouvert ?",
-    a: "Oui. STUDIO OS est distribué sous licence AGPL-3.0. Le code de la version en service reste consultable.",
+    a: "Oui. STUDIO OS est distribué sous licence AGPL-3.0. Le code de la version en service reste consultable à tout moment en ligne.",
   },
+  {
+    q: "Comment puis-je migrer mes données ?",
+    a: "Nous vous accompagnons dans la migration de vos données. Contactez notre support pour plus d'informations.",
+  },
+  {
+    q: "Puis-je essayer avant de créer mon compte ?",
+    a: "Oui. La démonstration montre un restaurant fictif pour explorer concrètement les écrans et le travail d’une équipe.",
+  },
+  {
+    q: "Mes données sont-elles visibles par d’autres commerces ?",
+    a: "Non. Chaque structure ne voit que ses propres données. Le cloisonnement est appliqué directement par la base de données, pas seulement par l’interface.",
+  },
+  {
+    q: "39 euros par mois seulement, vous êtes sûr ?",
+    a: "L’abonnement inclut un établissement. Un dashboard administrateur professionnel pour la gestion de votre activité. Une boutique en ligne intégrée pour accueillir vos clients et encaisser vos commandes. L'abonnement inclut également un système d'intelligence artificielle pour optimiser votre activité sans effort."
+  },
+  {
+    q: "À quoi servent les add-ons ?",
+    a: "Les add-ons permettent d’ajouter des fonctionnalités supplémentaires à votre abonnement de base. Vous pouvez les activer selon vos besoins, sans engagement, et évoluer à votre rythme. Tous les add-ons sont facturés séparément et peuvent être activés ou désactivés depuis votre espace client. Ils sont conçus pour répondre à des besoins spécifiques de votre commerce, comme la fidélisation des clients, l’optimisation des stocks ou l’intégration avec d’autres services. Vous pouvez consulter la liste complète des add-ons disponibles et leurs tarifs sur notre site. Chaque add-on est conçu pour améliorer votre expérience et vous offrir plus de contrôle sur votre activité, tout en restant flexible et adapté à vos besoins et surtout ils permettent de ne pas alourdir votre abonnement de base avec des fonctionnalités que vous n’utilisez pas. Vous pouvez donc choisir les add-ons qui correspondent le mieux à votre commerce et les activer ou désactiver uniquement lorsque vous en avez besoin. Certains de nos add-ons sont inclus dans l’abonnement de base, tandis que d’autres sont disponibles en option, certains add-ons sont purement stylistiques et vous permettent de personnaliser votre expérience utilisateur et celle de vos clients.",
+  },
+  {
+    q: "Comment puis-je gérer mes add-ons ?",
+    a: "Vous pouvez gérer vos add-ons directement depuis votre espace client. Vous pouvez activer ou désactiver les add-ons selon vos besoins, et vous pouvez également consulter les détails de chaque add-on, y compris les fonctionnalités qu’il offre et son coût mensuel. Pour activer un add-on, il vous suffit de cliquer sur le bouton d’activation correspondant dans votre espace client. Vous serez alors facturé pour l’add-on à partir du mois suivant. Pour désactiver un add-on, cliquez sur le bouton de désactivation correspondant. Vous ne serez plus facturé pour cet add-on à partir du mois suivant. Vous pouvez également consulter l’historique de vos add-ons et voir quels add-ons sont actuellement actifs ou inactifs. Si vous avez des questions sur la gestion de vos add-ons, n’hésitez pas à contacter notre support client pour obtenir de l’aide.",
+  },
+  {
+    q: "Quel prix dois-je payer pour les add-ons ?",
+    a: "Les prix des add-ons varient selon les fonctionnalités incluses, vous pourrez trouver des add-ons qui coûtent entre 3 et 99 euros en une fois ou payer mensuellement. Vous pouvez consulter la liste complète des add-ons disponibles et leurs tarifs sur notre site. Chaque add-on est conçu pour améliorer votre expérience et vous offrir plus de contrôle sur votre activité, tout en restant flexible et adapté à vos besoins."
+  }
 ];
 
 function Cta({ demoHref, inverse }: { demoHref?: string; inverse?: boolean }) {
   return (
     <div className="landing-cta">
-      <a
+      <Link
         className={`landing-btn ${inverse ? "light" : "primary"}`}
-        href="#offres"
+        href="/checkout/39"
       >
-        Choisir mon accompagnement <ArrowUpRight size={16} aria-hidden />
-      </a>
+        Essayer gratuitement 3 jours <ArrowUpRight size={16} aria-hidden />
+      </Link>
       <Link className="landing-btn outline" href={demoHref || "/guide"}>
         {demoHref ? "Me projeter dans la démo" : "Découvrir comment ça marche"}
       </Link>
@@ -134,7 +162,7 @@ export function Landing({
       </a>
       <header className="landing-header">
         <Link href="/" className="landing-brand">
-          <UtensilsCrossed size={20} aria-hidden /> STUDIO OS
+          <Store size={20} aria-hidden /> STUDIO OS
         </Link>
         <nav aria-label="Navigation principale">
           <a href="#modules">Votre quotidien</a>
@@ -156,14 +184,19 @@ export function Landing({
               Moins de gestion. Plus de passion.
             </span>
             <h1>
-              Retrouvez le plaisir
-              <br /> de tenir <em>votre restaurant.</em>
+              Votre commerce avance.
+              <br /> Vous gardez <em>la main.</em>
             </h1>
             <p className="landing-lead">
-              Vous avez ouvert pour régaler, accueillir, partager. Pas pour
-              passer vos soirées à tout gérer. STUDIO OS rassemble votre
-              quotidien et vous aide avec l’IA, pour garder du temps et de
-              l’énergie pour ce qui compte.
+              Vous avez lancé votre affaire pour la faire vivre, pas pour passer
+              vos soirées à jongler entre les outils. STUDIO OS réunit vos
+              clients, vos ventes, votre équipe, vos stocks et votre site dans
+              un même espace. Moins d’administratif, plus de temps pour vos idées
+              et les personnes qui comptent.
+            </p>
+            <p className="landing-note">
+              Relation client (CRM), gestion de votre activité (ERP) et création
+              de site (CMS) : les outils de votre commerce réunis au même endroit.
             </p>
             <Cta demoHref={demoHref} />
             <div className="landing-trust-links">
@@ -174,32 +207,31 @@ export function Landing({
               </a>
             </div>
             <p className="landing-note">
-              Dès 39 € HT / mois · Sur vos appareils · Vous gardez la main
+              3 jours gratuits · Puis 39 € HT / mois après activation · Sans engagement
             </p>
           </div>
           <div className="landing-hero-scene">
             <div className="landing-scene-title">
-              <Heart size={18} aria-hidden /> Ce soir, soyez là où vous aimez
-              être.
+              <Heart size={18} aria-hidden /> Votre énergie a mieux à faire.
             </div>
             <div className="landing-board" aria-hidden>
               <div className="landing-board-bar">
                 <span />
                 <span />
                 <span />
-                <strong>Service du soir</strong>
+                <strong>Votre commerce aujourd’hui</strong>
               </div>
               <div className="landing-board-cols">
                 {[
                   {
                     icon: LayoutGrid,
-                    label: "Salle",
-                    items: ["Table 4 · envoyée", "Table 7 · à encaisser"],
+                    label: "Ventes",
+                    items: ["Commande · reçue", "Client · à rappeler"],
                   },
                   {
-                    icon: ChefHat,
-                    label: "Cuisine",
-                    items: ["Table 4 · en préparation", "À emporter · prête"],
+                    icon: ShoppingBag,
+                    label: "Boutique",
+                    items: ["Produit · en ligne", "Retrait · à préparer"],
                   },
                   {
                     icon: Boxes,
@@ -220,7 +252,7 @@ export function Landing({
                 ))}
               </div>
               <div className="landing-board-foot">
-                <CalendarDays size={15} /> Réservation reçue depuis le site
+                <CalendarDays size={15} /> Votre activité, au même endroit
               </div>
             </div>
             <p className="landing-scene-caption">
@@ -228,7 +260,7 @@ export function Landing({
               de vos clients.
             </p>
             <span className="landing-note">
-              Illustration d’un service avec STUDIO OS
+              Illustration d’une journée avec STUDIO OS
             </span>
           </div>
         </section>
@@ -266,21 +298,21 @@ export function Landing({
                 Les informations dispersées
               </span>
               <h3>
-                La réservation ici. La commande là. Et vous, entre les deux.
+                Un client ici. Une commande là. Et vous, entre les deux.
               </h3>
               <p>
-                Un agenda, un fichier de stocks, des messages à l’équipe :
+                Un fichier clients, un suivi des stocks, des messages à l’équipe :
                 passer de l’un à l’autre finit par prendre toute la place.
               </p>
               <div className="landing-story-answer">
                 <Check size={20} aria-hidden />
                 <p>
-                  <strong>Retrouvez un fil commun.</strong> Salle, commandes,
+                  <strong>Retrouvez un fil commun.</strong> Clients, commandes,
                   réservations et stocks se retrouvent dans le même espace.
                 </p>
               </div>
               <Link href="/guide#service">
-                Suivre un service de bout en bout{" "}
+                Voir un parcours de vente{" "}
                 <ArrowUpRight size={16} aria-hidden />
               </Link>
             </article>
@@ -288,7 +320,7 @@ export function Landing({
               <span className="landing-eyebrow">
                 Le site qui attend toujours
               </span>
-              <h3>Votre carte change. Votre site devrait pouvoir suivre.</h3>
+              <h3>Votre activité change. Votre site devrait pouvoir suivre.</h3>
               <p>
                 Devoir demander chaque modification, relancer, puis attendre :
                 votre actualité ne devrait pas dépendre de ces allers-retours.
@@ -297,8 +329,7 @@ export function Landing({
                 <Check size={20} aria-hidden />
                 <p>
                   <strong>Reprenez la main sur votre vitrine.</strong> Modèles,
-                  photos, pages et aperçu avant publication, avec le forfait
-                  Site et fidélité.
+                  photos, pages et aperçu avant publication dans votre abonnement.
                 </p>
               </div>
               <Link href="/guide">
@@ -314,16 +345,16 @@ export function Landing({
                 Un abonnement de plus devrait vous apporter quelque chose.
               </h3>
               <p>
-                Site, gestion, fidélité : multiplier les prestations rend le
+                Site, gestion, clients : multiplier les prestations rend le
                 budget difficile à lire et les responsabilités difficiles à
                 suivre.
               </p>
               <div className="landing-story-answer">
                 <Check size={20} aria-hidden />
                 <p>
-                  <strong>Choisissez un périmètre clair.</strong> La gestion dès
-                  39 € HT par mois, le site et la fidélité à 69 €, la boutique à
-                  99 €.
+                  <strong>Choisissez un périmètre clair.</strong> Un abonnement à
+                  39 € HT par mois réunit la gestion, le site et la boutique.
+                  Ajoutez seulement les options dont vous avez besoin.
                 </p>
               </div>
               <a href="#offres">
@@ -348,7 +379,7 @@ export function Landing({
               <br />à porter tout seul.
             </h2>
             <p>
-              Une commande à saisir, un stock à vérifier, un chiffre à retrouver
+              Un client à retrouver, un stock à vérifier, un chiffre à consulter
               ? Dites simplement ce dont vous avez besoin. Votre assistant vous
               aide à avancer, sans chercher dans tous les menus.
             </p>
@@ -401,12 +432,12 @@ export function Landing({
         <section className="landing-section" id="modules">
           <div className="landing-heading">
             <span className="landing-eyebrow">
-              Du premier café au dernier couvert
+              De l’ouverture à la fermeture
             </span>
             <h2>Votre journée est déjà bien remplie. Allégeons-la.</h2>
             <p>
-              Le bon renseignement, au bon endroit. De la salle à la cuisine, de
-              votre site à vos stocks : retrouvez le fil sans tout ressaisir.
+              Le bon renseignement, au bon endroit. De vos clients à vos ventes,
+              de votre site à vos stocks : retrouvez le fil sans tout ressaisir.
             </p>
           </div>
           <div className="landing-modules">
@@ -423,7 +454,7 @@ export function Landing({
         <section className="landing-section landing-simple">
           <div className="landing-heading">
             <span className="landing-eyebrow">
-              Simple dès le premier service
+              Simple dès le premier jour
             </span>
             <h2>Vous n’avez pas à tout apprendre d’un coup.</h2>
           </div>
@@ -439,11 +470,11 @@ export function Landing({
           <ul className="landing-benefits">
             <li>
               <Check size={18} aria-hidden /> Une saisie, à jour partout : la
-              carte, le site et la cuisine suivent les stocks.
+              catalogue et le site suivent les stocks.
             </li>
             <li>
               <Check size={18} aria-hidden /> Chacun voit son poste : pas
-              d’écran surchargé pour le serveur ou le cuisinier.
+              d’écran surchargé pour votre équipe.
             </li>
             <li>
               <Check size={18} aria-hidden /> Sur ordinateur, tablette ou
@@ -459,7 +490,7 @@ export function Landing({
             </span>
             <h2>L’esprit tranquille, même quand vous déléguez.</h2>
             <p>
-              Votre restaurant a son propre espace. Commandes, clients, stocks
+              Votre commerce a son propre espace. Commandes, clients, stocks
               et équipe ne sont jamais visibles depuis un autre établissement.
             </p>
           </div>
@@ -470,7 +501,7 @@ export function Landing({
               <p>
                 Vos informations restent dans votre établissement. Vous
                 travaillez avec votre équipe, sans les partager avec les autres
-                restaurants.
+                commerces.
               </p>
             </article>
             <article>
@@ -478,7 +509,7 @@ export function Landing({
               <h3>Une structure, un espace</h3>
               <p>
                 Même avec plusieurs adresses, chaque structure garde son équipe,
-                sa carte, son site et ses clients.
+                son catalogue, son site et ses clients.
               </p>
             </article>
             <article>
@@ -515,12 +546,12 @@ export function Landing({
               <LayoutGrid size={24} aria-hidden />
               <h3>
                 {demoHref
-                  ? "Vivez un service en démo"
-                  : "Suivez le cycle d’un service"}
+                  ? "Explorez l’activité en démo"
+                  : "Suivez le cycle d’une commande"}
               </h3>
               <p>
                 {demoHref
-                  ? "Explorez un restaurant fictif et les écrans des différents métiers avant de vous engager."
+                  ? "Explorez un établissement fictif et ses écrans avant de vous engager."
                   : "De la prise de commande à la table libérée, comprenez chaque étape."}
               </p>
               <span>
@@ -572,10 +603,10 @@ export function Landing({
             <p>
               Studio ATS assure le développement et la maintenance de STUDIO OS.
               Un même interlocuteur pour faire évoluer l’outil qui accompagne
-              votre restaurant.
+              votre commerce.
             </p>
             <a className="landing-btn primary" href="#contact">
-              Parlons de votre restaurant <ArrowUpRight size={16} aria-hidden />
+              Parlons de votre commerce <ArrowUpRight size={16} aria-hidden />
             </a>
           </div>
           <div className="landing-team-commitments">
@@ -595,7 +626,7 @@ export function Landing({
                 <h3>Des explications à portée de main</h3>
                 <p>
                   Un guide consultable avant et après votre inscription, avec
-                  des parcours adaptés aux métiers du restaurant.
+                  des parcours pour découvrir les fonctions de votre espace.
                 </p>
               </div>
             </article>
@@ -615,12 +646,13 @@ export function Landing({
         <section className="landing-section" id="offres">
           <div className="landing-heading">
             <span className="landing-eyebrow">Offres</span>
-            <h2>Choisissez ce qui vous simplifie la vie.</h2>
+            <h2>Un abonnement. Des add-ons à la carte.</h2>
             <p>
-              Un établissement inclus. Chaque établissement supplémentaire coûte{" "}
+              3 jours d’essai gratuits, sans paiement initial. Puis un établissement
+              inclus à 39 € HT par mois après activation. Chaque établissement supplémentaire coûte{" "}
               {additionalRestaurantPrice} € HT par mois et bénéficie du même
-              forfait. Le hors ligne, la sécurité, la traçabilité et les
-              tutoriels sont inclus.
+              abonnement. Le hors ligne, la sécurité, la traçabilité et les
+              tutoriels sont inclus. Résiliation à tout moment, sans engagement.
             </p>
           </div>
           <aside className="landing-referral">
@@ -628,11 +660,10 @@ export function Landing({
               <span className="landing-eyebrow">
                 Le bouche-à-oreille vous récompense
               </span>
-              <h3>Votre forfait peut passer à 0 €.</h3>
+              <h3>Votre abonnement peut passer à 0 €.</h3>
               <p>
-                Dès 3 filleuls payants pour Exploitation, 5 pour Site et
-                fidélité, 10 pour Boutique en ligne. Crédits IA et
-                établissements supplémentaires hors avantage.
+                Dès 3 filleuls payants, votre abonnement Studio est offert.
+                Crédits IA et établissements supplémentaires hors avantage.
               </p>
             </div>
             <Link className="landing-btn outline" href="/platform/parrainage">
@@ -641,31 +672,39 @@ export function Landing({
           </aside>
           <div className="landing-plans">
             {plans.map((p) => (
-              <article
-                key={p.price}
-                className="landing-plan"
-                data-featured={p.price === 69 || undefined}
-              >
-                <span className="landing-eyebrow">
-                  {p.price === 39
-                    ? "Soufflez pendant le service"
-                    : p.price === 69
-                      ? "Faites rayonner votre adresse"
-                      : "Prolongez l’expérience en ligne"}
-                </span>
+              <article key={p.price} className="landing-plan" data-featured>
+                <span className="landing-eyebrow">Votre activité, à votre façon</span>
                 <h3>{p.title}</h3>
                 <strong className="landing-plan-quota">
                   {p.price} € HT / mois
                 </strong>
-                <p>{p.description}</p>
-                <Link
-                  className={`landing-btn ${p.price === 69 ? "light" : "primary"}`}
-                  href={`/checkout/${p.price}`}
-                >
-                  Choisir {p.title}
+                <ul>
+                  {p.features.map((feature) => (
+                    <li key={feature}>
+                      <Check size={16} aria-hidden /> {feature}
+                    </li>
+                  ))}
+                </ul>
+                <Link className="landing-btn light" href={`/checkout/${p.price}`}>
+                  Essayer {p.title} gratuitement
                 </Link>
               </article>
             ))}
+            <article className="landing-plan">
+              <span className="landing-eyebrow">Selon vos besoins</span>
+              <h3>Add-ons</h3>
+            
+              <ul>
+                {addonCatalog
+                  .filter((addon) => addon.includedFrom === null)
+                  .map((addon) => (
+                    <li key={addon.id}>
+                      <Check size={16} aria-hidden /> {addon.name}
+                    </li>
+                  ))}
+              </ul>
+              <p>Activez-les depuis votre espace, sans engagement, évoluez à votre rythme.</p>
+            </article>
           </div>
         </section>
 
@@ -688,7 +727,7 @@ export function Landing({
           <div className="landing-heading">
             <span className="landing-eyebrow">Parlons de votre quotidien</span>
             <h2>
-              Votre restaurant ne rentre pas dans une case. Vos questions non
+              Votre commerce ne rentre pas dans une case. Vos questions non
               plus.
             </h2>
             <p>
@@ -701,7 +740,7 @@ export function Landing({
             <MessageCircle size={28} aria-hidden />
             <h3>Échangez avec Studio ATS.</h3>
             <p>
-              Présentez votre restaurant, vos outils actuels et ce que vous
+              Présentez votre commerce, vos outils actuels et ce que vous
               aimeriez simplifier. Retrouvez l’équipe sur son site officiel pour
               lui poser vos questions.
             </p>
@@ -719,17 +758,17 @@ export function Landing({
               <ArrowUpRight size={16} aria-hidden />
             </Link>
             <a className="landing-btn outline" href="#offres">
-              Revoir les forfaits
+              Revoir l’offre
             </a>
           </div>
         </section>
 
         <section className="landing-final">
-          <h2>Votre restaurant mérite votre énergie. Vous aussi.</h2>
+          <h2>Votre affaire mérite votre énergie. Vous aussi.</h2>
           <p>
             {demo
-              ? "Prenez le temps de vous projeter dans la démo. Imaginez votre prochain service avec moins de choses à gérer."
-              : "Commencez par ce qui vous pèse le plus. Le service, le site, les commandes : avancez à votre rythme."}
+              ? "Prenez le temps de vous projeter dans la démo. Imaginez votre prochaine journée avec moins de choses à gérer."
+              : "Commencez par ce qui vous pèse le plus. Les clients, le site, les commandes : avancez à votre rythme."}
           </p>
           <Cta demoHref={demoHref} inverse />
         </section>
@@ -737,7 +776,7 @@ export function Landing({
 
       <footer className="landing-footer">
         <span className="landing-brand">
-          <UtensilsCrossed size={18} aria-hidden /> STUDIO OS
+          <Store size={18} aria-hidden /> STUDIO OS
         </span>
         <nav aria-label="Liens utiles">
           {demoHref && <Link href={demoHref}>Démonstration</Link>}

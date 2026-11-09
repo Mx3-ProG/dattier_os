@@ -2,7 +2,7 @@
 
 ## Décisions et état livré
 
-Tarif demandé : 9 € HT par mois par add-on. Hypothèse affichée : par établissement, partagé par les membres autorisés ; à confirmer avant ouverture commerciale. Les droits déjà compris dans 39/69/99 restent acquis, sans double facturation.
+Tarif demandé : 9 € HT par mois par add-on. Hypothèse affichée : par établissement, partagé par les membres autorisés ; à confirmer avant ouverture commerciale. Depuis l’abonnement unique à 39 €, les droits déjà acquis restent conservés (`addon_legacy_grants`), sans double facturation. Le domaine personnalisé est devenu un add-on (`domain`).
 
 La section « Add-ons » est intégrée au Workspace, accessible avec la permission settings, y compris via `?module=addons`. Elle contient le catalogue initial et une vue « Crédits Studio ». C'est une présentation commerciale en préparation, pas une boutique transactionnelle : aucun bouton ne simule un achat, aucune activation et aucun débit ne sont exécutés. Les cartes « inclus » reflètent les forfaits actuels, pas une validation technique des prestataires.
 

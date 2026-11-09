@@ -354,7 +354,7 @@ test("droits : salle, public et autre établissement sans accès", async () => {
   await db.query("SELECT set_config('app.user_id','bill-x',false)");
   await db.query("SELECT app.bootstrap_organization('bill-org','Autre','bill-r','Autre')");
   await db.query("SELECT set_config('app.user_id','',false)");
-  await db.query("UPDATE app.organization_plans SET plan=99 WHERE organization_id='bill-org'");
+  await db.query("UPDATE app.organization_plans SET plan=39 WHERE organization_id='bill-org'");
   const other = { id: "bill-x", name: "Autre", role: "OWNER" as const };
   await assert.rejects(
     withDatabaseContext({ userId: "bill-x", restaurantId: "bill-r" }, () =>

@@ -53,7 +53,7 @@ async function routeGET(req: NextRequest, c: Context) {
           await (
             await getDb()
           ).transaction(async (db) => {
-            await requirePlan(db, restaurant, action === "receipt" ? 39 : 69);
+            await requirePlan(db, restaurant, 39);
             if (["calendar", "availability"].includes(action)) await requireInstalled(db, restaurant, "booking");
             if (action === "catalog") await requireInstalled(db, restaurant, "website");
             const params = Object.fromEntries(req.nextUrl.searchParams);
@@ -192,7 +192,7 @@ async function routePOST(req: NextRequest, c: Context) {
               `store:${createHash("sha256").update(`${restaurant}:${ip}`).digest("hex")}`,
               60,
             );
-            await requirePlan(db, restaurant, 99);
+            await requirePlan(db, restaurant, 39);
             await requireInstalled(db, restaurant, "online-orders");
           });
           return json(
@@ -224,7 +224,7 @@ async function routePOST(req: NextRequest, c: Context) {
               await logout();
               return { ok: true };
             }
-            await requirePlan(db, restaurant, action === "checkout" ? 99 : 69);
+            await requirePlan(db, restaurant, 39);
             if (action === "reservation") await requireInstalled(db, restaurant, "booking");
             if (action === "checkout") await requireInstalled(db, restaurant, "online-orders");
             if (["reward", "loyalty-join", "referral-code", "referral-attach"].includes(action))

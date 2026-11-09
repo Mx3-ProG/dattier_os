@@ -585,7 +585,7 @@ export function clockStep(event: "start" | "break" | "resume" | "end"): Step {
 }
 
 export function flashStep(ctx: AssistantContext, item: string, percent: number | null, until: readonly [number, number] | null, hours: number | null): Step {
-  if (!can(ctx, "catalog") || ctx.plan < 69) return { reply: "Les promotions flash demandent le droit carte et le forfait Site et fidélité." };
+  if (!can(ctx, "catalog") || ctx.plan < 39) return { reply: "Les promotions flash demandent le droit carte et l’abonnement Studio." };
   const m = findMenu(ctx, item);
   if (!m) return { reply: `Je ne trouve pas « ${item} » à la carte.` };
   if (!percent) return { reply: `Quelle remise pour ${m.name} ?`, ask: { followUp: `Promo flash sur ${m.name} de`, options: [`Promo flash -10% sur ${m.name}`, `Promo flash -20% sur ${m.name}`] } };
