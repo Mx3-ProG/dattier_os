@@ -1,6 +1,6 @@
 # Séparer les sites publics du tableau de bord
 
-**Statut : proposition à valider, rien n'est implémenté.**
+**Statut : plan complet validé le 9 novembre 2026, rien n'est implémenté.**
 
 Effort total estimé : **14 à 20 jours de développement**, plus 1 à 2 semaines d'observation de la CSP. La CSP (lot 2) peut être livrée seule en 3 à 4 jours.
 
@@ -185,9 +185,9 @@ Dans Playwright, avec des hôtes `*.localhost` : parcours client complet, aperç
 - **Nonce :** à éprouver dès le début du lot 2 avec Next.js 16.4 et `skipProxyUrlNormalize`.
 - **Keycloak :** l'absence de joker d'hôte vient de ma connaissance du produit, pas d'un test sur la version 26.8. Le parcours proposé n'en dépend pas.
 
-## Décisions à valider
+## Décisions validées
 
-1. **Domaine :** un domaine enregistrable distinct, avec un sous-domaine par restaurant (recommandé).
-2. **Adresses :** un `site_slug` plutôt que l'UUID dans l'adresse (recommandé).
+1. **Domaine :** un domaine enregistrable distinct, avec un sous-domaine par restaurant. Le nom reste à choisir.
+2. **Adresses :** un `site_slug` plutôt que l'UUID dans l'adresse.
 3. **Pertes de bascule :** panier, choix sur les cookies et reconnexion des clients.
-4. **Périmètre :** le plan complet, ou seulement les lots 1 et 2 pour l'instant.
+4. **Périmètre :** le plan complet, lots 1 à 7.
