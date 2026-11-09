@@ -5,6 +5,7 @@ import { withDatabaseContext } from "@/lib/database/context";
 import { getDb } from "@/lib/database/db";
 import { openAsset, resolveAsset, resolveStaffAsset } from "@/features/site/media";
 import { actor, scope } from "@/lib/auth/session";
+import { MEDIA_CSP } from "@/lib/security/csp";
 async function staffPreview(restaurant: string, asset: string) {
   const user = await actor().catch(() => null);
   if (!user) return null;
@@ -41,6 +42,7 @@ async function routeGET(
         "Content-Type": found.type,
         "Cache-Control": staff ? "private, no-store" : "public, max-age=3600",
         "X-Content-Type-Options": "nosniff",
+        "Content-Security-Policy": MEDIA_CSP,
       },
     });
   } catch {

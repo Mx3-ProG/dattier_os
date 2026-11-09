@@ -80,6 +80,6 @@ Le test prouve l'isolation sur les chemins testés, pas l'absence de toute faill
 
 - **Tentatives d'accès non journalisées.** Quand un client tente d'accéder à un autre tenant, l'écriture de l'événement de sécurité est elle-même refusée par la RLS : l'accès est bien bloqué, mais la tentative n'apparaît pas dans le journal du tenant visé.
 - **Tables du canal public.** `customers`, `customer_sessions` et les autres tables de la liste publique restent protégées par le code applicatif en plus de leur restaurant de contexte : le canal public y a accès pour le restaurant demandé.
-- **Origine partagée.** Les sites publics et le tableau de bord partagent une origine sur le domaine de la plateforme. Une faille XSS sur un site tenant y atteindrait les sessions du personnel.
+- **Origine partagée.** Les sites publics et le tableau de bord partagent une origine sur le domaine de la plateforme. Une faille XSS sur un site tenant y atteindrait les sessions du personnel. La CSP à nonce réduit ce risque une fois passée en `CSP_MODE=enforce`, sans le supprimer. La séparation complète est prévue dans [SITE_ORIGIN_PLAN.md](SITE_ORIGIN_PLAN.md).
 - **`FORCE ROW LEVEL SECURITY`** n'est pas activé : sans effet tant que le migrateur est superutilisateur. Ce compte et les scripts d'exploitation contournent la RLS.
 - **Un seul bucket et une seule clé S3.** La séparation repose sur les préfixes et les lignes protégées, pas sur des identifiants distincts.

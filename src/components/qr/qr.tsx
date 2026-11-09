@@ -98,9 +98,11 @@ figure{margin:0;padding:5mm;border:1px dashed #c7c7cc;border-radius:4mm;text-ali
 figure svg{width:100%;height:auto;display:block}
 figcaption{display:grid;gap:1mm;margin-top:3mm;font-size:12px}
 small{color:#6e6e73;font-size:10px}
-</style></head><body><h1>${escapeHtml(title)}</h1><main>${cells.join("")}</main>
-<script>window.onload=()=>{window.print()}</script></body></html>`);
+</style></head><body><h1>${escapeHtml(title)}</h1><main>${cells.join("")}</main></body></html>`);
   w.document.close();
+  // Depuis cette page : la fenêtre hérite de la CSP, qui bloquerait un script écrit dedans.
+  w.focus();
+  w.print();
 }
 
 /** QR with its actions: download, copy, open. */

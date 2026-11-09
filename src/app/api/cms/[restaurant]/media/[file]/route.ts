@@ -6,6 +6,7 @@ import { getDb } from "@/lib/database/db";
 import { withDatabaseContext } from "@/lib/database/context";
 import { website } from "@/features/cms/service";
 import { cmsMedia } from "@/features/cms/media";
+import { MEDIA_CSP } from "@/lib/security/csp";
 async function routeGET(
   req: NextRequest,
   c: { params: Promise<{ restaurant: string; file: string }> },
@@ -76,6 +77,7 @@ async function routeGET(
               ? "public, max-age=3600"
               : "private, no-store",
             "X-Content-Type-Options": "nosniff",
+            "Content-Security-Policy": MEDIA_CSP,
           },
         });
       },

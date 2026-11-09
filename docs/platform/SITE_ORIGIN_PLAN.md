@@ -1,6 +1,6 @@
 # Séparer les sites publics du tableau de bord
 
-**Statut : plan complet validé le 9 novembre 2026, rien n'est implémenté.**
+**Statut : plan complet validé le 9 novembre 2026. Lots 1 et 2 implémentés sur `claude/blissful-davinci-040ade`, CSP en observation par défaut (`CSP_MODE=report-only`). Lots 3 à 7 à faire.**
 
 Effort total estimé : **14 à 20 jours de développement**, plus 1 à 2 semaines d'observation de la CSP. La CSP (lot 2) peut être livrée seule en 3 à 4 jours.
 
@@ -120,6 +120,14 @@ Points d'attention :
 - **`/offline` est mis en cache par le service worker.** L'en-tête et le HTML conservés gardent le même nonce : à tester, sur une page au contenu statique.
 - **SRI écarté :** la fonction est encore expérimentale, et le rendu dynamique n'en a pas besoin.
 - **`unsafe-eval` en développement uniquement,** comme l'exige React.
+
+### Ce que l'implémentation des lots 1 et 2 a montré
+
+- **Zod provoquait une violation sur chaque page.** Il teste `new Function("")` au chargement. `src/instrumentation-client.ts` le passe en mode `jitless` côté client.
+- **La console ne suffit pas pour détecter les violations,** car ce test de Zod n'y apparaissait pas. `tests/e2e/csp.spec.ts` écoute l'événement `securitypolicyviolation`.
+- **Le nonce fonctionne aussi en `Report-Only` :** Next.js lit les deux en-têtes.
+- **Seule `/_global-error` reste statique.** Ses scripts n'ont pas de nonce et seraient bloqués en mode `enforce` ; le texte de l'erreur s'affiche quand même.
+- **Vérifié avec `CSP_MODE=enforce`** sur le site public, le tableau de bord, l'administration et l'ensemble de la suite e2e : aucun blocage, à part l'injection volontaire du test.
 
 ## Lots et effort
 
