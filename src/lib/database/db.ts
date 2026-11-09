@@ -23,6 +23,18 @@ export async function one<T>(
   if (!r[0]) throw new Error("Élément introuvable dans cet établissement.");
   return r[0];
 }
+/** Refuse de démarrer si le rôle pourrait contourner la RLS : superutilisateur, BYPASSRLS ou propriétaire. */
+export async function assertLeastPrivilege(db: PostgresDatabase, label: string) {
+  const flags = await db.query<{ unsafe: boolean }>(
+    "SELECT (rolsuper OR rolbypassrls OR EXISTS(SELECT FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace WHERE n.nspname='public' AND pg_has_role(current_user,c.relowner,'MEMBER'))) AS unsafe FROM pg_roles WHERE rolname=current_user",
+  );
+  if (flags.rows[0]?.unsafe) {
+    await db.close();
+    throw new Error(
+      `${label} doit utiliser un rôle applicatif non propriétaire sans BYPASSRLS.`,
+    );
+  }
+}
 const globalDb = globalThis as unknown as { atacuisineDb?: Promise<Database> };
 export function demoEnabled() {
   return process.env.ATACUISINE_DEMO === "true" && !process.env.VERCEL;
@@ -35,15 +47,7 @@ export async function getDb(): Promise<Database> {
     if (!globalDb.atacuisineDb)
       globalDb.atacuisineDb = (async () => {
         const db = new PostgresDatabase(process.env.DATABASE_URL!);
-        const flags = await db.query<{ unsafe: boolean }>(
-          "SELECT (rolsuper OR rolbypassrls OR EXISTS(SELECT FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace WHERE n.nspname='public' AND pg_has_role(current_user,c.relowner,'MEMBER'))) AS unsafe FROM pg_roles WHERE rolname=current_user",
-        );
-        if (flags.rows[0]?.unsafe) {
-          await db.close();
-          throw new Error(
-            "DATABASE_URL doit utiliser un rôle applicatif non propriétaire sans BYPASSRLS.",
-          );
-        }
+        await assertLeastPrivilege(db, "DATABASE_URL");
         return db;
       })().catch((error) => {
         globalDb.atacuisineDb = undefined;

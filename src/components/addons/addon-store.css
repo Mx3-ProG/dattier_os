@@ -1,0 +1,236 @@
+.addon-store {
+  display: grid;
+  gap: 16px;
+  margin-block: 20px;
+}
+.addon-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 270px), 1fr));
+  gap: 16px;
+  margin-block: 16px;
+}
+.addon-card {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 16px;
+}
+.addon-estimation-preview { display:grid; place-content:center; text-align:center; gap:.4rem; background:linear-gradient(135deg,#e8f5ea,#d0e8da); color:#184d3b; }
+.addon-estimation-preview strong { font-size:4rem; line-height:1; }
+.addon-estimation-preview span { font-weight:700; }
+.addon-card > button {
+  margin-top: auto;
+}
+.addon-card p {
+  margin: 0;
+}
+.addon-card-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.addon-card-head h3 {
+  margin: 0;
+}
+.addon-preview {
+  width: 100%;
+  aspect-ratio: 16 / 10;
+  border-radius: 12px;
+  background: var(--sand);
+  overflow: hidden;
+}
+.addon-badges {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.addon-badge {
+  padding: 2px 9px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  font-size: max(var(--appearance-min-text, 0px), calc(12px * var(--appearance-text-scale, 1)));
+  font-weight: 600;
+}
+.addon-badge.is-free {
+  background: var(--sand);
+}
+.addon-badge.is-premium {
+  border-color: var(--terracotta);
+  color: var(--terracotta);
+}
+.addon-badge.is-owned {
+  background: var(--green);
+  border-color: var(--green);
+  color: var(--paper);
+}
+.addon-status,
+.addon-hint,
+.addon-price span {
+  color: var(--muted);
+  font-size: max(var(--appearance-min-text, 0px), calc(13px * var(--appearance-text-scale, 1)));
+}
+.addon-facts {
+  display: grid;
+  gap: 4px;
+  margin: 0;
+  font-size: max(var(--appearance-min-text, 0px), calc(13px * var(--appearance-text-scale, 1)));
+}
+.addon-facts > div {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+.addon-facts dt {
+  font-weight: 600;
+}
+.addon-facts dt::after {
+  content: " :";
+}
+.addon-facts dd {
+  margin: 0;
+  color: var(--muted);
+}
+.addon-filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 12px;
+}
+.addon-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  flex-basis: 100%;
+}
+.addon-filters label,
+.addon-customizer-form label {
+  display: grid;
+  gap: 4px;
+  font-weight: 600;
+  font-size: max(var(--appearance-min-text, 0px), calc(13px * var(--appearance-text-scale, 1)));
+}
+.addon-filters select,
+.addon-customizer-form select,
+.addon-customizer-form input[type="text"] {
+  min-height: 40px;
+  width: 100%;
+  padding-inline: 10px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--paper);
+  color: var(--ink);
+  font: inherit;
+  font-weight: 400;
+}
+.addon-empty {
+  display: grid;
+  justify-items: start;
+  gap: 12px;
+}
+.addon-customizer-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr);
+  gap: 24px;
+  margin-top: 12px;
+}
+.addon-customizer-form {
+  display: grid;
+  gap: 14px;
+  align-content: start;
+}
+.addon-customizer-form .addon-check {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 400;
+}
+.addon-colors {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+.addon-colors input {
+  width: 64px;
+  height: 40px;
+  padding: 2px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--paper);
+}
+.addon-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+@media (max-width: 720px) {
+  .addon-customizer-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .addon-customizer-preview {
+    order: -1;
+  }
+}
+/* Administration */
+.addon-admin {
+  max-width: 1120px;
+  margin-inline: auto;
+  padding: 32px 16px 64px;
+  display: grid;
+  gap: 24px;
+}
+.addon-admin h1,
+.addon-admin h2 {
+  margin: 0;
+}
+.addon-admin-table {
+  overflow-x: auto;
+}
+.addon-admin-table table {
+  width: 100%;
+  border-collapse: collapse;
+}
+.addon-admin-table th,
+.addon-admin-table td {
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--line);
+  text-align: left;
+  white-space: nowrap;
+}
+.addon-admin-form {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 190px), 1fr));
+  gap: 12px;
+  align-items: end;
+  margin-block: 12px;
+}
+.addon-admin-form label {
+  display: grid;
+  gap: 4px;
+  font-weight: 600;
+  font-size: max(var(--appearance-min-text, 0px), calc(13px * var(--appearance-text-scale, 1)));
+}
+.addon-admin-form input:not([type="checkbox"]),
+.addon-admin-form select {
+  min-height: 40px;
+  width: 100%;
+  padding-inline: 10px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--paper);
+  color: var(--ink);
+  font: inherit;
+  font-weight: 400;
+}
+.addon-admin-form .addon-check {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 40px;
+  font-weight: 400;
+}
+.addon-admin-item {
+  border-top: 1px solid var(--line);
+  padding-block: 12px;
+}

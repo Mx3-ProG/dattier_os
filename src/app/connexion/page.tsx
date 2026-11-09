@@ -22,7 +22,7 @@ export default async function Page({ searchParams }: {
   return (
     <main className="access-shell">
       <nav className="access-nav" aria-label="Navigation principale">
-        <Link href="/" className="access-brand"><UtensilsCrossed size={22} /> atacuisine</Link>
+        <Link href="/" className="access-brand"><UtensilsCrossed size={22} /> STUDIO OS</Link>
         <Link href="/#offres">Voir les offres</Link>
       </nav>
       <div className="access-split">
@@ -34,7 +34,7 @@ export default async function Page({ searchParams }: {
         <section className="access-panel">
           <span className="access-label">Espace client</span>
           <h1>{register ? "Créer votre compte" : "Heureux de vous revoir."}</h1>
-          <p>{register ? "Inscrivez-vous avec votre adresse e-mail pour ouvrir votre espace." : "Connectez-vous pour retrouver votre espace atacuisine."}</p>
+          <p>{register ? "Inscrivez-vous avec votre adresse e-mail pour ouvrir votre espace." : "Connectez-vous pour retrouver votre espace STUDIO OS."}</p>
           <a className="access-primary" href={`/auth/login?${query}`}>
             {register ? "Continuer vers l’inscription" : "Se connecter"}
           </a>

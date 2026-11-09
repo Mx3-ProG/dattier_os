@@ -275,16 +275,17 @@ export function CustomerAccount({
     );
 
   const e = account.engagement;
+  const visibleTab = e.enabled || (tab !== "recompenses" && tab !== "parrainage") ? tab : "accueil";
   return (
     <section className="ca">
       <div className="ca-topbar">
         <nav className="ca-tabs" aria-label="Sections de mon espace">
-          {tabs.map((t) => {
+          {tabs.filter((t) => e.enabled || t.id === "accueil" || t.id === "historique").map((t) => {
             const Icon = t.icon;
             return (
               <button
                 key={t.id}
-                aria-current={tab === t.id ? "page" : undefined}
+                aria-current={visibleTab === t.id ? "page" : undefined}
                 onClick={() => go(t.id)}
               >
                 <Icon size={20} />
@@ -321,8 +322,15 @@ export function CustomerAccount({
         </p>
       )}
 
-      {tab === "accueil" && (
+      {visibleTab === "accueil" && (
         <div className="ca-stack" key="accueil">
+          {!e.enabled ? (
+            <section className="ca-card">
+              <h1>Bonjour {account.customer.name.trim().split(/\s+/)[0]}</h1>
+              <p>Retrouvez vos commandes dans votre espace client.</p>
+              <button className="ca-button" onClick={() => go("historique")}>Voir mes commandes</button>
+            </section>
+          ) : <>
           <AccountHero account={account} onJoin={() => void join()} joining={joining} />
           {e.welcome && (
             <button className="ca-card ca-welcome" onClick={() => go("recompenses")}>
@@ -339,10 +347,11 @@ export function CustomerAccount({
             <ReferralTeaser account={account} onOpen={() => go("parrainage")} />
           </div>
           <QuickActions account={account} onReorder={onReorder} />
+          </>}
         </div>
       )}
 
-      {tab === "recompenses" && (
+      {e.enabled && visibleTab === "recompenses" && (
         <div className="ca-stack" key="recompenses">
           <RewardsWallet account={account} onChanged={() => void load()} />
           <BadgesGrid account={account} />
@@ -353,13 +362,13 @@ export function CustomerAccount({
         </div>
       )}
 
-      {tab === "parrainage" && (
+      {e.enabled && visibleTab === "parrainage" && (
         <div className="ca-stack" key="parrainage">
           <ReferralCard account={account} onChanged={() => void load()} />
         </div>
       )}
 
-      {tab === "historique" && (
+      {visibleTab === "historique" && (
         <div className="ca-stack" key="historique">
           <section className="ca-card">
             <SectionTitle kicker="Click & collect" title="Mes anciennes commandes" action={<Link href="/commander" className="ca-button ca-button-small">Nouvelle commande</Link>} />

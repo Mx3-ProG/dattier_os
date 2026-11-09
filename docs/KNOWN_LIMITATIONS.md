@@ -12,9 +12,10 @@ Le parcours de service central est implémenté. Les fonctions ci-dessous resten
 - QR : interface `/qr?table=bernay-t8` pour une session ouverte et acceptation obligatoire par le personnel ; génération/impression des images QR non implémentée. Ne pas exposer ce canal sans anti-abus de production.
 - Stocks : lots, pertes, corrections par lot ; pas de campagne d’inventaire avec brouillon multi-lignes, transferts d’emplacement, retours ou gestion des conversions depuis tous les formulaires.
 - Approvisionnements : commandes mono-ingrédient et réceptions partielles ; pas de cycle brouillon/envoyé/confirmé complet, envoi de bons, facture ou pièce jointe.
-- Équipe : liste fictive, ajout/suppression de créneaux, pointages ; pas de congés, absences, édition de profil, paie ni correction manuelle de pointage.
+- Équipe : liste fictive, créneaux, pointages, corrections tracées, absences et variables de paie (`docs/platform/HR_PAYROLL.md`) ; pas d’édition de profil, de solde de congés, de bulletin ni de déclaration sociale.
 - Carte : création de produits avec recette, modification, archivage/restauration et suppression sans historique disponibles. Restent à développer : création d’ingrédients et de catégories, photos, allergènes validés, variantes, suppléments, menus composés et plages de vente.
-- Finance : déclarations, dépenses, encaissements par jour, export CSV, pré-comptabilité des règlements (TVA configurée par l’établissement, écritures, opérations à vérifier). Pas de fiscalité validée, marges HT, filtres avancés, écriture des dépenses, remboursements ni export comptable. Ni comptabilité officielle, ni logiciel de caisse certifié : les protections du journal ne valent pas conformité à l’article 286 du CGI.
+- Finance : déclarations, dépenses, tableau de bord par période, export CSV, pré-comptabilité des règlements (TVA configurée par l’établissement, écritures, opérations à vérifier). Pas de fiscalité validée, marges HT, filtres avancés, écriture des dépenses, remboursements au comptoir ni export comptable. Paiements en ligne : voir `docs/platform/ONLINE_PAYMENTS.md`. Factures fournisseurs : voir `docs/platform/SUPPLIER_INVOICES.md`. Banque : voir `docs/platform/BANK_RECONCILIATION.md`. RH et paie : voir `docs/platform/HR_PAYROLL.md`. Ni comptabilité officielle, ni logiciel de caisse certifié : les protections du journal ne valent pas conformité à l’article 286 du CGI.
+- Factures clients : voir `docs/platform/SALES_INVOICES.md`. Le PDF n’est pas une facture électronique, le XML n’est pas validé, l’export FEC reste à contrôler par l’expert-comptable et aucune plateforme agréée n’est branchée.
 - Fidélité : consentement, mouvements manuels et codes nominatifs utilisables au règlement sont disponibles, avec échange de points et fiche privée partageable. Pas d’acquisition automatique de points après achat ni d’espace client authentifié. Le lien privé est un accès par possession du lien, pas une preuve d’identité ; vérifier le titulaire lors du règlement. Aucun envoi automatique.
 - Notifications : historique et lu/non lu ; pas d’alerte sonore, de destinataire serveur individuel, de notifications push, SMS ou e-mail.
 
@@ -23,9 +24,9 @@ Le parcours de service central est implémenté. Les fonctions ci-dessous resten
 - Accueil, carte, demandes de réservation/commande et contact sont connectés. Compte client, galerie, avis et pages légales présentent honnêtement ce qui reste à fournir ; aucun témoignage, visuel de plat réel ou engagement juridique n’est inventé.
 - Illustrations décoratives CSS, pas de photographie officielle. Adresse et téléphone viennent du prompt et n’ont pas été vérifiés auprès du restaurant.
 - Metadata et favicon sont présents. Le sitemap contient une origine locale ; robots et metadata interdisent l’indexation. SEO par page et données structurées Restaurant validées restent à préparer pour publication.
-- PostgreSQL embarqué persistant monoprocessus. Pas de connexion Supabase distante, Auth, Storage ni Realtime actifs. L’adaptateur local est expressément bloqué sur Vercel.
-- RLS est activée mais aucune politique applicative Supabase n’est encore déployée/testée ; le serveur local utilise une connexion privilégiée et des autorisations applicatives.
-- Pas d’authentification réelle de production, limitation de débit distribuée, stratégie de sauvegarde automatisée, observabilité ni audit de sécurité indépendant. La démo ne doit contenir aucune donnée réelle.
+- En démonstration, PostgreSQL est embarqué et monoprocessus, et sa connexion privilégiée contourne la RLS. La production utilise un PostgreSQL séparé : voir [isolation des tenants](platform/TENANT_ISOLATION.md).
+- Les politiques RLS sont déployées et vérifiées par `npm run test:isolation` sur un PostgreSQL local. Elles n’ont pas été vérifiées sur une base hébergée.
+- Authentification OIDC et limitation de débit en base présentes. Stratégie de sauvegarde automatisée, observabilité et audit de sécurité indépendant restent à établir.
 - Tests responsive automatisés à 390 px et desktop ; pas de certification exhaustive d’accessibilité ni tests de tous les navigateurs/appareils.
 
 ## Extensions externes

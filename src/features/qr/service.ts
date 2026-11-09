@@ -5,6 +5,7 @@ import type { Actor } from "@/lib/auth/session";
 import { can, type Permission } from "@/lib/permissions";
 import { productPath } from "@/lib/product-pages";
 import { log } from "@/features/orders/service";
+import { requirePaidAddon } from "@/features/platform/entitlements";
 
 /**
  * Traced QR codes. Each object of the establishment gets a short link
@@ -249,6 +250,7 @@ export type PortfolioCode = QrRow & {
 
 /** Every active code the member may see, with scan statistics. */
 export async function qrPortfolio(db: DB, r: string, user: Actor) {
+  await requirePaidAddon(db,r,"qr");
   await syncQrCodes(db, r);
   const role = user.roles ?? user.role;
   const allowed = (Object.keys(qrKinds) as QrKind[]).filter((k) => {
@@ -325,6 +327,7 @@ export async function qrAction(
   user: Actor,
   a: z.infer<typeof qrActionSchema>,
 ) {
+  await requirePaidAddon(db,r,"qr");
   const role = user.roles ?? user.role;
   if (a.action === "custom") {
     const id = randomUUID();

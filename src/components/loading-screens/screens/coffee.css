@@ -1,0 +1,54 @@
+.ls-coffee-cup {
+  fill: var(--ls-primary);
+}
+.ls-coffee-handle {
+  stroke: var(--ls-primary);
+  stroke-width: 8;
+}
+.ls-coffee-drink {
+  fill: var(--ls-secondary);
+  animation: ls-coffee-sway calc(3s / var(--ls-speed)) ease-in-out infinite;
+}
+.ls-coffee-saucer {
+  stroke: var(--ls-primary);
+  stroke-width: 6;
+  opacity: 0.8;
+}
+.ls-coffee-steam {
+  stroke: var(--ls-secondary);
+  stroke-width: 5;
+  stroke-dasharray: 46 100;
+  stroke-dashoffset: -20;
+  opacity: 0.7;
+  animation: ls-coffee-steam calc(3s / var(--ls-speed)) ease-in-out infinite;
+}
+.ls-coffee-steam.is-b {
+  animation-delay: calc(-1s / var(--ls-speed));
+}
+.ls-coffee-steam.is-c {
+  animation-delay: calc(-2s / var(--ls-speed));
+}
+@keyframes ls-coffee-steam {
+  0% {
+    stroke-dashoffset: 46;
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  30% {
+    opacity: 0.8;
+  }
+  100% {
+    stroke-dashoffset: -100;
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+}
+@keyframes ls-coffee-sway {
+  0%,
+  100% {
+    transform: scaleX(1);
+  }
+  50% {
+    transform: scaleX(0.96) scaleY(1.2);
+  }
+}

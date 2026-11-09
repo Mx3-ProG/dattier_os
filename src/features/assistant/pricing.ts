@@ -1,4 +1,4 @@
-/* Économie de Cuisine IA.
+/* Économie de STUDIO VOICE.
 
    Principe : le crédit a une valeur catalogue fixe (2 c€). Chaque réponse est
    facturée en crédits selon son coût réel :

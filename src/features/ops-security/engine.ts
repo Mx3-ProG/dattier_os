@@ -505,7 +505,7 @@ const mode = async (db: DB) =>
   (
     await one<{ m: "observation" | "active" }>(
       db,
-      "SELECT remediation_mode AS m FROM ops_security_settings LIMIT 1",
+      "SELECT remediation_mode AS m FROM ops_security_settings WHERE restaurant_id=coalesce(nullif(current_setting('app.restaurant_id',true),''),restaurant_id) LIMIT 1",
     )
   ).m;
 

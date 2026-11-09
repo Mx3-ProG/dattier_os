@@ -10,7 +10,7 @@ type Declaration = {
   order_id: string | null;
   amount: number;
   discount: number;
-  method: "card" | "cash" | "other";
+  method: "card" | "cash" | "other" | "online";
 };
 type Item = {
   name: string;
@@ -75,6 +75,7 @@ export async function processPayment(
     cash_account: string;
     card_account: string;
     other_account: string;
+    online_account: string;
     sales_account: string;
   }>(db, "SELECT * FROM fin_settings WHERE restaurant_id=$1", [r]);
   if (!settings || settings.vat_regime === "unknown") {
@@ -91,6 +92,7 @@ export async function processPayment(
     cash: settings.cash_account,
     card: settings.card_account,
     other: settings.other_account,
+    online: settings.online_account,
   }[p.method];
   let lines: EntryLine[];
   if (settings.vat_regime === "franchise") {
@@ -138,7 +140,7 @@ export async function processPayment(
   await db.query("SELECT app.fin_post_entry($1,$2,$3,$4)", [
     r,
     key,
-    `Encaissement ${{ card: "carte", cash: "espèces", other: "autre mode" }[p.method]}`,
+    `Encaissement ${{ card: "carte", cash: "espèces", other: "autre mode", online: "en ligne" }[p.method]}`,
     JSON.stringify(lines),
   ]);
   return "posted";

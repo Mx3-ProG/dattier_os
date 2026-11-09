@@ -17,7 +17,7 @@ type ReviewItem = {
   message: string;
   amount: number;
   occurred_at: string;
-  method: "card" | "cash" | "other";
+  method: "card" | "cash" | "other" | "online";
   discount: number;
   items: {
     id: string;
@@ -44,7 +44,26 @@ type State = {
     onsite_rate_id: string | null;
     takeaway_rate_id: string | null;
   }[];
-  counts: { events: number; entries: number; open: number };
+  categories: {
+    category: string;
+    products: number;
+    onsite_rate_id: string | null;
+    takeaway_rate_id: string | null;
+  }[];
+  vatSummary: {
+    month: string;
+    label: string;
+    rate_bp: number;
+    net: number;
+    vat: number;
+  }[];
+  counts: {
+    events: number;
+    entries: number;
+    open: number;
+    invoices: number;
+    bank: number;
+  };
   review: ReviewItem[];
   entries: {
     id: string;
@@ -73,7 +92,12 @@ const regimes = {
   normal: "Assujetti à la TVA",
   franchise: "Franchise en base (sans TVA)",
 };
-const methods = { card: "Carte", cash: "Espèces", other: "Autre" };
+const methods = {
+  card: "Carte",
+  cash: "Espèces",
+  other: "Autre",
+  online: "En ligne",
+};
 
 export function FinanceCenter({ restaurant }: { restaurant: string }) {
   const [state, setState] = useState<State | null>(null),
@@ -140,11 +164,13 @@ export function FinanceCenter({ restaurant }: { restaurant: string }) {
     value: a.code,
     label: `${a.code} · ${a.label}`,
   }));
-  const rateLabel = (id: string | null) =>
-    rates.find((r) => r.id === id)?.label ?? "À préciser";
-  const configured = state.products.filter(
-    (p) => p.onsite_rate_id && p.takeaway_rate_id,
-  ).length;
+  const configured = state.products.filter((p) => {
+    const c = state.categories.find((x) => x.category === p.category);
+    return (
+      (p.onsite_rate_id || c?.onsite_rate_id) &&
+      (p.takeaway_rate_id || c?.takeaway_rate_id)
+    );
+  }).length;
   const editSettings = () =>
     setEditor({
       title: "Régime de TVA et comptes",
@@ -293,8 +319,16 @@ export function FinanceCenter({ restaurant }: { restaurant: string }) {
       )}
       <div className="metrics">
         <article className="metric card">
-          <span>À vérifier</span>
+          <span>Ventes à vérifier</span>
           <strong>{state.counts.open}</strong>
+        </article>
+        <article className="metric card">
+          <span>Factures à valider</span>
+          <strong>{state.counts.invoices}</strong>
+        </article>
+        <article className="metric card">
+          <span>Mouvements à rapprocher</span>
+          <strong>{state.counts.bank}</strong>
         </article>
         <article className="metric card">
           <span>Écritures préparées</span>
@@ -433,6 +467,98 @@ export function FinanceCenter({ restaurant }: { restaurant: string }) {
       </div>
 
       <div className="section-heading">
+        <h2>TVA par catégorie</h2>
+      </div>
+      <p className="note">
+        Le taux d’une catégorie s’applique à tous ses produits, sauf ceux qui
+        ont leur propre taux ci-dessous. Vous restez responsable du taux choisi
+        et de votre déclaration de TVA.
+      </p>
+      <div className="card table-scroll">
+        <table>
+          <thead>
+            <tr>
+              <th>Catégorie</th>
+              <th>Produits</th>
+              <th>Sur place</th>
+              <th>À emporter</th>
+            </tr>
+          </thead>
+          <tbody>
+            {state.categories.map((c) => {
+              const select = (
+                field: "onsite_rate_id" | "takeaway_rate_id",
+                label: string,
+              ) => (
+                <select
+                  aria-label={`${label} : ${c.category}`}
+                  disabled={busy}
+                  value={c[field] ?? ""}
+                  onChange={(e) => {
+                    const next = { ...c, [field]: e.target.value || null };
+                    void run({
+                      action: "categoryVat",
+                      category: c.category,
+                      onsite: next.onsite_rate_id,
+                      takeaway: next.takeaway_rate_id,
+                    });
+                  }}
+                >
+                  <option value="">À préciser</option>
+                  {rates.map((r) => (
+                    <option key={r.id} value={r.id}>
+                      {r.label}
+                    </option>
+                  ))}
+                </select>
+              );
+              return (
+                <tr key={c.category}>
+                  <td>{c.category}</td>
+                  <td>{c.products}</td>
+                  <td>{select("onsite_rate_id", "TVA sur place")}</td>
+                  <td>{select("takeaway_rate_id", "TVA à emporter")}</td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+
+      <div className="section-heading">
+        <h2>Calcul de la TVA collectée</h2>
+      </div>
+      <p className="note">
+        Calcul à partir des écritures préparées, pour vous aider à déclarer. La
+        déclaration et le paiement de la TVA restent à votre charge.
+      </p>
+      <div className="card table-scroll">
+        <table>
+          <thead>
+            <tr>
+              <th>Mois</th>
+              <th>Taux</th>
+              <th>Base HT</th>
+              <th>TVA collectée</th>
+            </tr>
+          </thead>
+          <tbody>
+            {state.vatSummary.map((v) => (
+              <tr key={`${v.month}-${v.label}`}>
+                <td>{v.month}</td>
+                <td>{v.label}</td>
+                <td>{money(Number(v.net))}</td>
+                <td>{money(Number(v.vat))}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+        {!state.vatSummary.length && (
+          <p className="empty">Aucune vente comptabilisée pour le moment.</p>
+        )}
+      </div>
+
+      <div className="section-heading">
         <h2>TVA par produit</h2>
         <Button variant="secondary" onClick={editSettings}>
           Régime et comptes
@@ -441,7 +567,8 @@ export function FinanceCenter({ restaurant }: { restaurant: string }) {
       <p className="note">
         Le taux dépend du produit et du mode de consommation : c’est à vous, ou
         à votre expert-comptable, de le choisir. Aucun taux n’est déduit
-        automatiquement. Il s’applique aux prochaines ventes.
+        automatiquement. Il s’applique aux prochaines ventes, et un taux de
+        produit prime sur celui de sa catégorie.
       </p>
       <div className="card table-scroll">
         <table>
@@ -473,7 +600,7 @@ export function FinanceCenter({ restaurant }: { restaurant: string }) {
                     });
                   }}
                 >
-                  <option value="">{rateLabel(null)}</option>
+                  <option value="">Selon la catégorie</option>
                   {rates.map((r) => (
                     <option key={r.id} value={r.id}>
                       {r.label}

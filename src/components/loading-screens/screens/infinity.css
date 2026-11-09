@@ -1,0 +1,39 @@
+.ls-infinity-track {
+  stroke: var(--ls-primary);
+  stroke-width: 7;
+  opacity: 0.18;
+}
+.ls-infinity-trail,
+.ls-infinity-line {
+  stroke: var(--ls-primary);
+  stroke-width: 7;
+  stroke-dasharray: 30 70;
+  animation: ls-infinity-run calc(2.6s / var(--ls-speed)) linear infinite;
+}
+.ls-infinity-trail {
+  opacity: 0.55;
+  filter: blur(4px);
+}
+.ls-infinity-line {
+  stroke: var(--ls-secondary);
+  stroke-dasharray: 12 88;
+  stroke-dashoffset: -18;
+  filter: drop-shadow(0 0 6px var(--ls-secondary));
+  animation-name: ls-infinity-head;
+}
+@keyframes ls-infinity-run {
+  from {
+    stroke-dashoffset: 0;
+  }
+  to {
+    stroke-dashoffset: -100;
+  }
+}
+@keyframes ls-infinity-head {
+  from {
+    stroke-dashoffset: -18;
+  }
+  to {
+    stroke-dashoffset: -118;
+  }
+}

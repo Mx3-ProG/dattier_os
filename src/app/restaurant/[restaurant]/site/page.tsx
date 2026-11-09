@@ -18,6 +18,7 @@ export default async function Page({
       restaurantName={access.restaurantName}
       plan={access.plan}
       userRoles={access.roles}
+      addons={access.addons}
       demo={demoEnabled()}
     />
   );

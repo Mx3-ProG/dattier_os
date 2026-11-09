@@ -92,6 +92,13 @@ export async function initializeRestaurant(db: DB, r: string) {
 export async function overview(db: DB, user: Actor) {
   return {
     user,
+    platformAdmin: (
+      await one<{ allowed: boolean }>(
+        db,
+        "SELECT app.is_platform_admin($1) AS allowed",
+        [user.id],
+      )
+    ).allowed,
     organizations: await rows(
       db,
       "SELECT o.*,m.role,p.*,s.referral_code,s.referrals,s.paying_referrals,s.activated_total,s.activated_month,s.credits FROM organizations o JOIN organization_memberships m ON m.organization_id=o.id CROSS JOIN LATERAL app.organization_plan(o.id) p LEFT JOIN LATERAL app.referral_summary(o.id) s ON true WHERE m.profile_id=$1 ORDER BY o.name",

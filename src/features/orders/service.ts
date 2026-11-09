@@ -1,4 +1,4 @@
-import { requirePlan } from "@/features/platform/entitlements";
+import { requireCommercialCapability } from "@/features/platform/entitlements";
 import { processPayment } from "@/features/finance/books";
 import { mirrorAudit } from "@/features/ops-security/events";
 import { redeemPromo } from "@/features/loyalty/service";
@@ -135,7 +135,7 @@ export async function createOrder(
     [input.restaurant],
   );
   if (!locked) throw new Error("Établissement non autorisé.");
-  await requirePlan(db, input.restaurant, input.channel === "staff" ? 39 : 99);
+  await requireCommercialCapability(db, input.restaurant, input.channel === "staff" ? "operations" : "online-orders");
   const fingerprint = createHash("sha256")
     .update(JSON.stringify(input))
     .digest("hex");

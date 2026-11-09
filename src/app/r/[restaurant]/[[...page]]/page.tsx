@@ -17,6 +17,8 @@ import { findRedirect, siteLocale } from "@/features/seo/locale";
 import { effectiveTitle, effectiveDescription } from "@/features/seo/meta";
 import { DonutStore } from "@/components/cms-site/store";
 import { TenantSiteProvider } from "@/components/cms-site/context";
+import { AudienceBeacon } from "@/components/cms-site/audience-beacon";
+import { isAudienceMode } from "@/features/analytics/consent";
 import "@/app/donuts.css";
 import "@/app/site-sections.css";
 import "@/app/customer-account.css";
@@ -38,9 +40,14 @@ const loadSite = cache(
           await db.exec("SET LOCAL ROLE atacuisine_app");
           await one(db, "SELECT id FROM restaurants WHERE id=$1", [restaurant]);
           const plan = await restaurantPlan(db, restaurant);
+          const { websiteInstalled, shopInstalled } = await one<{ websiteInstalled: boolean; shopInstalled: boolean }>(
+            db,
+            'SELECT app.addon_installed($1,\'website\') AS "websiteInstalled", app.addon_installed($1,\'online-orders\') AS "shopInstalled"',
+            [restaurant],
+          );
           if (
-            plan < 69 ||
-            (plan < 99 && ["commander", "checkout", "panier"].includes(raw))
+            plan < 69 || !websiteInstalled ||
+            ((!shopInstalled || plan < 99) && ["commander", "checkout", "panier"].includes(raw))
           )
             notFound();
           const cms = website(restaurant);
@@ -50,6 +57,8 @@ const loadSite = cache(
               ? await cms.getDraftConfig(db)
               : await cms.getVersionConfig(db, mode.slice(8))
             : await cms.getPublishedConfig(db);
+          const estimationEnabled = (await one<{ enabled: boolean }>(db,
+            "SELECT app.estimation_public($1) IS NOT NULL AS enabled", [restaurant])).enabled;
           const route = raw === "account" ? "compte" : raw;
           const isProduct = /^produits\/[^/]+$/.test(route);
           const key = isProduct ? "carte" : route || "home";
@@ -91,7 +100,8 @@ const loadSite = cache(
           return {
             product,
             redirect: null,
-            shopEnabled: plan >= 99,
+            shopEnabled: plan >= 99 && shopInstalled,
+            estimationEnabled,
             restaurant,
             route,
             key,
@@ -101,6 +111,15 @@ const loadSite = cache(
             preview,
             urls,
             publishedAt: facts.publishedAt,
+            // Le collecteur n’existe sur la page que si l’établissement l’a activé.
+            audience: preview
+              ? null
+              : (
+                  await db.query<{ mode: string | null }>(
+                    "SELECT app.analytics_public_config($1) AS mode",
+                    [restaurant],
+                  )
+                ).rows[0]?.mode ?? null,
           };
         }),
     );
@@ -204,7 +223,9 @@ export default async function Page(props: Props) {
       shopEnabled={data.shopEnabled}
       preview={data.preview}
       platformOrigin={demoEnabled() ? "" : process.env.APP_URL || ""}
+      audience={isAudienceMode(data.audience) ? data.audience : null}
     >
+      {isAudienceMode(data.audience) && <AudienceBeacon />}
       {jsonLd && (
         <script
           type="application/ld+json"
@@ -221,6 +242,7 @@ export default async function Page(props: Props) {
         initialData={data.catalog}
         detailProduct={data.product}
         updatedAt={data.publishedAt}
+        estimationEnabled={data.estimationEnabled}
       />
     </TenantSiteProvider>
   );

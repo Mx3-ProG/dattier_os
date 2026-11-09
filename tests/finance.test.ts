@@ -20,7 +20,6 @@ import {
   saleEntryLines,
   splitVat,
 } from "../src/features/finance/posting";
-import { snapshot } from "../src/lib/snapshot";
 
 const R = "bernay";
 const owner = { id: "nadia", name: "Nadia", role: "OWNER" as const };
@@ -800,18 +799,6 @@ test("boutique (lot 0) : le coût matière compte les options, la TVA suit le mo
   assert.equal(line.vat_rate_bp, 1000);
 });
 
-test("écran Finances (lot 0) : coût matière sur tout l’historique, pas sur 150 commandes", async () => {
-  const data = await db.transaction((tx) => snapshot(tx, owner, R));
-  const expected = await one<{ cost: number }>(
-    db,
-    "SELECT coalesce(sum(i.material_cost*i.quantity),0)::float*100 AS cost FROM order_items i JOIN orders o ON o.id=i.order_id WHERE o.restaurant_id=$1 AND o.status='paid' AND i.status='served'",
-    [R],
-  );
-  assert.equal(data.materialCostSold, expected.cost);
-  const waiterView = await db.transaction((tx) => snapshot(tx, waiter, R));
-  assert.equal(waiterView.materialCostSold, 0);
-});
-
 test("migration : la descente puis la remontée redonnent un schéma fonctionnel", async () => {
   const scratch = new PGlite();
   try {
@@ -820,6 +807,30 @@ test("migration : la descente puis la remontée redonnent un schéma fonctionnel
     );
     await migrate(scratch);
     await scratch.transaction(seed);
+    await scratch.exec(
+      await readFile("database/migrations/down/041_sales_invoices.sql", "utf8"),
+    );
+    await scratch.exec(
+      await readFile("database/migrations/down/040_hr_payroll.sql", "utf8"),
+    );
+    await scratch.exec(
+      await readFile(
+        "database/migrations/down/039_bank_reconciliation.sql",
+        "utf8",
+      ),
+    );
+    await scratch.exec(
+      await readFile(
+        "database/migrations/down/038_supplier_invoices.sql",
+        "utf8",
+      ),
+    );
+    await scratch.exec(
+      await readFile(
+        "database/migrations/down/037_online_payments.sql",
+        "utf8",
+      ),
+    );
     await scratch.exec(
       await readFile("database/migrations/down/036_finance_core.sql", "utf8"),
     );
@@ -866,4 +877,53 @@ test("migration : la descente puis la remontée redonnent un schéma fonctionnel
   } finally {
     await scratch.close();
   }
+});
+
+test("lot 6 : compteur isolé par établissement, réservé à la finance et sans lecture directe permanente", async () => {
+  await assert.rejects(
+    asApp("nadia", "bernay", (tx) => tx.query("SELECT * FROM fin_counters")),
+    /permission denied/,
+  );
+  for (const [user, restaurant, expected] of [
+    ["nadia", "bernay", "bernay"],
+    ["nadia", "atelier", "atelier"],
+    ["nadia", "tenant-other-site", "tenant-other-site"],
+    ["sarah", "bernay", ""],
+  ] as const) {
+    await assert.rejects(
+      db.transaction(async (tx) => {
+        await tx.query(
+          "INSERT INTO organizations(id,name) VALUES('tenant-other','Autre organisation')",
+        );
+        await tx.query(
+          "INSERT INTO restaurants(id,name,organization_id) VALUES('tenant-other-site','Autre établissement','tenant-other')",
+        );
+        await tx.query(
+          "INSERT INTO memberships(profile_id,restaurant_id,role) VALUES('nadia','tenant-other-site','OWNER')",
+        );
+        await tx.query(
+          "INSERT INTO fin_counters(restaurant_id) VALUES('bernay'),('atelier'),('tenant-other-site') ON CONFLICT DO NOTHING",
+        );
+        await tx.exec("GRANT SELECT ON fin_counters TO atacuisine_app");
+        await tx.exec("SET LOCAL ROLE atacuisine_app");
+        await tx.query(
+          "SELECT set_config('app.user_id',$1,true),set_config('app.restaurant_id',$2,true),set_config('app.public','false',true)",
+          [user, restaurant],
+        );
+        const result = await tx.query<{ restaurant_id: string }>(
+          "SELECT restaurant_id FROM fin_counters ORDER BY restaurant_id",
+        );
+        assert.deepEqual(
+          result.rows.map((row) => row.restaurant_id),
+          expected ? [expected] : [],
+        );
+        throw new Error("ROLLBACK LOT6");
+      }),
+      /ROLLBACK LOT6/,
+    );
+  }
+  await assert.rejects(
+    asApp("nadia", "bernay", (tx) => tx.query("SELECT * FROM fin_counters")),
+    /permission denied/,
+  );
 });

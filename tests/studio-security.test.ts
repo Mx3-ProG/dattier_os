@@ -126,6 +126,18 @@ test("Sécurité complète : journal masqué entre restaurants, secrets expurgé
   assert.ok(!JSON.stringify(other).includes("test.security"));
   await assert.rejects(
     app("bernay", (tx) =>
+      listEvents(nestedDatabase(tx), scope, { scope: "atelier" }),
+    ),
+    /Établissement non autorisé/,
+  );
+  await assert.rejects(
+    app("bernay", (tx) =>
+      listEvents(nestedDatabase(tx), scope, { scope: "platform" }),
+    ),
+    /Établissement non autorisé/,
+  );
+  await assert.rejects(
+    app("bernay", (tx) =>
       securityScope(
         tx,
         { id: "sarah", name: "Sarah", role: "WAITER" },
@@ -158,4 +170,36 @@ test("Sécurité : maintenance persistante et archives quotidiennes intègres", 
     app("bernay", (tx) => tx.query("DELETE FROM ops_security_archives")),
     /ajout seul/,
   );
+});
+
+test("archives de sécurité : même journée indépendante pour deux établissements", async () => {
+  const day = new Date(Date.now() - 5 * 86400000).toISOString().slice(0, 10);
+  for (const restaurant of ["bernay", "atelier"]) {
+    await app(restaurant, async (tx) => {
+      await tx.query("SELECT set_config('donuts.security_import','on',true)");
+      await tx.query(
+        "INSERT INTO ops_security_events(event_id,occurred_at,severity,event_type,module,action,restaurant_id,message) VALUES($1,$2::date+interval '12 hours',2,'test.tenant','security','Archive isolée',$3,$4)",
+        [`archive-${restaurant}`, day, restaurant, `Événement ${restaurant}`],
+      );
+    });
+    await app(restaurant, (tx) =>
+      archiveDay(nestedDatabase(tx), day, { archiveDir: null }),
+    );
+  }
+  const archives = await db.query<{
+    restaurant_id: string;
+    payload: { restaurant_id: string; message: string }[];
+  }>(
+    "SELECT restaurant_id,payload FROM ops_security_archives WHERE day=$1 ORDER BY restaurant_id",
+    [day],
+  );
+  assert.deepEqual(
+    archives.rows.map((row) => row.restaurant_id),
+    ["atelier", "bernay"],
+  );
+  for (const row of archives.rows) {
+    assert.equal(row.payload.length, 1);
+    assert.equal(row.payload[0].restaurant_id, row.restaurant_id);
+    assert.equal(row.payload[0].message, `Événement ${row.restaurant_id}`);
+  }
 });

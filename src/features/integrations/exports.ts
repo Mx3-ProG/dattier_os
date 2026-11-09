@@ -29,7 +29,7 @@ export async function exportCsv(
         )
       : await rows<Record<string, unknown>>(
           db,
-          "SELECT t.id AS reference,t.profile_id AS collaborateur,p.name AS nom,t.event AS evenement,t.created_at AS date FROM time_entries t JOIN profiles p ON p.id=t.profile_id WHERE t.restaurant_id=$1 AND t.created_at>=$2::date AND t.created_at<$3::date+1 ORDER BY t.created_at,t.id LIMIT 10001",
+          "SELECT t.id AS reference,t.profile_id AS collaborateur,p.name AS nom,t.event AS evenement,t.created_at AS date FROM time_entries t JOIN profiles p ON p.id=t.profile_id WHERE t.restaurant_id=$1 AND t.voided_at IS NULL AND t.created_at>=$2::date AND t.created_at<$3::date+1 ORDER BY t.created_at,t.id LIMIT 10001",
           [r, from, to],
         );
   if (data.length > 10000)

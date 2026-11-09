@@ -4,6 +4,7 @@ import { rows, one, type DB } from "@/lib/database/db";
 import { scope, type Actor } from "@/lib/auth/session";
 import { requirePermission } from "@/lib/permissions";
 import { log, changeItem } from "@/features/orders/service";
+import { requirePaidAddon } from "@/features/platform/entitlements";
 const id = z.string().min(1).max(150);
 export const offlineAction = z.discriminatedUnion("action", [
   z.object({
@@ -65,6 +66,8 @@ async function device(db: DB, r: string, user: Actor, id: string) {
 }
 export async function offlineState(db: DB, r: string, user: Actor) {
   await scope(db, user, r);
+  const conflictsEnabled=(await one<{enabled:boolean}>(db,
+    "SELECT app.addon_installed($1,'offline-conflicts') AS enabled",[r])).enabled;
   return {
     devices: await rows(
       db,
@@ -81,11 +84,11 @@ export async function offlineState(db: DB, r: string, user: Actor) {
       "SELECT o.id,o.status,o.error FROM offline_operations o JOIN offline_devices d ON d.id=o.device_id WHERE d.restaurant_id=$1 AND d.profile_id=$2 ORDER BY o.created_at DESC LIMIT 1000",
       [r, user.id],
     ),
-    conflicts: await rows(
+    conflicts: conflictsEnabled ? await rows(
       db,
       "SELECT o.id,o.error,o.payload FROM offline_operations o JOIN offline_devices d ON d.id=o.device_id WHERE d.restaurant_id=$1 AND d.profile_id=$2 AND o.status='conflict' ORDER BY o.created_at DESC LIMIT 100",
       [r, user.id],
-    ),
+    ) : [],
   };
 }
 export async function offlinePerform(
@@ -98,6 +101,7 @@ export async function offlinePerform(
   requirePermission(user.roles ?? user.role, "orders");
   const a = offlineAction.parse(raw);
   if (a.action === "resolveConflict") {
+    await requirePaidAddon(db,r,"offline-conflicts");
     if (
       !(user.roles ?? [user.role]).some((role) =>
         ["OWNER", "MANAGER", "SUPER_ADMIN"].includes(role),

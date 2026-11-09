@@ -110,7 +110,7 @@ export function ReferralProgram({ organization }: { organization?: string }) {
   return (
     <main className="platform access-home">
       <nav className="access-nav" aria-label="Compte">
-        <Link href="/" className="access-brand">atacuisine</Link>
+        <Link href="/" className="access-brand">STUDIO OS</Link>
         <Link className="referral-back" href="/platform"><ArrowLeft size={14} aria-hidden /> Mon espace</Link>
       </nav>
       <div className="platform-home-content referral-program">
@@ -264,7 +264,7 @@ function ProgramBody({
 
 function ShareKit({ link, name }: { link: string; name: string }) {
   const [svg, setSvg] = useState("");
-  const message = `Je gère ${name} avec atacuisine : salle, commandes, stocks et site au même endroit. Avec mon lien, ton premier mois est offert : ${link}`;
+  const message = `Je gère ${name} avec STUDIO OS : salle, commandes, stocks et site au même endroit. Avec mon lien, ton premier mois est offert : ${link}`;
   useEffect(() => {
     if (!link.startsWith("http")) return;
     QRCode.toString(link, { type: "svg", margin: 1, color: { dark: "#18372d", light: "#fffdf8" } })
@@ -291,14 +291,14 @@ function ShareKit({ link, name }: { link: string; name: string }) {
           <a href={`https://wa.me/?text=${encoded}`} target="_blank" rel="noopener noreferrer">
             <MessageCircle size={15} aria-hidden /> WhatsApp
           </a>
-          <a href={`mailto:?subject=${encodeURIComponent("Ton premier mois atacuisine offert")}&body=${encoded}`}>
+          <a href={`mailto:?subject=${encodeURIComponent("Ton premier mois STUDIO OS offert")}&body=${encoded}`}>
             <Mail size={15} aria-hidden /> E-mail
           </a>
           <a href={`sms:?&body=${encoded}`}>
             <MessageSquare size={15} aria-hidden /> SMS
           </a>
           {canShare && (
-            <button type="button" onClick={() => navigator.share({ title: "atacuisine", text: message, url: link }).catch(() => undefined)}>
+            <button type="button" onClick={() => navigator.share({ title: "STUDIO OS", text: message, url: link }).catch(() => undefined)}>
               <Share2 size={15} aria-hidden /> Partager
             </button>
           )}

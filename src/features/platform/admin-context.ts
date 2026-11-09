@@ -13,6 +13,10 @@ export async function restaurantAdminContext(restaurant: string) {
       restaurantName: result.rows[0]?.name ?? restaurant,
       plan: await restaurantPlan(db, restaurant),
       roles: scopedUser.roles ?? [scopedUser.role],
+      addons: (await db.query<{addon:string}>(
+        "SELECT addon FROM unnest(ARRAY['loyalty','offline-conflicts','connections']) AS addon WHERE app.addon_installed($1,addon)",
+        [restaurant],
+      )).rows.map(row=>row.addon),
     };
   });
 }

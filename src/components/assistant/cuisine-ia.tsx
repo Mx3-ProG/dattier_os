@@ -1,5 +1,5 @@
 "use client";
-/* Cuisine IA : l’assistant du restaurateur, à l’écrit ou à la voix.
+/* STUDIO VOICE : l’assistant du restaurateur, à l’écrit ou à la voix.
    Ouvrable de partout via openCuisineIa() (bouton du poste, guide, admin). */
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
@@ -62,7 +62,7 @@ type State = {
 type Status = { state: "running" | "done" | "dismissed" | "error"; error?: string };
 
 const OPEN_EVENT = "cuisine-ia:open";
-/** Ouvre Cuisine IA, éventuellement avec une question déjà posée. */
+/** Ouvre STUDIO VOICE, éventuellement avec une question déjà posée. */
 export function openCuisineIa(prompt?: string) {
   window.dispatchEvent(new CustomEvent(OPEN_EVENT, { detail: { prompt } }));
 }
@@ -382,7 +382,7 @@ export function CuisineIa({
           body: JSON.stringify({ kind: "ask", message, history, voice: spokenReply, followUp }),
         });
         const d = await r.json();
-        if (!r.ok) throw new Error(d.error?.message || "Cuisine IA est indisponible.");
+        if (!r.ok) throw new Error(d.error?.message || "STUDIO VOICE est indisponible.");
         const reply = d as Reply;
         setMessages((m) => [...m, { id: uid(), role: "assistant", text: reply.reply, ...reply }]);
         setState((s) => (s ? { ...s, balance: reply.balance } : s));
@@ -505,19 +505,19 @@ export function CuisineIa({
   return (
     <>
       {launcher && !open && (
-        <button data-tour="ia-button" className={`cia-launcher ${docked ? "docked" : ""}`} onClick={() => openCuisineIa()} aria-label="Ouvrir Cuisine IA">
+        <button data-tour="ia-button" className={`cia-launcher ${docked ? "docked" : ""}`} onClick={() => openCuisineIa()} aria-label="Ouvrir STUDIO VOICE">
           <Sparkles size={20} aria-hidden />
-          <span>Cuisine IA</span>
+          <span>STUDIO VOICE</span>
         </button>
       )}
       {open && (
-        <section className="cia-panel" role="dialog" aria-label="Cuisine IA">
+        <section className="cia-panel" role="dialog" aria-label="STUDIO VOICE">
           <header className="cia-head">
             <span className="cia-mark" aria-hidden>
               <Sparkles size={18} />
             </span>
             <div className="cia-title">
-              <strong>Cuisine IA</strong>
+              <strong>STUDIO VOICE</strong>
               <small>
                 {voice
                   ? listening
@@ -538,21 +538,21 @@ export function CuisineIa({
                 if (view !== "credits") void refresh();
                 setView(view === "credits" ? "chat" : "credits");
               }}
-              aria-label="Mes crédits Cuisine IA"
+              aria-label="Mes crédits STUDIO VOICE"
             >
               <Coins size={14} aria-hidden /> {state ? state.balance.toLocaleString("fr-FR") : "…"}
             </button>
-            <button className="cia-icon" onClick={() => { stopVoice(); setView(view === "settings" ? "chat" : "settings"); }} aria-label="Paramètres de Cuisine IA" aria-pressed={view === "settings"}>
+            <button className="cia-icon" onClick={() => { stopVoice(); setView(view === "settings" ? "chat" : "settings"); }} aria-label="Paramètres de STUDIO VOICE" aria-pressed={view === "settings"}>
               <Settings size={18} />
             </button>
-            <button className="cia-icon" onClick={() => setOpen(false)} aria-label="Fermer Cuisine IA">
+            <button className="cia-icon" onClick={() => setOpen(false)} aria-label="Fermer STUDIO VOICE">
               <X size={18} />
             </button>
           </header>
 
           {view === "settings" ? (
             <div className="cia-body cia-settings">
-              <h2>Paramètres de Cuisine IA</h2>
+              <h2>Paramètres de STUDIO VOICE</h2>
               <p>Personnalisez la voix de synthèse. Vos choix sont conservés dans ce navigateur et s’appliquent à vos prochaines réponses vocales.</p>
               <label htmlFor="cia-voice">Voix disponible sur cet appareil</label>
               <select id="cia-voice" value={voices.some(v => v.voiceURI === preferences.voiceURI) ? preferences.voiceURI : ""} onChange={e => updatePreferences({ ...preferences, voiceURI: e.target.value })}>
@@ -565,7 +565,7 @@ export function CuisineIa({
               <input id="cia-rate" type="range" min="0.6" max="1.5" step="0.05" value={preferences.rate} onChange={e => updatePreferences({ ...preferences, rate: Number(e.target.value) })} />
               <label htmlFor="cia-pitch">Hauteur · {preferences.pitch.toFixed(2)}</label>
               <input id="cia-pitch" type="range" min="0.5" max="1.5" step="0.05" value={preferences.pitch} onChange={e => updatePreferences({ ...preferences, pitch: Number(e.target.value) })} />
-              <button className="cia-back" disabled={!voices.length} onClick={() => speaking ? window.speechSynthesis.cancel() : speak("Bonjour, je suis Cuisine IA. Je vous aide à gérer votre restaurant. Voilà un aperçu de ma voix.")}>{speaking ? "Arrêter l’aperçu" : "Écouter cette voix"}</button>
+              <button className="cia-back" disabled={!voices.length} onClick={() => speaking ? window.speechSynthesis.cancel() : speak("Bonjour, je suis STUDIO VOICE. Je vous aide à gérer votre restaurant. Voilà un aperçu de ma voix.")}>{speaking ? "Arrêter l’aperçu" : "Écouter cette voix"}</button>
               <button className="cia-back" onClick={() => updatePreferences({ voiceURI: "", rate: 1.05, pitch: 1 })}>Rétablir les réglages par défaut</button>
               <p>Voix du navigateur, sans intégration d’un service payant. Certaines voix utilisent une connexion Internet. Leur qualité varie selon l’appareil. Les voix OpenAI ne sont pas connectées.</p>
               <p>Moteur actuel : {state?.llm ? "réflexe et IA avancée" : "réflexe"}. Les actions de gestion restent soumises à votre confirmation.</p>
@@ -653,7 +653,7 @@ export function CuisineIa({
                   </div>
                   {voiceSupported && (
                     <button className="cia-voice-cta" onClick={startVoice}>
-                      <Mic size={16} aria-hidden /> Parler à Cuisine IA en temps réel
+                      <Mic size={16} aria-hidden /> Parler à STUDIO VOICE en temps réel
                     </button>
                   )}
                 </div>
@@ -757,7 +757,7 @@ export function CuisineIa({
                 </div>
               ))}
               {busy && (
-                <div className="cia-msg assistant cia-typing" aria-label="Cuisine IA réfléchit">
+                <div className="cia-msg assistant cia-typing" aria-label="STUDIO VOICE réfléchit">
                   <i />
                   <i />
                   <i />
@@ -813,13 +813,13 @@ export function CuisineIa({
                       void send(input);
                     }
                   }}
-                  aria-label="Votre demande à Cuisine IA"
+                  aria-label="Votre demande à STUDIO VOICE"
                 />
                 <button type="submit" className="cia-send" disabled={busy || !input.trim()} aria-label="Envoyer">
                   {busy ? <Loader2 size={18} className="cia-spin" /> : <ArrowUp size={18} />}
                 </button>
               </div>
-              <small className="cia-foot">Cuisine IA prépare, vous confirmez. ⌘K pour l’ouvrir.</small>
+              <small className="cia-foot">STUDIO VOICE prépare, vous confirmez. ⌘K pour l’ouvrir.</small>
             </form>
           )}
         </section>

@@ -1,0 +1,69 @@
+.ls-golden {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+}
+.ls-golden > * {
+  grid-area: 1 / 1;
+}
+.ls-golden-ring {
+  border-radius: 50%;
+  background: conic-gradient(
+    from 0deg,
+    #6f5420,
+    var(--ls-primary) 14%,
+    var(--ls-secondary) 24%,
+    var(--ls-primary) 34%,
+    #6f5420 52%,
+    #9c7c34 66%,
+    var(--ls-secondary) 76%,
+    #9c7c34 86%,
+    #6f5420
+  );
+  -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - var(--w)), #000 calc(100% - var(--w) + 1px));
+  mask: radial-gradient(farthest-side, transparent calc(100% - var(--w)), #000 calc(100% - var(--w) + 1px));
+  animation: ls-golden-turn calc(var(--t) / var(--ls-speed)) cubic-bezier(0.45, 0.05, 0.55, 0.95) infinite;
+}
+.ls-golden-ring.is-outer {
+  --w: 5px;
+  --t: 7s;
+  width: 176px;
+  height: 176px;
+}
+.ls-golden-ring.is-middle {
+  --w: 3px;
+  --t: 5s;
+  width: 132px;
+  height: 132px;
+  animation-direction: reverse;
+}
+.ls-golden-ring.is-inner {
+  --w: 7px;
+  --t: 3.5s;
+  width: 92px;
+  height: 92px;
+}
+.ls-golden-gem {
+  width: 24px;
+  height: 24px;
+  background: linear-gradient(135deg, var(--ls-secondary), var(--ls-primary) 55%, #6f5420);
+  clip-path: polygon(50% 0, 100% 50%, 50% 100%, 0 50%);
+  animation: ls-golden-gem calc(3.5s / var(--ls-speed)) ease-in-out infinite;
+}
+@keyframes ls-golden-turn {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@keyframes ls-golden-gem {
+  0%,
+  100% {
+    transform: scale(0.85);
+    filter: brightness(0.9);
+  }
+  50% {
+    transform: scale(1.1);
+    filter: brightness(1.25);
+  }
+}

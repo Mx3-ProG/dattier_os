@@ -14,6 +14,8 @@ Cuisine IA est l’assistant intégré au poste de travail (`/dashboard`), à l�
 | API | `src/app/api/restaurants/[restaurant]/assistant/route.ts` | `GET` renvoie le solde, les packs et l’historique. `POST {kind:"ask"}` envoie une question, `POST {kind:"pack"}` une demande de recharge. |
 | Interface | `src/components/assistant/cuisine-ia.tsx` | Panneau de conversation, cartes d’action, suggestions, mode vocal (Web Speech) et recharge. |
 
+Questions financières : `src/features/assistant/finance.ts` répond directement aux questions reconnues, et l’outil `read_finance` sert l’IA générative. Les deux lisent `financeDashboard`, en lecture seule, avec droits revérifiés et statut sur chaque chiffre. Un chiffre sans donnée est annoncé comme indisponible.
+
 Pour la sécurité, l’assistant ne voit que le snapshot de l’utilisateur, donc uniquement ses droits. Il n’exécute rien seul. Chaque action confirmée repasse par `perform`, qui revérifie les permissions, les stocks et les transitions.
 
 ## Gestion de bout en bout

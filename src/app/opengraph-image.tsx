@@ -4,7 +4,7 @@ import { ImageResponse } from "next/og";
 import { FORK_PATH, KNIFE_PATH } from "@/components/brand/paths";
 
 export const alt =
-  "atacuisine — commandes, salle, réservations, stocks, équipe et site web dans un seul outil";
+  "STUDIO OS — commandes, salle, réservations, stocks, équipe et site web dans un seul outil";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
@@ -80,7 +80,7 @@ export default async function Image() {
               color: "#344d3e",
             }}
           >
-            atacuisine
+            STUDIO OS
           </div>
         </div>
         <div style={{ display: "flex", flexDirection: "column", gap: 22 }}>

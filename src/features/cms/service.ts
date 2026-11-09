@@ -1,4 +1,4 @@
-import { requirePlan } from "@/features/platform/entitlements";
+import { requireCommercialCapability } from "@/features/platform/entitlements";
 import { randomUUID } from "node:crypto";
 
 import { z } from "zod";
@@ -31,7 +31,7 @@ export function website(SHOP: string) {
   /** Server-side gate: membership of the shop, then the `website` permission. */
   async function siteScope(db: DB, user: Actor): Promise<SiteScope> {
     const scoped = await scope(db, user, SHOP);
-    await requirePlan(db, SHOP, 69);
+    await requireCommercialCapability(db, SHOP, "website");
     requirePermission(scoped.roles ?? scoped.role, "website");
     return {
       user: scoped,
@@ -316,7 +316,7 @@ export function website(SHOP: string) {
               throw new Error("Média d’un autre restaurant refusé.");
             await one(
               db,
-              "SELECT id FROM cms_media WHERE restaurant_id=$1 AND file=$2 AND archived_at IS NULL",
+              "SELECT id FROM cms_media WHERE restaurant_id=$1 AND file=$2 AND archived_at IS NULL AND status='ready'",
               [SHOP, value.slice(prefix.length)],
             );
           } else if (value && typeof value === "object") {

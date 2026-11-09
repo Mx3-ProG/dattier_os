@@ -35,7 +35,7 @@ export function Demo({ returnTo = "/dashboard" }: { returnTo?: string }) {
   return (
     <main className="demo">
       <Link href="/" className="brand">
-        <UtensilsCrossed /> atacuisine
+        <UtensilsCrossed /> STUDIO OS
       </Link>
       <div className="eyebrow">UN RESTAURANT. UNE ÉQUIPE. UN MÊME OUTIL.</div>
       <h1>Entrez dans les coulisses.</h1>

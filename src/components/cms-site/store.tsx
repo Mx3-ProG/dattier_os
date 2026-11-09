@@ -32,6 +32,7 @@ import {
   ExternalLink,
   UserRound,
   Zap,
+  CalendarDays,
 } from "lucide-react";
 import type {
   Product,
@@ -56,6 +57,7 @@ import {
 } from "@/features/cms/schema";
 import { rich, type PlaceholderContext } from "@/features/cms/text";
 import { themeCss } from "@/features/cms/theme";
+import { bookingFirst } from "@/features/cms/defaults";
 import {
   Categories,
   Cta,
@@ -120,6 +122,7 @@ export function DonutStore({
   updatedAt = null,
   initialCategory = "Tout",
   detailProduct,
+  estimationEnabled = false,
 }: {
   route: string;
   config: SiteConfig;
@@ -132,6 +135,7 @@ export function DonutStore({
   updatedAt?: string | null;
   initialCategory?: string;
   detailProduct?: Product;
+  estimationEnabled?: boolean;
 }) {
   const nextRouter = useRouter();
   const {
@@ -485,6 +489,10 @@ export function DonutStore({
     ([, page]) => page.kind === "custom" && page.visible,
   );
   const page = config.pages[route || "home"] ?? { sections: [] as Section[] },
+    canReserve = !!config.pages.reservations?.sections.some(
+      (s) =>
+        s.visible && s.type === "system" && s.props.block === "reservationForm",
+    ),
     ctx: PlaceholderContext = {
       ...context,
       ...(data
@@ -842,7 +850,12 @@ export function DonutStore({
             <div className="donut-hours">
               <h3>{r(p.hoursTitle)}</h3>
               {p.hoursNote && <p>{r(p.hoursNote)}</p>}
-              {[
+              {data && data.settings.hours.length === 0 ? (
+                <p className="donut-hours-empty">
+                  Horaires communiqués prochainement par l’établissement.
+                </p>
+              ) : (
+              [
                 "Dimanche",
                 "Lundi",
                 "Mardi",
@@ -861,7 +874,8 @@ export function DonutStore({
                       .join(" / ") || "Fermé"}
                   </b>
                 </div>
-              ))}
+              ))
+              )}
               <SiteLink link={p.cta} className="donut-button">
                 <ArrowRight size={18} />
               </SiteLink>
@@ -1130,9 +1144,9 @@ export function DonutStore({
       );
     if (block === "reservationForm")
       return (
-        <section className="donut-section">
+        <div className="donut-booking">
           <PublicReservation />
-        </section>
+        </div>
       );
     if (block === "orderStart")
       return (
@@ -1294,6 +1308,7 @@ export function DonutStore({
                         try {
                           const d = await shopPost("payment", {
                             token: receipt.token,
+                            path: location.pathname + location.hash,
                           });
                           location.href = d.url;
                         } catch (e) {
@@ -1303,7 +1318,7 @@ export function DonutStore({
                         }
                       }}
                     >
-                      Continuer le paiement Stripe test
+                      Payer en ligne
                     </button>
                   )}
                 <p>
@@ -1484,6 +1499,7 @@ export function DonutStore({
           <Link href="/histoire">{header.navUniverse}</Link>
           <Link href="/contact">{header.navContact}</Link>
           <Link href="/compte">{header.navAccount}</Link>
+          {estimationEnabled && <Link href="/estimation">Estimation</Link>}
         </nav>
         <div className="donut-nav-actions">
           <PublicModeSwitch />
@@ -1494,6 +1510,16 @@ export function DonutStore({
           >
             <UserRound size={20} />
           </Link>
+          {canReserve && (
+            <Link
+              className={`donut-button compact donut-reserve-link${shopEnabled ? " outline" : ""}`}
+              href="/reservations"
+              aria-label="Réserver une table"
+            >
+              <CalendarDays size={17} aria-hidden />
+              <span>Réserver</span>
+            </Link>
+          )}
           {shopEnabled && (
             <>
               <Link className="donut-button compact" href="/commander">
@@ -1528,29 +1554,34 @@ export function DonutStore({
           </div>
         )}
         {detailProduct ? (
-          <section className="donut-section">
+          <section className="donut-section donut-product-page">
             <ProductDetails
               product={detailProduct}
-              image={detailProduct.images[0]}
+              image={detailProduct.images[0] || "/cms/restaurant.svg"}
             >
               <Link className="donut-button outline" href="/carte">
                 Retour à la carte
               </Link>
-              {shopEnabled && detailProduct.portions > 0 && (
+              {shopEnabled && !preview && detailProduct.portions > 0 && (
                 <button
                   type="button"
                   className="donut-button primary"
                   onClick={() => select(detailProduct)}
                 >
-                  Commander ce produit
+                  <ShoppingBag size={18} aria-hidden /> Ajouter à ma commande
                 </button>
+              )}
+              {canReserve && (
+                <Link className="donut-text-link" href="/reservations">
+                  Le déguster sur place ? Réserver une table
+                </Link>
               )}
             </ProductDetails>
             <ProductRecommendations
               product={detailProduct}
               items={data?.products ?? []}
               href={(item) => href(productPath(item.id))}
-              image={(item) => item.images[0]}
+              image={(item) => item.images[0] || "/cms/restaurant.svg"}
             >
               {shopEnabled &&
                 !preview &&
@@ -1576,7 +1607,9 @@ export function DonutStore({
             </ProductRecommendations>
           </section>
         ) : (
-          page.sections.filter((s) => s.visible).map(renderSection)
+          bookingFirst(route, page.sections)
+            .filter((s) => s.visible)
+            .map(renderSection)
         )}
       </main>
       {route !== "checkout" && (
@@ -2233,7 +2266,7 @@ export function DonutStore({
                           Au comptoir · carte ou espèces
                         </option>
                         <option value="stripe" disabled={!data?.stripe}>
-                          En ligne · Stripe test{" "}
+                          En ligne · carte bancaire{" "}
                           {data?.stripe ? "" : "(non configuré)"}
                         </option>
                       </select>

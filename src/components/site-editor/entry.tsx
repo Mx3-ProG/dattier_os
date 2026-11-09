@@ -9,12 +9,14 @@ export function WebsiteStudio({
   restaurantName,
   plan,
   userRoles,
+  addons,
   demo,
 }: {
   restaurant: string;
   restaurantName: string;
   plan: number;
   userRoles: Role[];
+  addons: string[];
   demo: boolean;
 }) {
   const dashboard = `/dashboard?restaurant=${encodeURIComponent(restaurant)}`;
@@ -25,6 +27,7 @@ export function WebsiteStudio({
         restaurantName={restaurantName}
         plan={plan}
         userRoles={userRoles}
+        addons={addons}
         activeModule="site"
         demo={demo}
       >

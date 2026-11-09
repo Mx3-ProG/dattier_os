@@ -1,4 +1,4 @@
-/* Moteur réflexe de Cuisine IA : comprend les demandes courantes du service
+/* Moteur réflexe de STUDIO VOICE : comprend les demandes courantes du service
    (prendre une commande, encaisser, servir, stocks, ventes, réservations,
    navigation, mode d’emploi) sans appel à un modèle. Il est instantané, coûte
    1 crédit et n’a presque aucun coût de fonctionnement. Ce qu’il ne comprend
@@ -53,6 +53,12 @@ export const navigation: [RegExp, string, string][] = [
   [/\b(presences?|pointage)\b/, "attendance", "les présences"],
   [/\b(finances?|rapports?)\b/, "finance", "les finances"],
   [/\bdepenses?\b/, "expenses", "les dépenses"],
+  [/\b(versements?|virements?|retirer l argent)\b/, "payouts", "vos versements"],
+  [/\b(factures? (de |des )?clients?|facturer|avoirs?)\b/, "billing", "les factures clients"],
+  [/\bfactures?\b/, "invoices", "les factures fournisseurs"],
+  [/\b(banque|rapprochement|releves?)\b/, "bank", "la banque"],
+  [/\b(paie|variables de paie)\b/, "payroll", "la paie"],
+  [/\b(absences?|conges?|heures sup\w*)\b/, "hr", "les heures et absences"],
   [/\b(operations? a verifier|comptabilite|ecritures?|tva)\b/, "accounting", "les opérations à vérifier"],
   [/\b(clients?|fidelite)\b/, "customers", "les clients"],
   [/\b(la carte|menu)\b/, "menu", "la carte"],
@@ -125,7 +131,7 @@ const statusLabel: Record<string, string> = {
 function capabilities(ctx: AssistantContext) {
   return answer(
     [
-      `Bonjour ${ctx.user.name.split(" ")[0]}, je suis Cuisine IA. Parlez-moi comme à un second :`,
+      `Bonjour ${ctx.user.name.split(" ")[0]}, je suis STUDIO VOICE. Parlez-moi comme à un second :`,
       "• « Commande table 4 : deux couscous agneau et un thé à la menthe »",
       "• « Encaisse la table 4 en espèces » · « Sers la table 2 »",
       "• « Aide-moi à gérer les stocks » · « Achète 3 kg de fraises chez Primeurs Martin »",
@@ -148,7 +154,7 @@ export function reflex(input: string, ctx: AssistantContext): ReflexResult | nul
 
   if (/\b(credits?|tokens?|solde|jetons?)\b/.test(text) && !/\bclient/.test(text))
     return answer(
-      `Il vous reste **${ctx.balance} crédits** Cuisine IA. Une réponse réflexe coûte 1 crédit, une analyse IA avancée quelques crédits selon sa longueur.`,
+      `Il vous reste **${ctx.balance} crédits** STUDIO VOICE. Une réponse réflexe coûte 1 crédit, une analyse IA avancée quelques crédits selon sa longueur.`,
       { suggestions: ["Recharger mes crédits"] },
       "free",
     );

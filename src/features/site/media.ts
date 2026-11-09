@@ -66,26 +66,20 @@ export async function saveAsset(db: DB, r: string, data: Buffer) {
   );
   return { id, url: `/api/media/${r}/${id}` };
 }
-export async function readAsset(db: DB, r: string, id: string) {
+/** Contrôle dans la transaction, lecture du stockage après sa fermeture. */
+export async function resolveAsset(db: DB, r: string, id: string) {
   const assets = await rows<{ object_key: string; content_type: string }>(
     db,
     "SELECT a.object_key,a.content_type FROM site_assets a JOIN site_documents s ON s.restaurant_id=a.restaurant_id WHERE a.id=$1 AND a.restaurant_id=$2 AND s.published::text LIKE '%'||a.id||'%'",
     [id, r],
   );
   if (!assets.length) return null;
-  if (demoEnabled())
-    return {
-      body: new Uint8Array(await readFile(localPath(assets[0].object_key))),
-      type: assets[0].content_type,
-    };
+  return { key: assets[0].object_key, type: assets[0].content_type };
+}
+export async function openAsset(key: string): Promise<BodyInit> {
+  if (demoEnabled()) return new Uint8Array(await readFile(localPath(key)));
   const result = await storage().send(
-    new GetObjectCommand({
-      Bucket: process.env.S3_BUCKET,
-      Key: assets[0].object_key,
-    }),
+    new GetObjectCommand({ Bucket: process.env.S3_BUCKET, Key: key }),
   );
-  return {
-    body: await result.Body?.transformToByteArray(),
-    type: assets[0].content_type,
-  };
+  return result.Body!.transformToWebStream();
 }

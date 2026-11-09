@@ -39,7 +39,7 @@ export default async function Page({ params }: { params: Promise<{ plan: string 
   return (
     <main className="access-shell">
       <nav className="access-nav" aria-label="Souscription">
-        <Link href="/" className="access-brand"><UtensilsCrossed size={22} /> atacuisine</Link>
+        <Link href="/" className="access-brand"><UtensilsCrossed size={22} /> STUDIO OS</Link>
         <Link href="/#offres">Changer d’offre</Link>
         {user && <form action="/auth/logout" method="post"><button>Se déconnecter</button></form>}
       </nav>

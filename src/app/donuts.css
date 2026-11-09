@@ -2351,3 +2351,146 @@
   min-height: 44px;
   overflow-wrap: anywhere;
 }
+
+/* Réservation embarquée : même parcours que la vitrine de démonstration. */
+.donut-booking > .booking {
+  padding: clamp(48px, 7vw, 96px) max(5vw, 24px);
+}
+.donut-site .booking-head h1,
+.donut-site .booking-done-card h1 {
+  font-size: clamp(34px, 5vw, 56px);
+  letter-spacing: -1.5px;
+}
+.donut-nav-actions .donut-reserve-link {
+  gap: 8px;
+}
+.donut-nav-actions .donut-reserve-link.outline {
+  display: inline-flex;
+  width: auto;
+  margin: 0;
+  color: var(--public-ink, var(--site-ink, #26201f)) !important;
+  border-color: var(--public-line, currentColor);
+}
+.donut-nav-actions .donut-reserve-link.outline:hover {
+  background: var(--public-soft, transparent);
+}
+@media (min-width: 761px) {
+  .donut-header nav a {
+    white-space: nowrap;
+  }
+}
+@media (min-width: 761px) and (max-width: 1480px) {
+  .donut-header nav {
+    gap: 20px;
+  }
+  .donut-nav-actions {
+    gap: 12px;
+  }
+}
+@media (min-width: 761px) and (max-width: 1240px) {
+  /* Icône seule : la navigation garde sa ligne. */
+  .donut-nav-actions .donut-reserve-link {
+    padding: 12px;
+  }
+  .donut-nav-actions .donut-reserve-link span {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+}
+.donut-hours > p.donut-hours-empty {
+  font-size: 15px !important;
+  margin: 0 0 18px !important;
+  padding: 14px 0;
+  border-bottom: 1px solid var(--public-line, #f1e8e1);
+}
+@media (max-width: 760px) {
+  .donut-nav-actions .donut-reserve-link {
+    padding: 10px;
+  }
+  .donut-nav-actions .donut-reserve-link span {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+}
+
+/* Fiche produit : visuel, prix et actions comme sur la démonstration. */
+.donut-product-page .product-details,
+.donut-product-page .product-suggestions {
+  max-width: 1180px;
+  margin-inline: auto;
+}
+.donut-product-page .product-details > img {
+  background: var(--public-soft, #f3efe6);
+  border: 1px solid var(--public-line, #e2d1c6);
+}
+.donut-product-page .product-details > img[src$="restaurant.svg"],
+.donut-product-page .product-suggestion-card img[src$="restaurant.svg"] {
+  object-fit: contain;
+  padding: 10%;
+}
+.donut-product-page .product-details-copy > p:first-child {
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--public-muted, #77625d);
+}
+.donut-site .donut-product-page .product-details-copy h1 {
+  font-size: clamp(40px, 5vw, 64px);
+  letter-spacing: -2px;
+  margin: 6px 0 14px;
+}
+.donut-site .donut-product-page .product-details-copy h2 {
+  font-size: 22px;
+  letter-spacing: -0.3px;
+  margin: 28px 0 6px;
+}
+.donut-product-page .product-details-actions {
+  align-items: center;
+  gap: 14px 20px;
+}
+.donut-product-page .product-details-actions .donut-button {
+  gap: 10px;
+}
+.donut-product-page .product-details-actions .donut-button.outline {
+  display: inline-flex;
+  margin: 0;
+}
+.donut-site .donut-product-page .product-suggestions h2 {
+  font-size: clamp(28px, 3.4vw, 40px);
+  letter-spacing: -1px;
+}
+.donut-product-page .product-suggestion-card {
+  overflow: hidden;
+  background: var(--public-surface, #fffdfb);
+  color: var(--public-ink, var(--site-ink, #26201f));
+  border-color: var(--public-line, #e2d1c6);
+  transition: transform 0.2s;
+}
+.donut-product-page .product-suggestion-card:hover {
+  transform: translateY(-3px);
+}
+.donut-product-page .product-suggestion-card img {
+  background: var(--public-soft, #f3efe6);
+}
+.donut-site .donut-product-page .product-suggestion-grid h3 {
+  color: inherit;
+  font-family: inherit;
+  font-size: 17px;
+  letter-spacing: 0;
+}
+.donut-product-page .product-suggestion-card span {
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--public-muted, #77625d);
+}

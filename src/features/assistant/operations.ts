@@ -1,11 +1,11 @@
-/* Opérations de gestion de Cuisine IA : achats et fournisseurs, réassort,
+/* Opérations de gestion de STUDIO VOICE : achats et fournisseurs, réassort,
    réceptions, pertes, carte et recettes, clients et fidélité, équipe,
    promotions flash, messages clients.
 
    Règle commune : si tout existe déjà, la carte d’action est prête ; s’il
    manque un élément créable (ingrédient, fournisseur), il est ajouté à la même
    carte, avant l’action qui en dépend (valeur « $N ») ; s’il manque une
-   information que seul l’utilisateur connaît, Cuisine IA pose la question et
+   information que seul l’utilisateur connaît, STUDIO VOICE pose la question et
    garde la phrase en attente (followUp) pour la compléter avec la réponse. */
 import { randomUUID } from "node:crypto";
 import {

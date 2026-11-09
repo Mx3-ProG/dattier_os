@@ -1,0 +1,20 @@
+# Test info
+
+- Name: studio-creation.spec.ts >> Créer une page sur téléphone, composer son contenu et la publier
+- Location: tests/e2e/studio-creation.spec.ts:3:1
+
+# Error details
+
+```
+Test timeout of 60000ms exceeded.
+```
+
+```
+Error: locator.click: Test timeout of 60000ms exceeded.
+Call log:
+  - waiting for getByRole('button', { name: 'Guide de création' })
+
+```
+
+
+Captures et traces complètes conservées dans la copie temporaire ; diagnostic ci-dessus conservé dans le dépôt.

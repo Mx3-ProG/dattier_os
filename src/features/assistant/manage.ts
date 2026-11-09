@@ -250,7 +250,7 @@ export function manage(input: string, ctx: AssistantContext): (Answer & { follow
     const reasonPart = t.match(/\b(?:car|parce que|parce qu|a cause)\s+(.+)$/)?.[1];
     const item = clean((amount ? amount.rest : t).replace(/\b(?:car|parce que|parce qu|a cause)\s+.+$/, ""));
     steps.push(
-      wasteStep(ctx, item, amount?.quantity ?? null, amount?.unit ?? null, reasonPart ? reasonPart.slice(0, 120) : /perime/.test(t) ? "Produit périmé" : "Perte déclarée à Cuisine IA"),
+      wasteStep(ctx, item, amount?.quantity ?? null, amount?.unit ?? null, reasonPart ? reasonPart.slice(0, 120) : /perime/.test(t) ? "Produit périmé" : "Perte déclarée à STUDIO VOICE"),
     );
   }
 

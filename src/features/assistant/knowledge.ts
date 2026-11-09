@@ -1,4 +1,4 @@
-/* Base de connaissances de Cuisine IA : le guide d’utilisation (même source que
+/* Base de connaissances de STUDIO VOICE : le guide d’utilisation (même source que
    la page /guide et la visite interactive). */
 import { chapters, glossary } from "@/features/guide/content";
 import { normalize, similarity, words } from "./text";

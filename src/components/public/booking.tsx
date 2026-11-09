@@ -73,7 +73,13 @@ async function getJson<T>(url: string): Promise<T> {
 export function Booking({
   restaurant = "bernay",
   apiBase = "/api/v1",
-}: { restaurant?: string; apiBase?: string } = {}) {
+  demo = true,
+}: {
+  restaurant?: string;
+  apiBase?: string;
+  /** Local demonstration: warn that nothing reaches a real restaurant. */
+  demo?: boolean;
+} = {}) {
   const RESTAURANT = restaurant;
   const [guests, setGuests] = useState(2),
     [month, setMonth] = useState(() => todayParis().slice(0, 7)),
@@ -238,8 +244,10 @@ export function Booking({
           </p>
           <p className="muted">
             Votre demande est enregistrée : la table est retenue et l’équipe
-            doit encore la confirmer. Démonstration locale : aucun e-mail ni SMS
-            n’a été envoyé.
+            doit encore la confirmer.
+            {demo
+              ? " Démonstration locale : aucun e-mail ni SMS n’a été envoyé."
+              : " Elle vous recontacte avec les coordonnées indiquées."}
           </p>
           <button
             className="btn outline"
@@ -256,7 +264,7 @@ export function Booking({
     );
 
   return (
-    <section className="public-section booking">
+    <section className="public-section booking" id="reserver">
       <header className="booking-head">
         <span className="eyebrow">ON VOUS GARDE UNE PLACE ?</span>
         <h1>
@@ -558,8 +566,9 @@ export function Booking({
                   : "Choisissez une heure"}
             </button>
             <p className="muted">
-              Démonstration locale : aucune réservation réelle auprès du
-              restaurant. Utilisez des coordonnées fictives.
+              {demo
+                ? "Démonstration locale : aucune réservation réelle auprès du restaurant. Utilisez des coordonnées fictives."
+                : "Vos coordonnées servent uniquement à confirmer cette réservation."}
             </p>
           </form>
         </div>

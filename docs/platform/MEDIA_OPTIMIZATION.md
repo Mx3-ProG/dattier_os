@@ -27,9 +27,9 @@ Le quota existant de 500 fichiers et 512 Mo par établissement (configurable ave
 
 FFmpeg et FFprobe sont requis sur le serveur Node. Le Dockerfile les installe ; sur une autre installation, les binaires doivent être présents dans PATH ou configurés par `FFMPEG_PATH` / `FFPROBE_PATH`. Le mode local a été vérifié avec les binaires installés. Aucun déploiement de production n’a été effectué.
 
-Deux imports maximum par processus ; les imports excédentaires sont refusés avec un message de nouvelle tentative. La conversion vidéo est limitée à 180 secondes de calcul. La compression s’effectue hors transaction SQL, puis les autorisations sont vérifiées à nouveau et le quota est contrôlé sous verrou avant stockage. Conteneurs vidéo imposés et protocoles restreints aux fichiers locaux.
+Deux imports maximum par processus web ; les imports excédentaires sont refusés avec un message de nouvelle tentative. En production, le transcodage vidéo tourne dans le groupe de workers `media` : l’envoi rend la main aussitôt, la médiathèque affiche « en cours » puis « échec » le cas échéant, et une vidéo non prête ne peut pas entrer dans un brouillon. La démonstration n’a pas de worker et garde le traitement direct. La conversion vidéo est limitée à 180 secondes. Les médias sont diffusés en flux, une fois la transaction de contrôle fermée. Voir [WORKER_GROUPS.md](WORKER_GROUPS.md).
 
-Ce moteur convient aux médias courts de sites de restaurants : ce n’est pas une plateforme de traitement de rushes longs ni une file distribuée dimensionnée pour des millions d’imports. Pour cette échelle, prévoir une file persistante, des workers isolés, un stockage temporaire avec expiration et une concurrence globale. Les limites d’envoi du proxy et de l’hébergeur doivent autoriser les tailles annoncées. L’original transite en mémoire et les vidéos sur un disque temporaire, mais aucun original n’est conservé durablement.
+Ce moteur convient aux médias courts de sites de restaurants : ce n’est pas une plateforme de traitement de rushes longs.
 
 ## Vérification
 

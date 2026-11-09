@@ -2667,6 +2667,10 @@ body:has(.admin-action-dock) .demo-purchase-link {
 }
 
 @media (max-width: 850px), (max-width: 1180px) and (pointer: coarse) {
+  /* Keep the demo promotion clear of the open navigation sheet. */
+  body:has(.workspace .dock-sheet) .demo-purchase-link {
+    display: none;
+  }
   body:has(.workspace-dock, .admin-action-dock) .demo-purchase-link {
     bottom: calc(84px + env(safe-area-inset-bottom));
   }

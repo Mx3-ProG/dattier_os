@@ -36,7 +36,42 @@ export async function uploadMedia(
   });
   const result = await response.json();
   if (!response.ok) throw new Error(result.error || "Import impossible.");
-  return result;
+  return result.status === "processing"
+    ? awaitTranscode(request, result, file.size)
+    : result;
+}
+/** La vidéo est transcodée par un worker : on attend ici sans occuper le serveur. */
+async function awaitTranscode(
+  request: (url: string, init?: RequestInit) => Promise<Response>,
+  queued: UploadedMedia,
+  originalSize: number,
+): Promise<UploadedMedia> {
+  for (let attempt = 0; attempt < 200; attempt++) {
+    await new Promise((resolve) => setTimeout(resolve, 3000));
+    const response = await request("/api/v1/site?view=media");
+    if (!response.ok) continue;
+    const { items } = (await response.json()) as {
+      items: {
+        url: string;
+        size: number;
+        status: "processing" | "ready" | "failed";
+        processing_error: string | null;
+      }[];
+    };
+    const media = items.find((item) => item.url === queued.url);
+    if (media?.status === "failed")
+      throw new Error(media.processing_error || "Vidéo illisible.");
+    if (media?.status === "ready")
+      return {
+        ...queued,
+        size: media.size,
+        originalSize,
+        savedBytes: Math.max(0, originalSize - media.size),
+      };
+  }
+  throw new Error(
+    "La vidéo est encore en cours d’optimisation. Elle apparaîtra dans la médiathèque dès qu’elle sera prête.",
+  );
 }
 export function MediaDropzone({
   kind,

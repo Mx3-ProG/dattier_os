@@ -275,7 +275,7 @@ export function HomeMenuPreview({ menu }: { menu?: MenuItem[] }) {
         </Link>
       </div>
       <p className="muted">
-        Carte de démonstration synchronisée avec atacuisine. Prix, compositions
+        Carte de démonstration synchronisée avec STUDIO OS. Prix, compositions
         et allergènes non validés par le restaurant.
       </p>
     </section>

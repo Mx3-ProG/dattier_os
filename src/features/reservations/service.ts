@@ -2,6 +2,7 @@ import { randomUUID as uuid } from "node:crypto";
 import { z } from "zod";
 import { rows, one, type DB } from "@/lib/database/db";
 import { log, notify } from "@/features/orders/service";
+import { requireModule } from "@/features/modules/access";
 
 /**
  * Horaires de réservation en ligne (heure de Paris). Valeurs de démonstration
@@ -141,6 +142,7 @@ export async function calendar(
   q: z.infer<typeof calendarQuery>,
   now = Date.now(),
 ) {
+  await requireModule(db, r, "table-booking");
   const first = `${q.month}-01`,
     days: string[] = [];
   for (let d = first; d.startsWith(q.month); d = addDays(d, 1)) days.push(d);
@@ -195,6 +197,7 @@ export async function availability(
   q: z.infer<typeof dayQuery>,
   now = Date.now(),
 ) {
+  await requireModule(db, r, "table-booking");
   const data = await load(
     db,
     r,
@@ -250,6 +253,7 @@ export async function requestReservation(
   a: z.infer<typeof reservationSchema>,
   now = Date.now(),
 ) {
+  await requireModule(db, a.restaurant, "table-booking");
   const start = Date.parse(a.start),
     local = paris(start);
   if (start < now) throw new Error("Choisissez un créneau futur.");

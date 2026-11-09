@@ -1,0 +1,300 @@
+
+> atacuisine_os@1.0.0 test:e2e
+> playwright test
+
+
+Running 14 tests using 1 worker
+
+(node:94272) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓   1 tests/e2e/accessibility-appearance.spec.ts:17:1 › taille lisible, repères personnalisés, journal compréhensible et mobile (5.5s)
+  ✓   2 tests/e2e/accessibility-appearance.spec.ts:115:1 › les sites publics proposent jour/nuit, mémorisent le choix et gardent leurs formulaires lisibles (2.3s)
+  ✘   3 tests/e2e/appearance.spec.ts:31:1 › préférences personnelles : aperçu, sauvegarde, navigation, réseau et isolation (1.5s)
+(node:94356) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓   4 tests/e2e/appearance.spec.ts:128:1 › API : session, origine, validation et changement de compte (350ms)
+  ✓   5 tests/e2e/appearance.spec.ts:163:1 › cache par compte, fenêtres métier et impression (1.0s)
+  ✓   6 tests/e2e/appearance.spec.ts:194:1 › violet jour/nuit : chargement, boutons, toutes les routes et persistance (5.8s)
+  ✘   7 tests/e2e/extensions.spec.ts:7:1 › manager : cycle produit, code client et règlement ; cuisine et bar : renfort salle (1.1m)
+(node:94538) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✘   8 tests/e2e/journey.spec.ts:8:1 › parcours complet, réservations publiques, responsive et accès serveur (1.0m)
+(node:94639) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✘   9 tests/e2e/journey.spec.ts:139:1 › deux profils simultanés : synchronisation sans rechargement et isolement (1.0m)
+(node:94738) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✘  10 tests/e2e/studio-creation.spec.ts:3:1 › Créer une page sur téléphone, composer son contenu et la publier (1.0m)
+(node:94843) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✘  11 tests/e2e/studio-security.spec.ts:2:1 › Studio : édition publiée, aperçus responsive et centre de sécurité (1.0m)
+(node:94940) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  12 tests/e2e/studio-security.spec.ts:116:1 › PWA : redémarrage hors ligne et file durable sans double commande (1.0s)
+  ✓  13 tests/e2e/tutorial-appearance.spec.ts:12:3 › tutoriel dark : accueil, centre, étapes et fin suivent la palette (2.0s)
+  ✓  14 tests/e2e/tutorial-appearance.spec.ts:12:3 › tutoriel light : accueil, centre, étapes et fin suivent la palette (1.9s)
+
+
+  1) tests/e2e/appearance.spec.ts:31:1 › préférences personnelles : aperçu, sauvegarde, navigation, réseau et isolation 
+
+    Error: locator.evaluate: Error: strict mode violation: locator('.workspace') resolved to 2 elements:
+        1) <div class="workspace restaurant-workspace ">…</div> aka locator('div').nth(2)
+        2) <div class="workspace restaurant-workspace ">…</div> aka locator('div').filter({ hasText: 'atacuisinePersonnaliser mon' }).nth(3)
+
+    Call log:
+      - waiting for locator('.workspace')
+
+
+      22 |   page
+      23 |     .locator(".workspace")
+    > 24 |     .evaluate((el) =>
+         |      ^
+      25 |       getComputedStyle(el).getPropertyValue("--appearance-accent").trim(),
+      26 |     );
+      27 | async function open(page: Page) {
+        at theme (/private/tmp/studio-os-lot0-rvcht70p/tests/e2e/appearance.spec.ts:24:6)
+        at /private/tmp/studio-os-lot0-rvcht70p/tests/e2e/appearance.spec.ts:63:27
+        at /private/tmp/studio-os-lot0-rvcht70p/tests/e2e/appearance.spec.ts:63:3
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/appearance-préférences-per-2167e-igation-réseau-et-isolation/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/appearance-préférences-per-2167e-igation-réseau-et-isolation/error-context.md
+
+    attachment #3: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results/appearance-préférences-per-2167e-igation-réseau-et-isolation/trace.zip
+    Usage:
+
+        npx playwright show-trace test-results/appearance-préférences-per-2167e-igation-réseau-et-isolation/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  2) tests/e2e/extensions.spec.ts:7:1 › manager : cycle produit, code client et règlement ; cuisine et bar : renfort salle 
+
+    Test timeout of 60000ms exceeded.
+
+    Error: locator.click: Test timeout of 60000ms exceeded.
+    Browser logs:
+
+    <launching> /Users/mathieu_pro/Library/Caches/ms-playwright/chromium_headless_shell-1248/chrome-headless-shell-mac-arm64/chrome-headless-shell --disable-field-trial-config --disable-background-networking --disable-background-timer-throttling --disable-backgrounding-occluded-windows --disable-back-forward-cache --disable-breakpad --disable-client-side-phishing-detection --disable-component-extensions-with-background-pages --disable-component-update --no-default-browser-check --disable-default-apps --disable-dev-shm-usage --disable-edgeupdater --disable-extensions --disable-features=AvoidUnnecessaryBeforeUnloadCheckSync,DestroyProfileOnBrowserClose,DialMediaRouteProvider,GlobalMediaControls,HttpsUpgrades,LensOverlay,MediaRouter,PaintHolding,ThirdPartyStoragePartitioning,BlockOriginHeaderModificationOnRedirect,AvoidCorsURLLoaderRestartOnRedirect,Translate,AutoDeElevate,OptimizationHints,NetworkTimeServiceQuerying,AimEnabled,msForceBrowserSignIn,msEdgeUpdateLaunchServicesPreferredVersion --enable-features=CDPScreenshotNewSurface --allow-pre-commit-input --disable-hang-monitor --disable-ipc-flooding-protection --disable-popup-blocking --disable-prompt-on-repost --disable-renderer-backgrounding --disable-updater-scheduler --force-color-profile=srgb --metrics-recording-only --no-first-run --password-store=basic --use-mock-keychain --no-service-autorun --export-tagged-pdf --disable-search-engine-choice-screen --unsafely-disable-devtools-self-xss-warnings --edge-skip-compat-layer-relaunch --disable-infobars --disable-search-engine-choice-screen --disable-sync --enable-unsafe-swiftshader --headless --hide-scrollbars --mute-audio --blink-settings=primaryHoverType=2,availableHoverTypes=2,primaryPointerType=4,availablePointerTypes=4 --no-sandbox --user-data-dir=/var/folders/jd/smcbtfvs1mlgzj_dxv_vrq7r0000gn/T/playwright_chromiumdev_profile-WV1z4A --remote-debugging-pipe --no-startup-window
+    <launched> pid=94357
+    [pid=94357][err] [1108/222659.058594:ERROR:ui/display/mac/cv_display_link_mac.mm:188] CVDisplayLinkCreateWithCGDisplay failed. CVReturn: -6670
+    [pid=94357][err] [1108/222659.134502:ERROR:ui/display/mac/cv_display_link_mac.mm:188] CVDisplayLinkCreateWithCGDisplay failed. CVReturn: -6670
+    [pid=94357][err] [1108/222659.393322:ERROR:ui/display/mac/cv_display_link_mac.mm:188] CVDisplayLinkCreateWithCGDisplay failed. CVReturn: -6670
+    [pid=94357][err] [1108/222659.460176:ERROR:ui/display/mac/cv_display_link_mac.mm:188] CVDisplayLinkCreateWithCGDisplay failed. CVReturn: -6670
+    [pid=94357][err] [1108/222659.995209:ERROR:ui/display/mac/cv_display_link_mac.mm:188] CVDisplayLinkCreateWithCGDisplay failed. CVReturn: -6670
+    [pid=94357][err] [1108/222700.182960:ERROR:ui/display/mac/cv_display_link_mac.mm:188] CVDisplayLinkCreateWithCGDisplay failed. CVReturn: -6670
+    [pid=94357][err] [1108/222700.426641:ERROR:ui/display/mac/cv_display_link_mac.mm:188] CVDisplayLinkCreateWithCGDisplay failed. CVReturn: -6670
+    [pid=94357][err] [1108/222700.491580:ERROR:ui/display/mac/cv_display_link_mac.mm:188] CVDisplayLinkCreateWithCGDisplay failed. CVReturn: -6670
+    [pid=94357][err] [1108/222700.816255:ERROR:ui/display/mac/cv_display_link_mac.mm:188] CVDisplayLinkCreateWithCGDisplay failed. CVReturn: -6670
+    [pid=94357][err] [1108/222704.008561:ERROR:ui/display/mac/cv_display_link_mac.mm:188] CVDisplayLinkCreateWithCGDisplay failed. CVReturn: -6670
+    [pid=94357][err] [1108/222704.096543:ERROR:ui/display/mac/cv_display_link_mac.mm:188] CVDisplayLinkCreateWithCGDisplay failed. CVReturn: -6670
+    [pid=94357][err] [1108/222704.191625:ERROR:ui/display/mac/cv_display_link_mac.mm:188] CVDisplayLinkCreateWithCGDisplay failed. CVReturn: -6670
+    [pid=94357][err] [1108/222704.282292:ERROR:ui/display/mac/cv_display_link_mac.mm:188] CVDisplayLinkCreateWithCGDisplay failed. CVReturn: -6670
+    [pid=94357][err] [1108/222704.416769:ERROR:ui/display/mac/cv_display_link_mac.mm:188] CVDisplayLinkCreateWithCGDisplay failed. CVReturn: -6670
+    [pid=94357][err] [1108/222704.501107:ERROR:ui/display/mac/cv_display_link_mac.mm:188] CVDisplayLinkCreateWithCGDisplay failed. CVReturn: -6670
+    [pid=94357][err] [1108/222704.597746:ERROR:ui/display/mac/cv_display_link_mac.mm:188] CVDisplayLinkCreateWithCGDisplay failed. CVReturn: -6670
+    [pid=94357][err] [1108/222704.679670:ERROR:ui/display/mac/cv_display_link_mac.mm:188] CVDisplayLinkCreateWithCGDisplay failed. CVReturn: -6670
+    [pid=94357][err] [1108/222704.808036:ERROR:ui/display/mac/cv_display_link_mac.mm:188] CVDisplayLinkCreateWithCGDisplay failed. CVReturn: -6670
+    [pid=94357][err] [1108/222704.891456:ERROR:ui/display/mac/cv_display_link_mac.mm:188] CVDisplayLinkCreateWithCGDisplay failed. CVReturn: -6670
+    [pid=94357][err] [1108/222705.107999:ERROR:ui/display/mac/cv_display_link_mac.mm:188] CVDisplayLinkCreateWithCGDisplay failed. CVReturn: -6670
+    [pid=94357][err] [1108/222705.303315:ERROR:ui/display/mac/cv_display_link_mac.mm:188] CVDisplayLinkCreateWithCGDisplay failed. CVReturn: -6670
+    [pid=94357][err] [1108/222705.385807:ERROR:ui/display/mac/cv_display_link_mac.mm:188] CVDisplayLinkCreateWithCGDisplay failed. CVReturn: -6670
+    [pid=94357][err] [1108/222706.127932:ERROR:ui/display/mac/cv_display_link_mac.mm:188] CVDisplayLinkCreateWithCGDisplay failed. CVReturn: -6670
+    [pid=94357][err] [1108/222706.241558:ERROR:ui/display/mac/cv_display_link_mac.mm:188] CVDisplayLinkCreateWithCGDisplay failed. CVReturn: -6670
+    [pid=94357][err] [1108/222706.275339:ERROR:ui/display/mac/cv_display_link_mac.mm:188] CVDisplayLinkCreateWithCGDisplay failed. CVReturn: -6670
+    [pid=94357][err] [1108/222707.060572:ERROR:ui/display/mac/cv_display_link_mac.mm:188] CVDisplayLinkCreateWithCGDisplay failed. CVReturn: -6670
+    [pid=94357] <gracefully close start>
+    Call log:
+      - waiting for getByRole('button', { name: 'Ajouter un produit', exact: true })
+        - locator resolved to <button class="btn primary">…</button>
+      - attempting click action
+        2 × waiting for element to be visible, enabled and stable
+          - element is visible, enabled and stable
+          - scrolling into view if needed
+          - done scrolling
+          - <div data-tour-layer="true" class="tour-modal-wrap appearance-scope">…</div> intercepts pointer events
+        - retrying click action
+        - waiting 20ms
+        2 × waiting for element to be visible, enabled and stable
+          - element is visible, enabled and stable
+          - scrolling into view if needed
+          - done scrolling
+          - <div data-tour-layer="true" class="tour-modal-wrap appearance-scope">…</div> intercepts pointer events
+        - retrying click action
+          - waiting 100ms
+        116 × waiting for element to be visible, enabled and stable
+            - element is visible, enabled and stable
+            - scrolling into view if needed
+            - done scrolling
+            - <div data-tour-layer="true" class="tour-modal-wrap appearance-scope">…</div> intercepts pointer events
+          - retrying click action
+            - waiting 500ms
+        - waiting for element to be visible, enabled and stable
+
+
+      20 |     await page
+      21 |       .getByRole("button", { name: "Ajouter un produit", exact: true })
+    > 22 |       .click();
+         |        ^
+      23 |     const dialog = page.getByRole("dialog");
+      24 |     await dialog.getByLabel("Nom du produit").fill(name);
+      25 |     await dialog.getByLabel("Catégorie", { exact: true }).selectOption("Plats");
+        at create (/private/tmp/studio-os-lot0-rvcht70p/tests/e2e/extensions.spec.ts:22:8)
+        at /private/tmp/studio-os-lot0-rvcht70p/tests/e2e/extensions.spec.ts:49:9
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/extensions-manager-cycle-p-88657-uisine-et-bar-renfort-salle/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/extensions-manager-cycle-p-88657-uisine-et-bar-renfort-salle/error-context.md
+
+    attachment #3: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results/extensions-manager-cycle-p-88657-uisine-et-bar-renfort-salle/trace.zip
+    Usage:
+
+        npx playwright show-trace test-results/extensions-manager-cycle-p-88657-uisine-et-bar-renfort-salle/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  3) tests/e2e/journey.spec.ts:8:1 › parcours complet, réservations publiques, responsive et accès serveur 
+
+    Test timeout of 60000ms exceeded.
+
+    Error: locator.click: Test timeout of 60000ms exceeded.
+    Call log:
+      - waiting for getByRole('button', { name: /^08/ })
+
+
+      19 |   expect(reset.ok()).toBeTruthy();
+      20 |   await profile(page, "Sarah");
+    > 21 |   await page.getByRole("button", { name: /^08/ }).click();
+         |                                                   ^
+      22 |   await page
+      23 |     .getByRole("button", { name: "Ajouter Couscous royal", exact: true })
+      24 |     .click({ clickCount: 2 });
+        at /private/tmp/studio-os-lot0-rvcht70p/tests/e2e/journey.spec.ts:21:51
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/journey-parcours-complet-r-e78c1-responsive-et-accès-serveur/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/journey-parcours-complet-r-e78c1-responsive-et-accès-serveur/error-context.md
+
+    attachment #3: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results/journey-parcours-complet-r-e78c1-responsive-et-accès-serveur/trace.zip
+    Usage:
+
+        npx playwright show-trace test-results/journey-parcours-complet-r-e78c1-responsive-et-accès-serveur/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  4) tests/e2e/journey.spec.ts:139:1 › deux profils simultanés : synchronisation sans rechargement et isolement 
+
+    Test timeout of 60000ms exceeded.
+
+    Error: locator.click: Test ended.
+    Call log:
+      - waiting for getByRole('button', { name: /^07/ })
+
+
+      146 |   await profile(waiter, "Sarah");
+      147 |   await profile(chef, "Karim");
+    > 148 |   await waiter.getByRole("button", { name: /^07/ }).click();
+          |                                                     ^
+      149 |   await waiter
+      150 |     .getByRole("button", { name: "Ajouter Couscous royal", exact: true })
+      151 |     .click();
+        at /private/tmp/studio-os-lot0-rvcht70p/tests/e2e/journey.spec.ts:148:53
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/journey-deux-profils-simul-41263-s-rechargement-et-isolement/test-failed-2.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/journey-deux-profils-simul-41263-s-rechargement-et-isolement/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/journey-deux-profils-simul-41263-s-rechargement-et-isolement/error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results/journey-deux-profils-simul-41263-s-rechargement-et-isolement/trace.zip
+    Usage:
+
+        npx playwright show-trace test-results/journey-deux-profils-simul-41263-s-rechargement-et-isolement/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  5) tests/e2e/studio-creation.spec.ts:3:1 › Créer une page sur téléphone, composer son contenu et la publier 
+
+    Test timeout of 60000ms exceeded.
+
+    Error: locator.click: Test timeout of 60000ms exceeded.
+    Call log:
+      - waiting for getByRole('button', { name: 'Guide de création' })
+
+
+      10 |   await page.goto("/restaurant/bernay/site");
+      11 |
+    > 12 |   await page.getByRole("button", { name: "Guide de création" }).click();
+         |                                                                 ^
+      13 |   await expect(
+      14 |     page.getByRole("heading", { name: "Choisir ou créer une page" }),
+      15 |   ).toBeVisible();
+        at /private/tmp/studio-os-lot0-rvcht70p/tests/e2e/studio-creation.spec.ts:12:65
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/studio-creation-Créer-une--21e91-r-son-contenu-et-la-publier/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/studio-creation-Créer-une--21e91-r-son-contenu-et-la-publier/error-context.md
+
+    attachment #3: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results/studio-creation-Créer-une--21e91-r-son-contenu-et-la-publier/trace.zip
+    Usage:
+
+        npx playwright show-trace test-results/studio-creation-Créer-une--21e91-r-son-contenu-et-la-publier/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  6) tests/e2e/studio-security.spec.ts:2:1 › Studio : édition publiée, aperçus responsive et centre de sécurité 
+
+    Test timeout of 60000ms exceeded.
+
+    Error: locator.click: Test timeout of 60000ms exceeded.
+    Call log:
+      - waiting for getByRole('button', { name: 'Domaines', exact: true })
+
+
+      18 |   await expect(page).toHaveURL(/dashboard/);
+      19 |   await page.goto("/restaurant/bernay");
+    > 20 |   await page.getByRole("button", { name: "Domaines", exact: true }).click();
+         |                                                                     ^
+      21 |   await expect(
+      22 |     page.getByRole("heading", { name: "Domaine personnalisé" }),
+      23 |   ).toBeVisible();
+        at /private/tmp/studio-os-lot0-rvcht70p/tests/e2e/studio-security.spec.ts:20:69
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/studio-security-Studio-édi-dcf0e-nsive-et-centre-de-sécurité/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/studio-security-Studio-édi-dcf0e-nsive-et-centre-de-sécurité/error-context.md
+
+    attachment #3: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results/studio-security-Studio-édi-dcf0e-nsive-et-centre-de-sécurité/trace.zip
+    Usage:
+
+        npx playwright show-trace test-results/studio-security-Studio-édi-dcf0e-nsive-et-centre-de-sécurité/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  6 failed
+    tests/e2e/appearance.spec.ts:31:1 › préférences personnelles : aperçu, sauvegarde, navigation, réseau et isolation 
+    tests/e2e/extensions.spec.ts:7:1 › manager : cycle produit, code client et règlement ; cuisine et bar : renfort salle 
+    tests/e2e/journey.spec.ts:8:1 › parcours complet, réservations publiques, responsive et accès serveur 
+    tests/e2e/journey.spec.ts:139:1 › deux profils simultanés : synchronisation sans rechargement et isolement 
+    tests/e2e/studio-creation.spec.ts:3:1 › Créer une page sur téléphone, composer son contenu et la publier 
+    tests/e2e/studio-security.spec.ts:2:1 › Studio : édition publiée, aperçus responsive et centre de sécurité 
+  8 passed (5.6m)

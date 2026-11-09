@@ -53,6 +53,9 @@ export async function proxy(req: NextRequest) {
       return NextResponse.redirect(
         new URL(`/restaurant/${r}`, process.env.APP_URL),
       );
+    // Collecteur d’audience : l’établissement est résolu côté serveur à partir de ce domaine.
+    if (pathname === "/api/analytics/collect")
+      return NextResponse.next(forwarded(req, null));
     const tenantApi = pathname.match(
       /^\/api\/(?:store|cms|ops-security|restaurants)\/([^/]+)/,
     );

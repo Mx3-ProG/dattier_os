@@ -1,4 +1,4 @@
-import { UtensilsLoader } from "@/components/brand/utensils";
+import { TenantLoader } from "@/components/loading-screens/tenant-loader";
 export default function Loading() {
-  return <UtensilsLoader label="Préparation de votre espace" />;
+  return <TenantLoader label="Préparation de votre espace" />;
 }

@@ -13,6 +13,10 @@
 - Appareils hors ligne, quotas de lots, file IndexedDB, synchronisation dédupliquée et conflits conservés.
 - Boîte d’envoi persistante, worker, exports de ventes/pointages, chiffrement des secrets de connecteurs et vérification d’enveloppes signées.
 - Pré-comptabilité des règlements : régime et taux de TVA déclarés par l’établissement, TVA figée sur la ligne vendue, événements et écritures en ajout seul, chaîne d’empreintes, contre-passation, centre « Opérations à vérifier » et politiques RLS financières (`docs/platform/FINANCIAL_AUDIT.md`).
+- Factures fournisseurs : dépôt, lecture Factur-X, CII et UBL, extraction par IA si une clé est présente, validation humaine et écritures (`SUPPLIER_INVOICES.md`).
+- Banque : import de relevés, doublons, rapprochement proposé et trésorerie (`BANK_RECONCILIATION.md`). Aucune connexion directe à une banque.
+- Factures clients : brouillon, émission numérotée, avoirs, règlements, PDF, XML et export des écritures au format FEC (`SALES_INVOICES.md`). Ni transmission à une plateforme agréée ni XML validé.
+- RH : heures consolidées depuis le pointage, corrections tracées, absences, coût estimé et variables de paie clôturées et exportables (`HR_PAYROLL.md`). Aucun bulletin ni déclaration.
 - Forfaits par organisation, contrôle du nombre d’établissements et gestion manuelle du pilote.
 - Composition auto-hébergeable, migrations séparées et outils de sauvegarde/import/charge.
 
@@ -23,8 +27,9 @@
 
 - Les conflits hors ligne sont conservés et affichés ; un responsable peut demander une reprise ou rejeter une opération avec justification. Les cas nécessitant une décision physique de stock restent à traiter manuellement. La réconciliation d’un appareil libère les quotas inutilisés et ferme l’appareil ; elle nécessite un inventaire des opérations locales.
 - Le navigateur ne garantit ni conservation après effacement ni synchronisation lorsqu’il est fermé. Aucun échange automatique entre appareils pendant la coupure.
-- Les transferts entre établissements, le routage multi-clusters et les migrations d’organisation entre clusters ne sont pas implémentés.
-- Paiements en ligne, remboursements PSP, caisse, comptabilité, paie et livraison restent indisponibles tant que les accès et parcours prestataires n’ont pas été implémentés/validés. L’activation des forfaits et la facturation sont manuelles pendant le pilote.
+- Les transferts entre établissements, le routage multi-clusters et les migrations d’organisation entre clusters ne sont pas implémentés. Les tâches de fond sont réparties en [groupes de workers](WORKER_GROUPS.md) sur un seul hôte.
+- Paiements en ligne : code livré et vérifié avec Stripe simulé, fermé sans clé, clés réelles refusées sans validation explicite (`ONLINE_PAYMENTS.md`).
+- Caisse, comptabilité officielle, paie et livraison restent indisponibles tant que les accès et parcours prestataires n’ont pas été implémentés/validés. L’activation des forfaits et la facturation sont manuelles pendant le pilote.
 - Les informations légales et la gestion complète des droits RGPD restent à établir avant des données réelles.
 - Les tests locaux ne valent pas audit de sécurité indépendant, validation réglementaire, haute disponibilité ni pilote de 100–500 restaurants réels.
 

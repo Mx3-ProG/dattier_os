@@ -174,6 +174,10 @@ export type Promo = {
   expired: boolean;
 };
 export type Snapshot = {
+  activeModules?: { floor: boolean; "table-booking": boolean };
+  addons?: string[];
+  licenses?: string[];
+  uninstalledAddons?: string[];
   plan: import("@/features/platform/pricing").Plan;
   demo: boolean;
   categories: string[];
@@ -226,6 +230,4 @@ export type Snapshot = {
   recipes: RecipeLine[];
   sales: { day: string; total: number }[];
   payments: { amount: number; created_at: string }[];
-  /** Coût matière théorique des produits servis et réglés, en centimes. */
-  materialCostSold: number;
 };

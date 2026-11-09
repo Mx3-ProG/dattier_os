@@ -86,6 +86,19 @@ const visit = (id: string, lock: 1 | 2 = 1): Section => ({
     burgerHint: "Survolez pour découvrir chaque ingrédient",
   },
 });
+/** Visit block of the reservations page: its button leads back to the booking flow. */
+export const reservationVisitCta = {
+  label: "Réserver une table",
+  href: "/reservations#reserver",
+};
+const reservationVisit = (): Section => {
+  const section = visit("reservations-visit", 2);
+  if (section.type === "visit") {
+    section.props.cta = { ...reservationVisitCta };
+    section.props.burger = false;
+  }
+  return section;
+};
 const reviews = (id: string, lock: 1 | 2 = 1): Section => ({
   id,
   type: "reviews",
@@ -166,7 +179,7 @@ export function defaultConfig(): SiteConfig {
       noIndex: true,
       title: "{{restaurant.name}} · Cuisine et convivialité",
       description:
-        "Cuisine, rencontres et convivialité. Démonstration e-commerce locale propulsée par atacuisine.",
+        "Cuisine, rencontres et convivialité. Démonstration e-commerce locale propulsée par STUDIO OS.",
       ogImage: "",
       favicon: "",
       shareName: "{{restaurant.name}}",
@@ -181,7 +194,7 @@ export function defaultConfig(): SiteConfig {
     footer: {
       tagline: "Un peu, beaucoup,\npassionnément gourmand.",
       cta: "À tout de suite ?",
-      credit: "{{restaurant.name}} · propulsé par atacuisine",
+      credit: "{{restaurant.name}} · propulsé par STUDIO OS",
       notice: "Disponibilités et prix confirmés lors de la commande.",
     },
     legal: {
@@ -296,9 +309,10 @@ export function defaultConfig(): SiteConfig {
         reviews("avis-reviews", 2),
         system("avis-form", "reviewForm"),
       ]),
+      // The booking flow comes first: the visit block (address, hours) follows it.
       reservations: page("partial", "Réservations", "reservations", [
-        visit("reservations-visit", 2),
         system("reservations-form", "reservationForm"),
+        reservationVisit(),
       ]),
       "mentions-legales": page(
         "legal",
@@ -331,3 +345,38 @@ export function defaultConfig(): SiteConfig {
 }
 /** Pages that always exist and cannot be created or deleted from the CMS. */
 export const systemPageKeys = Object.keys(defaultConfig().pages);
+
+/**
+ * Sites created before the booking flow led the reservations page still show
+ * the visit block first and send its button to the order page. Untouched
+ * default blocks are put back in the right order at render time; a page the
+ * restaurant reorganised itself (other blocks, edited button) is left as is.
+ */
+export function bookingFirst(pageKey: string, sections: Section[]): Section[] {
+  if (pageKey !== "reservations") return sections;
+  const visitAt = sections.findIndex((s) => s.id === "reservations-visit");
+  const formAt = sections.findIndex(
+    (s) =>
+      s.id === "reservations-form" &&
+      s.type === "system" &&
+      s.props.block === "reservationForm",
+  );
+  if (visitAt < 0 || formAt < 0) return sections;
+  const next = sections.map((section) => {
+    if (
+      section.id === "reservations-visit" &&
+      section.type === "visit" &&
+      section.props.cta.label === "Choisir mon créneau" &&
+      section.props.cta.href === "/commander"
+    )
+      return {
+        ...section,
+        props: { ...section.props, cta: { ...reservationVisitCta } },
+      };
+    return section;
+  });
+  if (formAt < visitAt) return next;
+  const [form] = next.splice(formAt, 1);
+  next.splice(visitAt, 0, form);
+  return next;
+}

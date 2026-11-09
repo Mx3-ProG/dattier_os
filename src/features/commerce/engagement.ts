@@ -30,6 +30,9 @@ export async function engagementSettings(
   db: DB,
   r: string,
 ): Promise<EngagementSettings> {
+  const enabled=(await one<{enabled:boolean}>(db,
+    "SELECT app.addon_installed($1,'loyalty') AS enabled",[r])).enabled;
+  if (!enabled) return { ...defaultEngagementSettings, points_per_euro:0, booking_points:0, referrer_points:0, milestones:[] };
   const found = await rows<EngagementSettings>(
     db,
     "SELECT points_per_euro::float AS points_per_euro,booking_points,referrer_points,welcome_kind,welcome_value,welcome_days,milestones FROM loyalty_settings WHERE restaurant_id=$1",
@@ -125,6 +128,9 @@ export async function creditPoints(
 
 /** Credits an online order's points once it is paid or served. Idempotent. */
 export async function awardOrderPoints(db: DB, r: string, orderId: string) {
+  const enabled=(await one<{enabled:boolean}>(db,
+    "SELECT app.addon_installed($1,'loyalty') AS enabled",[r])).enabled;
+  if (!enabled) return 0;
   const found = await rows<{
     customer_id: string | null;
     total: number;
@@ -166,6 +172,9 @@ export async function awardOrderPoints(db: DB, r: string, orderId: string) {
 
 /** Points for a guest marked as arrived after booking from their account. */
 export async function awardBookingPoints(db: DB, r: string, reservationId: string) {
+  const enabled=(await one<{enabled:boolean}>(db,
+    "SELECT app.addon_installed($1,'loyalty') AS enabled",[r])).enabled;
+  if (!enabled) return 0;
   const res = await rows<{ customer_id: string | null; consent: boolean | null }>(
     db,
     "SELECT r.customer_id,c.consent FROM reservations r LEFT JOIN customers c ON c.id=r.customer_id WHERE r.id=$1 AND r.restaurant_id=$2",
@@ -501,6 +510,9 @@ async function stats(db: DB, customerId: string): Promise<EngagementStats> {
 /** Records newly earned badges; returns the stats used. */
 export async function refreshBadges(db: DB, customerId: string) {
   const s = await stats(db, customerId);
+  const entitlement=await rows<{enabled:boolean}>(db,
+    "SELECT app.addon_installed(restaurant_id,'loyalty') AS enabled FROM customers WHERE id=$1",[customerId]);
+  if (!entitlement[0]?.enabled) return s;
   for (const badge of earnedBadges(s))
     await db.query(
       "INSERT INTO customer_badges(customer_id,badge) VALUES($1,$2) ON CONFLICT DO NOTHING",
@@ -521,6 +533,8 @@ export async function accountEngagement(
   rewards: { points_cost: number }[],
   now = new Date(),
 ) {
+  const enabled=(await one<{enabled:boolean}>(db,
+    "SELECT app.addon_installed($1,'loyalty') AS enabled",[r])).enabled;
   const settings = await engagementSettings(db, r);
   const s = await refreshBadges(db, customerId);
   const earned = await rows<{ badge: string; earned_at: string }>(
@@ -614,6 +628,7 @@ export async function accountEngagement(
     new Date(`${thisMonth}-15T12:00:00Z`),
   );
   return {
+    enabled,
     settings: {
       points_per_euro: settings.points_per_euro,
       booking_points: settings.booking_points,

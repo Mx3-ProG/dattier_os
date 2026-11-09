@@ -1,0 +1,64 @@
+.ls-liquid-shell {
+  fill: none;
+  stroke: var(--ls-primary);
+  stroke-width: 2;
+  opacity: 0.35;
+}
+.ls-liquid-level {
+  animation: ls-liquid-level calc(5s / var(--ls-speed)) ease-in-out infinite;
+}
+.ls-liquid-wave {
+  animation: ls-liquid-flow calc(2.6s / var(--ls-speed)) linear infinite;
+}
+.ls-liquid-wave.is-back {
+  fill: var(--ls-primary);
+  opacity: 0.35;
+  animation-duration: calc(4.2s / var(--ls-speed));
+  animation-name: ls-liquid-flow-back;
+}
+.ls-liquid-bubble {
+  fill: #fff;
+  opacity: 0.55;
+  animation: ls-liquid-bubble calc(3.4s / var(--ls-speed)) ease-in infinite;
+}
+.ls-liquid-bubble.is-b {
+  animation-delay: calc(-1.2s / var(--ls-speed));
+}
+.ls-liquid-bubble.is-c {
+  animation-delay: calc(-2.3s / var(--ls-speed));
+}
+@keyframes ls-liquid-flow {
+  to {
+    translate: 200px 0;
+  }
+}
+@keyframes ls-liquid-flow-back {
+  from {
+    transform: translate(0, 92px);
+  }
+  to {
+    transform: translate(200px, 92px);
+  }
+}
+@keyframes ls-liquid-level {
+  0%,
+  100% {
+    transform: translateY(8px);
+  }
+  50% {
+    transform: translateY(-14px);
+  }
+}
+@keyframes ls-liquid-bubble {
+  0% {
+    transform: translateY(0) scale(0.6);
+    opacity: 0;
+  }
+  20% {
+    opacity: 0.6;
+  }
+  100% {
+    transform: translateY(-72px) scale(1.1);
+    opacity: 0;
+  }
+}

@@ -14,9 +14,13 @@ import { level } from "./model";
  * Archiving the journal is NOT a database backup and never touches business data.
  */
 export type ArchiveOptions = { archiveDir?: string | null };
-export function defaultArchiveDir() {
+const currentRestaurant = () => {
   const restaurant = databaseContext.getStore()?.restaurantId;
   if (!restaurant) throw new Error("Établissement requis pour les archives.");
+  return restaurant;
+};
+export function defaultArchiveDir() {
+  const restaurant = currentRestaurant();
   return demoEnabled()
     ? path.resolve(
         process.env.ATACUISINE_DATA_DIR || ".data/atacuisine-demo",
@@ -42,7 +46,7 @@ export function canonical(value: unknown): string {
 const DAY_EVENTS = `SELECT event_id,to_char(occurred_at AT TIME ZONE 'UTC','YYYY-MM-DD"T"HH24:MI:SS.US"Z"') AS occurred_at,
  severity,event_type,module,action,actor_id,restaurant_id,session_id,correlation_id,resource_id,status,error_code,message,
  technical_details,resolution_status,incident_id
- FROM ops_security_events WHERE (occurred_at AT TIME ZONE 'Europe/Paris')::date=$1::date ORDER BY occurred_at,event_id`;
+ FROM ops_security_events WHERE (occurred_at AT TIME ZONE 'Europe/Paris')::date=$1::date AND restaurant_id=$2 ORDER BY occurred_at,event_id`;
 export const parisToday = async (db: DB) =>
   (
     await one<{ d: string }>(
@@ -75,6 +79,7 @@ export async function archiveDay(
   day: string,
   opts: ArchiveOptions = {},
 ) {
+  const restaurant = currentRestaurant();
   const started = new Date();
   const dir =
     opts.archiveDir === undefined ? defaultArchiveDir() : opts.archiveDir;
@@ -82,25 +87,30 @@ export async function archiveDay(
     const result = await db.transaction(async (tx) => {
       if (
         (
-          await rows(tx, "SELECT day FROM ops_security_archives WHERE day=$1", [
-            day,
-          ])
+          await rows(
+            tx,
+            "SELECT day FROM ops_security_archives WHERE day=$1 AND restaurant_id=$2",
+            [day, restaurant],
+          )
         ).length
       )
         return { status: "exists" as const };
-      const events = await rows<Record<string, unknown>>(tx, DAY_EVENTS, [day]);
+      const events = await rows<Record<string, unknown>>(tx, DAY_EVENTS, [
+        day,
+        restaurant,
+      ]);
       const digest = sha256(canonical(events));
       const prev =
         (
           await rows<{ chain_sha256: string }>(
             tx,
-            "SELECT chain_sha256 FROM ops_security_archives WHERE day<$1 ORDER BY day DESC LIMIT 1",
-            [day],
+            "SELECT chain_sha256 FROM ops_security_archives WHERE day<$1 AND restaurant_id=$2 ORDER BY day DESC LIMIT 1",
+            [day, restaurant],
           )
         )[0]?.chain_sha256 ?? "GENESIS";
       const chain = sha256(`${prev}:${digest}`);
       await tx.query(
-        "INSERT INTO ops_security_archives(day,event_count,payload,sha256,prev_chain,chain_sha256,file_path) VALUES($1,$2,$3,$4,$5,$6,$7)",
+        "INSERT INTO ops_security_archives(day,event_count,payload,sha256,prev_chain,chain_sha256,file_path,restaurant_id) VALUES($1,$2,$3,$4,$5,$6,$7,$8)",
         [
           day,
           events.length,
@@ -109,6 +119,7 @@ export async function archiveDay(
           prev,
           chain,
           dir ? filePath(dir, day) : null,
+          restaurant,
         ],
       );
       return { status: "created" as const, events, digest, prev, chain };
@@ -177,17 +188,19 @@ export async function archiveDay(
 
 /** Days before today without archive, within the retention window. */
 export async function missingArchiveDays(db: DB) {
+  const restaurant = currentRestaurant();
   return (
     await rows<{ day: string }>(
       db,
       `WITH bounds AS (
          SELECT (now() AT TIME ZONE 'Europe/Paris')::date AS today,
-                (SELECT retention_days FROM ops_security_settings LIMIT 1) AS keep,
-                (SELECT min((occurred_at AT TIME ZONE 'Europe/Paris')::date) FROM ops_security_events) AS first)
+                (SELECT retention_days FROM ops_security_settings WHERE restaurant_id=$1) AS keep,
+                (SELECT min((occurred_at AT TIME ZONE 'Europe/Paris')::date) FROM ops_security_events WHERE restaurant_id=$1) AS first)
        SELECT to_char(d,'YYYY-MM-DD') AS day
        FROM bounds, generate_series(greatest(coalesce(first,today), today-keep), today-1, interval '1 day') d
-       WHERE NOT EXISTS(SELECT 1 FROM ops_security_archives a WHERE a.day=d::date)
+       WHERE NOT EXISTS(SELECT 1 FROM ops_security_archives a WHERE a.day=d::date AND a.restaurant_id=$1)
        ORDER BY d LIMIT 31`,
+      [restaurant],
     )
   ).map((r) => r.day);
 }
@@ -204,6 +217,7 @@ export type IntegrityIssue = {
   detail: string;
 };
 export async function verifyArchives(db: PGlite) {
+  const restaurant = currentRestaurant();
   const started = new Date();
   const issues: IntegrityIssue[] = [];
   const archives = await rows<{
@@ -217,8 +231,9 @@ export async function verifyArchives(db: PGlite) {
   }>(
     db,
     `SELECT to_char(day,'YYYY-MM-DD') AS day,payload,sha256,prev_chain,chain_sha256,file_path,
-       ((day+1)::timestamp AT TIME ZONE 'Europe/Paris') >= now()-make_interval(days=>(SELECT retention_days FROM ops_security_settings LIMIT 1)) AS live
-     FROM ops_security_archives ORDER BY day`,
+       ((day+1)::timestamp AT TIME ZONE 'Europe/Paris') >= now()-make_interval(days=>(SELECT retention_days FROM ops_security_settings WHERE restaurant_id=$1)) AS live
+     FROM ops_security_archives WHERE restaurant_id=$1 ORDER BY day`,
+    [restaurant],
   );
   let previous: string | null = null;
   for (const a of archives) {
@@ -239,7 +254,7 @@ export async function verifyArchives(db: PGlite) {
       });
     previous = a.chain_sha256;
     if (a.live) {
-      const events = await rows(db, DAY_EVENTS, [a.day]);
+      const events = await rows(db, DAY_EVENTS, [a.day, restaurant]);
       if (sha256(canonical(events)) !== a.sha256)
         issues.push({
           day: a.day,
@@ -300,6 +315,7 @@ export async function verifyArchives(db: PGlite) {
  * blocks the purge of that day instead of losing it silently.
  */
 export async function purgeExpired(db: PGlite) {
+  const restaurant = currentRestaurant();
   const started = new Date();
   try {
     const result = await db.transaction(async (tx) => {
@@ -307,25 +323,26 @@ export async function purgeExpired(db: PGlite) {
       const keep = (
         await one<{ k: number }>(
           tx,
-          "SELECT retention_days AS k FROM ops_security_settings LIMIT 1",
+          "SELECT retention_days AS k FROM ops_security_settings WHERE restaurant_id=$1",
+          [restaurant],
         )
       ).k;
       const blocked = await rows<{ day: string }>(
         tx,
         `SELECT DISTINCT to_char((occurred_at AT TIME ZONE 'Europe/Paris')::date,'YYYY-MM-DD') AS day FROM ops_security_events e
-         WHERE occurred_at < now()-make_interval(days=>$1)
-           AND NOT EXISTS(SELECT 1 FROM ops_security_archives a WHERE a.day=(e.occurred_at AT TIME ZONE 'Europe/Paris')::date)`,
-        [keep],
+         WHERE e.restaurant_id=$2 AND occurred_at < now()-make_interval(days=>$1)
+           AND NOT EXISTS(SELECT 1 FROM ops_security_archives a WHERE a.restaurant_id=e.restaurant_id AND a.day=(e.occurred_at AT TIME ZONE 'Europe/Paris')::date)`,
+        [keep, restaurant],
       );
       const events = await tx.query(
-        `DELETE FROM ops_security_events e WHERE occurred_at < now()-make_interval(days=>$1)
-         AND EXISTS(SELECT 1 FROM ops_security_archives a WHERE a.day=(e.occurred_at AT TIME ZONE 'Europe/Paris')::date)`,
-        [keep],
+        `DELETE FROM ops_security_events e WHERE e.restaurant_id=$2 AND occurred_at < now()-make_interval(days=>$1)
+         AND EXISTS(SELECT 1 FROM ops_security_archives a WHERE a.restaurant_id=e.restaurant_id AND a.day=(e.occurred_at AT TIME ZONE 'Europe/Paris')::date)`,
+        [keep, restaurant],
       );
       const files = await rows<{ file_path: string | null }>(
         tx,
-        `DELETE FROM ops_security_archives WHERE ((day+1)::timestamp AT TIME ZONE 'Europe/Paris') < now()-make_interval(days=>$1) RETURNING file_path`,
-        [keep],
+        `DELETE FROM ops_security_archives WHERE restaurant_id=$2 AND ((day+1)::timestamp AT TIME ZONE 'Europe/Paris') < now()-make_interval(days=>$1) RETURNING file_path`,
+        [keep, restaurant],
       );
       return {
         keep,

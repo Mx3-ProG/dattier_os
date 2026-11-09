@@ -1,11 +1,12 @@
 "use client";
+import { workspaceNavigation } from "@/features/navigation/catalog";
+import { currentNavigation } from "@/core/navigation/registry";
 import { moduleCategory } from "@/features/appearance/categories";
 import { CategoryBadge } from "./appearance/category-badge";
 import {
   AppearanceScope,
   AppearanceButton,
 } from "@/components/appearance/appearance";
-import { UtensilsLoader } from "@/components/brand/utensils";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useCallback, useEffect, useState, useRef } from "react";
@@ -23,11 +24,19 @@ import {
   Clock,
   Wallet,
   ClipboardCheck,
+  FileText,
+  FileSignature,
+  Landmark,
+  CalendarOff,
+  HandCoins,
+  Banknote,
   Receipt,
   Heart,
   Settings,
   Activity,
   Globe,
+  Earth,
+  Calculator,
   Bell,
   Menu,
   X,
@@ -38,15 +47,38 @@ import {
   GraduationCap,
   QrCode,
 } from "lucide-react";
-import { can, type Permission, roleLabels } from "@/lib/permissions";
+import { roleLabels } from "@/lib/permissions";
 import type { Snapshot } from "@/lib/types";
 import { Dining, Kds, OrderList } from "./operations";
+import { AddonsCenter } from "./addons-center";
+import {
+  LoadingScreenSync,
+  TenantLoader,
+} from "./loading-screens/tenant-loader";
 import { Management } from "./management";
 import dynamic from "next/dynamic";
 const Overview = dynamic(() => import("./overview").then((m) => m.Overview), {
   loading: () => <p>Chargement du tableau de bord…</p>,
 });
 const Finance = dynamic(() => import("./overview").then((m) => m.Finance));
+const BillingCenter = dynamic(() =>
+  import("./billing-center").then((m) => m.BillingCenter),
+);
+const HrCenter = dynamic(() => import("./hr-center").then((m) => m.HrCenter));
+const BankCenter = dynamic(() =>
+  import("./bank-center").then((m) => m.BankCenter),
+);
+const InvoicesCenter = dynamic(() =>
+  import("./invoices-center").then((m) => m.InvoicesCenter),
+);
+const PayoutsCenter = dynamic(() =>
+  import("./payouts-center").then((m) => m.PayoutsCenter),
+);
+// Le globe et three.js ne sont téléchargés qu’à l’ouverture de cette page.
+const EarthTracker = dynamic(() =>
+  import("./analytics/earth-tracker").then((m) => m.EarthTracker),
+);
+const EstimationCenter = dynamic(() => import("./estimation/center").then((m) => m.EstimationCenter));
 const FinanceCenter = dynamic(() =>
   import("./finance-center").then((m) => m.FinanceCenter),
 );
@@ -54,162 +86,40 @@ import { dateTime } from "@/lib/domain";
 import { Tutorial } from "./tutorial/tour";
 import { CuisineIa } from "./assistant/cuisine-ia";
 import { QrPortfolio } from "./qr/qr-portfolio";
-const modules = [
-  {
-    id: "overview",
-    name: "Vue d’ensemble",
-    group: "PILOTAGE",
-    icon: LayoutDashboard,
-    permission: "finance",
-  },
-  {
-    id: "activity",
-    name: "Activité",
-    group: "PILOTAGE",
-    icon: Activity,
-    permission: "audit",
-  },
-  {
-    id: "qr",
-    name: "QR codes",
-    group: "PILOTAGE",
-    icon: QrCode,
-    permission: undefined,
-  },
-  {
-    id: "dining",
-    name: "Plan de salle",
-    group: "OPÉRATIONS",
-    icon: UtensilsCrossed,
-    permission: "orders",
-  },
-  {
-    id: "orders",
-    name: "Commandes",
-    group: "OPÉRATIONS",
-    icon: ClipboardList,
-    permission: "orders",
-  },
-  {
-    id: "kitchen",
-    name: "Cuisine",
-    group: "OPÉRATIONS",
-    icon: ChefHat,
-    permission: "kitchen",
-  },
-  {
-    id: "bar",
-    name: "Bar",
-    group: "OPÉRATIONS",
-    icon: Wine,
-    permission: "bar",
-  },
-  {
-    id: "reservations",
-    name: "Réservations",
-    group: "OPÉRATIONS",
-    icon: CalendarDays,
-    permission: "reservations",
-  },
-  {
-    id: "stocks",
-    name: "Stocks & inventaire",
-    group: "GESTION",
-    icon: Package,
-    permission: "stock",
-  },
-  {
-    id: "recipes",
-    name: "Recettes",
-    group: "GESTION",
-    icon: BookOpen,
-    permission: "stock",
-  },
-  {
-    id: "suppliers",
-    name: "Fournisseurs",
-    group: "GESTION",
-    icon: Truck,
-    permission: "purchases",
-  },
-  {
-    id: "deliveries",
-    name: "Livraisons",
-    group: "GESTION",
-    icon: Package,
-    permission: "purchases",
-  },
-  {
-    id: "team",
-    name: "Équipe & planning",
-    group: "ÉQUIPE",
-    icon: Users,
-    permission: "team",
-  },
-  {
-    id: "attendance",
-    name: "Présences",
-    group: "ÉQUIPE",
-    icon: Clock,
-    permission: null,
-  },
-  {
-    id: "finance",
-    name: "Finances & rapports",
-    group: "PILOTAGE FINANCIER",
-    icon: Wallet,
-    permission: "finance",
-  },
-  {
-    id: "accounting",
-    name: "Opérations à vérifier",
-    group: "PILOTAGE FINANCIER",
-    icon: ClipboardCheck,
-    permission: "finance",
-  },
-  {
-    id: "expenses",
-    name: "Dépenses",
-    group: "PILOTAGE FINANCIER",
-    icon: Receipt,
-    permission: "finance",
-  },
-  {
-    id: "customers",
-    name: "Clients & fidélité",
-    group: "RELATION CLIENT",
-    icon: Heart,
-    permission: "customers",
-  },
-  {
-    id: "menu",
-    name: "La carte",
-    group: "CONFIGURATION",
-    icon: BookOpen,
-    permission: "catalog",
-  },
-  {
-    id: "settings",
-    name: "Établissements",
-    group: "CONFIGURATION",
-    icon: Settings,
-    permission: "settings",
-  },
-  {
-    id: "site",
-    name: "Mon site web",
-    group: "CONFIGURATION",
-    icon: Globe,
-    permission: "website",
-  },
-  {
-    id: "security",
-    name: "Sécurité opérationnelle",
-    group: "CONFIGURATION",
-    icon: ShieldCheck,
-    permission: "security",
-  },
-] as const;
+const navigationIcons = {
+  Package,
+  LayoutDashboard,
+  Activity,
+  QrCode,
+  UtensilsCrossed,
+  ClipboardList,
+  ChefHat,
+  Wine,
+  CalendarDays,
+  BookOpen,
+  Truck,
+  Users,
+  Clock,
+  CalendarOff,
+  Wallet,
+  ClipboardCheck,
+  FileSignature,
+  FileText,
+  Landmark,
+  HandCoins,
+  Banknote,
+  Receipt,
+  Heart,
+  Settings,
+  Globe,
+  Earth,
+  Calculator,
+  ShieldCheck,
+};
+const decorateNavigation = (
+  entries: ReturnType<typeof workspaceNavigation.list>,
+) => entries.map((entry) => ({ ...entry, icon: navigationIcons[entry.icon] }));
+const modules = decorateNavigation(workspaceNavigation.list());
 type ModuleGroup = (typeof modules)[number]["group"];
 // Barre d’onglets façon app mobile (tablette et téléphone) : cinq entrées
 // maximum, chacune regroupant une ou plusieurs familles du menu latéral.
@@ -317,26 +227,18 @@ export function Workspace() {
     }
   }
   const allowed = data
-    ? modules.filter(
-        (m) =>
-          !m.permission ||
-          ((data.plan >= 69 ||
-            !["finance", "customers", "website"].includes(m.permission)) &&
-            can(data.user.roles ?? data.user.role, m.permission as Permission)),
+    ? decorateNavigation(
+        workspaceNavigation.resolve({
+          plan: data.plan,
+          roles: data.user.roles ?? data.user.role,
+          addons: data.addons,
+          licenses: data.licenses,
+          uninstalledAddons: data.uninstalledAddons,
+          activeModules: data.activeModules,
+        }),
       )
     : [];
-  const current =
-    allowed.find((m) => m.id === module) ||
-    allowed.find(
-      (m) =>
-        m.id ===
-        (data?.user.role === "CHEF"
-          ? "kitchen"
-          : data?.user.role === "BARTENDER"
-            ? "bar"
-            : ""),
-    ) ||
-    allowed[0];
+  const current = currentNavigation(allowed, module, data?.user.role);
   const navigate = (s: string) => {
     if (["site", "security"].includes(s)) {
       router.push(`/restaurant/${restaurant}/${s}`);
@@ -357,24 +259,30 @@ export function Workspace() {
     .filter((tab) => tab.items.length > 0);
   const openSheet = dock.find((tab) => tab.id === dockSheet);
   if (!data && !error)
-    return <UtensilsLoader label="Votre restaurant se prépare" />;
+    return (
+      <TenantLoader
+        restaurant={restaurant}
+        label="Votre restaurant se prépare"
+      />
+    );
   if (!data)
     return (
       <main className="loading">
         <Leaf />
-        <h1>atacuisine</h1>
+        <h1>STUDIO OS</h1>
         <p>{error || "Votre restaurant se prépare…"}</p>
         <Link href="/platform">Mes restaurants et connexion</Link>
       </main>
     );
   return (
     <AppearanceScope userId={data.user.id} className="workspace">
+      <LoadingScreenSync restaurant={restaurant} />
       <aside className={`sidebar ${mobile ? "open" : ""}`}>
         <Link href="/dashboard" className="brand">
           <span className="brand-mark">
             <Leaf size={23} />
           </span>
-          atacuisine
+          STUDIO OS
         </Link>
         <AppearanceButton />
         <div className="restaurant-switch" data-tour="restaurant-switch">
@@ -559,7 +467,17 @@ export function Workspace() {
               <h1>{current?.name}</h1>
             </div>
           )}
-          {current?.id === "overview" ? (
+          {current?.id === "addons" ? (
+            <AddonsCenter
+              key={restaurant}
+              plan={data.plan}
+              restaurant={restaurant}
+              accountId={data.user.id}
+              accessibleModules={allowed.map((entry) => entry.id)}
+              navigate={navigate}
+              onModulesChanged={load}
+            />
+          ) : current?.id === "overview" ? (
             <Overview data={data} navigate={navigate} />
           ) : current?.id === "dining" ? (
             <Dining data={data} act={act} />
@@ -573,10 +491,28 @@ export function Workspace() {
             />
           ) : current?.id === "qr" ? (
             <QrPortfolio restaurant={restaurant} />
+          ) : current?.id === "audience" ? (
+            <EarthTracker key={restaurant} restaurant={restaurant} />
+          ) : current?.id === "estimation" ? (
+            <EstimationCenter key={restaurant} restaurant={restaurant} />
           ) : current?.id === "finance" ? (
             <Finance data={data} />
           ) : current?.id === "accounting" ? (
             <FinanceCenter key={restaurant} restaurant={restaurant} />
+          ) : current?.id === "billing" ? (
+            <BillingCenter key={restaurant} restaurant={restaurant} />
+          ) : current?.id === "invoices" ? (
+            <InvoicesCenter key={restaurant} restaurant={restaurant} />
+          ) : current?.id === "bank" ? (
+            <BankCenter key={restaurant} restaurant={restaurant} />
+          ) : current?.id === "hr" || current?.id === "payroll" ? (
+            <HrCenter
+              key={`${current.id}-${restaurant}`}
+              restaurant={restaurant}
+              payrollView={current.id === "payroll"}
+            />
+          ) : current?.id === "payouts" ? (
+            <PayoutsCenter key={restaurant} restaurant={restaurant} />
           ) : (
             <Management
               key={`${current?.id}-${restaurant}`}
@@ -587,11 +523,11 @@ export function Workspace() {
           )}
         </main>
         <footer className="workspace-footer">
-          atacuisine <span>Un service bien orchestré.</span>
+          STUDIO OS <span>Un service bien orchestré.</span>
           <small>
             {data.demo
               ? "Démonstration · données fictives"
-              : "atacuisine · commandes et stocks partagés"}
+              : "STUDIO OS · commandes et stocks partagés"}
           </small>
         </footer>
       </div>

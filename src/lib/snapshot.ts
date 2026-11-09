@@ -1,3 +1,4 @@
+import { observeStaffFloor } from "@/features/floor/capabilities";
 import { restaurantPlan } from "@/features/platform/entitlements";
 import {
   messagingProviders,
@@ -8,6 +9,7 @@ import { type DB, rows, one, demoEnabled } from "./database/db";
 import { type Actor, scope } from "./auth/session";
 import { can } from "./permissions";
 import { canArrange } from "@/features/floor/access";
+import { moduleEnabled } from "@/features/modules/access";
 import { tableQuota } from "@/features/floor/service";
 import type { Snapshot, MenuItem, Restaurant, Order, Item } from "./types";
 import {
@@ -34,9 +36,26 @@ export async function snapshot(
   user = await scope(db, user, r);
   await registerPresence(db, r, user);
   const plan = await restaurantPlan(db, r);
+  const activeModules = {
+    floor: await moduleEnabled(db, r, "floor"),
+    "table-booking": await moduleEnabled(db, r, "table-booking"),
+  };
+  const paidAddons=(await rows<{addon:string}>(db,
+    `SELECT addon FROM unnest(ARRAY['invoices','attendance','client-invoices','payroll',
+      'offline-conflicts','connections','qr','loyalty']) AS addon
+     WHERE app.addon_installed($1,addon)`,[r])).map(row=>row.addon);
   const allowed = (p: Parameters<typeof can>[1]) =>
-    (plan >= 69 || !["finance", "customers", "website"].includes(p)) &&
+    (p === "customers" ? paidAddons.includes("loyalty") :
+      p === "payroll" ? paidAddons.includes("payroll") :
+      plan >= 69 || !["finance", "website"].includes(p)) &&
     can(user.roles ?? user.role, p);
+  const floorVisible =
+    activeModules.floor &&
+    observeStaffFloor(
+      "floor.view",
+      user.roles ?? [user.role],
+      allowed("orders") || allowed("reservations"),
+    );
   const restaurants = await rows<Restaurant>(
     db,
     "SELECT DISTINCT r.* FROM restaurants r JOIN memberships m ON m.restaurant_id=r.id WHERE m.profile_id=$1 ORDER BY r.id",
@@ -49,7 +68,7 @@ export async function snapshot(
     allowed("finance")
       ? await rows<Order>(
           db,
-          `SELECT o.id,o.status,o.channel,o.created_at,o.session_id,${allowed("orders") ? "o.customer_name,o.contact" : "'' AS customer_name"},t.number AS table_number,pd.amount AS payment_amount,pd.discount FROM orders o LEFT JOIN table_sessions s ON s.id=o.session_id LEFT JOIN dining_tables t ON t.id=s.table_id LEFT JOIN payment_declarations pd ON pd.order_id=o.id OR pd.session_id=o.session_id WHERE o.restaurant_id=$1 ORDER BY o.created_at DESC LIMIT 150`,
+          `SELECT o.id,o.status,o.channel,o.created_at,o.session_id,${allowed("orders") ? "o.customer_name,o.contact" : "'' AS customer_name"},t.number AS table_number,pd.amount AS payment_amount,pd.discount FROM orders o LEFT JOIN table_sessions s ON s.id=o.session_id LEFT JOIN dining_tables t ON t.id=s.table_id LEFT JOIN payment_declarations pd ON pd.order_id=o.id OR pd.session_id=o.session_id WHERE o.restaurant_id=$1 AND NOT EXISTS(SELECT 1 FROM shop_orders so WHERE so.order_id=o.id AND so.payment_method='stripe' AND so.payment_status<>'paid') ORDER BY o.created_at DESC LIMIT 150`,
           [r],
         )
       : [];
@@ -63,6 +82,19 @@ export async function snapshot(
   for (const order of orders)
     order.items = items.filter((i) => i.order_id === order.id);
   return {
+    activeModules,
+    uninstalledAddons: (await rows<{ addon_id: string }>(db,
+      "SELECT addon_id FROM addon_installations WHERE restaurant_id=$1 AND NOT installed", [r],
+    )).map((row) => row.addon_id),
+    addons: paidAddons,
+    // Licences d’add-ons de mesure : la RLS limite déjà la lecture à l’établissement ouvert.
+    licenses: (
+      await rows<{ product_id: string }>(
+        db,
+        "SELECT l.product_id FROM addon_licenses l JOIN addon_products p ON p.id=l.product_id WHERE l.restaurant_id=$1 AND p.kind IN ('analytics','estimation') AND app.addon_installed($1,l.product_id)",
+        [r],
+      )
+    ).map((license) => license.product_id),
     demo: demoEnabled(),
     categories: (
       await rows<{ category: string }>(
@@ -76,22 +108,20 @@ export async function snapshot(
     restaurants,
     restaurant: await one(db, "SELECT * FROM restaurants WHERE id=$1", [r]),
     menu: await menu(db, r, allowed("finance"), allowed("catalog")),
-    tables:
-      allowed("orders") || allowed("reservations")
-        ? await rows(
-            db,
-            "SELECT * FROM dining_tables WHERE restaurant_id=$1 ORDER BY number",
-            [r],
-          )
-        : [],
-    zones:
-      allowed("orders") || allowed("reservations")
-        ? await rows(
-            db,
-            "SELECT id,name,position FROM floor_zones WHERE restaurant_id=$1 ORDER BY position,created_at",
-            [r],
-          )
-        : [],
+    tables: floorVisible
+      ? await rows(
+          db,
+          "SELECT * FROM dining_tables WHERE restaurant_id=$1 ORDER BY number",
+          [r],
+        )
+      : [],
+    zones: floorVisible
+      ? await rows(
+          db,
+          "SELECT id,name,position FROM floor_zones WHERE restaurant_id=$1 ORDER BY position,created_at",
+          [r],
+        )
+      : [],
     floorPlan: {
       canArrange: await canArrange(db, r, user),
       ...(await tableQuota(db, r)),
@@ -119,13 +149,14 @@ export async function snapshot(
           [r],
         )
       : [],
-    reservations: allowed("reservations")
-      ? await rows(
-          db,
-          "SELECT * FROM reservations WHERE restaurant_id=$1 ORDER BY starts_at",
-          [r],
-        )
-      : [],
+    reservations:
+      activeModules["table-booking"] && allowed("reservations")
+        ? await rows(
+            db,
+            "SELECT * FROM reservations WHERE restaurant_id=$1 ORDER BY starts_at",
+            [r],
+          )
+        : [],
     notifications: await rows(
       db,
       "SELECT n.*,EXISTS(SELECT 1 FROM notification_reads nr WHERE nr.notification_id=n.id AND nr.profile_id=$2) AS read FROM notifications n WHERE restaurant_id=$1 ORDER BY created_at DESC LIMIT 40",
@@ -168,7 +199,7 @@ export async function snapshot(
       : [],
     timeEntries: await rows(
       db,
-      `SELECT t.*,p.name FROM time_entries t JOIN profiles p ON p.id=t.profile_id WHERE restaurant_id=$1 ${allowed("team") ? "" : "AND profile_id=$2"} ORDER BY created_at DESC LIMIT 50`,
+      `SELECT t.*,p.name FROM time_entries t JOIN profiles p ON p.id=t.profile_id WHERE restaurant_id=$1 AND t.voided_at IS NULL ${allowed("team") ? "" : "AND profile_id=$2"} ORDER BY created_at DESC LIMIT 50`,
       allowed("team") ? [r] : [r, user.id],
     ),
     plan,
@@ -226,16 +257,6 @@ export async function snapshot(
           [r],
         )
       : [],
-    // Même périmètre que les encaissements : toutes dates, sans limite d’affichage.
-    materialCostSold: allowed("finance")
-      ? (
-          await one<{ cost: number }>(
-            db,
-            "SELECT coalesce(sum(i.material_cost*i.quantity),0)::float*100 AS cost FROM order_items i JOIN orders o ON o.id=i.order_id WHERE o.restaurant_id=$1 AND o.status='paid' AND i.status='served'",
-            [r],
-          )
-        ).cost
-      : 0,
     payments: allowed("finance")
       ? await rows(
           db,

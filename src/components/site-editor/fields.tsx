@@ -27,6 +27,8 @@ type Media = {
   size: number;
   width: number | null;
   height: number | null;
+  status?: "processing" | "ready" | "failed";
+  processing_error?: string | null;
 };
 type Limits = { imageBytes: number; videoBytes: number };
 
@@ -81,18 +83,31 @@ export function MediaPicker({
         {(kind === "image"
           ? [...list.map((m) => m.url), ...builtInImages]
           : list.map((m) => m.url)
-        ).map((url) => (
-          <button type="button" key={url} onClick={() => pick(url)} title={url}>
-            {kind === "image" ? (
-              <img src={url} alt="" loading="lazy" />
-            ) : (
-              <span className="site-media-video">
-                <Film size={22} />
-                {items.find((m) => m.url === url)?.original_name}
-              </span>
-            )}
-          </button>
-        ))}
+        ).map((url) => {
+          const media = items.find((m) => m.url === url);
+          const pending = media?.status === "processing";
+          const failed = media?.status === "failed";
+          return (
+            <button
+              type="button"
+              key={url}
+              disabled={pending || failed}
+              onClick={() => pick(url)}
+              title={failed ? media?.processing_error || url : url}
+            >
+              {kind === "image" ? (
+                <img src={url} alt="" loading="lazy" />
+              ) : (
+                <span className="site-media-video">
+                  <Film size={22} />
+                  {media?.original_name}
+                  {pending && <small>Optimisation en cours…</small>}
+                  {failed && <small>Échec de l’optimisation</small>}
+                </span>
+              )}
+            </button>
+          );
+        })}
         {kind === "video" && !list.length && (
           <p className="muted">Aucune vidéo importée.</p>
         )}

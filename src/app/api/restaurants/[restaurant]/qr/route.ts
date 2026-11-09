@@ -10,6 +10,7 @@ import {
 import { scope } from "@/lib/auth/session";
 import { rows } from "@/lib/database/db";
 import { qrAction, qrActionSchema, qrPortfolio } from "@/features/qr/service";
+import { requirePaidAddon } from "@/features/platform/entitlements";
 
 export const dynamic = "force-dynamic";
 type Context = { params: Promise<{ restaurant: string }> };
@@ -22,9 +23,10 @@ async function routeGET(req: NextRequest, c: Context) {
         const member = await scope(db, user, restaurant);
         // Clock-in page: who is clocking in, and what they did last.
         if (req.nextUrl.searchParams.get("view") === "clock") {
+          await requirePaidAddon(db,restaurant,"attendance");
           const last = await rows<{ event: string; created_at: string }>(
             db,
-            "SELECT event,created_at FROM time_entries WHERE profile_id=$1 AND restaurant_id=$2 ORDER BY created_at DESC LIMIT 1",
+            "SELECT event,created_at FROM time_entries WHERE profile_id=$1 AND restaurant_id=$2 AND voided_at IS NULL ORDER BY created_at DESC LIMIT 1",
             [member.id, restaurant],
           );
           const r = await rows<{ name: string }>(

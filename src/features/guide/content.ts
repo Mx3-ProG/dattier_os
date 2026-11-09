@@ -66,7 +66,7 @@ const core: Chapter[] = [
     minutes: 2,
     steps: [
       {
-        title: "Bienvenue dans atacuisine",
+        title: "Bienvenue dans STUDIO OS",
         body: "Un seul outil pour la salle, la cuisine, le bar, les stocks et la direction. Ce que l’un saisit est immédiatement visible par les autres. Cette visite vous montre où tout se trouve ; vous pouvez la quitter à tout moment avec Échap.",
       },
       {
@@ -462,7 +462,7 @@ const core: Chapter[] = [
       {
         target: '.modal select[name="method"]',
         title: "Le moyen de paiement",
-        body: "Carte bancaire, espèces ou autre. atacuisine enregistre le règlement que vous avez encaissé avec votre terminal habituel : il n’encaisse pas lui-même l’argent.",
+        body: "Carte bancaire, espèces ou autre. STUDIO OS enregistre le règlement que vous avez encaissé avec votre terminal habituel : il n’encaisse pas lui-même l’argent.",
       },
       {
         target: ".modal .btn.primary",
@@ -478,7 +478,7 @@ const core: Chapter[] = [
       },
     ],
     guide: {
-      lead: "Le règlement se déclare à la fin du repas, une fois par table. atacuisine n’est pas une caisse certifiée : il enregistre le paiement encaissé avec votre terminal ou en espèces, pour que les ventes, les stocks et la fidélité restent justes.",
+      lead: "Le règlement se déclare à la fin du repas, une fois par table. STUDIO OS n’est pas une caisse certifiée : il enregistre le paiement encaissé avec votre terminal ou en espèces, pour que les ventes, les stocks et la fidélité restent justes.",
       sections: [
         {
           title: "Pas à pas",
@@ -533,7 +533,7 @@ const core: Chapter[] = [
         target: ".card.table-scroll .btn",
         text: "Gérer",
         title: "Confirmer et affecter une table",
-        body: "« Gérer » permet de confirmer ou refuser une demande, d’affecter une table, puis de noter l’arrivée ou l’absence. atacuisine refuse une table trop petite ou déjà réservée sur le même créneau.",
+        body: "« Gérer » permet de confirmer ou refuser une demande, d’affecter une table, puis de noter l’arrivée ou l’absence. STUDIO OS refuse une table trop petite ou déjà réservée sur le même créneau.",
         fallback:
           "Aucune réservation à gérer : créez-en une depuis le formulaire public.",
       },
@@ -582,7 +582,7 @@ const core: Chapter[] = [
       {
         target: ".modal .recipe-line",
         title: "La recette, par portion",
-        body: "Indiquez chaque ingrédient et sa quantité pour une portion, dans l’unité du stock (grammes, pièces…). C’est grâce à elle que atacuisine réserve et consomme le bon stock, et calcule les portions disponibles.",
+        body: "Indiquez chaque ingrédient et sa quantité pour une portion, dans l’unité du stock (grammes, pièces…). C’est grâce à elle que STUDIO OS réserve et consomme le bon stock, et calcule les portions disponibles.",
         fallback: "Ouvrez « Ajouter un produit » pour voir le formulaire.",
       },
       {
@@ -745,7 +745,7 @@ const core: Chapter[] = [
         },
         {
           title: "Bon à savoir",
-          text: "Les commandes fournisseurs sont enregistrées dans atacuisine ; aucun bon n’est envoyé automatiquement au fournisseur. L’administration du restaurant propose aussi des commandes multilignes et des campagnes d’inventaire.",
+          text: "Les commandes fournisseurs sont enregistrées dans STUDIO OS ; aucun bon n’est envoyé automatiquement au fournisseur. L’administration du restaurant propose aussi des commandes multilignes et des campagnes d’inventaire.",
         },
       ],
     },
@@ -876,7 +876,7 @@ const core: Chapter[] = [
         module: "finance",
         target: ".metrics",
         title: "Le pilotage financier",
-        body: "Encaissements déclarés TTC toutes dates, ticket moyen par déclaration, dépenses déclarées et coût matière théorique des produits vendus.",
+        body: "Choisissez une période : encaissements, chiffre d’affaires et autres indicateurs s’affichent avec leur niveau de fiabilité.",
       },
       {
         module: "finance",
@@ -899,16 +899,22 @@ const core: Chapter[] = [
         {
           title: "Ce que vous pouvez faire",
           points: [
-            "Consulter les encaissements déclarés, le ticket moyen, les dépenses et le coût matière théorique.",
+            "Consulter par période les encaissements, le chiffre d’affaires, la TVA, les dépenses, le coût matière et la marge estimée. Chaque chiffre indique s’il est confirmé, incomplet, estimé ou indisponible.",
             "Retrouver l’historique des règlements, avec leurs remises.",
             "Exporter les règlements en CSV.",
             "Enregistrer les dépenses opérationnelles.",
             "Dans Opérations à vérifier : déclarer le régime de TVA et le taux de chaque produit, sur place et à emporter. Chaque règlement prépare alors son écriture, et ce qui reste incertain vous est présenté.",
+            "Déclarer le taux de TVA par catégorie ou par produit, et consulter le calcul de la TVA collectée pour préparer votre déclaration, qui reste à votre charge.",
+            "Dans Factures clients : facturer une vente encaissée ou créer une facture, suivre les règlements et corriger par avoir. Une facture émise ne se modifie plus.",
+            "Dans Factures fournisseurs : déposer photos et PDF, vérifier ce qui a été lu et valider d’un clic. Rien n’est comptabilisé sans votre validation.",
+            "Dans Banque : importer vos relevés, confirmer les rapprochements proposés et suivre votre trésorerie. Un mouvement sans correspondance reste à vérifier.",
+            "Dans Paie : saisir contrats et taux, vérifier les heures consolidées depuis le pointage, clôturer le mois et exporter les variables pour votre gestionnaire de paie. Aucun bulletin n’est produit ici.",
+            "Dans Mes versements : suivre vos ventes en ligne, activer votre compte de versement et demander le virement de ce qui est disponible.",
           ],
         },
         {
           title: "Limites",
-          text: "Les exports et les écritures sont une pré-comptabilité à valider par votre expert-comptable : atacuisine n’est ni un logiciel de comptabilité ni une caisse certifiée. Aucun taux de TVA n’est déduit à votre place.",
+          text: "Les exports et les écritures sont une pré-comptabilité à valider par votre expert-comptable : STUDIO OS n’est ni un logiciel de comptabilité ni une caisse certifiée. Aucun taux de TVA n’est déduit à votre place.",
         },
       ],
     },
@@ -1026,7 +1032,7 @@ const core: Chapter[] = [
       },
       {
         title: "Vous êtes prêt",
-        body: "Vous connaissez maintenant tout atacuisine. Le guide complet reprend chaque fonctionnalité par écrit, avec les règles détaillées et les rôles.",
+        body: "Vous connaissez maintenant tout STUDIO OS. Le guide complet reprend chaque fonctionnalité par écrit, avec les règles détaillées et les rôles.",
         link: { label: "Lire le guide complet", href: "/guide" },
       },
     ],
@@ -1157,7 +1163,7 @@ export const glossary: { term: string; definition: string }[] = [
   {
     term: "Règlement déclaré",
     definition:
-      "L’enregistrement d’un paiement encaissé avec votre terminal ou en espèces. atacuisine n’encaisse pas lui-même en salle.",
+      "L’enregistrement d’un paiement encaissé avec votre terminal ou en espèces. STUDIO OS n’encaisse pas lui-même en salle.",
   },
   {
     term: "Code promo personnel",

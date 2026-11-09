@@ -1,4 +1,6 @@
-import { requirePlan } from "@/features/platform/entitlements";
+import { observeStaffFloor } from "@/features/floor/capabilities";
+import { requireModule } from "@/features/modules/access";
+import { requirePlan, requirePaidAddon } from "@/features/platform/entitlements";
 import {
   productSchema,
   createProduct,
@@ -202,20 +204,11 @@ export async function perform(
   user: Actor,
   a: z.infer<typeof actionSchema>,
 ) {
-  if (
-    [
-      "issuePromo",
-      "cancelPromo",
-      "expense",
-      "customer",
-      "loyalty",
-      "messageCustomer",
-      "engagementSettings",
-      "flashPromotion",
-      "stopFlashPromotion",
-    ].includes(a.action) ||
-    (a.action === "pay" && (a.customer || a.promo))
-  )
+  if (["issuePromo","cancelPromo","customer","loyalty","engagementSettings",
+       "flashPromotion","stopFlashPromotion"].includes(a.action) ||
+      (a.action === "pay" && (a.customer || a.promo)))
+    await requirePaidAddon(db,r,"loyalty");
+  if (["expense","messageCustomer"].includes(a.action))
     await requirePlan(db, r, 69);
   switch (a.action) {
     case "createProduct":
@@ -253,6 +246,18 @@ export async function perform(
         [a.id, r],
       );
       if (o.status !== "pending") throw new Error("Demande déjà traitée.");
+      if (
+        (
+          await rows(
+            db,
+            "SELECT order_id FROM shop_orders WHERE order_id=$1 AND payment_method='stripe' AND payment_status<>'paid'",
+            [a.id],
+          )
+        ).length
+      )
+        throw new Error(
+          "Paiement en ligne en attente : commande non confirmable.",
+        );
       if (a.accept) {
         if (o.session_id)
           await one(
@@ -289,6 +294,12 @@ export async function perform(
     case "deleteZone":
       return deleteZone(db, r, user, a.id);
     case "table": {
+      await requireModule(db, r, "floor");
+      observeStaffFloor(
+        "floor.status",
+        user.roles ?? [user.role],
+        can(user.roles ?? user.role, "orders"),
+      );
       requirePermission(user.roles ?? user.role, "orders");
       const t = await one<{ status: string }>(
         db,
@@ -304,6 +315,12 @@ export async function perform(
       break;
     }
     case "reservation": {
+      await requireModule(db, r, "table-booking");
+      observeStaffFloor(
+        "table-booking.manage",
+        user.roles ?? [user.role],
+        can(user.roles ?? user.role, "reservations"),
+      );
       requirePermission(user.roles ?? user.role, "reservations");
       const res = await one<{
         status: string;
@@ -410,10 +427,11 @@ export async function perform(
     }
     case "supplierIngredient":
       requirePermission(user.roles ?? user.role, "purchases");
-      await one(db, "SELECT id FROM suppliers WHERE id=$1 AND restaurant_id=$2", [
-        a.supplier,
-        r,
-      ]);
+      await one(
+        db,
+        "SELECT id FROM suppliers WHERE id=$1 AND restaurant_id=$2",
+        [a.supplier, r],
+      );
       await one(
         db,
         "SELECT id FROM ingredients WHERE id=$1 AND restaurant_id=$2",
@@ -428,7 +446,11 @@ export async function perform(
       break;
     case "ingredient": {
       const roles = user.roles ?? user.role;
-      if (!["catalog", "stock", "purchases"].some((p) => can(roles, p as Permission)))
+      if (
+        !["catalog", "stock", "purchases"].some((p) =>
+          can(roles, p as Permission),
+        )
+      )
         throw new Error("Accès refusé pour ce profil.");
       const ingredientId = uuid();
       await db.query(
@@ -547,9 +569,10 @@ export async function perform(
       ]);
       break;
     case "clock": {
+      await requirePaidAddon(db,r,"attendance");
       const latest = await rows<{ event: string }>(
         db,
-        "SELECT event FROM time_entries WHERE profile_id=$1 AND restaurant_id=$2 ORDER BY created_at DESC LIMIT 1",
+        "SELECT event FROM time_entries WHERE profile_id=$1 AND restaurant_id=$2 AND voided_at IS NULL ORDER BY created_at DESC LIMIT 1",
         [user.id, r],
       );
       const prev = latest[0]?.event ?? "end";
@@ -590,6 +613,7 @@ export async function perform(
       break;
     case "loyalty": {
       requirePermission(user.roles ?? user.role, "customers");
+      await requirePaidAddon(db,r,"loyalty");
       const c = await one<{ points: number; consent: boolean }>(
         db,
         "SELECT *,coalesce(app.customer_points(id),points) AS points FROM customers WHERE id=$1 AND restaurant_id=$2 FOR UPDATE",

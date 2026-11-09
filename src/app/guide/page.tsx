@@ -5,9 +5,9 @@ import "../landing.css";
 import "./guide.css";
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = {
-  title: "Guide d’utilisation · atacuisine",
+  title: "Guide d’utilisation · STUDIO OS",
   description:
-    "Toutes les fonctionnalités de atacuisine expliquées de A à Z : commandes, cuisine, règlement, carte, stocks, réservations, fidélité, site web et paiement client.",
+    "Toutes les fonctionnalités de STUDIO OS expliquées de A à Z : commandes, cuisine, règlement, carte, stocks, réservations, fidélité, site web et paiement client.",
 };
 export default function Page() {
   return <GuidePage demo={demoEnabled()} />;

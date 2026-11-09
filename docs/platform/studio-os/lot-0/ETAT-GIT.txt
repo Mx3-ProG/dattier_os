@@ -1,0 +1,100 @@
+ M .env.production.example
+ M README.md
+ M THIRD_PARTY_NOTICES.md
+ M compose.yaml
+ M docs/DATABASE.md
+ M docs/KNOWN_LIMITATIONS.md
+ M docs/ROLES_PERMISSIONS.md
+ M docs/platform/CUISINE_IA.md
+ M docs/platform/FINANCIAL_AUDIT.md
+ M docs/platform/IMPLEMENTATION_STATUS.md
+ M docs/platform/PROVIDERS.md
+ M next-env.d.ts
+ M package-lock.json
+ M package.json
+ M scripts/verify-postgres.ts
+ M scripts/worker.ts
+ M src/app/api/restaurants/[restaurant]/qr/route.ts
+ M src/app/api/store/[restaurant]/[action]/route.ts
+ M src/app/donuts.css
+ M src/components/cms-site/public-reservation.tsx
+ M src/components/cms-site/store.tsx
+ M src/components/finance-center.tsx
+ M src/components/overview.tsx
+ M src/components/public/booking.tsx
+ M src/components/workspace.tsx
+ M src/features/assistant/llm.ts
+ M src/features/assistant/reflex.ts
+ M src/features/assistant/service.ts
+ M src/features/cms/defaults.ts
+ M src/features/commerce/service.ts
+ M src/features/finance/books.ts
+ M src/features/finance/service.ts
+ M src/features/guide/content.ts
+ M src/features/integrations/exports.ts
+ M src/features/platform/jobs.ts
+ M src/lib/actions.ts
+ M src/lib/database/migrate.ts
+ M src/lib/permissions.ts
+ M src/lib/snapshot.ts
+ M src/lib/types.ts
+ M tests/finance.test.ts
+?? database/migrations/037_online_payments.sql
+?? database/migrations/038_supplier_invoices.sql
+?? database/migrations/039_bank_reconciliation.sql
+?? database/migrations/040_hr_payroll.sql
+?? database/migrations/041_sales_invoices.sql
+?? database/migrations/042_finance_alignment.sql
+?? database/migrations/down/037_online_payments.sql
+?? database/migrations/down/038_supplier_invoices.sql
+?? database/migrations/down/039_bank_reconciliation.sql
+?? database/migrations/down/040_hr_payroll.sql
+?? database/migrations/down/041_sales_invoices.sql
+?? database/migrations/down/042_finance_alignment.sql
+?? docs/platform/BANK_RECONCILIATION.md
+?? docs/platform/HR_PAYROLL.md
+?? docs/platform/ONLINE_PAYMENTS.md
+?? docs/platform/SALES_INVOICES.md
+?? docs/platform/SUPPLIER_INVOICES.md
+?? docs/platform/studio-os/lot-0/REFERENCE.json
+?? scripts/payments-review.ts
+?? src/app/api/restaurants/[restaurant]/bank/route.ts
+?? src/app/api/restaurants/[restaurant]/billing/[invoice]/[format]/route.ts
+?? src/app/api/restaurants/[restaurant]/billing/route.ts
+?? src/app/api/restaurants/[restaurant]/finance/dashboard/route.ts
+?? src/app/api/restaurants/[restaurant]/finance/fec/route.ts
+?? src/app/api/restaurants/[restaurant]/hr/export/route.ts
+?? src/app/api/restaurants/[restaurant]/hr/route.ts
+?? src/app/api/restaurants/[restaurant]/invoices/[invoice]/route.ts
+?? src/app/api/restaurants/[restaurant]/invoices/route.ts
+?? src/app/api/restaurants/[restaurant]/payments/route.ts
+?? src/app/api/webhooks/stripe/route.ts
+?? src/components/bank-center.tsx
+?? src/components/billing-center.tsx
+?? src/components/finance-dashboard.tsx
+?? src/components/hr-center.tsx
+?? src/components/invoices-center.tsx
+?? src/components/payouts-center.tsx
+?? src/features/assistant/finance.ts
+?? src/features/bank/matching.ts
+?? src/features/bank/parsers.ts
+?? src/features/bank/service.ts
+?? src/features/billing/documents.ts
+?? src/features/billing/service.ts
+?? src/features/finance/dashboard.ts
+?? src/features/hr/hours.ts
+?? src/features/hr/service.ts
+?? src/features/invoices/checks.ts
+?? src/features/invoices/extract.ts
+?? src/features/invoices/service.ts
+?? src/features/invoices/storage.ts
+?? src/features/invoices/structured.ts
+?? src/features/payments/config.ts
+?? src/features/payments/service.ts
+?? tests/bank.test.ts
+?? tests/billing.test.ts
+?? tests/finance-dashboard.test.ts
+?? tests/hr.test.ts
+?? tests/invoices.test.ts
+?? tests/payments.test.ts
+?? tests/reservation-page.test.ts

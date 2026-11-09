@@ -63,10 +63,14 @@ export const restaurantModules: RestaurantModule[] = [
 export function availableRestaurantModules(
   roles: Role[],
   plan: number,
+  addons: readonly string[] = [],
 ): RestaurantModule[] {
   return restaurantModules.filter(
     (module) =>
-      plan >= (module.minimumPlan ?? 0) &&
+      (module.id === "loyalty" ? addons.includes("loyalty") :
+       module.id === "reconciliation" ? addons.includes("offline-conflicts") :
+       module.id === "integrations" ? addons.includes("connections") :
+       plan >= (module.minimumPlan ?? 0)) &&
       module.permissions.some((permission) => can(roles, permission)),
   );
 }

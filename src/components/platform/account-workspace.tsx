@@ -14,19 +14,23 @@ import {
   X,
   LogOut,
   ArrowUpRight,
+  Package,
 } from "lucide-react";
+import { clearLoadingConfigs } from "@/components/loading-screens/tenant-loader";
 export function AccountWorkspace({
   children,
   userId,
   name,
   restaurants,
   canCreate,
+  platformAdmin = false,
 }: {
   children: ReactNode;
   userId?: string;
   name?: string;
   restaurants: { id: string; name: string; plan: number }[];
   canCreate: boolean;
+  platformAdmin?: boolean;
 }) {
   const [mobile, setMobile] = useState(false);
   const first = restaurants.find((r) => r.plan > 0);
@@ -43,7 +47,7 @@ export function AccountWorkspace({
           <span className="brand-mark">
             <Leaf size={23} />
           </span>
-          atacuisine
+          STUDIO OS
         </Link>
         <AppearanceButton />
         <button
@@ -89,6 +93,15 @@ export function AccountWorkspace({
                 <span>{r.name}</span>
               </Link>
             ))}
+          {platformAdmin && (
+            <>
+              <span className="nav-group">ADMINISTRATION</span>
+              <Link className="restaurant-nav-link" href="/platform/boutique">
+                <Package size={18} />
+                Boutique d’add-ons
+              </Link>
+            </>
+          )}
           {canCreate && (
             <a
               className="restaurant-nav-link"
@@ -101,7 +114,12 @@ export function AccountWorkspace({
           )}
         </nav>
         {name && (
-          <form className="account-logout" action="/auth/logout" method="post">
+          <form
+            className="account-logout"
+            action="/auth/logout"
+            method="post"
+            onSubmit={clearLoadingConfigs}
+          >
             <button>
               <LogOut size={16} />
               Se déconnecter

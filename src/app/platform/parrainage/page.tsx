@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { ReferralProgram } from "@/components/platform/referral-program";
 
-export const metadata: Metadata = { title: "Programme parrain · atacuisine" };
+export const metadata: Metadata = { title: "Programme parrain · STUDIO OS" };
 
 export default async function Page({
   searchParams,

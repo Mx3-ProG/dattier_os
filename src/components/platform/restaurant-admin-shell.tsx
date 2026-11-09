@@ -68,6 +68,7 @@ export function RestaurantAdminShell({
   restaurantName,
   plan,
   userRoles,
+  addons,
   activeModule,
   pageTitle,
   contentClassName,
@@ -78,6 +79,7 @@ export function RestaurantAdminShell({
   restaurantName: string;
   plan: number;
   userRoles: Role[];
+  addons: string[];
   activeModule?: RestaurantModuleId;
   pageTitle?: string;
   contentClassName?: string;
@@ -85,7 +87,7 @@ export function RestaurantAdminShell({
   demo?: boolean;
 }) {
   const [mobile, setMobile] = useState(false);
-  const modules = availableRestaurantModules(userRoles, plan);
+  const modules = availableRestaurantModules(userRoles, plan, addons);
   const dashboard = `/dashboard?restaurant=${encodeURIComponent(restaurant)}`;
   const isSite = activeModule === "site";
   const title = isSite
@@ -113,7 +115,7 @@ export function RestaurantAdminShell({
           <span className="brand-mark">
             <Leaf size={23} />
           </span>
-          atacuisine
+          STUDIO OS
         </Link>
         <AppearanceButton />
         <button

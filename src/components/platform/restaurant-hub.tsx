@@ -35,18 +35,20 @@ export function RestaurantHub({
   restaurantName,
   plan,
   userRoles,
+  addons,
 }: {
   restaurant: string;
   restaurantName: string;
   plan: number;
   userRoles: Role[];
+  addons: string[];
 }) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [refreshVersion, setRefreshVersion] = useState(0);
   const accessibleTabs = useMemo(
-    () => availableRestaurantModules(userRoles, plan),
-    [plan, userRoles],
+    () => availableRestaurantModules(userRoles, plan, addons),
+    [plan, userRoles, addons],
   );
   const requestedTab = searchParams.get("module");
   const initialTab = accessibleTabs.some((module) => module.id === requestedTab)
@@ -159,6 +161,7 @@ export function RestaurantHub({
       restaurantName={restaurantName}
       plan={plan}
       userRoles={userRoles}
+      addons={addons}
       activeModule={tab as RestaurantModuleId}
       pageTitle="Administration du restaurant"
       contentClassName="platform"

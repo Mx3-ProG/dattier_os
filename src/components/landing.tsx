@@ -80,7 +80,7 @@ const steps = [
 const faq = [
   {
     q: "L’IA peut-elle agir sans mon accord ?",
-    a: "Non. Cuisine IA prépare les actions et vous demande de les confirmer. Vous pouvez lui écrire ou lui parler, selon la compatibilité de votre navigateur. Les réponses utilisent des crédits, avec des recharges payantes distinctes de votre abonnement.",
+    a: "Non. STUDIO VOICE prépare les actions et vous demande de les confirmer. Vous pouvez lui écrire ou lui parler, selon la compatibilité de votre navigateur. Les réponses utilisent des crédits, avec des recharges payantes distinctes de votre abonnement.",
   },
   {
     q: "Puis-je avoir un abonnement à 0 € ?",
@@ -100,7 +100,7 @@ const faq = [
   },
   {
     q: "Le code est-il ouvert ?",
-    a: "Oui. atacuisine est distribué sous licence AGPL-3.0. Le code de la version en service reste consultable.",
+    a: "Oui. STUDIO OS est distribué sous licence AGPL-3.0. Le code de la version en service reste consultable.",
   },
 ];
 
@@ -134,11 +134,11 @@ export function Landing({
       </a>
       <header className="landing-header">
         <Link href="/" className="landing-brand">
-          <UtensilsCrossed size={20} aria-hidden /> atacuisine
+          <UtensilsCrossed size={20} aria-hidden /> STUDIO OS
         </Link>
         <nav aria-label="Navigation principale">
           <a href="#modules">Votre quotidien</a>
-          <a href="#cuisine-ia">Cuisine IA</a>
+          <a href="#cuisine-ia">STUDIO VOICE</a>
 
           <a href="#offres">Offres</a>
           <a href="#equipe">Studio ATS</a>
@@ -161,7 +161,7 @@ export function Landing({
             </h1>
             <p className="landing-lead">
               Vous avez ouvert pour régaler, accueillir, partager. Pas pour
-              passer vos soirées à tout gérer. atacuisine rassemble votre
+              passer vos soirées à tout gérer. STUDIO OS rassemble votre
               quotidien et vous aide avec l’IA, pour garder du temps et de
               l’énergie pour ce qui compte.
             </p>
@@ -228,7 +228,7 @@ export function Landing({
               de vos clients.
             </p>
             <span className="landing-note">
-              Illustration d’un service avec atacuisine
+              Illustration d’un service avec STUDIO OS
             </span>
           </div>
         </section>
@@ -341,7 +341,7 @@ export function Landing({
         <section className="landing-section landing-ai" id="cuisine-ia">
           <div className="landing-heading">
             <span className="landing-eyebrow">
-              <Sparkles size={16} aria-hidden /> Découvrez Cuisine IA
+              <Sparkles size={16} aria-hidden /> Découvrez STUDIO VOICE
             </span>
             <h2>
               Une chose de moins
@@ -358,7 +358,7 @@ export function Landing({
                 voix.
               </li>
               <li>
-                <Check size={18} aria-hidden /> Cuisine IA prépare les actions.
+                <Check size={18} aria-hidden /> STUDIO VOICE prépare les actions.
               </li>
               <li>
                 <Check size={18} aria-hidden /> Vous vérifiez et confirmez.
@@ -383,7 +383,7 @@ export function Landing({
               <Sparkles size={22} aria-hidden />
               <h3>La demande devient une action à valider.</h3>
               <p>
-                Cuisine IA prépare la commande et vous demande les informations
+                STUDIO VOICE prépare la commande et vous demande les informations
                 manquantes. Vous relisez avant de confirmer.
               </p>
               <span className="landing-ai-status">
@@ -536,7 +536,7 @@ export function Landing({
                 fonctionnement concret.
               </p>
               <span>
-                Lire le guide Cuisine IA <ArrowUpRight size={17} aria-hidden />
+                Lire le guide STUDIO VOICE <ArrowUpRight size={17} aria-hidden />
               </span>
             </Link>
             <Link href="/guide#evolutions">
@@ -567,10 +567,10 @@ export function Landing({
 
         <section className="landing-section landing-team" id="equipe">
           <div className="landing-heading">
-            <span className="landing-eyebrow">Derrière atacuisine</span>
+            <span className="landing-eyebrow">Derrière STUDIO OS</span>
             <h2>Une plateforme. Une équipe identifiée.</h2>
             <p>
-              Studio ATS assure le développement et la maintenance d’atacuisine.
+              Studio ATS assure le développement et la maintenance de STUDIO OS.
               Un même interlocuteur pour faire évoluer l’outil qui accompagne
               votre restaurant.
             </p>
@@ -604,7 +604,7 @@ export function Landing({
               <div>
                 <h3>Vous gardez la décision</h3>
                 <p>
-                  Vos accès suivent les rôles de votre équipe. Cuisine IA
+                  Vos accès suivent les rôles de votre équipe. STUDIO VOICE
                   prépare les actions et attend votre confirmation.
                 </p>
               </div>
@@ -737,7 +737,7 @@ export function Landing({
 
       <footer className="landing-footer">
         <span className="landing-brand">
-          <UtensilsCrossed size={18} aria-hidden /> atacuisine
+          <UtensilsCrossed size={18} aria-hidden /> STUDIO OS
         </span>
         <nav aria-label="Liens utiles">
           {demoHref && <Link href={demoHref}>Démonstration</Link>}
@@ -756,7 +756,7 @@ export function Landing({
           <Link href="/platform">Espace client</Link>
           <Link href="/source">Code source et licence</Link>
         </nav>
-        <small>© atacuisine · Logiciel libre sous licence AGPL-3.0</small>
+        <small>© STUDIO OS · Logiciel libre sous licence AGPL-3.0</small>
       </footer>
     </div>
   );

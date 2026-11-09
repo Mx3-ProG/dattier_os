@@ -5,7 +5,7 @@ import type { Snapshot } from "@/lib/types";
     même carte (ingrédient ou fournisseur créé juste avant). */
 export type ActionPayload = { action: string } & Record<string, unknown>;
 
-/** Action proposée par Cuisine IA : rien n’est exécuté sans confirmation. */
+/** Action proposée par STUDIO VOICE : rien n’est exécuté sans confirmation. */
 export type Proposal = {
   id: string;
   title: string;

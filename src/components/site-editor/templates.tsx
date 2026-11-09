@@ -32,7 +32,7 @@ function TemplatePreview({ template: t }: { template: SiteTemplate }) {
         <i />
         <i />
         <i />
-        <span>{t.id}.atacuisine.fr</span>
+        <span>{t.id}.example.com</span>
       </div>
       <div className={`tpl-site tpl-site-${t.id}`}>
         <div className="tpl-site-nav">

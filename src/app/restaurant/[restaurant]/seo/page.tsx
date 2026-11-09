@@ -16,6 +16,7 @@ export default async function Page({
       restaurantName={access.restaurantName}
       plan={access.plan}
       userRoles={access.roles}
+      addons={access.addons}
       activeModule="seo"
       pageTitle="SEO et visibilité IA"
       contentClassName="platform"

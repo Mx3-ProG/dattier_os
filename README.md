@@ -49,7 +49,7 @@ Les scénarios PostgreSQL réels et de charge utilisent exclusivement des bases 
 
 ## État et limites
 
-Les parcours locaux et les contrôles SQL sont vérifiables ; leur présence ne vaut pas lancement commercial. Paiements en ligne, caisse, paie, comptabilité et livraison ne sont pas raccordés à des comptes prestataires. Les exports de ventes/pointages sont des données à rapprocher, sans prétention de conformité comptable ou de paie.
+Les parcours locaux et les contrôles SQL sont vérifiables ; leur présence ne vaut pas lancement commercial. Caisse, paie, comptabilité et livraison ne sont pas raccordées à des comptes prestataires. Le paiement en ligne est développé mais fermé sans clé Stripe, et n’a été vérifié qu’avec Stripe simulé ([détails](docs/platform/ONLINE_PAYMENTS.md)). Les exports de ventes/pointages sont des données à rapprocher, sans prétention de conformité comptable ou de paie.
 
 Le mode hors ligne fonctionne par appareils indépendants : aucun transfert automatique de ticket pendant une coupure. Quotas et opérations locales doivent être réconciliés avant de retirer un appareil. Un navigateur effacé peut perdre ses opérations non synchronisées.
 

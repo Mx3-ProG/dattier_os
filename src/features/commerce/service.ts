@@ -1,6 +1,8 @@
 import { createHash, randomBytes, randomUUID } from "node:crypto";
 import { z } from "zod";
 import { processPayment } from "@/features/finance/books";
+import { enqueue } from "@/features/platform/jobs";
+import { minimumOnlineAmount, onlineReady } from "@/features/payments/config";
 import { one, rows, type DB } from "@/lib/database/db";
 import { menu } from "@/lib/snapshot";
 import {
@@ -9,6 +11,7 @@ import {
   log,
   changeItem,
   completeSettledOrder,
+  notify,
 } from "@/features/orders/service";
 import { requirePermission } from "@/lib/permissions";
 import type { Actor } from "@/lib/auth/session";
@@ -117,7 +120,7 @@ export function commerce(SHOP: string) {
        ORDER BY pr.created_at DESC LIMIT 60`,
         [SHOP],
       ),
-      stripe: false,
+      stripe: await onlineReady(db, SHOP),
     };
   }
   async function submitReview(db: DB, raw: unknown, customerId: string) {
@@ -250,8 +253,8 @@ export function commerce(SHOP: string) {
   ) {
     const a = checkoutSchema.parse(raw),
       hash = createHash("sha256").update(JSON.stringify(a)).digest("hex");
-    if (a.payment !== "counter")
-      throw new Error("Paiement externe non raccordé.");
+    if (a.payment === "stripe" && !(await onlineReady(db, SHOP)))
+      throw new Error("Paiement en ligne indisponible.");
     await db.query(
       "SELECT restaurant_id FROM shop_settings WHERE restaurant_id=$1 FOR UPDATE",
       [SHOP],
@@ -383,6 +386,8 @@ export function commerce(SHOP: string) {
         )
       : null;
     const total = subtotal - (promo?.discount ?? 0);
+    if (a.payment === "stripe" && total < minimumOnlineAmount)
+      throw new Error("Montant trop faible pour un paiement en ligne.");
     // Ordered from a table QR: the kitchen sees the table, served on site.
     if (a.table)
       await one(
@@ -426,7 +431,18 @@ export function commerce(SHOP: string) {
         a.items[n].choices,
       );
     }
-    await db.query("UPDATE orders SET status='active' WHERE id=$1", [id]);
+    // En ligne : la cuisine ne voit la commande qu’une fois le paiement confirmé.
+    if (a.payment !== "stripe")
+      await db.query("UPDATE orders SET status='active' WHERE id=$1", [id]);
+    else
+      await enqueue(
+        db,
+        SHOP,
+        "online_order_timeout",
+        id,
+        { order: id },
+        new Date(Date.now() + 40 * 60_000),
+      );
     const token = randomBytes(32).toString("hex");
     await db.query(
       "INSERT INTO shop_orders(order_id,token,request_hash,consumption,payment_method,total,subtotal,discount,promo_id,customer_id,reorder_items,terms_version,terms_accepted_at,flash_items,flash_bonus_points) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,now(),$13,$14)",
@@ -525,6 +541,65 @@ export function commerce(SHOP: string) {
     if (o.total > 0) await processPayment(db, SHOP, declaration);
     await log(db, SHOP, user.id, "Encaissement comptoir déclaré", id);
     await awardOrderPoints(db, SHOP, id);
+  }
+  /** Paiement en ligne confirmé par Stripe : la commande part en cuisine. */
+  async function confirmOnline(db: DB, id: string) {
+    const o = await one<{
+      payment_status: string;
+      total: number;
+      discount: number;
+      promo_id: string | null;
+      customer_id: string | null;
+      number: number;
+    }>(
+      db,
+      "SELECT c.* FROM shop_orders c JOIN orders o ON o.id=c.order_id WHERE c.order_id=$1 AND o.restaurant_id=$2 FOR UPDATE",
+      [id, SHOP],
+    );
+    if (o.payment_status === "paid") return;
+    const declaration = randomUUID();
+    await db.query(
+      "UPDATE orders SET status='active' WHERE id=$1 AND status='pending'",
+      [id],
+    );
+    await db.query(
+      "INSERT INTO payment_declarations(id,order_id,amount,method,discount,promo_id,customer_id) VALUES($1,$2,$3,'online',$4,$5,$6)",
+      [declaration, id, o.total, o.discount, o.promo_id, o.customer_id],
+    );
+    await db.query(
+      "UPDATE shop_orders SET payment_status='paid' WHERE order_id=$1",
+      [id],
+    );
+    await processPayment(db, SHOP, declaration);
+    await log(db, SHOP, null, "Paiement en ligne confirmé par Stripe", id);
+    await notify(db, SHOP, `Nouvelle commande payée en ligne · n° ${o.number}`);
+    await awardOrderPoints(db, SHOP, id);
+  }
+  /** Paiement abandonné : la commande est annulée et son stock libéré. */
+  async function cancelUnpaidOnline(db: DB, id: string) {
+    const o = await rows<{ payment_status: string; status: string }>(
+      db,
+      "SELECT c.payment_status,o.status FROM shop_orders c JOIN orders o ON o.id=c.order_id WHERE c.order_id=$1 AND o.restaurant_id=$2 FOR UPDATE OF c",
+      [id, SHOP],
+    );
+    if (!o[0] || o[0].payment_status === "paid" || o[0].status !== "pending")
+      return;
+    // Action de la plateforme, sans membre de l’équipe à son origine.
+    const system = {
+      id: null as unknown as string,
+      name: "Paiement en ligne",
+      role: "OWNER",
+    } as Actor;
+    await db.query("UPDATE orders SET status='active' WHERE id=$1", [id]);
+    const items = await rows<{ id: string }>(
+      db,
+      "SELECT id FROM order_items WHERE order_id=$1",
+      [id],
+    );
+    for (const item of items)
+      await changeItem(db, SHOP, item.id, "cancelled", system);
+    await db.query("UPDATE orders SET status='cancelled' WHERE id=$1", [id]);
+    await log(db, SHOP, null, "Commande en ligne non payée : annulée", id);
   }
   async function transition(db: DB, id: string, target: string, user: Actor) {
     requirePermission(user.roles ?? user.role, "orders");
@@ -637,6 +712,8 @@ export function commerce(SHOP: string) {
     checkout,
     staffOrders,
     settle,
+    confirmOnline,
+    cancelUnpaidOnline,
     transition,
     updateDetails,
     updateSettings,

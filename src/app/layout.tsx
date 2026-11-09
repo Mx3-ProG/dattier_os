@@ -15,14 +15,14 @@ import "./fonts.css";
 import "./public-site.css";
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.APP_URL || "https://atacuisine.vercel.app"),
-  applicationName: "atacuisine",
-  title: "atacuisine · Le restaurant, en harmonie",
+  applicationName: "STUDIO OS",
+  title: "STUDIO OS · Votre espace professionnel",
   description:
     "Le système ouvert pour gérer les commandes, stocks, équipes et clients de vos restaurants.",
   robots: { index: false, follow: false },
   openGraph: {
-    title: "atacuisine",
-    description: "Le système ouvert pour les restaurateurs",
+    title: "STUDIO OS",
+    description: "Votre espace de gestion, par Studio ATS",
   },
 };
 export default async function Layout({

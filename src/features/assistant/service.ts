@@ -1,4 +1,4 @@
-/* Orchestration de Cuisine IA : contexte, choix du moteur, débit des crédits.
+/* Orchestration de STUDIO VOICE : contexte, choix du moteur, débit des crédits.
    Le moteur réflexe répond dans la même transaction. L’IA générative tourne
    hors transaction (plusieurs secondes), puis le coût réel est débité. */
 import { z } from "zod";
@@ -18,18 +18,20 @@ import {
   welcomeCredits,
 } from "./pricing";
 import { reflex } from "./reflex";
+import { financeDashboard, type PeriodQuery } from "@/features/finance/dashboard";
+import { financeIntent, financeReply, periodIn, previousMonth } from "./finance";
 import { assistantContext, type AssistantContext, type AssistantReply } from "./types";
 
 const permissions: Permission[] = [
   "security", "website", "catalog", "payments", "orders", "kitchen", "bar", "stock",
-  "purchases", "finance", "team", "customers", "settings", "audit", "reservations", "floor",
+  "purchases", "finance", "team", "customers", "settings", "audit", "reservations", "floor", "payroll",
 ];
 /** Écrans du poste et permission requise (même règle que components/workspace.tsx). */
 const modules: [string, Permission | null][] = [
   ["overview", "finance"], ["activity", "audit"], ["dining", "orders"], ["orders", "orders"],
   ["kitchen", "kitchen"], ["bar", "bar"], ["reservations", "reservations"], ["stocks", "stock"],
   ["recipes", "stock"], ["suppliers", "purchases"], ["deliveries", "purchases"], ["team", "team"],
-  ["attendance", null], ["finance", "finance"], ["accounting", "finance"], ["expenses", "finance"], ["customers", "customers"],
+  ["attendance", null], ["finance", "finance"], ["accounting", "finance"], ["billing", "finance"], ["invoices", "finance"], ["bank", "finance"], ["payroll", "payroll"], ["hr", "team"], ["payouts", "finance"], ["expenses", "finance"], ["customers", "customers"],
   ["menu", "catalog"], ["settings", "settings"],
 ];
 
@@ -37,7 +39,7 @@ export const askSchema = z.object({
   kind: z.literal("ask"),
   message: z.string().trim().max(800),
   voice: z.boolean().default(false),
-  /** Phrase en attente que ce message complète (question posée par Cuisine IA). */
+  /** Phrase en attente que ce message complète (question posée par STUDIO VOICE). */
   followUp: z.string().trim().max(300).optional(),
   history: z
     .array(z.object({ role: z.enum(["user", "assistant"]), content: z.string().max(4000) }))
@@ -78,7 +80,7 @@ async function buildContext(db: DB, restaurant: string, user: Actor, balance: nu
   const s = await snapshot(db, user, restaurant);
   const roles = s.user.roles ?? s.user.role;
   const allowed = (p: Permission) =>
-    (s.plan >= 69 || !["finance", "customers", "website"].includes(p)) && can(roles, p);
+    (s.plan >= 69 || !["finance", "customers", "website", "payroll"].includes(p)) && can(roles, p);
   return assistantContext(
     s,
     modules.filter(([, p]) => !p || allowed(p)).map(([id]) => id),
@@ -138,7 +140,26 @@ export async function ask(
     const ctx = await buildContext(db, restaurant, user, w.balance);
     // Une réponse courte (« Primeurs Martin », « 3 kilos ») complète la question
     // en attente ; une nouvelle demande complète (« chiffre du jour ») passe avant.
-    const alone = reflex(input.message, ctx);
+    const asked = financeIntent(input.message);
+    const finance: ReturnType<typeof reflex> = asked
+      ? {
+          reply: ctx.permissions.includes("finance")
+            ? financeReply(
+                asked,
+                await financeDashboard(db, restaurant, user, periodIn(input.message, asked)),
+                asked === "marginTrend"
+                  ? await financeDashboard(db, restaurant, user, previousMonth())
+                  : undefined,
+              )
+            : "Les chiffres financiers ne sont pas accessibles avec votre profil.",
+          proposals: [],
+          suggestions: [],
+          links: [],
+          navigate: ctx.modules.includes("finance") ? "finance" : undefined,
+          engine: "reflex",
+        }
+      : null;
+    const alone = finance ?? reflex(input.message, ctx);
     const local =
       input.followUp && (!alone || alone.engine === "free")
         ? (reflex(`${input.followUp} ${input.message}`, ctx) ?? alone)
@@ -146,7 +167,7 @@ export async function ask(
     if (local) {
       if (local.engine === "free")
         return { done: { ...local, credits: 0, balance: w.balance } };
-      if (w.balance < reflexCredits) throw new Error("Crédits Cuisine IA insuffisants.");
+      if (w.balance < reflexCredits) throw new Error("Crédits STUDIO VOICE insuffisants.");
       const balance = await consume(db, restaurant, reflexCredits, "reflex", input.message);
       return {
         done: {
@@ -173,11 +194,16 @@ export async function ask(
       balance,
     };
   if (balance < minimumLlmCredits)
-    throw new Error("Crédits Cuisine IA insuffisants pour une analyse avancée.");
+    throw new Error("Crédits STUDIO VOICE insuffisants pour une analyse avancée.");
   const outcome = await askLlm(
     input.followUp ? `${input.message}\n(En réponse à ta question : « ${input.followUp} … »)` : input.message,
     input.history,
     ctx,
+    // Nouvelle transaction et droits revérifiés à chaque lecture demandée par le modèle.
+    (query: PeriodQuery) =>
+      authenticated(restaurant, (db, user) =>
+        financeDashboard(db, restaurant, user, query),
+      ),
   );
   const credits = llmCredits(outcome.costEur);
   const after = await authenticated(restaurant, (db) =>

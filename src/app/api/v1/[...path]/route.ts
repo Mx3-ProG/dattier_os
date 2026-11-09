@@ -32,6 +32,12 @@ import {
 import { seed } from "@/lib/database/seed";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
+/** Le tenant par défaut n'existe qu'en démonstration ; ailleurs il doit être demandé. */
+function tenant(value: unknown) {
+  if (typeof value === "string" && value) return value;
+  if (demoEnabled()) return "bernay";
+  throw new Error("Établissement requis.");
+}
 async function fail(e: unknown) {
   await recordFailure(e, {
     endpoint: requestContext()?.route || "/api/v1",
@@ -88,7 +94,7 @@ async function handleGet(req: NextRequest) {
     }
     if (endpoint === "calendar" || endpoint === "availability") {
       const params = Object.fromEntries(req.nextUrl.searchParams);
-      const r = params.restaurant || "bernay";
+      const r = tenant(params.restaurant);
       await requirePlan(db, r, 39);
       return NextResponse.json(
         endpoint === "calendar"
@@ -98,7 +104,7 @@ async function handleGet(req: NextRequest) {
       );
     }
     if (endpoint === "public") {
-      const r = req.nextUrl.searchParams.get("restaurant") || "bernay";
+      const r = tenant(req.nextUrl.searchParams.get("restaurant"));
       await requirePlan(db, r, 69);
       return NextResponse.json({
         restaurants: await rows(
@@ -110,7 +116,7 @@ async function handleGet(req: NextRequest) {
       });
     }
     const user = await actor();
-    const r = req.nextUrl.searchParams.get("restaurant") || "bernay";
+    const r = tenant(req.nextUrl.searchParams.get("restaurant"));
     return NextResponse.json(
       await db.transaction((tx) => snapshot(tx, user, r)),
       { headers: { "Cache-Control": "no-store" } },
@@ -165,8 +171,7 @@ async function handlePost(req: NextRequest) {
       });
       return NextResponse.json({ ok: true });
     }
-    const restaurant =
-      typeof body.restaurant === "string" ? body.restaurant : "bernay";
+    const restaurant = tenant(body.restaurant);
     const data = actionSchema.parse(body);
     const result = await db.transaction(async (tx) =>
       perform(tx, restaurant, await scope(tx, user, restaurant), data),
@@ -193,7 +198,9 @@ async function routeGET(req: NextRequest) {
     return await withDatabaseContext(
       {
         userId: user?.id,
-        restaurantId: req.nextUrl.searchParams.get("restaurant") || "bernay",
+        restaurantId:
+          req.nextUrl.searchParams.get("restaurant") ||
+          (demoEnabled() ? "bernay" : undefined),
         public: publicEndpoint,
       },
       () => handleGet(req),
@@ -215,7 +222,11 @@ async function routePOST(req: NextRequest) {
       {
         userId: user?.id,
         restaurantId:
-          typeof body.restaurant === "string" ? body.restaurant : "bernay",
+          typeof body.restaurant === "string"
+            ? body.restaurant
+            : demoEnabled()
+              ? "bernay"
+              : undefined,
         public: publicEndpoint,
       },
       () => handlePost(req),

@@ -1,4 +1,4 @@
-/* Page /guide : le mode d’emploi écrit de atacuisine. Même contenu que la
+/* Page /guide : le mode d’emploi écrit de STUDIO OS. Même contenu que la
    visite interactive du poste (features/guide/content.ts). */
 import Link from "next/link";
 import {
@@ -58,8 +58,8 @@ const stock = [
 
 const faq = [
   [
-    "atacuisine encaisse-t-il l’argent en salle ?",
-    "Non. Vous encaissez avec votre terminal de paiement ou en espèces, puis vous déclarez le règlement dans atacuisine. Les ventes, la fidélité et les rapports restent ainsi justes. Pour la commande en ligne, le paiement peut passer par Stripe.",
+    "STUDIO OS encaisse-t-il l’argent en salle ?",
+    "Non. Vous encaissez avec votre terminal de paiement ou en espèces, puis vous déclarez le règlement dans STUDIO OS. Les ventes, la fidélité et les rapports restent ainsi justes. Pour la commande en ligne, le paiement peut passer par Stripe.",
   ],
   [
     "Comment un client paie-t-il une commande sur le site ?",
@@ -82,8 +82,8 @@ const faq = [
     "Chaque rôle n’affiche que les modules qu’il est autorisé à utiliser. Le tableau « Qui fait quoi » ci-dessus indique les accès de chaque rôle.",
   ],
   [
-    "Comment fonctionnent les crédits Cuisine IA ?",
-    `Chaque organisation reçoit ${welcomeCredits} crédits à l’inscription. Une réponse du moteur réflexe (commandes, règlements, stocks, ventes, mode d’emploi) coûte 1 crédit ; une analyse par l’IA avancée coûte de 2 à 60 crédits selon sa longueur. Le solde, l’aide et la navigation sont gratuits. Un administrateur recharge depuis le bouton de solde, dans Cuisine IA.`,
+    "Comment fonctionnent les crédits STUDIO VOICE ?",
+    `Chaque organisation reçoit ${welcomeCredits} crédits à l’inscription. Une réponse du moteur réflexe (commandes, règlements, stocks, ventes, mode d’emploi) coûte 1 crédit ; une analyse par l’IA avancée coûte de 2 à 60 crédits selon sa longueur. Le solde, l’aide et la navigation sont gratuits. Un administrateur recharge depuis le bouton de solde, dans STUDIO VOICE.`,
   ],
   [
     "Comment relancer la visite guidée ?",
@@ -94,10 +94,10 @@ const faq = [
 export function GuidePage({ demo }: { demo: boolean }) {
   const toc = [
     { id: "bien-demarrer", label: "Bien démarrer, pas à pas" },
-    { id: "comprendre", label: "Comprendre atacuisine" },
+    { id: "comprendre", label: "Comprendre STUDIO OS" },
     { id: "service", label: "Le cycle d’un service" },
     { id: "roles", label: "Qui fait quoi" },
-    { id: "cuisine-ia", label: "Cuisine IA, votre assistant" },
+    { id: "cuisine-ia", label: "STUDIO VOICE, votre assistant" },
     ...chapters.map((c) => ({ id: c.id, label: c.title })),
     { id: "evolutions", label: "Évolutions et maintenance" },
     { id: "glossaire", label: "Glossaire" },
@@ -112,11 +112,11 @@ export function GuidePage({ demo }: { demo: boolean }) {
       </a>
       <header className="landing-header">
         <Link href="/" className="landing-brand">
-          <UtensilsCrossed size={20} aria-hidden /> atacuisine
+          <UtensilsCrossed size={20} aria-hidden /> STUDIO OS
         </Link>
         <nav aria-label="Navigation du guide">
           <a href="#comprendre">Les bases</a>
-          <a href="#cuisine-ia">Cuisine IA</a>
+          <a href="#cuisine-ia">STUDIO VOICE</a>
           <a href="#order">Commandes</a>
           <a href="#payment">Règlement</a>
           <a href="#online">Paiement client</a>
@@ -131,7 +131,7 @@ export function GuidePage({ demo }: { demo: boolean }) {
         <section className="guide-hero">
           <span className="landing-eyebrow">Guide d’utilisation</span>
           <h1>
-            atacuisine, <em>de A à Z.</em>
+            STUDIO OS, <em>de A à Z.</em>
           </h1>
           <p className="landing-lead">
             Tout ce qu’il faut savoir pour faire tourner votre restaurant :
@@ -204,9 +204,9 @@ export function GuidePage({ demo }: { demo: boolean }) {
 
             <section id="comprendre" className="guide-section">
               <span className="landing-eyebrow">Les bases</span>
-              <h2>Comprendre atacuisine en deux minutes</h2>
+              <h2>Comprendre STUDIO OS en deux minutes</h2>
               <p>
-                atacuisine est un seul logiciel partagé par toute l’équipe.
+                STUDIO OS est un seul logiciel partagé par toute l’équipe.
                 Chacun y travaille avec son propre écran, mais tout le monde lit
                 et écrit les mêmes données, en temps réel.
               </p>
@@ -342,13 +342,13 @@ export function GuidePage({ demo }: { demo: boolean }) {
 
             <section id="cuisine-ia" className="guide-section guide-ia">
               <span className="landing-eyebrow">Nouveau</span>
-              <h2>Cuisine IA, votre second qui ne dort jamais</h2>
+              <h2>STUDIO VOICE, votre second qui ne dort jamais</h2>
               <p>
-                Cuisine IA est l’assistant intégré au poste de travail et à
+                STUDIO VOICE est l’assistant intégré au poste de travail et à
                 l’administration. Vous lui parlez comme à un membre de l’équipe,
                 à l’écrit ou à la voix : il comprend le service en cours,
                 prépare les actions et vous propose la suite logique. Ouvrez-le
-                avec le bouton flottant <b>Cuisine IA</b> en bas à droite, ou{" "}
+                avec le bouton flottant <b>STUDIO VOICE</b> en bas à droite, ou{" "}
                 <kbd>⌘K</kbd> / <kbd>Ctrl K</kbd>.
               </p>
               <div className="guide-cards">
@@ -375,7 +375,7 @@ export function GuidePage({ demo }: { demo: boolean }) {
                   <Mic aria-hidden />
                   <h3>En temps réel, à la voix</h3>
                   <p>
-                    Activez le micro : Cuisine IA écoute, répond à voix haute et
+                    Activez le micro : STUDIO VOICE écoute, répond à voix haute et
                     attend votre « oui » pour exécuter. Les mains restent sur le
                     service.
                   </p>
@@ -385,7 +385,7 @@ export function GuidePage({ demo }: { demo: boolean }) {
               <ol className="guide-steps">
                 <li>Vous demandez, en phrase normale.</li>
                 <li>
-                  Cuisine IA prépare une carte d’action détaillée (plats,
+                  STUDIO VOICE prépare une carte d’action détaillée (plats,
                   quantités, total, alertes de stock).
                 </li>
                 <li>
@@ -393,7 +393,7 @@ export function GuidePage({ demo }: { demo: boolean }) {
                   vos droits, les stocks et les étapes, comme pour toute action.
                 </li>
                 <li>
-                  Cuisine IA vous propose la suite : suivi, règlement, table.
+                  STUDIO VOICE vous propose la suite : suivi, règlement, table.
                 </li>
               </ol>
               <h3 className="guide-sub">Crédits</h3>
@@ -411,7 +411,7 @@ export function GuidePage({ demo }: { demo: boolean }) {
                 ))}
               </ul>
               <Link className="guide-practice" href="/dashboard">
-                <Wand2 size={15} aria-hidden /> Essayer Cuisine IA dans le poste
+                <Wand2 size={15} aria-hidden /> Essayer STUDIO VOICE dans le poste
                 <ArrowRight size={15} aria-hidden />
               </Link>
             </section>
@@ -485,19 +485,19 @@ export function GuidePage({ demo }: { demo: boolean }) {
               <h2>Évolutions et maintenance</h2>
               <p>
                 Studio ATS assure le développement, la maintenance et les
-                corrections d’atacuisine. Voici les repères de la version
+                corrections de STUDIO OS. Voici les repères de la version
                 présentée dans ce guide.
               </p>
               <div className="guide-cards">
                 <article>
                   <Sparkles aria-hidden />
-                  <h3>Cuisine IA</h3>
+                  <h3>STUDIO VOICE</h3>
                   <p>
                     Un assistant à l’écrit ou à la voix, qui prépare les actions
                     et vous laisse les confirmer. Les crédits et leur
                     utilisation sont expliqués dans ce guide.
                   </p>
-                  <a href="#cuisine-ia">Comprendre Cuisine IA →</a>
+                  <a href="#cuisine-ia">Comprendre STUDIO VOICE →</a>
                 </article>
                 <article>
                   <Building2 aria-hidden />
@@ -568,7 +568,7 @@ export function GuidePage({ demo }: { demo: boolean }) {
 
       <footer className="landing-footer">
         <span className="landing-brand">
-          <UtensilsCrossed size={18} aria-hidden /> atacuisine
+          <UtensilsCrossed size={18} aria-hidden /> STUDIO OS
         </span>
         <nav aria-label="Liens utiles">
           <Link href="/">Accueil</Link>
@@ -576,7 +576,7 @@ export function GuidePage({ demo }: { demo: boolean }) {
           {demo && <Link href="/site-demo">Exemple de site restaurant</Link>}
           <Link href="/platform">Espace client</Link>
         </nav>
-        <small>© atacuisine · Logiciel libre sous licence AGPL-3.0</small>
+        <small>© STUDIO OS · Logiciel libre sous licence AGPL-3.0</small>
       </footer>
     </div>
   );

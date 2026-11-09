@@ -5,9 +5,9 @@ import "./landing.css";
 export const dynamic = "force-dynamic";
 export function generateMetadata(): Metadata {
   return {
-    title: "atacuisine · Moins de gestion, plus de passion",
+    title: "STUDIO OS · Moins de gestion, plus de passion",
     description:
-      "Retrouvez du temps pour votre restaurant et pour vous. Service, équipe, site web et Cuisine IA : un quotidien plus simple, dès 39 € HT par mois.",
+      "Retrouvez du temps pour votre restaurant et pour vous. Service, équipe, site web et STUDIO VOICE : un quotidien plus simple, dès 39 € HT par mois.",
     robots: { index: !demoEnabled(), follow: !demoEnabled() },
   };
 }

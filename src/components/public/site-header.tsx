@@ -11,7 +11,7 @@ export function Brand({ tagline }: { tagline: string }) {
     <Link className="public-brand" href={sitePath("/")}>
       <Leaf aria-hidden />
       <span>
-        le atacuisine<small>{tagline}</small>
+        STUDIO OS<small>{tagline}</small>
       </span>
     </Link>
   );

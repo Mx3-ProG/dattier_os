@@ -1,4 +1,4 @@
-/* IA générative de Cuisine IA (Claude, via le SDK officiel Anthropic).
+/* IA générative de STUDIO VOICE (Claude, via le SDK officiel Anthropic).
    Le modèle voit un résumé du service limité aux droits de l’utilisateur et le
    guide complet. Il ne modifie jamais les données : ses outils fabriquent des
    propositions que l’utilisateur confirme dans le poste. */
@@ -34,6 +34,7 @@ import {
 } from "./proposals";
 import { providerCostEur, type TokenUsage } from "./pricing";
 import type { Answer, AssistantContext, Proposal, Turn } from "./types";
+import type { PeriodQuery } from "@/features/finance/dashboard";
 
 export const llmEnabled = () => !!process.env.ANTHROPIC_API_KEY;
 export const llmModel = () => process.env.ATACUISINE_AI_MODEL || "claude-opus-5-5";
@@ -283,17 +284,33 @@ const tools: Anthropic.Beta.BetaTool[] = [
   },
 ];
 
-const instructions = `Tu es Cuisine IA, l’assistant du logiciel de restaurant atacuisine. Tu parles français, au vouvoiement, comme un second de cuisine efficace : phrases courtes, concrètes, sans jargon technique.
+/** Outil en lecture seule, proposé uniquement aux profils ayant accès aux finances. */
+export const readFinanceTool: Anthropic.Beta.BetaTool = {
+  name: "read_finance",
+  description:
+    "Lit les indicateurs financiers réels de l’établissement sur une période. Lecture seule. Chaque valeur porte un statut : confirmed, partial, estimate ou missing (valeur null, avec la raison).",
+  strict: true,
+  input_schema: object({
+    period: { type: "string", enum: ["today", "week", "month", "year", "custom"] },
+    from: { type: "string", description: "AAAA-MM-JJ si period = custom, sinon vide." },
+    to: { type: "string", description: "AAAA-MM-JJ si period = custom, sinon vide." },
+  }),
+};
+export const toolsFor = (ctx: Pick<AssistantContext, "permissions">) =>
+  ctx.permissions.includes("finance") ? [...tools, readFinanceTool] : tools;
+
+const instructions = `Tu es STUDIO VOICE, l’assistant de STUDIO OS, édité par Studio ATS. La configuration métier actuelle est la restauration. Tu utilises uniquement les données et outils autorisés fournis dans le contexte ; ne prétends pas disposer de modules d’autres métiers. Tu parles français, au vouvoiement, comme un second de cuisine efficace : phrases courtes, concrètes, sans jargon technique.
 
 Ton rôle :
 - Répondre aux questions sur le service en cours, la carte, les stocks, les ventes, les réservations, à partir du contexte JSON fourni avec chaque question. Ne jamais inventer un chiffre absent du contexte.
-- Expliquer le fonctionnement d’atacuisine à partir du guide ci-dessous, en citant les étapes.
+- Expliquer le fonctionnement de STUDIO OS à partir du guide ci-dessous, en citant les étapes.
 - Préparer les actions demandées avec les outils propose_* : ils affichent une carte que l’utilisateur confirme. Tu ne dis jamais qu’une action est faite : dis qu’elle est prête à confirmer.
 - Enchaîner sur la suite naturelle du service (après une commande : suivi cuisine puis règlement ; après un règlement : libérer la table) avec suggest_followups.
 - Gérer le restaurant de bout en bout : achats et fournisseurs, réassort, réceptions, pertes, carte et recettes, clients et fidélité, dépenses, planning, promotions flash, messages clients.
 - Si un élément existe déjà (ingrédient, fournisseur, produit, client), l’utiliser. S’il manque et peut être créé, le créer dans la même proposition (les outils le font). S’il manque une information que seul l’utilisateur connaît, poser la question avec ask_user, une seule question à la fois.
 - Une même phrase peut contenir plusieurs demandes : appelle un outil par demande.
 - Si la demande dépasse les droits de l’utilisateur (permissions du contexte), le dire simplement.
+- Pour une question financière, appelle read_finance si l’outil est disponible. Ne donne que ses chiffres. Précise toujours si un chiffre est incomplet (partial) ou une estimation (estimate). S’il est missing, dis qu’il n’est pas disponible et pourquoi, sans le calculer toi-même. Ne confonds jamais encaissements, chiffre d’affaires, trésorerie et résultat. Ne donne pas de conseil fiscal, et renvoie les questions de conformité vers l’expert-comptable.
 
 Règles :
 - Les prix du contexte sont en centimes : affiche-les en euros (1250 → 12,50 €).
@@ -301,7 +318,7 @@ Règles :
 - Texte simple, listes courtes avec « • », gras avec **…** pour l’essentiel. Pas de tableau, pas de titre.
 - Réponse orale possible : reste sous 90 mots sauf demande d’analyse détaillée.
 
-# Guide d’utilisation d’atacuisine
+# Guide d’utilisation de STUDIO OS
 `;
 
 let systemCache: Anthropic.Beta.BetaTextBlockParam[] | undefined;
@@ -432,7 +449,7 @@ function runTool(
         return receiveStep(ctx, str("ingredient_name"), date(str("expires")));
       case "propose_waste": {
         const a = amount("quantity");
-        return wasteStep(ctx, str("ingredient_name"), a.quantity, a.unit, str("reason") || "Perte déclarée à Cuisine IA");
+        return wasteStep(ctx, str("ingredient_name"), a.quantity, a.unit, str("reason") || "Perte déclarée à STUDIO VOICE");
       }
       case "propose_supplier": {
         const sells = ((input.sells as string[]) ?? []).map((x) => String(x).trim()).filter(Boolean);
@@ -509,10 +526,38 @@ function runTool(
   return { content: built.reply, error: failed };
 }
 
+/** Toute erreur, droits compris, revient au modèle comme un refus sans détail technique. */
+export async function financeTool(
+  call: Pick<Anthropic.Beta.BetaToolUseBlock, "input">,
+  readFinance?: (query: PeriodQuery) => Promise<unknown>,
+) {
+  if (!readFinance)
+    return { content: "Lecture financière indisponible.", error: true };
+  const input = call.input as { period?: string; from?: string; to?: string };
+  try {
+    return {
+      content: JSON.stringify(
+        await readFinance({
+          period: input.period as PeriodQuery["period"],
+          ...(input.from ? { from: input.from } : {}),
+          ...(input.to ? { to: input.to } : {}),
+        }),
+      ),
+      error: false,
+    };
+  } catch {
+    return {
+      content: "Lecture refusée ou période invalide. Ne donne aucun chiffre.",
+      error: true,
+    };
+  }
+}
+
 export async function askLlm(
   question: string,
   history: Turn[],
   ctx: AssistantContext,
+  readFinance?: (query: PeriodQuery) => Promise<unknown>,
 ): Promise<Outcome> {
   const messages: Anthropic.Beta.BetaMessageParam[] = [
     ...history.slice(-8).map((t) => ({ role: t.role, content: t.content.slice(0, 1500) })),
@@ -537,7 +582,7 @@ export async function askLlm(
       fallbacks: "default",
       output_config: { effort: "low" },
       system: system(),
-      tools,
+      tools: toolsFor(ctx),
       messages,
     });
     model = response.model;
@@ -555,15 +600,20 @@ export async function askLlm(
     messages.push({ role: "assistant", content: response.content });
     messages.push({
       role: "user",
-      content: calls.map((call) => {
-        const result = runTool(ctx, call, out);
-        return {
-          type: "tool_result" as const,
-          tool_use_id: call.id,
-          content: result.content,
-          is_error: result.error,
-        };
-      }),
+      content: await Promise.all(
+        calls.map(async (call) => {
+          const result =
+            call.name === "read_finance"
+              ? await financeTool(call, readFinance)
+              : runTool(ctx, call, out);
+          return {
+            type: "tool_result" as const,
+            tool_use_id: call.id,
+            content: result.content,
+            is_error: result.error,
+          };
+        }),
+      ),
     });
     // Question posée : on attend l’utilisateur, inutile de relancer le modèle.
     if (out.question) {

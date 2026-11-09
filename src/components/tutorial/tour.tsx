@@ -842,7 +842,7 @@ function Center({
         <header>
           <div>
             <span className="eyebrow">Centre d’apprentissage</span>
-            <h2 id="tour-center-title">Apprendre atacuisine</h2>
+            <h2 id="tour-center-title">Apprendre STUDIO OS</h2>
           </div>
           <button aria-label="Fermer le guide" onClick={close}>
             <X size={19} />
@@ -891,7 +891,7 @@ function Center({
           <div className="tour-ia-head">
             <Sparkles size={18} aria-hidden />
             <div>
-              <b>Une question ? Demandez à Cuisine IA</b>
+              <b>Une question ? Demandez à STUDIO VOICE</b>
               <small>
                 Elle répond à partir de ce guide et de votre service en cours, à
                 l’écrit ou à la voix, et prépare les actions pour vous.

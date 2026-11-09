@@ -10,6 +10,7 @@ import { optimizeMedia, reserveMediaJob } from "@/features/cms/media-optimizer";
 import { cmsMedia, limits } from "@/features/cms/media";
 import { website } from "@/features/cms/service";
 import { log } from "@/features/orders/service";
+import { demoEnabled } from "@/lib/database/db";
 async function routePOST(
   req: NextRequest,
   c: { params: Promise<{ restaurant: string }> },
@@ -44,6 +45,32 @@ async function routePOST(
       }).formData(),
       file = form.get("file");
     if (!(file instanceof File)) throw new Error("Ajoutez un fichier.");
+    // En production, la vidéo part au groupe de workers media : le serveur web reste libre.
+    // La démonstration n'a pas de worker et garde le traitement direct.
+    if (file.type.startsWith("video/") && !demoEnabled()) {
+      if (
+        !["video/mp4", "video/webm", "video/quicktime"].includes(file.type) ||
+        !file.size ||
+        file.size > limits.videoBytes
+      )
+        throw new Error("Vidéo MP4, MOV ou WebM limitée à 100 Mo.");
+      const cms = cmsMedia(restaurant);
+      const incoming = await cms.storeIncoming(file);
+      try {
+        return json(
+          await authenticated(restaurant, async (db, user) => {
+            await db.exec("SET LOCAL ROLE atacuisine_app");
+            await website(restaurant).siteScope(db, user);
+            const saved = await cms.queueVideo(db, incoming, file, user.id);
+            await log(db, restaurant, user.id, "Site : média importé", saved.id);
+            return saved;
+          }),
+        );
+      } catch (error) {
+        await cms.removeIncoming(incoming.key);
+        throw error;
+      }
+    }
     const optimized = await optimizeMedia(file);
     return json(
       await authenticated(restaurant, async (db, user) => {

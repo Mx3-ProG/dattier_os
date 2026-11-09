@@ -5,7 +5,7 @@ import { UtensilsMark } from "@/components/brand/utensils";
 import { actor } from "@/lib/auth/session";
 
 export const metadata: Metadata = {
-  title: "Page introuvable · atacuisine",
+  title: "Page introuvable · STUDIO OS",
   robots: { index: false, follow: false },
 };
 
@@ -25,7 +25,7 @@ export default async function NotFound() {
     <main className="dattier-404">
       <div className="dattier-404-card">
         <Link href="/" className="dattier-404-brand">
-          <UtensilsMark size={18} /> atacuisine
+          <UtensilsMark size={18} /> STUDIO OS
         </Link>
         <div className="dattier-404-code" aria-hidden>
           4

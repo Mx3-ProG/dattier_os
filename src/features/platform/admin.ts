@@ -1,4 +1,4 @@
-import { requirePlan, restaurantPlan } from "@/features/platform/entitlements";
+import { requirePlan, requireCommercialCapability, requirePaidAddon, restaurantPlan } from "@/features/platform/entitlements";
 import { createReward, rewardSchema } from "@/features/loyalty/service";
 import { offlinePerform } from "@/features/offline/service";
 import { securityAction } from "./security";
@@ -20,7 +20,7 @@ export async function adminState(
   after = 0,
 ) {
   user = await scope(db, user, r);
-  if (["site", "seo", "loyalty"].includes(module)) await requirePlan(db, r, 69);
+  if (["site", "seo", "loyalty"].includes(module)) await requireCommercialCapability(db, r, module === "loyalty" ? "loyalty" : "website");
   if (module === "site") return siteState(db, r, user);
   if (module === "seo") return seoState(db, r, user);
   if (module === "shop") {
@@ -75,17 +75,19 @@ export async function adminState(
   if (module === "inventory") return inventoryState(db, r, user);
   if (module === "security") {
     requirePermission(user.roles ?? user.role, "audit");
+    const conflictsEnabled=(await one<{enabled:boolean}>(db,
+      "SELECT app.addon_installed($1,'offline-conflicts') AS enabled",[r])).enabled;
     return {
       events: await rows(
         db,
         "SELECT a.*,p.name FROM audit_logs a LEFT JOIN profiles p ON p.id=a.actor WHERE a.restaurant_id=$1 ORDER BY a.created_at DESC LIMIT 100 OFFSET $2",
         [r, after],
       ),
-      conflicts: await rows(
+      conflicts: conflictsEnabled ? await rows(
         db,
         "SELECT o.id,o.error,o.payload,d.name AS device FROM offline_operations o JOIN offline_devices d ON d.id=o.device_id WHERE d.restaurant_id=$1 AND o.status='conflict' ORDER BY o.created_at DESC LIMIT 100",
         [r],
-      ),
+      ) : [],
       incidents: await rows(
         db,
         "SELECT id,rule,message,status,updated_at FROM security_incidents WHERE restaurant_id=$1 ORDER BY updated_at DESC LIMIT 100",
@@ -124,6 +126,7 @@ export async function adminState(
   }
   if (module === "integrations") {
     requirePermission(user.roles ?? user.role, "settings");
+    await requirePaidAddon(db,r,"connections");
     return {
       connections: await rows(
         db,
@@ -149,7 +152,7 @@ export async function adminPerform(
   raw: unknown,
 ) {
   user = await scope(db, user, r);
-  if (["site", "seo", "loyalty"].includes(module)) await requirePlan(db, r, 69);
+  if (["site", "seo", "loyalty"].includes(module)) await requireCommercialCapability(db, r, module === "loyalty" ? "loyalty" : "website");
   if (module === "site") return sitePerform(db, r, user, raw);
   if (module === "seo") return seoPerform(db, r, user, raw);
   if (module === "team") {
@@ -210,7 +213,7 @@ export async function adminPerform(
         .parse(raw),
       shop = commerce(r);
     if (input.action === "settings" || input.action === "product")
-      await requirePlan(db, r, 99);
+      await requireCommercialCapability(db, r, "online-orders");
     if (input.action === "moderate") await requirePlan(db, r, 69);
     if (input.action === "settings")
       return shop.updateSettings(db, user, input.data);

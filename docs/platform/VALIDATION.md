@@ -38,6 +38,18 @@ Le scénario PWA doit être exécuté contre une version compilée (`npm run bui
 
 Pour PostgreSQL, créer une base locale vide dédiée, puis définir `MIGRATION_DATABASE_URL` vers cette base et exécuter `npm run db:migrate`, puis `CONFIRM_ISOLATED_DATABASE=true npm run test:postgres`. Ce scénario crée ses propres identités et données fictives. Le script de charge exige aussi une base explicitement isolée ; lire ses contrôles avant exécution.
 
+## Isolation des tenants et groupes de workers — 9 novembre 2026
+
+Sur PostgreSQL 16 et Garage locaux, avec les vrais logins web et worker :
+
+- `npm run test:isolation` : 6 395 vérifications sans échec sur 123 tables tenant. Avant correction, la même suite comptait 269 échecs, surtout le canal public ouvert sur les tables privées.
+- Mise à niveau d'une base au schéma 52 avec les anciens droits globaux : droits identiques à une installation neuve. Retour arrière de 062 à 060, puis remontée : réussis.
+- `npm test` : 290 tests réussis. `npm run test:postgres`, typage et ESLint : réussis.
+- `docker compose config` : valide. Les conteneurs eux-mêmes n'ont pas été démarrés : les workers ont été lancés comme processus, et les limites CPU et mémoire n'ont pas été exercées.
+- `npm run test:e2e` : 24 réussis, 6 échoués. Cinq échouent de la même façon sans ces changements (`extensions`, deux `journey`, `studio-creation`, `studio-security`), et sont listés au [lot 0](studio-os/lot-0/VERIFICATIONS.md). Le sixième, `appearance`, est instable : 2 réussites sur 5 répétitions, sur un sélecteur ambigu.
+
+Procédure : [TENANT_ISOLATION.md](TENANT_ISOLATION.md).
+
 ## Conditions encore ouvertes
 
 SMTP réel, domaines et HTTPS publics, parcours prestataires, restauration coordonnée base/identités/médias, exploitation et alertes en situation réelle, tests HTTP de charge et cohorte pilote restent nécessaires. Les connecteurs non validés restent désactivés. Les captures et contrôles locaux ne remplacent pas ces conditions.

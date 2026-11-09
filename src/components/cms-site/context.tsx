@@ -1,5 +1,6 @@
 "use client";
 import NextLink from "next/link";
+import type { AudienceMode } from "@/features/analytics/consent";
 import {
   createContext,
   useContext,
@@ -13,12 +14,14 @@ const Context = createContext<{
   platformOrigin: string;
   preview: boolean;
   shopEnabled: boolean;
+  audience: AudienceMode | null;
 }>({
   restaurant: "",
   demo: false,
   platformOrigin: "",
   preview: false,
   shopEnabled: true,
+  audience: null,
 });
 export function TenantSiteProvider({
   restaurant,
@@ -26,6 +29,7 @@ export function TenantSiteProvider({
   platformOrigin = "",
   preview = false,
   shopEnabled = true,
+  audience = null,
   children,
 }: {
   restaurant: string;
@@ -33,11 +37,12 @@ export function TenantSiteProvider({
   platformOrigin?: string;
   preview?: boolean;
   shopEnabled?: boolean;
+  audience?: AudienceMode | null;
   children: ReactNode;
 }) {
   const value = useMemo(
-    () => ({ restaurant, demo, platformOrigin, preview, shopEnabled }),
-    [restaurant, demo, platformOrigin, preview, shopEnabled],
+    () => ({ restaurant, demo, platformOrigin, preview, shopEnabled, audience }),
+    [restaurant, demo, platformOrigin, preview, shopEnabled, audience],
   );
   return <Context.Provider value={value}>{children}</Context.Provider>;
 }

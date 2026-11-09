@@ -30,6 +30,18 @@ Migration `036_finance_core.sql`, avec son retour arrière `down/036_finance_cor
 - `processPayment` (`src/features/finance/books.ts`) écrit dans la transaction du règlement, ou ouvre une ligne dans `fin_review_items` s’il manque une information. L’unicité par événement empêche toute seconde écriture.
 - Écritures créées uniquement par les fonctions `app.fin_*`. Lecture réservée aux rôles financiers ; le canal public ne voit rien. Une nouvelle table financière suit le même modèle, jamais la politique générale `tenant_access`.
 
+Migration `037_online_payments.sql` : TVA par catégorie, comptes connectés, paiements en ligne et versements. Écritures réservées au rôle `atacuisine_worker`, que le rôle web ne peut pas endosser. Voir `docs/platform/ONLINE_PAYMENTS.md`.
+
+Migration `038_supplier_invoices.sql` : justificatifs en ajout seul, factures, unicité par fournisseur et numéro. Voir `docs/platform/SUPPLIER_INVOICES.md`.
+
+Migration `039_bank_reconciliation.sql` : comptes, relevés, mouvements protégés et rapprochements. Voir `docs/platform/BANK_RECONCILIATION.md`.
+
+Migration `040_hr_payroll.sql` : corrections de pointage tracées, contrats, absences et mois clôturés. Voir `docs/platform/HR_PAYROLL.md`.
+
+Migration `041_sales_invoices.sql` : identité de facturation, numérotation continue, factures, avoirs et règlements clients. Voir `docs/platform/SALES_INVOICES.md`.
+
+Migration `042_finance_alignment.sql` : alignement des bases de développement ; sans effet sur une installation neuve.
+
 ## Réinitialisation et sauvegarde
 
 Paramètres → Réinitialiser, confirmation obligatoire, propriétaire/admin seulement. La route est désactivée hors démo. Elle vide exclusivement la base locale dédiée et recharge le seed dans une transaction ; elle révoque les sessions locales. Aucun connecteur distant n’est appelé.

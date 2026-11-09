@@ -16,7 +16,7 @@ Les comptes clients ont une identité OIDC, puis un rattachement distinct dans c
 
 RLS assure le périmètre locataire. Les permissions métier sont vérifiées par les services. Les fonctions SQL SECURITY DEFINER sont ciblées, ont un search_path fixé et ne donnent pas d’accès général aux tables. Les triggers contrôlent les liens entre tables indirectes : commande/produit, recette/ingrédient, réservation/table, règlement/client, quota/lot, achats et inventaires.
 
-Les canaux publics utilisent un contexte d’établissement explicite. Ils n’exposent que les projections prévues par les routes : aucune connexion SQL n’est distribuée aux navigateurs. Ils ne constituent pas une politique SQL de lecture anonyme universelle utilisable directement par des clients externes.
+Les canaux publics utilisent un contexte d’établissement explicite. La base n’y ouvre que les tables de la liste publique, et le code n’expose que les projections prévues par les routes : aucune connexion SQL n’est distribuée au navigateur. Voir [TENANT_ISOLATION.md](TENANT_ISOLATION.md).
 
 ## API
 
@@ -46,6 +46,6 @@ Les mutations produisent des événements sans données clients détaillées. Le
 
 ## Croissance
 
-Les processus applicatifs sont réplicables grâce au pool, aux transactions et aux tâches persistantes. Le registre `organization_placements` prépare la localisation des organisations ; le routage vers plusieurs clusters et le déplacement en ligne ne sont pas implémentés. L’installation de référence reste sur un hôte. Toute promesse de capacité nécessite un test HTTP et métier représentatif, une analyse des coûts et des procédures d’exploitation.
+Les processus applicatifs sont réplicables grâce au pool, aux transactions et aux tâches persistantes. Le registre `organization_placements` prépare la localisation des organisations ; le routage vers plusieurs clusters et le déplacement en ligne ne sont pas implémentés. L’installation de référence reste sur un hôte. Toute promesse de capacité nécessite un test HTTP et métier représentatif, une analyse des coûts et des procédures d’exploitation. Les tâches de fond tournent dans trois groupes de workers, voir [WORKER_GROUPS.md](WORKER_GROUPS.md).
 
 Le contexte de transaction et le contexte de journalisation utilisent chacun un singleton AsyncLocalStorage partagé entre les bundles de routes Next.js. Les services CMS et sécurité exécutent aussi les politiques RLS en démonstration au moyen du rôle non propriétaire `atacuisine_app`. Les relations incident/correction/événement portent une contrainte composite d’établissement.

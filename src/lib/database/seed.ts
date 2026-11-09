@@ -13,6 +13,11 @@ export async function seed(db: DB) {
   await db.query(
     "INSERT INTO restaurants(id,name,address,phone,goal) VALUES ('bernay','Studio Restau','29 Rue du Général Leclerc, 27300 Bernay','02 32 46 12 11',150000),('atelier','L’Atelier — établissement fictif','Établissement de démonstration','',90000)",
   );
+  // The sample establishments intentionally showcase paid modules without Stripe.
+  await db.query(`INSERT INTO addon_legacy_grants(restaurant_id,addon_id)
+    SELECT r.id,a.id FROM restaurants r CROSS JOIN unnest(ARRAY[
+      'invoices','attendance','client-invoices','payroll','offline-conflicts','connections','qr','loyalty'
+    ]) AS a(id) WHERE r.id IN ('bernay','atelier') ON CONFLICT DO NOTHING`);
   const people = [
     ["slimane", "Slimane", "SUPER_ADMIN"],
     ["nadia", "Nadia", "OWNER"],

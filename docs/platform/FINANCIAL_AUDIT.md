@@ -10,7 +10,12 @@ Ce document n'est pas un avis juridique, fiscal ou comptable. Les points réglem
 | --- | --- | --- |
 | 0 | Fait | Anomalies A1 à A6 corrigées, données passées reprises par la migration 036 (remises, statut des commandes réglées) |
 | 1 | Fait | Migration 036 et retour arrière, `src/features/finance`, route `/api/restaurants/:id/finance`, écran « Opérations à vérifier », `tests/finance.test.ts`, contrôles ajoutés à `verify-postgres.ts` |
-| 2 à 7 | À faire | Le lot 3 reste suspendu à la décision caisse (section 9) |
+| Paiements en ligne | Fait, Stripe simulé | TVA par catégorie, calcul de TVA, encaissement et versements : voir `ONLINE_PAYMENTS.md`. Non testé contre Stripe, à valider avant production |
+| 2 | Fait | Tableau de bord par période et réponses de l'assistant, tirées des données réelles, avec leur niveau de fiabilité. Outil `read_finance` non essayé avec un vrai modèle, faute de clé |
+| 4 | Fait | Factures fournisseurs : `SUPPLIER_INVOICES.md`. Lecture par IA testée seulement avec une IA simulée. Adresse e-mail dédiée non construite |
+| 5 | Fait | Import CSV, OFX et CAMT.053, rapprochement et trésorerie : `BANK_RECONCILIATION.md`. Connexion directe à la banque non construite, faute de contrat |
+| 7 | Fait | Heures consolidées, corrections, absences, coût de personnel et variables de paie : `HR_PAYROLL.md`. Aucun bulletin ni connecteur |
+| 3, 6 | À faire | Le lot 3 reste suspendu à la décision caisse (section 9) |
 
 Écarts avec la conception initiale :
 
@@ -20,6 +25,8 @@ Ce document n'est pas un avis juridique, fiscal ou comptable. Les points réglem
 - La comptabilisation étant dans la transaction du règlement, une panne imprévue de cette étape annule aussi le règlement. Un taux manquant ne bloque jamais : il ouvre une opération à vérifier.
 
 **Ces protections ne valent pas conformité.** Le journal chaîné et l'ajout seul vont dans le sens de l'inaltérabilité, mais ne remplacent ni une attestation, ni une certification, ni l'avis d'un expert.
+
+Tous les indicateurs prévus ont maintenant une source, sous réserve des données saisies. Le résultat comptable reste du ressort de l'expert-comptable.
 
 ## 1. Conclusions
 
@@ -198,6 +205,8 @@ Chaque lot est livrable seul, testé et soumis à validation.
 | **7** | Couche RH et variables de paie | Rien de bloquant | 2 à 3 semaines |
 
 Ces durées sont des estimations approximatives, pas des engagements.
+
+**État au 8 novembre 2026.** Lots 0 et 1 commités ; lots 2, 4, 5, 6 et 7 et paiements en ligne livrés et vérifiés, non commités. Le lot 3 attend la décision sur la caisse. Pour le lot 6, la plateforme agréée n'est pas choisie : aucune transmission (`SALES_INVOICES.md`).
 
 ## 9. Décisions attendues
 

@@ -478,7 +478,7 @@ export const seo: Chapter = {
   steps: [
     {
       title: "Être trouvé sur Google et par les IA",
-      body: "Le SEO, c’est ce qui fait apparaître votre restaurant quand quelqu’un cherche « couscous Bernay » sur Google ou demande conseil à un assistant IA. atacuisine analyse votre site et vous dit quoi améliorer. La visite vous emmène dans l’administration, onglet SEO.",
+      body: "Le SEO, c’est ce qui fait apparaître votre restaurant quand quelqu’un cherche « couscous Bernay » sur Google ou demande conseil à un assistant IA. STUDIO OS analyse votre site et vous dit quoi améliorer. La visite vous emmène dans l’administration, onglet SEO.",
     },
     {
       page: "admin:seo",

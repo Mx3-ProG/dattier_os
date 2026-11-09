@@ -5,7 +5,7 @@ import { z } from "zod";
 import { one, rows, type DB } from "@/lib/database/db";
 import { scope, type Actor } from "@/lib/auth/session";
 import { requirePermission } from "@/lib/permissions";
-import { requirePlan } from "@/features/platform/entitlements";
+import { requireCommercialCapability } from "@/features/platform/entitlements";
 import { log } from "@/features/orders/service";
 import { declarationItems, processPayment } from "./books";
 
@@ -20,6 +20,21 @@ const defaultAccounts: [string, string][] = [
   ["445713", "TVA collectée 5,5 %"],
   ["445711", "TVA collectée 10 %"],
   ["445712", "TVA collectée 20 %"],
+  ["4671", "Ventes en ligne à recevoir de la plateforme"],
+  ["580", "Virements en cours"],
+  ["6222", "Commissions de la plateforme"],
+  ["627", "Services bancaires"],
+  ["401", "Fournisseurs"],
+  ["411", "Clients"],
+  ["44566", "TVA déductible"],
+  ["512", "Banque"],
+  ["607", "Achats de marchandises"],
+  ["6061", "Énergie et eau"],
+  ["6063", "Petit matériel et fournitures"],
+  ["613", "Locations"],
+  ["615", "Entretien et réparations"],
+  ["6226", "Honoraires"],
+  ["628", "Autres charges externes"],
 ];
 const defaultRates: [string, number, string, string][] = [
   ["5,5 %", 550, "70755", "445713"],
@@ -32,12 +47,12 @@ const batch = 300;
 async function access(db: DB, r: string, user: Actor) {
   const scoped = await scope(db, user, r);
   requirePermission(scoped.roles ?? scoped.role, "finance");
-  await requirePlan(db, r, 69);
+  await requireCommercialCapability(db, r, "finance");
   return scoped;
 }
 
 /** Propose le plan comptable et les taux légaux. N’affecte aucun taux à aucun produit. */
-async function ensureDefaults(db: DB, r: string) {
+export async function ensureDefaults(db: DB, r: string) {
   const known = await rows(
     db,
     "SELECT restaurant_id FROM fin_settings WHERE restaurant_id=$1",
@@ -65,7 +80,7 @@ async function syncPending(db: DB, r: string) {
   const pending = await rows<{ source_id: string }>(
     db,
     `SELECT e.source_id FROM fin_events e
-      WHERE e.restaurant_id=$1 AND e.amount>0
+      WHERE e.restaurant_id=$1 AND e.amount>0 AND e.type='payment.confirmed'
         AND NOT EXISTS(SELECT 1 FROM fin_entries x WHERE x.event_id=e.id)
         AND NOT EXISTS(SELECT 1 FROM fin_review_items v WHERE v.event_id=e.id)
       ORDER BY e.occurred_at LIMIT ${batch}`,
@@ -140,9 +155,37 @@ export async function financeState(db: DB, r: string, user: Actor) {
           WHERE m.restaurant_id=$1 AND m.archived_at IS NULL ORDER BY m.category,m.name`,
     [r],
   );
-  const counts = await one<{ events: number; entries: number; open: number }>(
+  const categories = await rows(
+    db,
+    `SELECT c.category,v.onsite_rate_id,v.takeaway_rate_id,c.products FROM
+       (SELECT category,count(*)::int AS products FROM menu_items WHERE restaurant_id=$1 AND archived_at IS NULL GROUP BY category) c
+       LEFT JOIN fin_category_vat v ON v.restaurant_id=$1 AND v.category=c.category
+      ORDER BY c.category`,
+    [r],
+  );
+  // Calcul d’aide à la déclaration : le restaurateur reste responsable de sa TVA.
+  const vatSummary = await rows(
+    db,
+    `SELECT to_char(n.entry_date,'YYYY-MM') AS month,r.label,r.rate_bp,
+            coalesce(sum(l.credit-l.debit) FILTER (WHERE l.account_code=r.sales_account),0)::bigint AS net,
+            coalesce(sum(l.credit-l.debit) FILTER (WHERE l.account_code=r.vat_account),0)::bigint AS vat
+       FROM fin_entry_lines l JOIN fin_entries n ON n.id=l.entry_id
+       JOIN fin_tax_rates r ON r.restaurant_id=l.restaurant_id AND l.account_code IN (r.sales_account,r.vat_account)
+      WHERE l.restaurant_id=$1 AND n.kind IN ('sale_payment','sale_invoice','sale_credit','reversal')
+      GROUP BY 1,r.label,r.rate_bp ORDER BY 1 DESC,r.rate_bp LIMIT 60`,
+    [r],
+  );
+  const counts = await one<{
+    events: number;
+    entries: number;
+    open: number;
+    invoices: number;
+    bank: number;
+  }>(
     db,
     `SELECT (SELECT count(*)::int FROM fin_events WHERE restaurant_id=$1) AS events,
+                (SELECT count(*)::int FROM fin_supplier_invoices WHERE restaurant_id=$1 AND status='to_review') AS invoices,
+                (SELECT count(*)::int FROM fin_bank_transactions WHERE restaurant_id=$1 AND status='to_review') AS bank,
                 (SELECT count(*)::int FROM fin_entries WHERE restaurant_id=$1) AS entries,
                 (SELECT count(*)::int FROM fin_review_items WHERE restaurant_id=$1 AND status='open') AS open`,
     [r],
@@ -201,6 +244,8 @@ export async function financeState(db: DB, r: string, user: Actor) {
     accounts,
     rates,
     products,
+    categories,
+    vatSummary,
     counts,
     review,
     entries: entries.map((e) => ({
@@ -239,6 +284,12 @@ export const financeActionSchema = z.discriminatedUnion("action", [
   z.object({
     action: z.literal("productVat"),
     menu: id,
+    onsite: id.nullable(),
+    takeaway: id.nullable(),
+  }),
+  z.object({
+    action: z.literal("categoryVat"),
+    category: z.string().trim().min(1).max(100),
     onsite: id.nullable(),
     takeaway: id.nullable(),
   }),
@@ -361,6 +412,21 @@ export async function financeAction(
         [r, a.menu, a.onsite, a.takeaway],
       );
       await log(db, r, user.id, "TVA du produit configurée", a.menu);
+      return {};
+    }
+    case "categoryVat": {
+      await one(
+        db,
+        "SELECT category FROM menu_items WHERE restaurant_id=$1 AND category=$2 LIMIT 1",
+        [r, a.category],
+      );
+      for (const rate of [a.onsite, a.takeaway])
+        if (rate) await activeRate(db, r, rate);
+      await db.query(
+        "INSERT INTO fin_category_vat(restaurant_id,category,onsite_rate_id,takeaway_rate_id) VALUES($1,$2,$3,$4) ON CONFLICT(restaurant_id,category) DO UPDATE SET onsite_rate_id=excluded.onsite_rate_id,takeaway_rate_id=excluded.takeaway_rate_id",
+        [r, a.category, a.onsite, a.takeaway],
+      );
+      await log(db, r, user.id, "TVA de la catégorie configurée", a.category);
       return {};
     }
     case "applyConfigured": {

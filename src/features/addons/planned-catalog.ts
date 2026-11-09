@@ -1,0 +1,23 @@
+/** Discovery only: these entries never enter checkout, entitlements or installation APIs. */
+export const plannedAddons = [
+  { id: "kitchen-display", name: "Écran cuisine", industry: "Restauration", destination: "Commandes · cuisine", description: "Suivre les préparations et leur priorité en temps réel." },
+  { id: "recipe-cost", name: "Coût des recettes", industry: "Restauration", destination: "Produits · recettes", description: "Comparer le coût matière et le prix de vente." },
+  { id: "menu-allergens", name: "Allergènes avancés", industry: "Restauration", destination: "Produits · carte", description: "Présenter et mettre à jour les allergènes de chaque produit." },
+  { id: "service-pacing", name: "Cadence du service", industry: "Restauration", destination: "Commandes · service", description: "Visualiser les retards et la charge par poste." },
+  { id: "waste-tracker", name: "Suivi des pertes", industry: "Restauration", destination: "Stocks", description: "Mesurer les pertes et repérer leurs causes." },
+  { id: "site-planning", name: "Planning de chantier", industry: "BTP", destination: "Chantiers · planning", description: "Planifier les étapes, équipes et échéances." },
+  { id: "site-report", name: "Rapport de chantier", industry: "BTP", destination: "Chantiers · rapports", description: "Centraliser photos, avancement et réserves." },
+  { id: "quote-builder", name: "Devis travaux", industry: "BTP", destination: "Ventes · devis", description: "Composer un devis à partir des postes et quantités." },
+  { id: "equipment-log", name: "Suivi du matériel", industry: "BTP", destination: "Équipements", description: "Suivre les affectations et entretiens du matériel." },
+  { id: "appointment-booking", name: "Agenda de rendez-vous", industry: "Coiffure", destination: "Agenda", description: "Gérer les créneaux et la disponibilité de l’équipe." },
+  { id: "chair-occupancy", name: "Occupation des fauteuils", industry: "Coiffure", destination: "Agenda · salon", description: "Voir la charge du salon pendant la journée." },
+  { id: "client-style", name: "Fiches prestations", industry: "Coiffure", destination: "Clients", description: "Retrouver l’historique des prestations et préférences." },
+  { id: "salon-stock", name: "Stocks salon", industry: "Coiffure", destination: "Produits · stocks", description: "Suivre les produits utilisés et revendus." },
+  { id: "product-variants", name: "Variantes produit", industry: "Commerce", destination: "Produits", description: "Décliner les articles par taille, couleur ou finition." },
+  { id: "abandoned-cart", name: "Paniers abandonnés", industry: "Commerce", destination: "Commandes", description: "Suivre les paniers non finalisés et les relances." },
+  { id: "shipping-rules", name: "Livraison", industry: "Commerce", destination: "Commandes · livraison", description: "Configurer les zones, frais et modes de livraison." },
+  { id: "product-bundles", name: "Lots de produits", industry: "Commerce", destination: "Produits", description: "Créer des lots et des ventes associées." },
+  { id: "customer-segments", name: "Segments clients", industry: "Tous métiers", destination: "Clients", description: "Regrouper les clients selon leur activité et leurs besoins." },
+  { id: "loyalty-campaigns", name: "Campagnes de fidélité", industry: "Tous métiers", destination: "Clients · fidélité", description: "Créer des avantages adaptés à chaque clientèle." },
+  { id: "conversion-insights", name: "Parcours de conversion", industry: "Tous métiers", destination: "Tracking · analyse", description: "Comprendre les étapes avant un achat ou une réservation." },
+] as const;
