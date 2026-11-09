@@ -426,6 +426,52 @@ export async function deniedJournalHttpChecks(
   );
   check(section, !!inside.rowCount, "Le refus d'un membre n'est plus journalisé");
 
+  // Le journal reçoit le statut renvoyé au client : une erreur de saisie d'un
+  // employé n'est pas un refus d'accès, un vrai refus sur /api/v1 en est un.
+  const post = async (url: string, cookie: string, body: unknown) => {
+    const response = await fetch(`${appUrl}${url}`, {
+      method: "POST",
+      redirect: "manual",
+      headers: { cookie, origin: appUrl, "content-type": "application/json" },
+      body: JSON.stringify(body),
+    });
+    return { status: response.status, text: await response.text() };
+  };
+  // Repère par nombre de lignes : un horodatage relu en JS perd les microsecondes.
+  const all = async () =>
+    (
+      await migrator.query<{ event_type: string }>(
+        "SELECT event_type FROM ops_security_events WHERE restaurant_id=$1 AND actor_id=$2 ORDER BY occurred_at,event_id",
+        [a1, employeeA1],
+      )
+    ).rows.map((r) => r.event_type);
+  const baseline = (await all()).length;
+  const journal = async () => (await all()).slice(baseline);
+  const invalid = await post(`/api/restaurants/${a1}/team`, employee, {
+    action: "inconnue",
+  });
+  check(section, invalid.status === 400, `Saisie invalide d'un employé : ${invalid.status}`);
+  const afterInvalid = await journal();
+  check(
+    section,
+    afterInvalid.includes("request.invalid") &&
+      !afterInvalid.includes("access.denied"),
+    `Saisie invalide d'un employé journalisée comme ${afterInvalid.join(", ") || "rien"}`,
+  );
+  const forbidden = await post("/api/v1/action", employee, {
+    restaurant: a1,
+    action: "ingredient",
+    name: "Contrôle de statut",
+    unit: "g",
+  });
+  check(section, forbidden.status === 403, `Employé refusé sur /api/v1 : ${forbidden.status} ${forbidden.text.slice(0, 200)}`);
+  const afterForbidden = (await journal()).slice(afterInvalid.length);
+  check(
+    section,
+    afterForbidden.length === 1 && afterForbidden[0] === "access.denied",
+    `Refus d'un employé sur /api/v1 journalisé comme ${afterForbidden.join(", ") || "rien"}`,
+  );
+
   // Plus aucun événement perdu dans le tampon du processus web.
   const lost = logs()
     .split("\n")

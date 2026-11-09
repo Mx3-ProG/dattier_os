@@ -96,14 +96,14 @@ export async function authenticated<T>(
         await recordFailure(error, {
           endpoint: "authenticated",
           restaurant,
-          status: 403,
+          status: failureStatus(error),
         });
         throw error;
       }
     },
   );
 }
-export function failure(error: unknown) {
+function failureKind(error: unknown) {
   const m = error instanceof Error ? error.message : "";
   const auth = /Connexion/.test(m),
     forbidden = /refusé|autorisé|suspendu/.test(m),
@@ -121,6 +121,25 @@ export function failure(error: unknown) {
           : conflict
             ? 409
             : 400;
+  return { m, auth, forbidden, limited, large, conflict, status };
+}
+/** HTTP status that `failure` returns to the client for this error. */
+export const failureStatus = (error: unknown) => failureKind(error).status;
+/**
+ * HTTP status that `/api/v1` returns for this error. Its contract is older
+ * and narrower than `failure` (no 409, 413 or 429), and is kept as is.
+ */
+export function v1FailureStatus(error: unknown) {
+  const message = error instanceof Error ? error.message : "";
+  return message.includes("Connexion")
+    ? 401
+    : message.includes("refusé") || message.includes("autorisé")
+      ? 403
+      : 400;
+}
+export function failure(error: unknown) {
+  const { m, auth, forbidden, limited, large, conflict, status } =
+    failureKind(error);
   const safe =
     error instanceof Error &&
     error.constructor === Error &&

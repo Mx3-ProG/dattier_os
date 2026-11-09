@@ -81,7 +81,7 @@ Avec `S3_BUCKET` et les variables S3 d'un stockage de test, il exécute aussi le
 | Catalogue | RLS, politiques, liste publique identique en base et dans le code, liens gardés, rôles, droits |
 | Contrôle positif | Le propriétaire voit bien ses données : un test qui refuse tout échouerait ici |
 | Matrice | Pour chaque table tenant et 11 scénarios d'accès : SELECT, UPDATE, DELETE et INSERT sur les lignes de l'autre |
-| Journal des refus | La tentative de B arrive chez A et rien sur B n'y figure, B ne lit et n'écrit rien d'autre, membres et anonymes gardent le journal normal, bornes par source et par établissement. En HTTP : la requête refusée de B est lue par le propriétaire de A via `/api/ops-security` |
+| Journal des refus | La tentative de B arrive chez A et rien sur B n'y figure, B ne lit et n'écrit rien d'autre, membres et anonymes gardent le journal normal, bornes par source et par établissement. En HTTP : la requête refusée de B est lue par le propriétaire de A via `/api/ops-security` ; la saisie invalide d'un employé est journalisée `request.invalid`, son vrai refus sur `/api/v1` `access.denied` |
 | Régressions | Comptes clients entre établissements, historique IA, solde de points, liens et dépôts de job forgés |
 | HTTP | Toutes les routes tenant, ID valides demandés depuis l'autre espace, webhook signé, rate limit, parcours publics |
 | Worker groups | Voir [WORKER_GROUPS.md](WORKER_GROUPS.md) |
