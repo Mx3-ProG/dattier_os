@@ -7,6 +7,7 @@ import { notFound, permanentRedirect, redirect } from "next/navigation";
 import { getDb, demoEnabled, one } from "@/lib/database/db";
 import { withDatabaseContext } from "@/lib/database/context";
 import { actor } from "@/lib/auth/session";
+import { NONCE_HEADER } from "@/lib/security/csp";
 import { website } from "@/features/cms/service";
 import { plain } from "@/features/cms/text";
 import { commerce } from "@/features/commerce/service";
@@ -226,6 +227,7 @@ export default async function Page(props: Props) {
       restaurant={data.restaurant}
       demo={demoEnabled()}
       shopEnabled={data.shopEnabled}
+      nonce={(await headers()).get(NONCE_HEADER) ?? undefined}
       preview={data.preview}
       platformOrigin={demoEnabled() ? "" : process.env.APP_URL || ""}
       audience={isAudienceMode(data.audience) ? data.audience : null}

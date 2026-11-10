@@ -28,7 +28,7 @@ export function CookieConsent({
 }: {
   onChange: (externalMedia: boolean) => void;
 }) {
-  const { restaurant, audience } = useTenantSite();
+  const { restaurant, audience, nonce } = useTenantSite();
   const STORAGE_KEY = `atacuisine-cookie-consent:${restaurant}`;
   const [consent, setConsent] = useState<Consent | null>(null);
   const [ready, setReady] = useState(false);
@@ -81,7 +81,14 @@ export function CookieConsent({
       {(!ready || (!chosen(consent, audience) && !settings)) && (
         <Banner save={save} customize={() => setSettings(true)} audience={audience} />
       )}
-      {!ready && <script dangerouslySetInnerHTML={{ __html: hideIfChosen }} />}
+      {!ready && (
+        <script
+          nonce={nonce}
+          // Les navigateurs masquent le nonce du DOM : l'écart à l'hydratation est normal.
+          suppressHydrationWarning
+          dangerouslySetInnerHTML={{ __html: hideIfChosen }}
+        />
+      )}
 
       {settings && (
         <div className="donut-cookie-overlay" role="presentation">

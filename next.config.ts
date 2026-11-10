@@ -24,12 +24,28 @@ const config: NextConfig = {
           { key: "X-Content-Type-Options", value: "nosniff" },
           { key: "X-Frame-Options", value: "SAMEORIGIN" },
           { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
+        ],
+      },
+      // Les pages reçoivent leur CSP du proxy, avec un nonce : plusieurs CSP s'additionnent,
+      // cette base ne s'applique donc qu'à ce qui n'est pas une page.
+      ...[
+        "/api/:path*",
+        "/_next/:path*",
+        "/cms/:path*",
+        "/fonts/:path*",
+        "/favicon.ico",
+        "/icon.svg",
+        "/sw.js",
+        "/manifest.webmanifest",
+      ].map((source) => ({
+        source,
+        headers: [
           {
             key: "Content-Security-Policy",
             value: "frame-ancestors 'self'; object-src 'none'; base-uri 'self'",
           },
         ],
-      },
+      })),
       {
         source: "/avantage",
         headers: [

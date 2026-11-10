@@ -77,6 +77,7 @@ services:
       DB_POOL_SIZE: ${APP_DB_POOL_SIZE:-20}
       DATABASE_URL: postgresql://atacuisine_web:${APP_DB_PASSWORD}@postgres:5432/atacuisine
       APP_URL: ${APP_URL}
+      CSP_MODE: ${CSP_MODE:-report-only}
       OIDC_ISSUER: ${IDENTITY_URL}/realms/atacuisine
       OIDC_CLIENT_ID: atacuisine
       OIDC_BACKCHANNEL_ORIGIN: http://keycloak:8080
