@@ -12,7 +12,7 @@ import Link from "next/link";
 import { useState } from "react";
 import type { Snapshot } from "@/lib/types";
 import { money, dateTime } from "@/lib/domain";
-import { roleLabels } from "@/lib/permissions";
+import { roleLabels, teamRoles } from "@/lib/permissions";
 import { Button } from "./ui/button";
 import { Form, Modal, Badge, type Act, type Field } from "./forms";
 import { QrButton } from "./qr/qr-portfolio";
@@ -517,31 +517,70 @@ export function Management({
       <>
         <div className="section-heading">
           <h2>L’équipe & les services</h2>
-          <Button
-            onClick={() =>
-              edit(
-                "Planifier un service",
-                [
-                  {
-                    name: "profile",
-                    label: "Employé",
-                    options: options(data.employees),
-                  },
-                  { name: "start", label: "Début", type: "datetime-local" },
-                  { name: "end", label: "Fin", type: "datetime-local" },
-                ],
-                (v) =>
-                  act({
-                    action: "shift",
-                    profile: v.profile,
-                    start: new Date(v.start).toISOString(),
-                    end: new Date(v.end).toISOString(),
-                  }),
-              )
-            }
-          >
-            Planifier un service
-          </Button>
+          <div className="actions">
+            {(data.user.roles ?? [data.user.role]).includes("OWNER") && (
+              <Button
+                variant="secondary"
+                onClick={() =>
+                  edit(
+                    "Ajouter une personne",
+                    [
+                      { name: "name", label: "Nom et prénom", maxLength: 100 },
+                      {
+                        name: "role",
+                        label: "Poste",
+                        options: teamRoles.map((role) => ({
+                          value: role,
+                          label: roleLabels[role],
+                        })),
+                      },
+                      {
+                        name: "email",
+                        label: "E-mail (facultatif)",
+                        type: "email",
+                        maxLength: 150,
+                        required: false,
+                      },
+                    ],
+                    (v) =>
+                      act({
+                        action: "addMember",
+                        name: v.name,
+                        role: v.role,
+                        email: v.email,
+                      }),
+                  )
+                }
+              >
+                Ajouter une personne
+              </Button>
+            )}
+            <Button
+              onClick={() =>
+                edit(
+                  "Planifier un service",
+                  [
+                    {
+                      name: "profile",
+                      label: "Employé",
+                      options: options(data.employees),
+                    },
+                    { name: "start", label: "Début", type: "datetime-local" },
+                    { name: "end", label: "Fin", type: "datetime-local" },
+                  ],
+                  (v) =>
+                    act({
+                      action: "shift",
+                      profile: v.profile,
+                      start: new Date(v.start).toISOString(),
+                      end: new Date(v.end).toISOString(),
+                    }),
+                )
+              }
+            >
+              Planifier un service
+            </Button>
+          </div>
         </div>
         <div className="three-grid">
           {data.employees

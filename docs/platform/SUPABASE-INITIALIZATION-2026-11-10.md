@@ -55,3 +55,23 @@ les versions absentes.
 
 Aucun secret de connexion créé ou modifié, aucun réglage Vercel modifié et aucun
 déploiement applicatif effectué pendant cette initialisation.
+
+## Accents abîmés en production (constaté le 10 novembre 2026)
+
+Le collage du script dans l’éditeur SQL a relu l’UTF-8 comme du Windows-1252 :
+« Écrans » est devenu « Ã‰crans », « l’image » « lâ€™image ». Tout ce que les
+migrations ont écrit est touché : catégories et fiches de la boutique, messages
+d’erreur des fonctions, valeurs par défaut, arguments de déclencheurs.
+
+Réparation : `database/migrations/130_repair_text_encoding.sql`, à exécuter une
+fois dans l’éditeur SQL. Le fichier est volontairement en ASCII pur (caractères
+spéciaux construits avec `chr()`), donc le même collage ne peut pas l’abîmer.
+Il ne réécrit que les séquences mal encodées, peut être rejoué sans risque et ne
+change rien sur une base saine. Vérifié en simulation : base construite avec
+toutes les migrations corrompues de la même façon (avec et sans perte des espaces
+insécables), puis réparée ; données, fonctions, valeurs par défaut et
+déclencheurs redeviennent identiques à une installation propre.
+
+Pour les migrations suivantes contenant des accents (110, 111, 112…), le même
+risque existe : relancer 130 après chaque collage, ou appliquer les fichiers avec
+`psql -f` depuis un terminal.

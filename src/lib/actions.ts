@@ -36,7 +36,12 @@ import { randomUUID as uuid } from "node:crypto";
 import { z } from "zod";
 import { rows, one, type DB } from "./database/db";
 import type { Actor } from "./auth/session";
-import { can, requirePermission, type Permission } from "./permissions";
+import {
+  can,
+  requirePermission,
+  teamRoles,
+  type Permission,
+} from "./permissions";
 import {
   changeItem,
   createOrder,
@@ -149,6 +154,12 @@ export const actionSchema = z.discriminatedUnion("action", [
   }),
   z.object({ action: z.literal("shift"), profile: id, start: dt, end: dt }),
   z.object({ action: z.literal("deleteShift"), id }),
+  z.object({
+    action: z.literal("addMember"),
+    name: z.string().trim().min(2).max(100),
+    email: z.union([z.literal(""), z.email().max(150)]).optional(),
+    role: z.enum(teamRoles),
+  }),
   z.object({
     action: z.literal("clock"),
     event: z.enum(["start", "break", "resume", "end"]),
@@ -563,6 +574,19 @@ export async function perform(
         a.end,
       ]);
       await notify(db, r, "Planning mis à jour");
+      break;
+    }
+    case "addMember": {
+      if (!(user.roles ?? [user.role]).includes("OWNER"))
+        throw new Error("Seul un administrateur peut ajouter une personne.");
+      await db.query("SELECT app.add_team_member($1,$2,$3,$4,$5::jsonb)", [
+        r,
+        `staff:${uuid()}`,
+        a.name,
+        a.email ?? "",
+        JSON.stringify([a.role]),
+      ]);
+      await notify(db, r, `${a.name} a rejoint l’équipe`);
       break;
     }
     case "deleteShift":
