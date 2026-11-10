@@ -570,6 +570,10 @@ try {
   await positiveControl(world);
   await matrix(world);
   await regressions(migrator, world);
+  const { deniedJournalSqlChecks, deniedJournalHttpChecks } = await import(
+    "./isolation/denied-journal"
+  );
+  await deniedJournalSqlChecks(world, migrator, web, check);
   const { workerChecks } = await import("./isolation/workers");
   await workerChecks(world, migrator, worker, workerUrl, check);
   if (process.env.ISOLATION_HTTP === "true") {
@@ -579,6 +583,7 @@ try {
     console.log(`Vérifications HTTP à partir de ${new Date().toISOString()}.`);
     try {
       await httpChecks(world, migrator, app.url, check);
+      await deniedJournalHttpChecks(world, migrator, app.url, app.logs, check);
       if (process.env.S3_BUCKET) {
         const { mediaChecks } = await import("./isolation/media");
         await mediaChecks(world, migrator, app.url, workerUrl, check);

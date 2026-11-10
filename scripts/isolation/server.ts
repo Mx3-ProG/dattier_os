@@ -86,7 +86,7 @@ export async function startApp(migrator: Client, webUrl: string) {
   for (let i = 0; i < 60; i++) {
     try {
       const health = await fetch(`${url}/api/health`);
-      if (health.ok) return { url, stop };
+      if (health.ok) return { url, stop, logs: () => output };
     } catch {
       /* Pas encore démarré. */
     }

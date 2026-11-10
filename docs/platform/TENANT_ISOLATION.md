@@ -24,6 +24,7 @@ Une organisation (le client) possède un ou plusieurs établissements (restauran
 | File de jobs | Le canal public dépose par `app.enqueue_job`, pour son seul restaurant, et ne relit jamais la file. | migration 060 |
 | Droits SQL | Les migrations accordent le strict nécessaire. `scripts/migrate.ts` n'accorde plus rien. | migration 060 |
 | Stockage | Les clés d'objet sont préfixées par le restaurant et lues depuis une ligne protégée par la RLS. | `src/features/cms/media.ts`, `src/features/site/media.ts` |
+| Journal des refus | Une tentative refusée depuis l'extérieur d'un établissement apparaît dans son journal, sans rien révéler sur son auteur. | `app.record_denied_access`, migration 160 |
 | Rate limit | Les compteurs du store sont par restaurant et par adresse IP. Une requête refusée compte aussi. | `src/app/api/store/[restaurant]/[action]/route.ts` |
 
 ## Entre établissements d'une organisation
@@ -33,6 +34,32 @@ Une organisation (le client) possède un ou plusieurs établissements (restauran
 - Un simple membre de l'organisation ne voit aucun compte client par défaut.
 - L'historique de l'assistant est propre à chaque établissement.
 - Le solde de points n'est écrit que par `app.loyalty_delta`.
+
+## Tentatives d'accès refusées
+
+Un compte connecté qui demande un établissement auquel il n'a pas accès n'a pas le droit d'écrire dans son journal. `recordFailure` appelle donc `app.record_denied_access`, seule écriture permise depuis l'extérieur. La fonction décide elle-même si l'appelant est extérieur, à partir du contexte de la transaction. Sinon, le journal normal s'applique : un employé refusé chez lui reste identifié par son `actor_id`.
+
+**Ce que voit le propriétaire.** Dans le centre de sécurité, un événement `access.denied.external` de sévérité `WARNING`, avec la route visée, l'heure et le nombre de tentatives. Les détails techniques donnent une empreinte `source`, stable sur l'établissement, et l'empreinte `client` de l'adresse.
+
+**Ce qu'il ne voit pas.** Ni le compte, ni la session, ni l'organisation de l'auteur. Le message est fixe, et la fonction ignore toute valeur d'appel qui n'a pas la forme attendue : aucun texte de l'attaquant n'arrive dans le journal d'un autre client.
+
+**Ce que l'auteur ne peut pas faire.** La fonction n'écrit que ce type d'événement, ne renvoie aucune donnée et n'accorde aucune lecture. Elle n'écrit rien pour un établissement qui n'existe pas et n'ouvre pas d'incident.
+
+**Bornes, par établissement et par heure :**
+
+| Borne | Valeur | Au-delà |
+|---|---|---|
+| Lignes par source | 3 | Une ligne seulement aux paliers 10, 100, 1000… avec le volume réel |
+| Sources suivies | 20 | Les suivantes partagent la source `*`, soumise aux mêmes paliers |
+
+Chaque source ajoute donc environ 6 lignes pour 1000 tentatives. Les compteurs sont dans `app.denied_access_counters`, inaccessibles aux rôles applicatifs, et seule l'heure en cours est conservée.
+
+**Retrouver le compte.** L'exploitant de la plateforme, seul à pouvoir lire tous les profils, retrouve le compte à partir d'une empreinte, avec le compte migrateur :
+
+```sql
+SELECT id FROM profiles
+ WHERE left(encode(sha256(convert_to('<restaurant_id>:'||id,'UTF8')),'hex'),16)='<source>';
+```
 
 ## Vérifier
 
@@ -54,6 +81,7 @@ Avec `S3_BUCKET` et les variables S3 d'un stockage de test, il exécute aussi le
 | Catalogue | RLS, politiques, liste publique identique en base et dans le code, liens gardés, rôles, droits |
 | Contrôle positif | Le propriétaire voit bien ses données : un test qui refuse tout échouerait ici |
 | Matrice | Pour chaque table tenant et 11 scénarios d'accès : SELECT, UPDATE, DELETE et INSERT sur les lignes de l'autre |
+| Journal des refus | La tentative de B arrive chez A et rien sur B n'y figure, B ne lit et n'écrit rien d'autre, membres et anonymes gardent le journal normal, bornes par source et par établissement. En HTTP : la requête refusée de B est lue par le propriétaire de A via `/api/ops-security` ; la saisie invalide d'un employé est journalisée `request.invalid`, son vrai refus sur `/api/v1` `access.denied` |
 | Régressions | Comptes clients entre établissements, historique IA, solde de points, liens et dépôts de job forgés |
 | HTTP | Toutes les routes tenant, ID valides demandés depuis l'autre espace, webhook signé, rate limit, parcours publics |
 | Worker groups | Voir [WORKER_GROUPS.md](WORKER_GROUPS.md) |
@@ -78,7 +106,9 @@ Le test prouve l'isolation sur les chemins testés, pas l'absence de toute faill
 
 ## Limites connues
 
-- **Tentatives d'accès non journalisées.** Quand un client tente d'accéder à un autre tenant, l'écriture de l'événement de sécurité est elle-même refusée par la RLS : l'accès est bien bloqué, mais la tentative n'apparaît pas dans le journal du tenant visé.
+- **Tentatives anonymes non journalisées.** Une requête sans session sur une route tenant est refusée avant d'atteindre le journal. Seuls les comptes connectés laissent une trace chez l'établissement visé.
+- **Routes sans contexte de requête.** Les routes qui n'utilisent pas `withRequestContext` apparaissent en « Route inconnue » dans le journal.
+- **Plafond du journal des refus.** Au-delà de 20 comptes par heure, un attaquant qui possède de nombreux comptes noie les suivants dans une source commune `*` : le volume reste compté, l'empreinte individuelle est perdue jusqu'à l'heure suivante.
 - **Tables du canal public.** `customers`, `customer_sessions` et les autres tables de la liste publique restent protégées par le code applicatif en plus de leur restaurant de contexte : le canal public y a accès pour le restaurant demandé.
 - **Origine partagée.** Les sites publics et le tableau de bord partagent une origine sur le domaine de la plateforme. Une faille XSS sur un site tenant y atteindrait les sessions du personnel.
 - **`FORCE ROW LEVEL SECURITY`** n'est pas activé : sans effet tant que le migrateur est superutilisateur. Ce compte et les scripts d'exploitation contournent la RLS.
