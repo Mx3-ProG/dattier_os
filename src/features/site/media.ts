@@ -77,9 +77,11 @@ export async function resolveStaffAsset(db: DB, r: string, id: string) {
 }
 /** Contrôle dans la transaction, lecture du stockage après sa fermeture. */
 export async function resolveAsset(db: DB, r: string, id: string) {
+  // Avant la migration 151, seules les images du site publié sont publiques (comportement d'origine).
+  const offers = (await rows<{ ok: boolean }>(db, "SELECT to_regprocedure('app.offer_media_public(text,text)') IS NOT NULL AS ok"))[0]?.ok;
   const assets = await rows<{ object_key: string; content_type: string }>(
     db,
-    "SELECT a.object_key,a.content_type FROM site_assets a WHERE a.id=$1 AND a.restaurant_id=$2 AND (EXISTS (SELECT 1 FROM site_documents s WHERE s.restaurant_id=a.restaurant_id AND s.published::text LIKE '%'||a.id||'%') OR app.offer_media_public(a.restaurant_id,a.id))",
+    `SELECT a.object_key,a.content_type FROM site_assets a WHERE a.id=$1 AND a.restaurant_id=$2 AND (EXISTS (SELECT 1 FROM site_documents s WHERE s.restaurant_id=a.restaurant_id AND s.published::text LIKE '%'||a.id||'%')${offers ? " OR app.offer_media_public(a.restaurant_id,a.id)" : ""})`,
     [id, r],
   );
   if (!assets.length) return null;

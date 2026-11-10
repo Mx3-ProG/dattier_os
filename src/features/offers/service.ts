@@ -210,6 +210,9 @@ export async function offersMutation(db: DB, user: Actor, restaurant: string, ra
 
 /** Services et produits publiés, lus dans le contexte public du site. */
 export async function publicOffers(db: DB, restaurant: string) {
+  // Déploiement avant `npm run db:migrate` (migration 151) : le site s'affiche sans ces sections.
+  const ready = await one<{ ok: boolean }>(db, "SELECT to_regprocedure('app.public_offers(text)') IS NOT NULL AS ok");
+  if (!ready.ok) return parsePublicOffers(null);
   const result = await one<{ data: unknown }>(db, "SELECT app.public_offers($1) AS data", [restaurant]);
   return parsePublicOffers(result.data);
 }

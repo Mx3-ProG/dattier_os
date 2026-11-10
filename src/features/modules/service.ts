@@ -186,6 +186,9 @@ export async function setModuleDisplay(
 }
 
 export async function readModuleDisplay(db: DB, restaurant: string): Promise<ModuleDisplay[]> {
+  // Déploiement avant `npm run db:migrate` (migration 150) : affichage par défaut, sans erreur.
+  const ready = await db.query<{ ok: boolean }>("SELECT to_regclass('public.module_display') IS NOT NULL AS ok");
+  if (!ready.rows[0]?.ok) return [];
   const { rows } = await db.query<ModuleDisplay>(
     "SELECT module_id,shown FROM module_display WHERE restaurant_id=$1 ORDER BY module_id",
     [restaurant],
