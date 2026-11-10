@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { addonCollections } from "../src/features/addons/catalog";
+import { addonCatalog, addonCollections } from "../src/features/addons/catalog";
 const now = Date.parse("2026-11-08T12:00:00Z");
 test("owned and shop partition the catalogue by the single subscription without duplicates", () => {
   for (const [plan, count] of [
@@ -9,8 +9,8 @@ test("owned and shop partition the catalogue by the single subscription without 
   ]) {
     const { owned, shop } = addonCollections(plan, [], now);
     assert.equal(owned.length, count);
-    assert.equal(owned.length + shop.length, 13);
-    assert.equal(new Set([...owned, ...shop].map((x) => x.id)).size, 13);
+    assert.equal(owned.length + shop.length, addonCatalog.length);
+    assert.equal(new Set([...owned, ...shop].map((x) => x.id)).size, addonCatalog.length);
   }
 });
 test("only a current active subscription belongs to owned; pending and expired remain in shop", () => {

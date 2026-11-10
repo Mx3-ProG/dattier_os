@@ -19,7 +19,7 @@ export const account: Chapter = {
     },
     {
       title: "Votre compte, en trois temps",
-      body: "1. Sur la page de connexion, « Créer un compte » : vous vous inscrivez avec votre adresse e-mail, qui est vérifiée. 2. Vous choisissez une offre : elle crée votre organisation. 3. Vous créez votre premier restaurant : il démarre vide, prêt à être configuré. Si vous voyez cet écran, ces trois étapes sont faites.",
+      body: "1. Créez votre compte et vérifiez votre e-mail. 2. Dans le parcours de bienvenue, décrivez votre métier et votre façon de travailler. 3. Vérifiez le récapitulatif : la validation crée votre organisation et votre premier établissement et démarre l’essai de trois jours. Vous pouvez ensuite inviter l’équipe et importer vos clients.",
       link: { label: "Revoir la création de compte", href: "/guide#account" },
     },
     {
@@ -45,8 +45,8 @@ export const account: Chapter = {
         steps: [
           "Ouvrez la page de connexion et cliquez sur « Créer un compte ».",
           "Inscrivez-vous avec votre adresse e-mail ; elle est vérifiée avant la première connexion.",
-          "Choisissez une offre : votre organisation est créée.",
-          "Depuis « Mes restaurants », créez votre premier établissement.",
+          "Choisissez l’offre Studio, puis renseignez votre organisation, votre établissement et votre métier.",
+          "Validez le récapitulatif pour créer l’espace et démarrer l’essai.",
           "Ouvrez son poste de travail : la visite « Bien démarrer » se lance.",
         ],
       },

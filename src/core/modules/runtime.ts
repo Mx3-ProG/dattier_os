@@ -7,12 +7,14 @@ export type ModuleDecision = {
   reason: "available" | "not-entitled" | "suspended" | "dependency-unavailable";
 };
 
-/** Current restaurant offer: both existing modules are included from Basic. */
-export function legacyRestaurantModules(plan: number): string[] {
+/** Modules granted by the historic single plan to any business (Studio, 39 €). */
+export function legacyBusinessModules(plan: number): string[] {
   return plan === 39
     ? ["floor", "table-booking"]
     : [];
 }
+/** @deprecated Historic name; use `legacyBusinessModules`. */
+export const legacyRestaurantModules = legacyBusinessModules;
 
 /** Pure resolution only. Callers must supply server-verified entitlements and states. */
 export function resolveModuleRuntime(

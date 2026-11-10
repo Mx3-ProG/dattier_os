@@ -1,0 +1,9 @@
+.ls-wreath { position: absolute; inset: 0; display: grid; place-items: center; }
+.ls-wreath-ring { width: 144px; height: 144px; border: 22px solid var(--ls-primary); border-radius: 50%; box-shadow: inset 0 0 0 5px #78a887, 0 0 0 5px #215f47, 0 12px 18px #1e463326; background: transparent; animation: ls-wreath-breathe calc(3s / var(--ls-speed)) ease-in-out infinite; }
+.ls-wreath-ring::before { content: ""; position: absolute; inset: 30px; border: 3px dashed var(--ls-secondary); border-radius: 50%; opacity: .75; }
+.ls-wreath-center { position: absolute; color: var(--ls-secondary); font: 60px Georgia, serif; animation: ls-wreath-glow calc(3s / var(--ls-speed)) ease-in-out infinite; }
+.ls-wreath-bow { position: absolute; top: 14px; left: 77px; z-index: 2; width: 46px; height: 22px; }
+.ls-wreath-bow i { position: absolute; width: 27px; height: 25px; background: #c54547; border-radius: 80% 8% 80% 8%; transform: rotate(30deg); }.ls-wreath-bow i:last-child { right: 0; transform: rotate(62deg); }
+.ls-wreath-berry { position: absolute; width: 12px; height: 12px; border-radius: 50%; background: #ce4243; box-shadow: 2px 2px 0 #a83234; }.ls-wreath-berry.is-one { top: 48px; left: 35px; }.ls-wreath-berry.is-two { bottom: 44px; right: 33px; }.ls-wreath-berry.is-three { bottom: 30px; left: 72px; }
+@keyframes ls-wreath-breathe { 0%, 100% { transform: scale(.97) rotate(-3deg); } 50% { transform: scale(1.04) rotate(3deg); } }
+@keyframes ls-wreath-glow { 0%, 100% { opacity: .5; transform: scale(.9); } 50% { opacity: 1; transform: scale(1.15); } }

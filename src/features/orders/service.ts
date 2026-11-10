@@ -7,6 +7,7 @@ import { z } from "zod";
 import { one, rows, type DB } from "@/lib/database/db";
 import type { Actor } from "@/lib/auth/session";
 import { requirePermission } from "@/lib/permissions";
+import { moduleAvailable } from "@/features/modules/availability";
 export const orderSchema = z.object({
   restaurant: z.string(),
   table: z.string().optional(),
@@ -305,8 +306,15 @@ export async function changeItem(
   if (item.order_status === "paid") throw new Error("Commande déjà réglée.");
   if (target === "cancelled" && ["served", "cancelled"].includes(item.status))
     throw new Error("Produit déjà servi ou annulé.");
+  // Sans module Cuisine ou Bar pour ce poste, pas d'étape de préparation : la ligne
+  // se sert directement depuis « en attente » (lot P1-a3, commandes sans cuisine ni bar).
+  const direct =
+    target === "served" &&
+    item.status === "waiting" &&
+    !(await moduleAvailable(db, r, item.station === "bar" ? "bar" : "kitchen"));
   if (
     target !== "cancelled" &&
+    !direct &&
     !(
       {
         waiting: ["preparing"],
@@ -328,7 +336,8 @@ export async function changeItem(
     [id],
   );
   for (const reservation of reservations) {
-    if (target === "preparing" && reservation.status === "reserved") {
+    // Le service direct consomme le stock comme le ferait le début de préparation.
+    if ((target === "preparing" || direct) && reservation.status === "reserved") {
       if (reservation.expired)
         throw new Error(
           "Lot expiré depuis la commande. Annulez puis recréez le produit.",
@@ -347,7 +356,7 @@ export async function changeItem(
         reservation.lot_id,
         -reservation.quantity,
         "consumption",
-        "Début de préparation",
+        direct ? "Service direct" : "Début de préparation",
         user.id,
         id,
       );

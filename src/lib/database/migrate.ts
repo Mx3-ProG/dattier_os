@@ -62,6 +62,23 @@ const migrations: [number, string][] = [
   [74, "074_paid_feature_access.sql"],
   [75, "075_single_plan.sql"],
   [76, "076_three_day_trial.sql"],
+  [77, "077_trade_tools.sql"],
+  [78, "078_studio_onboarding.sql"],
+  [79, "079_site_addons.sql"],
+  [80, "080_santa_loader.sql"],
+  [81, "081_tenant_indexes.sql"],
+  [82, "082_festive_designs.sql"],
+  [83, "083_christmas_loaders.sql"],
+  [84, "084_christmas_site_decorations.sql"],
+  [85, "085_site_backgrounds.sql"],
+  [86, "086_space_nature_visuals.sql"],
+  [90, "090_module_available.sql"],
+  [91, "091_module_legacy_grants.sql"],
+  [92, "092_module_legacy_grants_scope.sql"],
+  [93, "093_pilotage_addons.sql"],
+  [94, "094_pilotage_data.sql"],
+  [100, "100_booking_without_floor.sql"],
+  [101, "101_demo_addon_source.sql"],
 ];
 /** Applies every additive migration not yet recorded, inside the caller's transaction. */
 export async function applyMigrations(tx: DB) {

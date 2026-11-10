@@ -9,14 +9,16 @@ import {
   rateLimit,
 } from "@/features/platform/http";
 import { offlineState, offlinePerform } from "@/features/offline/service";
+import { requireRestaurantIndustry } from "@/features/onboarding/access";
 type Context = { params: Promise<{ restaurant: string }> };
 async function routeGET(_: NextRequest, c: Context) {
   try {
     const { restaurant } = await c.params;
     return json(
-      await authenticated(restaurant, (db, user) =>
-        offlineState(db, restaurant, user),
-      ),
+      await authenticated(restaurant, async (db, user) => {
+        await requireRestaurantIndustry(db,restaurant);
+        return offlineState(db, restaurant, user);
+      }),
     );
   } catch (e) {
     return failure(e);
@@ -29,6 +31,7 @@ async function routePOST(req: NextRequest, c: Context) {
     const body = await readBody(req);
     return json(
       await authenticated(restaurant, async (db, user) => {
+        await requireRestaurantIndustry(db,restaurant);
         await rateLimit(db, `offline:${user.id}`, 120);
         return offlinePerform(db, restaurant, user, body);
       }),

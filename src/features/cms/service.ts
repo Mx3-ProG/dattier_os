@@ -21,11 +21,53 @@ import {
 import { registry } from "./registry";
 import type { PlaceholderContext } from "./text";
 import { cmsMedia } from "./media";
+import { isAddonSection, addonSectionAddons, parseSiteAddons, type SiteAddonData } from "./site-addons";
 
 export type SiteScope = { user: Actor; role: Role };
 export function website(SHOP: string) {
   const { listMedia } = cmsMedia(SHOP);
   const shopSettings = (db: DB) => commerce(SHOP).settings(db);
+  /** Add-ons installés visibles sur le site : la seule source qui ouvre leurs sections. */
+  async function siteAddons(db: DB): Promise<SiteAddonData> {
+    const data = parseSiteAddons((await one<{ data: unknown }>(db, "SELECT app.site_addon_data($1) AS data", [SHOP])).data);
+    const decorations = await one<{ data: SiteAddonData["decorations"] }>(db, "SELECT app.site_decoration_data($1) AS data", [SHOP]);
+    const backgrounds = await one<{ data: SiteAddonData["backgrounds"] }>(db, "SELECT app.site_background_data($1) AS data", [SHOP]);
+    return { ...data, decorations: decorations.data ?? [], backgrounds: backgrounds.data ?? [] };
+  }
+  /** Les sections d’add-ons suivent l’installation, pas la liste enregistrée du site. */
+  function withAddonSections(settings: CmsSettings, addons: SiteAddonData): CmsSettings {
+    return {
+      ...settings,
+      allowedTypes: [
+        ...settings.allowedTypes.filter((type) => !isAddonSection(type)),
+        ...(Object.keys(addonSectionAddons) as (keyof typeof addonSectionAddons)[]).filter((type) =>
+          addons.installed.includes(addonSectionAddons[type]),
+        ),
+      ],
+    };
+  }
+  /** Un modèle de 404 ou un écran de chargement n’est choisi que parmi les add-ons acquis. */
+  function checkSiteAddonChoices(next: SiteConfig, addons: SiteAddonData, prev?: SiteConfig) {
+    // Quel que soit le rôle : une nouvelle section d’add-on exige l’add-on installé.
+    // Les sections déjà présentes restent tolérées (masquées sur le site si l’add-on est retiré).
+    const existing = new Set(Object.values(prev?.pages ?? {}).flatMap((page) => page.sections.map((section) => section.id)));
+    for (const page of Object.values(next.pages))
+      for (const section of page.sections)
+        if (isAddonSection(section.type) && !existing.has(section.id) && !addons.installed.includes(addonSectionAddons[section.type]))
+          throw new Error(`Modification refusée : le composant « ${section.type} » n’est pas autorisé sans son add-on.`);
+    const loader = next.branding.loader?.product;
+    if (loader && !addons.loadingScreens.some((entry) => entry.id === loader))
+      throw new Error("Cet écran de chargement n’est pas installé dans cet établissement.");
+    const decoration = next.branding.decoration?.product;
+    if (decoration && !addons.decorations.some((entry) => entry.id === decoration))
+      throw new Error("Cette décoration n’est pas installée dans cet établissement.");
+    const background = next.branding.background?.product;
+    if (background && !addons.backgrounds.some((entry) => entry.id === background))
+      throw new Error("Ce fond de site n’est pas installé dans cet établissement.");
+    const page = next.branding.notFound?.product;
+    if (page && !addons.notFoundPages.some((entry) => entry.id === page))
+      throw new Error("Ce modèle de page 404 n’est pas installé dans cet établissement.");
+  }
   /* ───────────────────────── Access ───────────────────────── */
 
   /** Server-side gate: membership of the shop, then the `website` permission. */
@@ -180,6 +222,7 @@ export function website(SHOP: string) {
     );
     const name = (id: string | null) =>
       names.find((n) => n.id === id)?.name ?? id;
+    const addons = await siteAddons(db);
     return {
       role: s.role,
       config: draft,
@@ -197,7 +240,8 @@ export function website(SHOP: string) {
       unpublished:
         stable(draft) !==
         stable(published ? parseConfig(published.config) : defaultConfig()),
-      settings: { ...defaultCmsSettings(), ...row.settings },
+      settings: withAddonSections({ ...defaultCmsSettings(), ...row.settings }, addons),
+      siteAddons: addons,
       defaults: defaultConfig(),
       context: await placeholderContext(db, draft),
     };
@@ -324,7 +368,10 @@ export function website(SHOP: string) {
           }
         };
         await validateMedia(next);
-        enforceLocks(await currentDraft(db, row), next, s.role, settings);
+        const addons = await siteAddons(db);
+        const previous = await currentDraft(db, row);
+        checkSiteAddonChoices(next, addons, previous);
+        enforceLocks(previous, next, s.role, withAddonSections(settings, addons));
         const revision = await writeDraft(db, next, s.user.id);
         await log(db, SHOP, s.user.id, "Site : brouillon enregistré");
         return { revision };
@@ -363,7 +410,7 @@ export function website(SHOP: string) {
           )
         ).number;
         // A restore is a change like any other: an administrator may only restore what locks permit.
-        enforceLocks(await currentDraft(db, row), old, s.role, settings);
+        enforceLocks(await currentDraft(db, row), old, s.role, withAddonSections(settings, await siteAddons(db)));
         const revision = await writeDraft(db, old, s.user.id);
         const number = await insertVersion(
           db,
@@ -430,6 +477,7 @@ export function website(SHOP: string) {
   }
   return {
     siteScope,
+    siteAddons,
     parseConfig,
     cmsSettings,
     getPublishedConfig,

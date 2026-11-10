@@ -3,10 +3,12 @@ import { SiteEditor } from "./index";
 import { TenantSiteProvider } from "../cms-site/context";
 import type { Role } from "@/lib/permissions";
 import { RestaurantAdminShell } from "@/components/platform/restaurant-admin-shell";
+import type { Industry } from "@/features/onboarding/catalog";
 
 export function WebsiteStudio({
   restaurant,
   restaurantName,
+  industry = "restaurant",
   plan,
   userRoles,
   addons,
@@ -14,6 +16,7 @@ export function WebsiteStudio({
 }: {
   restaurant: string;
   restaurantName: string;
+  industry?: Industry;
   plan: number;
   userRoles: Role[];
   addons: string[];
@@ -25,6 +28,7 @@ export function WebsiteStudio({
       <RestaurantAdminShell
         restaurant={restaurant}
         restaurantName={restaurantName}
+        industry={industry}
         plan={plan}
         userRoles={userRoles}
         addons={addons}
@@ -33,7 +37,7 @@ export function WebsiteStudio({
       >
         <SiteEditor
           liveDataHref={(module) =>
-            module === "menu"
+            industry !== "restaurant" ? dashboard + "&module=trade-tools" : module === "menu"
               ? `${dashboard}&module=menu`
               : `/restaurant/${restaurant}?module=shop${module === "reviews" ? "#avis" : "#reglages-commande"}`
           }

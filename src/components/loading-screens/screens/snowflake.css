@@ -1,0 +1,7 @@
+.ls-snowflake { position: absolute; inset: 0; display: grid; place-items: center; overflow: hidden; }
+.ls-snowflake-halo { position: absolute; width: 150px; height: 150px; border: 1px solid #a8d7e866; border-radius: 50%; box-shadow: 0 0 35px #a8d7e844, inset 0 0 30px #a8d7e822; }
+.ls-snowflake-mark { color: var(--ls-secondary); font: 116px/1 Georgia, serif; text-shadow: 0 0 18px var(--ls-primary); animation: ls-snowflake-turn calc(8s / var(--ls-speed)) ease-in-out infinite; }
+.ls-snowflake i { position: absolute; width: 5px; height: 5px; border-radius: 50%; background: var(--ls-secondary); animation: ls-snowflake-fall calc(3.4s / var(--ls-speed)) linear infinite; }
+.ls-snowflake i:nth-of-type(1) { left: 12%; animation-delay: -.2s; }.ls-snowflake i:nth-of-type(2) { left: 28%; animation-delay: -1.7s; }.ls-snowflake i:nth-of-type(3) { left: 42%; animation-delay: -2.6s; }.ls-snowflake i:nth-of-type(4) { left: 61%; animation-delay: -1s; }.ls-snowflake i:nth-of-type(5) { left: 76%; animation-delay: -2.2s; }.ls-snowflake i:nth-of-type(6) { left: 90%; animation-delay: -3s; }
+@keyframes ls-snowflake-turn { 0%, 100% { transform: rotate(-18deg) scale(.94); } 50% { transform: rotate(20deg) scale(1.05); } }
+@keyframes ls-snowflake-fall { from { top: -8%; opacity: 0; transform: translateX(0); } 20% { opacity: .9; } to { top: 105%; opacity: 0; transform: translateX(22px); } }

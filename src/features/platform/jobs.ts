@@ -1,8 +1,10 @@
 import { randomUUID } from "node:crypto";
 import type { DB } from "@/lib/database/db";
+import type { BusinessId } from "@/core/tenant/business";
+/** Durable outbox job, scoped to one business (column `restaurant_id`, historic name). */
 export async function enqueue(
   db: DB,
-  restaurant: string,
+  business: BusinessId,
   kind: string,
   key: string,
   payload: unknown,
@@ -11,7 +13,7 @@ export async function enqueue(
   const id = randomUUID();
   await db.query("SELECT app.enqueue_job($1,$2,$3,$4::jsonb,$5,$6::timestamptz)", [
     id,
-    restaurant,
+    business,
     kind,
     JSON.stringify(payload),
     key,

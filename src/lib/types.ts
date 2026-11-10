@@ -4,6 +4,9 @@ import type { Actor } from "./auth/session";
 export type Restaurant = {
   id: string;
   name: string;
+  industry?: import("@/features/onboarding/catalog").Industry;
+  trade?: string;
+  trade_detail?: string;
   address: string;
   phone: string;
   goal: number;
@@ -175,6 +178,8 @@ export type Promo = {
 };
 export type Snapshot = {
   activeModules?: { floor: boolean; "table-booking": boolean };
+  /** Modules disponibles (app.module_available) ; prioritaire pour la navigation. */
+  modules?: string[];
   addons?: string[];
   licenses?: string[];
   uninstalledAddons?: string[];

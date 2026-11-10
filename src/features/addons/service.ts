@@ -5,9 +5,9 @@ import { addonStripe, addonBillingReady } from "./billing-config";
 import { authenticated } from "@/features/platform/http";
 import { one, rows } from "@/lib/database/db";
 import { scope } from "@/lib/auth/session";
-
-export const monthlyAddonIds = ["invoices","attendance","client-invoices","payroll","offline-conflicts","connections","qr","loyalty","domain"] as const;
-export type MonthlyAddonId = (typeof monthlyAddonIds)[number];
+import { addonPriceCents, monthlyAddonIds, type MonthlyAddonId } from "./catalog";
+import { demoEnabled } from "@/lib/database/db";
+export { monthlyAddonIds, type MonthlyAddonId } from "./catalog";
 export const addonPriceId = (addon: MonthlyAddonId) =>
   process.env[`STUDIO_ADDON_${addon.replaceAll("-", "_").toUpperCase()}_PRICE_ID`] ?? "";
 
@@ -25,6 +25,7 @@ async function readAddonState(restaurant: string) {
     );
     return {
       ...state,
+      demo: demoEnabled(),
       ready: addonCheckoutReady(),
       readyAddons: monthlyAddonIds.filter(addonCheckoutReady),
       subscriptions: await rows(
@@ -34,6 +35,9 @@ async function readAddonState(restaurant: string) {
       ),
       installations: await rows<{ addon_id: string; installed: boolean }>(
         db, "SELECT addon_id,installed FROM addon_installations WHERE restaurant_id=$1", [restaurant],
+      ),
+      storeLicenses: await rows<{ product_id: string; status: string; valid_until: string | null }>(
+        db, "SELECT product_id,status,valid_until FROM addon_licenses WHERE restaurant_id=$1", [restaurant],
       ),
       legacyGrants: (await rows<{addon_id:string}>(db,
         "SELECT addon_id FROM addon_legacy_grants WHERE restaurant_id=$1",[restaurant])).map(row=>row.addon_id),
@@ -67,13 +71,13 @@ export async function addonCheckout(restaurant: string, addon: MonthlyAddonId = 
   if (
     !price.active ||
     price.livemode ||
-    price.unit_amount !== 900 ||
+    price.unit_amount !== addonPriceCents(addon) ||
     price.currency !== "eur" ||
     price.recurring?.interval !== "month" ||
     price.recurring.interval_count !== 1 ||
-    price.tax_behavior !== "exclusive"
+    price.tax_behavior !== "inclusive"
   )
-    throw new Error("Le tarif doit être de 9 € HT par mois en mode test.");
+    throw new Error(`Le tarif doit être de ${addonPriceCents(addon) / 100} € TTC par mois en mode test.`);
   const id = await authenticated(restaurant, async (db, user) => {
     await scope(db, user, restaurant);
     const state = await one<{ plan: number; admin: boolean }>(

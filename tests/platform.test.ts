@@ -13,6 +13,7 @@ import { can } from "../src/lib/permissions";
 import { monthlyPrice } from "../src/features/platform/pricing";
 import { requirePlan } from "../src/features/platform/entitlements";
 import { randomUUID } from "node:crypto";
+import { onboardingInput } from "./support/onboarding";
 let db: PGlite;
 const user = { id: "nadia", name: "Nadia", role: "OWNER" as const };
 before(async () => {
@@ -111,6 +112,7 @@ test("initialisation multi-restaurant sans recopier les comptes et stocks de dé
         action: "restaurant",
         organization: "other-org",
         name: "Deuxième restaurant",
+        activity: onboardingInput().activity,
       }),
     );
   await assert.rejects(add(), /avant activation/);
@@ -125,6 +127,7 @@ test("initialisation multi-restaurant sans recopier les comptes et stocks de dé
         action: "restaurant",
         organization: "other-org",
         name: "Deuxième restaurant",
+        activity: onboardingInput().activity,
       },
     ),
   )) as { restaurant: string };
@@ -368,7 +371,7 @@ test("parrainage : lien, récompenses, paliers, défi, classement et notificatio
   // Self-referral and invalid codes are ignored without blocking onboarding.
   await asUser("parrain", "", (tx) =>
     platformPerform(tx, { id: "parrain", name: "Parrain", role: "OWNER" }, {
-      action: "onboard", organization: "Moi-même", restaurant: "Annexe", referral: code,
+      action: "onboard", organization: "Moi-même", restaurant: "Annexe", referral: code, ...onboardingInput(),
     }),
   );
   assert.equal((await summary()).referrals.length, 0);
@@ -381,7 +384,7 @@ test("parrainage : lien, récompenses, paliers, défi, classement et notificatio
     );
     const created = (await asUser(id, "", (tx) =>
       platformPerform(tx, { id, name: id, role: "OWNER" }, {
-        action: "onboard", organization: `Org ${i}`, restaurant: `Resto ${i}`, referral: code!.toLowerCase(),
+        action: "onboard", organization: `Org ${i}`, restaurant: `Resto ${i}`, referral: code!.toLowerCase(), ...onboardingInput(),
       }),
     )) as { organization: string };
     filleuls.push(created.organization);

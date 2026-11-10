@@ -5,9 +5,21 @@
 
 -- 1. The custom domain is now a paid add-on.
 ALTER TABLE public.addon_subscriptions DROP CONSTRAINT addon_subscriptions_addon_check;
+ALTER TABLE public.addon_legacy_grants DROP CONSTRAINT addon_legacy_grants_addon_id_check;
+-- Earlier local catalogues used this provisional identifier. Normalize stored
+-- grants before tightening the constraint; keep every existing entitlement.
+INSERT INTO public.addon_legacy_grants(restaurant_id,addon_id,granted_at)
+SELECT restaurant_id,'loyalty',granted_at FROM public.addon_legacy_grants
+WHERE addon_id='gamified-customers' ON CONFLICT DO NOTHING;
+DELETE FROM public.addon_legacy_grants WHERE addon_id='gamified-customers';
+UPDATE public.addon_subscriptions SET addon='loyalty' WHERE addon='gamified-customers';
+INSERT INTO public.addon_installations(restaurant_id,addon_id,installed,updated_by,updated_at)
+SELECT restaurant_id,'loyalty',installed,updated_by,updated_at FROM public.addon_installations
+WHERE addon_id='gamified-customers' ON CONFLICT (restaurant_id,addon_id)
+DO UPDATE SET installed=excluded.installed,updated_by=excluded.updated_by,updated_at=excluded.updated_at;
+DELETE FROM public.addon_installations WHERE addon_id='gamified-customers';
 ALTER TABLE public.addon_subscriptions ADD CONSTRAINT addon_subscriptions_addon_check
   CHECK (addon IN ('invoices','attendance','client-invoices','payroll','offline-conflicts','connections','qr','loyalty','domain'));
-ALTER TABLE public.addon_legacy_grants DROP CONSTRAINT addon_legacy_grants_addon_id_check;
 ALTER TABLE public.addon_legacy_grants ADD CONSTRAINT addon_legacy_grants_addon_id_check
   CHECK (addon_id IN ('invoices','attendance','client-invoices','payroll','offline-conflicts','connections','qr','loyalty','domain'));
 

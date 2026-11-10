@@ -318,7 +318,8 @@ export function Management({
                                     )[s],
                                   })),
                                 },
-                                {
+                                // Sans plan de salle actif, la réservation se gère sans table.
+                                ...(data.activeModules?.floor === false ? [] : [{
                                   name: "table",
                                   label: "Table",
                                   value: r.table_id || "",
@@ -335,7 +336,7 @@ export function Management({
                                       })),
                                   ],
                                   required: false,
-                                },
+                                }]),
                               ],
                               (v) =>
                                 act({

@@ -12,8 +12,9 @@ export const moduleDefinitions: readonly ModuleDefinition[] = [
     capabilities: ["floor.view", "floor.arrange", "floor.status"], lifecycle,
   },
   {
-    id: "table-booking", version: 1, label: "Réservation de tables", scope: "establishment",
-    required: ["floor"], optional: [], industries: ["restaurant"],
+    id: "table-booking", version: 1, label: "Réservations", scope: "establishment",
+    // Depuis 100 : le plan de salle permet d'attribuer une table, il n'est plus requis.
+    required: [], optional: ["floor"], industries: ["restaurant"],
     capabilities: ["table-booking.availability", "table-booking.request", "table-booking.manage"], lifecycle,
   },
 ];

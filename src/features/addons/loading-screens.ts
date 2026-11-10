@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { themedVisuals, type ThemedVisualId } from "@/features/cms/themed-visuals";
 
 /**
  * Moteur commun des écrans de chargement : ce module ne dépend ni du serveur
@@ -24,6 +25,13 @@ export const loadingRenderers = {
   infinity: { colorable: true, primary: "#ff7a59", secondary: "#ffd166", background: "#14161f", text: "#fff3ec" },
   crystal: { colorable: true, primary: "#5ad1e6", secondary: "#a78bfa", background: "#101828", text: "#e8f7fb" },
   golden: { colorable: false, primary: "#d9b45b", secondary: "#fff1c1", background: "#14110b", text: "#f6e7bf" },
+  santa: { colorable: false, primary: "#c92f3a", secondary: "#fff7ed", background: "#18382f", text: "#fff7ed" },
+  snowflake: { colorable: false, primary: "#a8d7e8", secondary: "#f6fbff", background: "#102d42", text: "#f6fbff" },
+  giftbox: { colorable: false, primary: "#c93d4c", secondary: "#f3d38b", background: "#1c4038", text: "#fff7ed" },
+  wreath: { colorable: false, primary: "#2d7255", secondary: "#efc87d", background: "#f7f1e6", text: "#263d34" },
+  ...Object.fromEntries(Object.entries(themedVisuals).map(([id, visual]) => [id, {
+    colorable: false, primary: visual.accent, secondary: visual.tint, background: visual.base, text: visual.accent,
+  }])) as Record<ThemedVisualId, LoadingRendererDefinition>,
 } as const satisfies Record<string, LoadingRendererDefinition>;
 export type LoadingRendererId = keyof typeof loadingRenderers;
 export const loadingRendererIds = Object.keys(loadingRenderers) as LoadingRendererId[];

@@ -2,7 +2,7 @@ import { randomUUID as uuid } from "node:crypto";
 import { z } from "zod";
 import { rows, one, type DB } from "@/lib/database/db";
 import { log, notify } from "@/features/orders/service";
-import { requireModule } from "@/features/modules/access";
+import { moduleEnabled, requireModule } from "@/features/modules/access";
 
 /**
  * Horaires de réservation en ligne (heure de Paris). Valeurs de démonstration
@@ -92,7 +92,10 @@ export type PublicTable = {
 type Hold = { table_id: string; starts_at: string; ends_at: string };
 
 async function load(db: DB, r: string, from: number, to: number) {
-  const tables = await rows<PublicTable>(
+  // Sans plan de salle actif, aucune table : chaque demande est enregistrée sans table
+  // et l'équipe l'organise (même chemin que les groupes trop grands pour une table).
+  const floor = await moduleEnabled(db, r, "floor");
+  const tables = !floor ? [] : await rows<PublicTable>(
     db,
     "SELECT t.id,t.number,t.capacity,t.label,t.zone,t.shape,t.pos_x,t.pos_y,t.rotation,t.status FROM dining_tables t LEFT JOIN floor_zones z ON z.id=t.zone_id WHERE t.restaurant_id=$1 AND t.bookable AND t.archived_at IS NULL ORDER BY z.position,t.number",
     [r],
@@ -265,6 +268,8 @@ export async function requestReservation(
     throw new Error("Ce créneau n’est pas ouvert à la réservation.");
   await one(db, "SELECT id FROM restaurants WHERE id=$1", [a.restaurant]);
   const end = start + booking.durationMinutes * 60000;
+  if (a.table && !(await moduleEnabled(db, a.restaurant, "floor")))
+    throw new Error("Le choix de table n’est pas proposé par cet établissement.");
   if (a.table) {
     // Verrou de ligne : deux demandes simultanées sur la même table se suivent.
     const t = await one<{ capacity: number; status: string }>(

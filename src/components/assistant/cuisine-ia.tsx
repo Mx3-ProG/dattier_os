@@ -587,7 +587,7 @@ export function CuisineIa({
                     {p.featured && <span className="cia-badge">Populaire</span>}
                     <b>{p.title}</b>
                     <strong>{p.credits.toLocaleString("fr-FR")} crédits</strong>
-                    <span className="cia-price">{euros(p.priceCents)} HT</span>
+                    <span className="cia-price">{euros(p.priceCents)} TTC</span>
                     <small>{p.hint}</small>
                     <button disabled={!state.admin} onClick={() => requestPack(p.id)}>
                       {state.admin ? "Commander" : "Réservé à l’admin"}

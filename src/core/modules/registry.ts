@@ -1,3 +1,5 @@
+import type { Industry } from "@/core/tenant/business";
+
 /** Descriptive contracts only: never an authorization or billing decision. */
 export type ModuleDefinition = {
   id: string;
@@ -7,7 +9,8 @@ export type ModuleDefinition = {
   required: readonly string[];
   optional: readonly string[];
   capabilities: readonly string[];
-  industries: readonly string[];
+  /** Business sectors the module is designed for. Empty means every sector. */
+  industries: readonly Industry[];
   lifecycle: { preservesData: true; suspension: string };
 };
 

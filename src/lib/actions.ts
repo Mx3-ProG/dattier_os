@@ -1,5 +1,5 @@
 import { observeStaffFloor } from "@/features/floor/capabilities";
-import { requireModule } from "@/features/modules/access";
+import { moduleEnabled, requireModule } from "@/features/modules/access";
 import { requirePlan, requirePaidAddon } from "@/features/platform/entitlements";
 import {
   productSchema,
@@ -340,8 +340,12 @@ export async function perform(
       };
       if (!transitions[res.status]?.includes(a.status))
         throw new Error("Transition de réservation impossible.");
+      const floor = await moduleEnabled(db, r, "floor");
+      if (a.table && !floor)
+        throw new Error("Activez le plan de salle pour attribuer une table.");
       const table = a.table || res.table_id;
-      if (["confirmed", "arrived"].includes(a.status)) {
+      // Sans plan de salle, la réservation se confirme sans table (lot P1-a3).
+      if (["confirmed", "arrived"].includes(a.status) && (floor || table)) {
         if (!table) throw new Error("Affectez une table.");
         const t = await one<{ capacity: number; status: string }>(
           db,

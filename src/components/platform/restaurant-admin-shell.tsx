@@ -33,6 +33,7 @@ import {
 } from "@/features/platform/admin-navigation";
 import { CuisineIa } from "@/components/assistant/cuisine-ia";
 import { AdminTutorial } from "@/components/tutorial/tour";
+import type { Industry } from "@/features/onboarding/catalog";
 import "./platform.css";
 
 const moduleIcons = {
@@ -66,6 +67,7 @@ const moduleDescriptions: Partial<Record<RestaurantModuleId, string>> = {
 export function RestaurantAdminShell({
   restaurant,
   restaurantName,
+  industry = "restaurant",
   plan,
   userRoles,
   addons,
@@ -77,6 +79,7 @@ export function RestaurantAdminShell({
 }: {
   restaurant: string;
   restaurantName: string;
+  industry?: Industry;
   plan: number;
   userRoles: Role[];
   addons: string[];
@@ -87,14 +90,14 @@ export function RestaurantAdminShell({
   demo?: boolean;
 }) {
   const [mobile, setMobile] = useState(false);
-  const modules = availableRestaurantModules(userRoles, plan, addons);
+  const modules = availableRestaurantModules(userRoles, plan, addons, industry);
   const dashboard = `/dashboard?restaurant=${encodeURIComponent(restaurant)}`;
   const isSite = activeModule === "site";
   const title = isSite
     ? "Mon site web"
     : modules.find((m) => m.id === activeModule)?.label ||
       pageTitle ||
-      "Mon restaurant";
+      "Mon établissement";
   useEffect(() => {
     if (!mobile) return;
     const close = (event: KeyboardEvent) => {
@@ -129,7 +132,7 @@ export function RestaurantAdminShell({
           <small>VOTRE ÉTABLISSEMENT</small>
           <strong>{restaurantName}</strong>
         </div>
-        <nav aria-label="Navigation du restaurant">
+        <nav aria-label="Navigation de l’établissement">
           <span className="nav-group">POSTE DE TRAVAIL</span>
           <Link className="restaurant-nav-link" href={dashboard}>
             <LayoutDashboard size={18} />
@@ -156,7 +159,7 @@ export function RestaurantAdminShell({
           <span className="nav-group">MON ESPACE</span>
           <Link className="restaurant-nav-link" href="/platform">
             <Store size={18} />
-            Mes restaurants
+            Mes établissements
           </Link>
           {can(userRoles, "orders") && (
             <Link
@@ -207,7 +210,7 @@ export function RestaurantAdminShell({
             >
               <Menu size={20} />
             </button>
-            <span>Mon restaurant</span>
+            <span>Mon établissement</span>
             <span>/</span>
             <strong>{title}</strong>
           </div>
@@ -224,7 +227,7 @@ export function RestaurantAdminShell({
           />
           {!isSite && (
             <div className="restaurant-page-heading">
-              <span>{restaurantName} · MON RESTAURANT</span>
+              <span>{restaurantName} · MON ÉTABLISSEMENT</span>
               <h1>{title}</h1>
               {activeModule && moduleDescriptions[activeModule] && (
                 <p>{moduleDescriptions[activeModule]}</p>
@@ -239,11 +242,11 @@ export function RestaurantAdminShell({
           </footer>
         )}
       </div>
-      <CuisineIa restaurant={restaurant} />
-      <AdminTutorial
+      {industry === "restaurant" && <CuisineIa restaurant={restaurant} />}
+      {industry === "restaurant" && <AdminTutorial
         restaurant={restaurant}
         surface={`admin:${activeModule ?? ""}`}
-      />
+      />}
     </AppearanceScope>
   );
 }

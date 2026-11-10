@@ -5,21 +5,43 @@ import { scope, type Actor } from "@/lib/auth/session";
 import { roles } from "@/lib/permissions";
 import { log } from "@/features/orders/service";
 import { setLayoutAccess } from "@/features/floor/service";
+import { industries, trades, freeTradeTools, discoverySources, workflowChoices, type Industry } from "@/features/onboarding/catalog";
 const text = z.string().trim().min(2).max(150),
   id = z.string().min(1).max(150);
+const industry = z.enum(industries);
+const activity = z.object({
+  industry,
+  trade: z.string().trim().min(2).max(100),
+  tradeDetail: z.string().trim().max(300).default(""),
+}).refine((value) => trades[value.industry].includes(value.trade), "Métier inconnu pour ce secteur.")
+  .refine((value) => !value.trade.startsWith("Autre") || !!value.tradeDetail, "Précisez votre activité.");
+const answers = z.object({
+  teamSize: z.enum(["solo", "2-5", "6-20", "21+"]),
+  workflows: z.array(z.enum(workflowChoices)).max(5),
+  currentTools: z.string().trim().max(300).default(""),
+  mainChallenge: z.string().trim().min(2).max(500),
+});
+const professional = z.object({
+  jobTitle: z.string().trim().min(2).max(100),
+  phone: z.string().trim().max(40).default(""),
+});
+const onboarding = z.object({
+  action: z.literal("onboard"),
+  requestKey: z.uuid(),
+  organization: text,
+  restaurant: text,
+  plan: z.literal(39).default(39),
+  professional,
+  activity,
+  answers,
+  discovery: z.object({ source: z.enum(discoverySources), detail: z.string().trim().max(300).default("") })
+    .refine((value) => value.source !== "other" || !!value.detail, "Précisez comment vous nous avez connus."),
+  referral: z.string().regex(/^[A-Fa-f0-9]{10}$/).optional().catch(undefined),
+});
 export const platformAction = z.discriminatedUnion("action", [
-  z.object({
-    action: z.literal("onboard"),
-    organization: text,
-    plan: z.literal(39).default(39),
-    restaurant: text,
-    referral: z
-      .string()
-      .regex(/^[A-Fa-f0-9]{10}$/)
-      .optional()
-      .catch(undefined),
-  }),
-  z.object({ action: z.literal("restaurant"), organization: id, name: text }),
+  onboarding,
+  z.object({ action: z.literal("restaurant"), organization: id, name: text, activity }),
+  z.object({ action: z.literal("activity"), restaurant: id, activity }),
   z.object({ action: z.literal("cancelSubscription"), organization: id }),
   z.object({
     action: z.literal("invite"),
@@ -93,6 +115,7 @@ export async function initializeRestaurant(db: DB, r: string) {
 export async function overview(db: DB, user: Actor) {
   return {
     user,
+    draft: (await rows<{ draft: unknown }>(db, "SELECT draft FROM onboarding_drafts WHERE profile_id=$1", [user.id]))[0]?.draft ?? null,
     platformAdmin: (
       await one<{ allowed: boolean }>(
         db,
@@ -102,7 +125,7 @@ export async function overview(db: DB, user: Actor) {
     ).allowed,
     organizations: await rows(
       db,
-      "SELECT o.*,m.role,p.*,t.trial_ends_at,t.cancelled_at,t.trial_active,s.referral_code,s.referrals,s.paying_referrals,s.activated_total,s.activated_month,s.credits FROM organizations o JOIN organization_memberships m ON m.organization_id=o.id CROSS JOIN LATERAL app.organization_plan(o.id) p LEFT JOIN LATERAL app.organization_trial(o.id) t ON true LEFT JOIN LATERAL app.referral_summary(o.id) s ON true WHERE m.profile_id=$1 ORDER BY o.name",
+      "SELECT o.*,m.role,p.*,t.trial_ends_at,t.cancelled_at,t.trial_active,s.referral_code,s.referrals,s.paying_referrals,s.activated_total,s.activated_month,s.credits,creator.name AS creator_name,creator.email AS creator_email,creator.job_title AS creator_job_title,creator.work_phone AS creator_work_phone FROM organizations o JOIN organization_memberships m ON m.organization_id=o.id LEFT JOIN profiles creator ON creator.id=o.created_by CROSS JOIN LATERAL app.organization_plan(o.id) p LEFT JOIN LATERAL app.organization_trial(o.id) t ON true LEFT JOIN LATERAL app.referral_summary(o.id) s ON true WHERE m.profile_id=$1 ORDER BY o.name",
       [user.id],
     ),
     restaurants: await rows(
@@ -121,6 +144,12 @@ export async function assertAdmin(db: DB, user: Actor, r: string) {
 export async function platformPerform(db: DB, user: Actor, raw: unknown) {
   const a = platformAction.parse(raw);
   if (a.action === "onboard") {
+    // The profile row serializes retries of the same request across tabs.
+    await db.query("SELECT id FROM profiles WHERE id=$1 FOR UPDATE", [user.id]);
+    const existing = await rows<{ id: string; restaurant: string; trial_ends_at: string | null }>(db,
+      "SELECT o.id,o.first_restaurant_id AS restaurant,t.trial_ends_at FROM organizations o LEFT JOIN LATERAL app.organization_trial(o.id) t ON true WHERE o.created_by=$1 AND o.creation_key=$2",
+      [user.id, a.requestKey]);
+    if (existing[0]) return { organization: existing[0].id, restaurant: existing[0].restaurant, trialEndsAt: existing[0].trial_ends_at };
     const org = randomUUID(),
       r = randomUUID();
     await db.query("SELECT app.bootstrap_organization($1,$2,$3,$4)", [
@@ -133,6 +162,11 @@ export async function platformPerform(db: DB, user: Actor, raw: unknown) {
       org,
       a.plan,
     ]);
+    await db.query("UPDATE profiles SET job_title=$2,work_phone=$3 WHERE id=$1", [user.id,a.professional.jobTitle,a.professional.phone]);
+    await db.query("UPDATE organizations SET created_by=$2,creation_key=$3,first_restaurant_id=$4,discovery_source=$5,discovery_detail=$6,onboarding_answers=$7::jsonb WHERE id=$1",
+      [org,user.id,a.requestKey,r,a.discovery.source,a.discovery.detail,JSON.stringify(a.answers)]);
+    await saveActivity(db,r,a.activity,a.answers);
+    await installFreeTradeTools(db,r,a.activity.industry);
     const trial = await one<{ trial_ends_at: string }>(
       db,
       "SELECT app.start_organization_trial($1) AS trial_ends_at",
@@ -140,6 +174,7 @@ export async function platformPerform(db: DB, user: Actor, raw: unknown) {
     );
     if (a.referral)
       await db.query("SELECT app.attach_referral($1,$2)", [org, a.referral]);
+    await db.query("DELETE FROM onboarding_drafts WHERE profile_id=$1", [user.id]);
     return { organization: org, restaurant: r, trialEndsAt: trial.trial_ends_at };
   }
   if (a.action === "cancelSubscription") {
@@ -175,7 +210,22 @@ export async function platformPerform(db: DB, user: Actor, raw: unknown) {
       user.id,
       r,
     ]);
+    await saveActivity(db,r,a.activity,{});
+    await installFreeTradeTools(db,r,a.activity.industry);
     return { restaurant: r };
+  }
+  if (a.action === "activity") {
+    await assertAdmin(db,user,a.restaurant);
+    const previous=await one<{industry:Industry}>(db,"SELECT industry FROM restaurants WHERE id=$1",[a.restaurant]);
+    if (previous.industry === "restaurant" && a.activity.industry !== "restaurant") {
+      const pending=await one<{active:boolean}>(db,
+        "SELECT EXISTS(SELECT 1 FROM orders WHERE restaurant_id=$1 AND status IN ('pending','active')) OR EXISTS(SELECT 1 FROM reservations WHERE restaurant_id=$1 AND status IN ('requested','confirmed','arrived') AND ends_at>now()) OR EXISTS(SELECT 1 FROM table_sessions s JOIN dining_tables t ON t.id=s.table_id WHERE t.restaurant_id=$1 AND s.closed_at IS NULL) AS active",
+        [a.restaurant]);
+      if (pending.active) throw new Error("Terminez les commandes, réservations et services de table en cours avant de changer de métier.");
+    }
+    await saveActivity(db,a.restaurant,a.activity);
+    await installFreeTradeTools(db,a.restaurant,a.activity.industry,previous.industry);
+    return { updated: true };
   }
   if (a.action === "referralVisibility") {
     await db.query("SELECT app.set_referral_visibility($1,$2)", [
@@ -287,6 +337,31 @@ export async function platformPerform(db: DB, user: Actor, raw: unknown) {
   );
   await log(db, a.restaurant, user.id, "Accès support révoqué", a.grant);
   return { revoked: true };
+}
+async function saveActivity(db: DB, restaurant: string, value: { industry: Industry; trade: string; tradeDetail: string }, workProfile?: unknown) {
+  await db.query("UPDATE restaurants SET industry=$2,trade=$3,trade_detail=$4,work_profile=coalesce($5::jsonb,work_profile) WHERE id=$1",
+    [restaurant,value.industry,value.trade,value.tradeDetail,workProfile === undefined ? null : JSON.stringify(workProfile)]);
+}
+async function installFreeTradeTools(db: DB, restaurant: string, industry: Industry, previous?: Industry) {
+  await db.query("SELECT set_config('app.restaurant_id',$1,true)",[restaurant]);
+  if (previous && previous !== industry)
+    for (const tool of freeTradeTools[previous]) {
+      const entitled=await one<{enabled:boolean}>(db,"SELECT app.addon_entitled($1,$2) AS enabled",[restaurant,tool]);
+      if (entitled.enabled) await db.query("SELECT app.addon_installation_set($1,$2,false)",[restaurant,tool]);
+    }
+  for (const tool of freeTradeTools[industry]) {
+    await db.query("SELECT app.addon_install_free($1,$2)",[restaurant,tool]);
+    await db.query("SELECT app.addon_installation_set($1,$2,true)",[restaurant,tool]);
+  }
+}
+
+export async function saveOnboardingDraft(db: DB, user: Actor, raw: unknown) {
+  const draft = z.record(z.string(),z.unknown()).parse(raw);
+  const serialized = JSON.stringify(draft);
+  if (Buffer.byteLength(serialized)>16000) throw new Error("Brouillon trop volumineux.");
+  await db.query("INSERT INTO onboarding_drafts(profile_id,draft) VALUES($1,$2::jsonb) ON CONFLICT(profile_id) DO UPDATE SET draft=excluded.draft,updated_at=now()",
+    [user.id,serialized]);
+  return { saved: true };
 }
 
 /** Full referral program for one organisation: summary and monthly leaderboard. */

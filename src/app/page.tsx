@@ -7,7 +7,7 @@ export function generateMetadata(): Metadata {
   return {
     title: "STUDIO OS · Votre commerce, votre temps, vos choix",
     description:
-      "Pilotez clients, ventes, stocks, équipe, site web et boutique en ligne au même endroit. Essayez STUDIO OS gratuitement pendant 3 jours, puis 39 € HT par mois sans engagement.",
+      "Pilotez clients, ventes, stocks, équipe, site web et boutique en ligne au même endroit. Essayez STUDIO OS gratuitement pendant 3 jours, puis 39 € TTC par mois sans engagement.",
     robots: { index: !demoEnabled(), follow: !demoEnabled() },
   };
 }

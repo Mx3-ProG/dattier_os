@@ -1,5 +1,7 @@
 "use client";
 import { PublicAppearance, PublicModeSwitch } from "./public-appearance";
+import { SiteDecoration } from "./site-decoration";
+import { SiteBackgroundMotion } from "./site-background";
 import { TemplateExtras } from "./template-extras";
 import "./templates.css";
 import { ProductRecommendations } from "../product-recommendations";
@@ -50,6 +52,17 @@ import { OrderQrCard } from "./account/qr-sheet";
 import { CustomerAuth } from "./customer-auth";
 import type { CustomerIdentity } from "./customer-auth";
 import { LegalPage } from "./legal-pages";
+import {
+  AllergensSection,
+  BundlesSection,
+  DeliverySection,
+  EstimationSection,
+  LoyaltySection,
+  ReservationSection,
+  ServicesSection,
+} from "../site/addon-sections";
+import { effectiveSiteBackground, effectiveSiteDecoration, emptySiteAddons, isAddonSection, sectionAvailable, type SiteAddonData } from "@/features/cms/site-addons";
+import { siteBackgrounds, siteBackgroundStyle } from "@/features/cms/site-backgrounds";
 import {
   siteConfigSchema,
   type Section,
@@ -123,6 +136,7 @@ export function DonutStore({
   initialCategory = "Tout",
   detailProduct,
   estimationEnabled = false,
+  siteAddons = emptySiteAddons,
 }: {
   route: string;
   config: SiteConfig;
@@ -136,6 +150,8 @@ export function DonutStore({
   initialCategory?: string;
   detailProduct?: Product;
   estimationEnabled?: boolean;
+  /** Add-ons installés visibles sur le site, et leurs données publiques. */
+  siteAddons?: SiteAddonData;
 }) {
   const nextRouter = useRouter();
   const {
@@ -505,12 +521,29 @@ export function DonutStore({
       preview ? { "data-cms-section": section.id } : {},
     { branding, header, footer } = config;
   const css = useMemo(() => themeCss(config.theme), [config.theme]);
+  const backgroundDesign = effectiveSiteBackground(config.branding.background, siteAddons.backgrounds);
   // Each section of the page, in the order chosen in the CMS. The JSX of the
   // original sections is unchanged; only their texts and media come from the
   // configuration. Business data (products, prices, hours, reviews) stays live.
   function renderSection(section: Section) {
     const attrs = cms(section);
+    // Add-on désinstallé : sa section disparaît du site sans casser la page.
+    if (isAddonSection(section.type) && !sectionAvailable(section.type, siteAddons)) return null;
     switch (section.type) {
+      case "estimation":
+        return <EstimationSection key={section.id} props={section.props} ctx={ctx} attrs={attrs} enabled={estimationEnabled} />;
+      case "loyalty":
+        return <LoyaltySection key={section.id} props={section.props} ctx={ctx} attrs={attrs} />;
+      case "reservation":
+        return <ReservationSection key={section.id} props={section.props} ctx={ctx} attrs={attrs} canReserve={canReserve} />;
+      case "allergens":
+        return <AllergensSection key={section.id} props={section.props} ctx={ctx} attrs={attrs} products={data?.products ?? []} />;
+      case "delivery":
+        return <DeliverySection key={section.id} props={section.props} ctx={ctx} attrs={attrs} data={siteAddons} />;
+      case "bundles":
+        return <BundlesSection key={section.id} props={section.props} ctx={ctx} attrs={attrs} data={siteAddons} />;
+      case "services":
+        return <ServicesSection key={section.id} props={section.props} ctx={ctx} attrs={attrs} data={siteAddons} />;
       case "hero": {
         const p = section.props;
         return (
@@ -1428,6 +1461,9 @@ export function DonutStore({
   }
   return (
     <PublicAppearance theme={config.theme}
+      style={backgroundDesign ? siteBackgroundStyle(backgroundDesign) : undefined}
+      data-site-background={backgroundDesign ?? undefined}
+      data-bg-tier={backgroundDesign ? siteBackgrounds[backgroundDesign].tier : undefined}
       className={`donut-site${preview ? " is-cms-preview" : ""}`}
       data-template={config.theme.presentation?.layout}
       data-sticky-header={config.theme.presentation?.stickyHeader}
@@ -1437,6 +1473,8 @@ export function DonutStore({
         config.theme.presentation.stickyAction !== "none"
       }
     >
+      <SiteBackgroundMotion design={backgroundDesign} />
+      {effectiveSiteDecoration(config.branding.decoration, siteAddons.decorations) && <SiteDecoration design={effectiveSiteDecoration(config.branding.decoration, siteAddons.decorations)!} />}
       {demo && (
         <aside className="tenant-demo-banner">
           Démonstration locale · données fictives · aucun paiement réel.

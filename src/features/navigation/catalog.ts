@@ -1,6 +1,6 @@
 import { createNavigation } from "@/core/navigation/registry";
 import { addonsNavigation } from "@/features/addons/navigation";
-import { overviewNavigation } from "@/features/pilotage/navigation";
+import { overviewNavigation, prospectScannerNavigation, pipelineCrmNavigation, customerHealthNavigation } from "@/features/pilotage/navigation";
 import {
   activityNavigation,
   securityNavigation,
@@ -42,6 +42,7 @@ import { customersNavigation } from "@/features/loyalty/navigation";
 import { menuNavigation } from "@/features/catalog/navigation";
 import { settingsNavigation } from "@/features/platform/navigation";
 import { siteNavigation } from "@/features/cms/navigation";
+import { tradeNavigation } from "@/features/trade/navigation";
 
 /** Restaurant composition: preserve historic order; features own their contributions. */
 export const workspaceNavigation = createNavigation([
@@ -50,6 +51,9 @@ export const workspaceNavigation = createNavigation([
   qrNavigation,
   analyticsNavigation,
   estimationNavigation,
+  prospectScannerNavigation,
+  pipelineCrmNavigation,
+  customerHealthNavigation,
   floorNavigation,
   ordersNavigation,
   kitchenNavigation,
@@ -59,6 +63,7 @@ export const workspaceNavigation = createNavigation([
   recipesNavigation,
   suppliersNavigation,
   deliveriesNavigation,
+  tradeNavigation,
   teamNavigation,
   attendanceNavigation,
   hrNavigation,

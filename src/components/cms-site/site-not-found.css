@@ -1,0 +1,280 @@
+.site-404 {
+  --nf-primary: #344d3e;
+  --nf-bg: #f8f5ed;
+  --nf-text: #2f4034;
+  min-height: 100vh;
+  min-height: 100dvh;
+  display: grid;
+  place-items: center;
+  padding: 48px 16px;
+  background: var(--nf-bg);
+  color: var(--nf-text);
+  font-family: var(--appearance-font, system-ui, sans-serif);
+  text-align: center;
+}
+.site-404.is-preview {
+  min-height: 0;
+  padding: 24px 12px;
+  border-radius: 14px;
+}
+.site-404-card {
+  display: grid;
+  justify-items: center;
+  gap: 14px;
+  max-width: 520px;
+}
+.site-404-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  font-size: 13px;
+}
+.site-404-brand img {
+  max-height: 32px;
+  max-width: 120px;
+  object-fit: contain;
+}
+.site-404 h1 {
+  margin: 4px 0 0;
+  font-size: clamp(24px, 5vw, 32px);
+  letter-spacing: -0.02em;
+}
+.site-404-message {
+  margin: 0;
+  line-height: 1.6;
+  opacity: 0.85;
+}
+.site-404-button {
+  display: inline-flex;
+  align-items: center;
+  min-height: 46px;
+  margin-top: 10px;
+  padding: 0 22px;
+  border-radius: 999px;
+  background: var(--nf-primary);
+  color: #fff;
+  font-weight: 700;
+  text-decoration: none;
+}
+.site-404-art {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 150px;
+  font-size: clamp(80px, 20vw, 136px);
+  font-weight: 800;
+  line-height: 1;
+  color: var(--nf-primary);
+}
+.is-preview .site-404-art {
+  min-height: 90px;
+  font-size: 72px;
+}
+/* Assiette vide */
+.site-404-plate {
+  display: grid;
+  place-items: center;
+  width: 0.8em;
+  height: 0.8em;
+  border-radius: 50%;
+  border: 0.06em solid var(--nf-primary);
+  background: #fff;
+  box-shadow: inset 0 0 0 0.08em #fff, inset 0 0 0 0.095em rgba(0, 0, 0, 0.08);
+  animation: nf-wobble 3s ease-in-out infinite;
+}
+.site-404-plate i {
+  width: 40%;
+  height: 40%;
+  border-radius: 50%;
+  border: 2px dashed color-mix(in srgb, var(--nf-primary) 45%, transparent);
+}
+@keyframes nf-wobble {
+  0%, 100% { transform: rotate(-4deg); }
+  50% { transform: rotate(4deg); }
+}
+/* Boussole perdue */
+.site-404-compass {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 1.1em;
+  height: 1.1em;
+  border-radius: 50%;
+  border: 0.05em solid var(--nf-primary);
+  background: radial-gradient(circle, #fff 55%, color-mix(in srgb, var(--nf-primary) 12%, #fff));
+}
+.site-404-compass b {
+  position: absolute;
+  top: 0.08em;
+  font-size: 0.16em;
+}
+.site-404-needle {
+  width: 0.08em;
+  height: 0.8em;
+  border-radius: 999px;
+  background: linear-gradient(var(--nf-primary) 50%, #c0392b 50%);
+  animation: nf-search 4s cubic-bezier(0.45, 0.05, 0.3, 1.2) infinite;
+}
+@keyframes nf-search {
+  0% { transform: rotate(-60deg); }
+  30% { transform: rotate(110deg); }
+  55% { transform: rotate(-20deg); }
+  75%, 100% { transform: rotate(0deg); }
+}
+/* Néon 404 */
+.site-404.is-neon {
+  background: #0c0b14;
+  color: #f4ecff;
+}
+.site-404-neon {
+  color: #fff;
+  text-shadow: 0 0 6px var(--nf-primary), 0 0 18px var(--nf-primary), 0 0 42px var(--nf-primary);
+  letter-spacing: 0.04em;
+}
+.site-404-neon em {
+  font-style: normal;
+  animation: nf-flicker 3.2s steps(1) infinite;
+}
+@keyframes nf-flicker {
+  0%, 18%, 22%, 62%, 66%, 100% { opacity: 1; }
+  20%, 64% { opacity: 0.2; }
+}
+/* Ciel étoilé */
+.site-404.is-stars {
+  background: radial-gradient(ellipse at top, #1d2450, #090b1d 70%);
+  color: #eef0ff;
+}
+.site-404-sky {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 3em;
+  height: 1.4em;
+  color: #fff;
+}
+.site-404-sky strong {
+  font-size: 1em;
+  text-shadow: 0 0 24px rgba(160, 180, 255, 0.6);
+}
+.site-404-sky i {
+  position: absolute;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: #fff;
+  animation: nf-twinkle 2.4s ease-in-out infinite;
+}
+.site-404-sky i:nth-child(1) { top: 5%; left: 8%; }
+.site-404-sky i:nth-child(2) { top: 15%; right: 12%; animation-delay: -0.6s; }
+.site-404-sky i:nth-child(3) { bottom: 10%; left: 20%; animation-delay: -1.2s; }
+.site-404-sky i:nth-child(4) { bottom: 0; right: 25%; animation-delay: -1.8s; }
+.site-404-sky i:nth-child(5) { top: 45%; left: 0; animation-delay: -0.3s; }
+.site-404-sky i:nth-child(6) { top: 40%; right: 0; animation-delay: -0.9s; }
+.site-404-shooting {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 0.6em;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, #fff);
+  transform: rotate(18deg);
+  animation: nf-shoot 4s ease-in infinite;
+}
+@keyframes nf-twinkle {
+  0%, 100% { opacity: 0.25; transform: scale(0.7); }
+  50% { opacity: 1; transform: scale(1.2); }
+}
+@keyframes nf-shoot {
+  0%, 70% { opacity: 0; transform: translate(0, 0) rotate(18deg); }
+  75% { opacity: 1; }
+  100% { opacity: 0; transform: translate(2.4em, 0.8em) rotate(18deg); }
+}
+/* Cinq compositions gratuites, toutes lisibles même sans mouvement. */
+.site-404-symbol {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 2.6em;
+  height: 1.15em;
+  font-size: .84em;
+}
+.site-404-symbol strong { position: relative; z-index: 1; font-size: 1em; letter-spacing: -.08em; }
+.site-404-symbol i { position: absolute; display: block; }
+.site-404-symbol.is-trail::after { content: ""; position: absolute; inset: auto 3% 5%; height: 4px; border-radius: 50%; background: currentColor; opacity: .32; }
+.site-404-symbol.is-trail i:first-child { width: 35%; height: 3px; left: 0; bottom: 15%; background: currentColor; transform: rotate(-13deg); }
+.site-404-symbol.is-trail i:last-child { width: 26%; height: 3px; right: 0; top: 7%; background: currentColor; transform: rotate(-20deg); }
+.site-404-symbol.is-portal { border: 5px solid currentColor; border-radius: 50% 50% 40% 40%; box-shadow: 0 0 0 9px color-mix(in srgb, var(--nf-primary) 14%, transparent); }
+.site-404-symbol.is-portal strong { font-size: .75em; }
+.site-404-symbol.is-portal i:first-child { inset: 10%; border: 2px solid currentColor; border-radius: inherit; opacity: .3; }
+.site-404-symbol.is-lantern { width: 1.75em; border: 5px solid currentColor; border-radius: 18% 18% 28% 28%; background: color-mix(in srgb, var(--nf-primary) 10%, var(--nf-bg)); box-shadow: 0 0 32px color-mix(in srgb, var(--nf-primary) 40%, transparent); }
+.site-404-symbol.is-lantern strong { font-size: .62em; }
+.site-404-symbol.is-lantern i:first-child { width: 35%; height: 12px; top: -19px; border: 4px solid currentColor; border-bottom: 0; border-radius: 50% 50% 0 0; }
+.site-404-symbol.is-map { width: 2.7em; transform: rotate(-3deg); background: linear-gradient(105deg, #f7e8c9 32%, #e4cfaa 33% 35%, #f7e8c9 36% 65%, #e4cfaa 66% 68%, #f7e8c9 69%); box-shadow: 5px 8px 0 #0002; }
+.site-404-symbol.is-map strong { font-size: .75em; }
+.site-404-symbol.is-map i:first-child { inset: 15%; border: 3px dashed currentColor; border-radius: 50%; opacity: .28; }
+.site-404-symbol.is-balloon { width: 1.7em; height: 1.35em; border-radius: 50% 50% 48% 48%; background: color-mix(in srgb, var(--nf-primary) 20%, white); box-shadow: inset -12px -8px 0 #0001; animation: nf-float 4s ease-in-out infinite; }
+.site-404-symbol.is-balloon strong { font-size: .58em; }
+.site-404-symbol.is-balloon i:last-child { width: 2px; height: .65em; top: 95%; background: currentColor; }
+@keyframes nf-float { 0%, 100% { transform: translateY(3px); } 50% { transform: translateY(-8px); } }
+/* Quatre modèles de Noël à 6 € TTC. */
+.site-404.is-snowglobe, .site-404.is-candy, .site-404.is-gingerbread, .site-404.is-gifts {
+  background: #f6f0e4;
+  color: #244237;
+}
+.site-404.is-snowglobe .site-404-button, .site-404.is-candy .site-404-button, .site-404.is-gingerbread .site-404-button, .site-404.is-gifts .site-404-button { background: #ad3038; color: #fff; }
+.site-404-snowglobe { position: relative; display: grid; place-items: center; width: 1.5em; height: 1.5em; border: 5px solid #e7eced; border-radius: 50%; background: linear-gradient(#b9dbe0, #f6f9ed); box-shadow: inset 0 0 15px #fff, 0 12px 0 -4px #875c48; }
+.site-404-snowglobe b { font-size: .48em; color: #285145; text-shadow: 0 2px #fff; }
+.site-404-snowglobe::after { content: ""; position: absolute; top: 60%; left: 28%; width: 44%; height: 32%; background: linear-gradient(145deg, transparent 48%, #355b4b 49%); clip-path: polygon(0 100%, 50% 0, 100% 100%); opacity: .45; }
+.site-404-snow { position: absolute; inset: 6%; border-radius: 50%; background: radial-gradient(circle at 25% 30%, white 0 2px, transparent 3px), radial-gradient(circle at 65% 20%, white 0 3px, transparent 4px), radial-gradient(circle at 80% 55%, white 0 2px, transparent 3px), radial-gradient(circle at 35% 70%, white 0 2px, transparent 3px); animation: nf-snow 5s linear infinite; }
+.site-404-snow:nth-of-type(2) { animation-delay: -2.5s; }
+@keyframes nf-snow { 0% { transform: translateY(-8px) rotate(0); } 100% { transform: translateY(8px) rotate(20deg); } }
+.site-404-candy { display: grid; place-items: center; width: 2.4em; height: 1.2em; border-radius: 24px; transform: rotate(-4deg); background: repeating-linear-gradient(125deg, #fdf9ef 0 14px, #c63c47 14px 28px); box-shadow: 0 12px 0 #9e2830, 0 18px 24px #44231c33; }
+.site-404-candy strong { font-size: .83em; color: #1b4237; text-shadow: 2px 2px #fff, -2px -2px #fff; }
+.site-404-candy i { position: absolute; width: 12%; height: 70%; border-radius: 50%; background: #fff9; }
+.site-404-candy i:first-child { left: 2%; } .site-404-candy i:last-child { right: 2%; }
+.site-404-gingerbread { position: relative; display: grid; place-items: center; width: 1.65em; height: 1.05em; margin-top: .35em; border: 7px solid #fff6e5; border-radius: 9px; background: #a66a42; box-shadow: 0 9px 0 #78472d; }
+.site-404-gingerbread strong { color: #fff7df; font-size: .55em; text-shadow: 2px 3px #603b2b; }
+.site-404-roof { position: absolute; bottom: 100%; width: 125%; height: .5em; background: #a66a42; clip-path: polygon(50% 0, 100% 100%, 0 100%); filter: drop-shadow(0 -4px #fff7eb); }
+.site-404-door { position: absolute; bottom: 0; width: 17%; height: 27%; background: #533923; border-radius: 50% 50% 0 0; }
+.site-404-gifts { position: relative; width: 2.6em; height: 1.2em; display: flex; align-items: end; justify-content: center; gap: .08em; }
+.site-404-gifts i { display: block; width: .75em; height: .7em; background: linear-gradient(90deg, #be4045 42%, #f8d789 43% 57%, #be4045 58%); box-shadow: 0 -9px 0 #a82f37; animation: nf-gift 3.5s ease-in-out infinite; }
+.site-404-gifts i:nth-child(2) { height: 1em; background: linear-gradient(90deg, #285b50 43%, #f8d789 44% 56%, #285b50 57%); box-shadow: 0 -9px 0 #204a41; animation-delay: -.6s; }
+.site-404-gifts i:nth-child(3) { background: linear-gradient(90deg, #bf7143 43%, #f8d789 44% 56%, #bf7143 57%); animation-delay: -1.2s; }
+.site-404-gifts strong { position: absolute; top: 30%; font-size: .45em; color: white; text-shadow: 1px 2px #163b33; }
+@keyframes nf-gift { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
+/* Quatre modèles de Noël à 9 € TTC, avec scènes plus immersives. */
+.site-404.is-aurora, .site-404.is-village, .site-404.is-forest, .site-404.is-advent { color: #fff8e7; background: #102a35; }
+.site-404.is-aurora .site-404-button, .site-404.is-village .site-404-button, .site-404.is-forest .site-404-button, .site-404.is-advent .site-404-button { background: #e6c685; color: #1b2830; }
+.site-404-aurora, .site-404-village, .site-404-forest, .site-404-advent { position: relative; display: grid; place-items: center; width: 3em; height: 1.45em; overflow: hidden; border-radius: .18em; font-size: .82em; }
+.site-404-aurora { background: radial-gradient(circle at 70% 15%, #dceefa 0 3%, transparent 4%), linear-gradient(#12304e, #11262e); }
+.site-404-aurora i { position: absolute; width: 100%; height: 90%; top: -30%; border-radius: 50%; filter: blur(12px); background: linear-gradient(90deg, transparent, #65e4bf88, #a6a9ed99, transparent); transform: rotate(-20deg); animation: nf-aurora 7s ease-in-out infinite alternate; }
+.site-404-aurora i:nth-child(2) { top: 0; animation-delay: -2s; opacity: .6; }
+.site-404-aurora i:nth-child(3) { top: 25%; animation-delay: -4s; opacity: .4; }
+.site-404-aurora strong, .site-404-village strong, .site-404-forest strong { position: relative; z-index: 2; color: white; text-shadow: 0 5px 20px #04121c; font-size: .8em; }
+@keyframes nf-aurora { from { transform: translateX(-20%) rotate(-20deg); } to { transform: translateX(25%) rotate(15deg); } }
+.site-404-village { background: linear-gradient(#203e53 0 58%, #e9eff1 59%); }
+.site-404-village i { position: absolute; bottom: 10%; width: 22%; height: 43%; background: repeating-linear-gradient(90deg, #9b6250 0 22%, #f8d98d 23% 32%, #9b6250 33% 52%); clip-path: polygon(0 28%, 50% 0, 100% 28%, 100% 100%, 0 100%); }
+.site-404-village i:first-child { left: 6%; transform: scale(.8); }.site-404-village i:nth-child(2) { left: 38%; height: 55%; }.site-404-village i:nth-child(3) { right: 4%; transform: scale(.85); }
+.site-404-village strong { align-self: start; font-size: .55em; margin-top: .08em; }
+.site-404-forest { background: linear-gradient(#13363d 70%, #d7e7e2 71%); }
+.site-404-forest i { position: absolute; bottom: 13%; width: 29%; height: 87%; background: linear-gradient(90deg, #1b4c3d, #39745b); clip-path: polygon(50% 0, 88% 35%, 72% 35%, 100% 72%, 68% 72%, 68% 100%, 32% 100%, 32% 72%, 0 72%, 28% 35%, 12% 35%); }
+.site-404-forest i:first-child { left: 3%; transform: scale(.8); }.site-404-forest i:nth-child(2) { left: 35%; }.site-404-forest i:nth-child(3) { right: 2%; transform: scale(.7); }
+.site-404-forest strong { align-self: start; font-size: .5em; margin-top: .08em; }
+.site-404-advent { grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(3, 1fr); gap: 3px; padding: 6px; background: #9d313e; }
+.site-404-advent i, .site-404-advent strong { display: grid; place-items: center; width: 100%; height: 100%; border: 2px solid #dfb77b; border-radius: 4px; background: #b94750; }
+.site-404-advent i::after { content: "✦"; color: #f5d9a4; font-size: .18em; }
+.site-404-advent strong { z-index: 1; background: #f1d7a7; color: #8d2935; font-size: .38em; }
+.site-404.is-preview .site-404-symbol, .site-404.is-preview .site-404-snowglobe, .site-404.is-preview .site-404-candy, .site-404.is-preview .site-404-gingerbread, .site-404.is-preview .site-404-gifts { font-size: .67em; }
+.site-404.is-preview .site-404-aurora, .site-404.is-preview .site-404-village, .site-404.is-preview .site-404-forest, .site-404.is-preview .site-404-advent { font-size: .72em; }
+@media (prefers-reduced-motion: reduce) {
+  .site-404 *,
+  .site-404 *::before,
+  .site-404 *::after {
+    animation: none !important;
+  }
+}

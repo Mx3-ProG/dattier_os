@@ -1043,7 +1043,7 @@ const core: Chapter[] = [
           title: "Organisation et établissements",
           points: [
             "Une organisation regroupe un ou plusieurs établissements (structures).",
-            "Un établissement inclus, puis 39 € HT par mois par établissement supplémentaire.",
+            "Un établissement inclus, puis 39 € TTC par mois par établissement supplémentaire.",
             "Les données de chaque structure sont cloisonnées, jusque dans la base de données.",
             "Un nouvel établissement démarre vide.",
           ],

@@ -143,7 +143,7 @@ function ProductForm({
         </select>
       </label>
       <label>
-        Prix HT (€)
+        Prix TTC (€)
         <input name="price" inputMode="decimal" defaultValue={String(product.price_cents / 100)} />
       </label>
       <label>
@@ -283,7 +283,7 @@ export function AddonStoreAdmin() {
       <section className="card" aria-label="Revenus et popularité">
         <h2>Revenus et popularité</h2>
         <p>
-          Revenus nets cumulés HT : <strong>{euros(totalRevenue)}</strong>
+          Revenus produits cumulés après remboursements : <strong>{euros(totalRevenue)}</strong>
         </p>
         <div className="addon-admin-table">
           <table>
@@ -374,7 +374,7 @@ export function AddonStoreAdmin() {
                   <th>Date</th>
                   <th>Établissement</th>
                   <th>Add-on</th>
-                  <th>Montant HT</th>
+                  <th>Prix affiché lors de l’achat</th>
                   <th>Statut</th>
                 </tr>
               </thead>

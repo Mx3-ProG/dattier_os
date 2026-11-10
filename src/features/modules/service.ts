@@ -3,7 +3,7 @@ import type { DB } from "@/lib/database/types";
 import { scope, type Actor } from "@/lib/auth/session";
 import { moduleRegistry } from "@/core/modules/catalog";
 import {
-  legacyRestaurantModules,
+  legacyBusinessModules,
   resolveModuleRuntime,
   type ModuleRuntimeState,
 } from "@/core/modules/runtime";
@@ -91,14 +91,14 @@ export async function readModuleSettings(
     rows.map((row) => [row.module_id, row.requested_state]),
   ) as Record<string, ModuleRuntimeState>;
   const preview = resolveModuleRuntime(
-    legacyRestaurantModules(planResult.rows[0]?.plan ?? 0),
+    legacyBusinessModules(planResult.rows[0]?.plan ?? 0),
     states,
   );
   const appliedStates = Object.fromEntries(
     rows.map((row) => [row.module_id, row.applied_state]),
   ) as Record<string, ModuleRuntimeState>;
   const effective = resolveModuleRuntime(
-    legacyRestaurantModules(planResult.rows[0]?.plan ?? 0),
+    legacyBusinessModules(planResult.rows[0]?.plan ?? 0),
     appliedStates,
   );
   const blockers = await moduleSuspensionPreflight(db, restaurant);

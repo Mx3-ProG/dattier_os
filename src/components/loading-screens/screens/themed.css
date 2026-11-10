@@ -1,0 +1,21 @@
+.ls-themed { position:absolute; inset:0; display:grid; place-items:center; isolation:isolate; }
+.ls-themed-ring { position:absolute; width:138px; height:138px; border:5px solid var(--ls-primary); border-top-color:transparent; border-radius:50%; opacity:.75; animation:ls-themed-spin calc(4s / var(--ls-speed)) linear infinite; }
+.ls-themed-ring.is-second { width:110px; height:110px; border-width:2px; border-color:var(--ls-secondary); border-bottom-color:transparent; opacity:.65; animation-direction:reverse; animation-duration:calc(6s / var(--ls-speed)); }
+.ls-themed-symbol { z-index:2; color:var(--ls-primary); font-size:65px; line-height:1; text-shadow:0 0 28px var(--ls-secondary); animation:ls-themed-pulse calc(3s / var(--ls-speed)) ease-in-out infinite; }
+.ls-themed-spark { position:absolute; width:8px; height:8px; border-radius:50%; background:var(--ls-secondary); box-shadow:0 0 16px var(--ls-primary); animation:ls-themed-pulse calc(2.2s / var(--ls-speed)) ease-in-out infinite alternate; }
+.ls-themed-spark.is-one { top:12%; left:38%; }.ls-themed-spark.is-two { right:15%; top:53%; animation-delay:-.8s; }.ls-themed-spark.is-three { bottom:14%; left:23%; animation-delay:-1.5s; }
+.ls-themed.is-nature .ls-themed-ring { border-radius:10% 80% 10% 80%; transform:rotate(25deg); animation-name:ls-themed-leaf; }
+.ls-themed.is-six .ls-themed-ring { box-shadow:0 0 16px var(--ls-secondary); }
+.ls-themed.is-nine .ls-themed-ring.is-second { border-style:dashed; box-shadow:0 0 20px var(--ls-primary); }
+.ls-themed.is-deluxe::before { content:""; position:absolute; width:175px; height:175px; border-radius:50%; background:radial-gradient(circle,var(--ls-secondary),transparent 69%); opacity:.55; filter:blur(11px); animation:ls-themed-pulse calc(5s / var(--ls-speed)) ease-in-out infinite; }
+.ls-themed.is-space-wormhole .ls-themed-ring { width:170px; height:86px; transform:rotate(-25deg); animation-name:ls-themed-portal; }
+.ls-themed.is-space-wormhole .ls-themed-ring.is-second { width:120px; height:58px; }
+.ls-themed.is-space-supernova .ls-themed-ring { border-style:dotted; box-shadow:0 0 28px var(--ls-primary), inset 0 0 22px var(--ls-secondary); }
+.ls-themed.is-space-cosmos .ls-themed-ring { width:175px; height:86px; transform:rotate(25deg); animation-name:ls-themed-portal; }
+.ls-themed.is-nature-biosphere .ls-themed-ring { border-radius:50%; border-style:dashed; }
+.ls-themed.is-nature-coral .ls-themed-ring { border-radius:38% 62% 70% 30%; border-width:11px; }
+.ls-themed.is-nature-rainforest .ls-themed-ring { border-radius:15% 75% 20% 80%; border-width:12px; }
+@keyframes ls-themed-spin { to { transform:rotate(360deg); } }
+@keyframes ls-themed-portal { to { transform:rotate(335deg) scale(1.05); } }
+@keyframes ls-themed-leaf { 50% { transform:rotate(205deg) scale(1.08); } to { transform:rotate(385deg); } }
+@keyframes ls-themed-pulse { 50% { opacity:.48; transform:scale(.88); } }

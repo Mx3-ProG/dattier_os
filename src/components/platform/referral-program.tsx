@@ -147,7 +147,7 @@ function ProgramBody({
         </h1>
         <p>{label}</p>
         <p className="referral-hero-price">
-          Votre abonnement : <strong>{pricing.total} € HT / mois</strong>
+          Votre abonnement : <strong>{pricing.total} € TTC / mois</strong>
           {pricing.total < pricing.gross && <s>{pricing.gross} €</s>}
         </p>
       </header>

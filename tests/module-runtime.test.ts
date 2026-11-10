@@ -22,24 +22,28 @@ test("restaurant commercial mapping includes floor and booking in the single sub
   );
 });
 
-test("module runtime requires entitlement and all mandatory dependencies", () => {
+test("module runtime requires entitlement and respects suspension, without a floor dependency", () => {
   assert.deepEqual(resolveModuleRuntime([], {}), [
     { id: "floor", available: false, reason: "not-entitled" },
     { id: "table-booking", available: false, reason: "not-entitled" },
   ]);
+  // Les réservations fonctionnent sans plan de salle (migration 100).
   assert.deepEqual(resolveModuleRuntime(["table-booking"], {}), [
     { id: "floor", available: false, reason: "not-entitled" },
-    { id: "table-booking", available: false, reason: "dependency-unavailable" },
+    { id: "table-booking", available: true, reason: "available" },
   ]);
   assert.deepEqual(
     resolveModuleRuntime(["floor", "table-booking"], { floor: "suspended" }),
     [
       { id: "floor", available: false, reason: "suspended" },
-      {
-        id: "table-booking",
-        available: false,
-        reason: "dependency-unavailable",
-      },
+      { id: "table-booking", available: true, reason: "available" },
+    ],
+  );
+  assert.deepEqual(
+    resolveModuleRuntime(["floor", "table-booking"], { "table-booking": "suspended" }),
+    [
+      { id: "floor", available: true, reason: "available" },
+      { id: "table-booking", available: false, reason: "suspended" },
     ],
   );
   assert.deepEqual(resolveModuleRuntime(["floor", "table-booking"], {}), [

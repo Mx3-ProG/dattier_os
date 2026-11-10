@@ -14,6 +14,7 @@ export default async function Page({
     <RestaurantAdminShell
       restaurant={restaurant}
       restaurantName={access.restaurantName}
+      industry={access.activity.industry}
       plan={access.plan}
       userRoles={access.roles}
       addons={access.addons}

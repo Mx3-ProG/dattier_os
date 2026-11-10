@@ -155,10 +155,10 @@ export async function finishLogin(code: string, state: string) {
   });
   jar.set(
     cookieName,
-    await signed({ sub: id, name, email, issuedAtMs: Date.now() }, "8h"),
+    await signed({ sub: id, name, email, issuedAtMs: Date.now() }, "12h"),
     {
       ...cookieOptions,
-      maxAge: 28800,
+      maxAge: 43200,
     },
   );
   return String(payload.returnTo || "/platform");

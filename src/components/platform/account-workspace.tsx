@@ -59,7 +59,7 @@ export function AccountWorkspace({
         </button>
         <div className="restaurant-switch">
           <small>VOTRE ESPACE</small>
-          <strong>{name || "Mes restaurants"}</strong>
+          <strong>{name || "Mes établissements"}</strong>
         </div>
         <nav aria-label="Navigation de votre espace">
           <span className="nav-group">PILOTAGE</span>
@@ -69,7 +69,7 @@ export function AccountWorkspace({
             href="/platform"
           >
             <Building2 size={18} />
-            Mes restaurants
+            Mes établissements
           </Link>
           {first && (
             <Link
@@ -155,7 +155,7 @@ export function AccountWorkspace({
             </button>
             <span>Mon espace</span>
             <span>/</span>
-            <strong>Mes restaurants</strong>
+            <strong>Mes établissements</strong>
           </div>
           {first && (
             <Link

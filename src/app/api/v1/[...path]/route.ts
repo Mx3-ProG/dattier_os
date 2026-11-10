@@ -30,6 +30,7 @@ import {
   dayQuery,
 } from "@/features/reservations/service";
 import { seed } from "@/lib/database/seed";
+import { requireRestaurantIndustry } from "@/features/onboarding/access";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 /** Le tenant par défaut n'existe qu'en démonstration ; ailleurs il doit être demandé. */
@@ -96,6 +97,7 @@ async function handleGet(req: NextRequest) {
       const params = Object.fromEntries(req.nextUrl.searchParams);
       const r = tenant(params.restaurant);
       await requirePlan(db, r, 39);
+      await requireRestaurantIndustry(db,r);
       return NextResponse.json(
         endpoint === "calendar"
           ? await calendar(db, r, calendarQuery.parse(params))
@@ -147,6 +149,7 @@ async function handlePost(req: NextRequest) {
         id: await db.transaction(async (tx) => {
           const reservation = reservationSchema.parse(body);
           await requirePlan(tx, reservation.restaurant, 39);
+          await requireRestaurantIndustry(tx,reservation.restaurant);
           return requestReservation(tx, reservation);
         }),
       });
@@ -154,7 +157,10 @@ async function handlePost(req: NextRequest) {
       const data = orderSchema.parse(body);
       if (data.channel === "staff") throw new Error("Canal non autorisé.");
       return NextResponse.json({
-        id: await db.transaction((tx) => createOrder(tx, data, null)),
+        id: await db.transaction(async(tx) => {
+          await requireRestaurantIndustry(tx,data.restaurant);
+          return createOrder(tx,data,null);
+        }),
       });
     }
     const user = await actor();
@@ -173,9 +179,10 @@ async function handlePost(req: NextRequest) {
     }
     const restaurant = tenant(body.restaurant);
     const data = actionSchema.parse(body);
-    const result = await db.transaction(async (tx) =>
-      perform(tx, restaurant, await scope(tx, user, restaurant), data),
-    );
+    const result = await db.transaction(async (tx) => {
+      await requireRestaurantIndustry(tx,restaurant);
+      return perform(tx, restaurant, await scope(tx, user, restaurant), data);
+    });
     return NextResponse.json({ ok: true, result });
   } catch (e) {
     return fail(e);

@@ -34,7 +34,7 @@ Cette évolution requiert la migration additive 045 et la permission dédiée de
 
 La vue Boutique se filtre par catégorie, prix, disponibilité et statut d’acquisition. Les catégories et les produits sont en base (`addon_categories`, `addon_products`, migration 049) : en ajouter ne demande pas de déploiement. Seul un nouveau *type* d’add-on demande du code, car il lui faut son moteur de rendu. Les six fonctionnalités historiques restent gérées par `addonCatalog` et `addon_subscriptions`, sous la catégorie affichée « Fonctionnalités ».
 
-Dix écrans de chargement sont disponibles : Magic Loader, Kitchen Loader et Studio S gratuits, puis sept écrans en paiement unique (5, 7 ou 9 € HT). Tous partagent le même moteur (`src/components/loading-screens`) ; chaque animation est un fichier CSS/SVG chargé à la demande.
+Onze écrans de chargement sont disponibles : Magic Loader, Kitchen Loader et Studio S gratuits, puis huit écrans en paiement unique (5, 7 ou 9 € TTC), dont la tête de Père Noël. Tous partagent le même moteur (`src/components/loading-screens`) ; chaque animation est un fichier CSS/SVG chargé à la demande.
 
 ### Par établissement
 

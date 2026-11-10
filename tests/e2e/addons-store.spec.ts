@@ -53,15 +53,16 @@ test("addons belongs to the single bottom Configuration group and separates owne
     }),
   ).toBeVisible();
 });
-test("the shop presents future trades without purchase actions on mobile", async ({ page }) => {
+test("the shop presents installable trade tools by industry on mobile", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await open(page);
   await page.getByRole("button", { name: /^Boutique d’add-ons/ }).click();
-  const roadmap = page.getByRole("region", { name: "Add-ons à venir" });
-  await expect(roadmap.getByRole("heading", { name: "BTP", exact: true })).toBeVisible();
-  await expect(roadmap.getByRole("heading", { name: "Coiffure", exact: true })).toBeVisible();
-  await expect(roadmap.getByRole("heading", { name: "Commerce", exact: true })).toBeVisible();
-  await expect(roadmap.getByRole("button", { name: /acheter|installer/i })).toHaveCount(0);
+  for (const industry of ["Restauration", "BTP", "Coiffure", "Commerce", "Tous métiers"]) {
+    const region = page.getByRole("region", { name: industry, exact: true });
+    await expect(region.getByRole("heading", { name: industry, exact: true })).toBeVisible();
+    await expect(region.getByRole("article").first()).toBeVisible();
+  }
+  await expect(page.getByRole("region", { name: "Add-ons à venir" })).toHaveCount(0);
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBeTruthy();
 });
 test("basic plan and subscription states show distinct collections on mobile", async ({

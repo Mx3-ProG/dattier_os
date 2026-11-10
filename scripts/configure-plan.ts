@@ -27,7 +27,7 @@ try {
   const paying = rows[0]?.paying ?? 0;
   const price = referralPricing(input.plan, input.seats, paying);
   console.log(
-    `${input.organization} · ${input.seats} place(s) · ${price.total} € HT / mois · ${paying} filleul(s) payant(s)${price.free ? " · forfait offert par le parrainage" : ""}${price.freeSeats ? ` · ${price.freeSeats} établissement(s) offert(s)` : ""}`,
+    `${input.organization} · ${input.seats} place(s) · ${price.total} € TTC / mois · ${paying} filleul(s) payant(s)${price.free ? " · forfait offert par le parrainage" : ""}${price.freeSeats ? ` · ${price.freeSeats} établissement(s) offert(s)` : ""}`,
   );
 } finally {
   await db.close();

@@ -47,7 +47,7 @@ try {
         covered && (row.used_this_month ? "mois offert déjà utilisé ce mois-ci" : "mois offert utilisé"),
       ].filter(Boolean);
       console.log(
-        `${row.name} (${row.id}) · forfait ${row.plan} € · ${row.seats} place(s) · brut ${price.gross} € · après parrainage ${price.total} € · À FACTURER ${due} € HT\n    ${notes.join(" · ")}`,
+        `${row.name} (${row.id}) · forfait ${row.plan} € · ${row.seats} place(s) · brut ${price.gross} € · après parrainage ${price.total} € · À FACTURER ${due} € TTC\n    ${notes.join(" · ")}`,
       );
       if (apply && covered && !row.used_this_month)
         await tx.query(
@@ -57,7 +57,7 @@ try {
           [row.id],
         );
     }
-    console.log(`\nTotal à facturer : ${total} € HT${apply ? " · crédits consommés" : " · relancer avec --apply pour consommer les mois offerts"}`);
+    console.log(`\nTotal à facturer : ${total} € TTC${apply ? " · crédits consommés" : " · relancer avec --apply pour consommer les mois offerts"}`);
   });
 } finally {
   await db.close();

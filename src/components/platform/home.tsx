@@ -9,6 +9,7 @@ import { useRouter } from "next/navigation";
 import { useState, useEffect, useCallback } from "react";
 import { ArrowUpRight, Building2, Plus } from "lucide-react";
 import { can, type Role } from "@/lib/permissions";
+import { industries, industryLabels, trades, discoveryLabels, type Industry } from "@/features/onboarding/catalog";
 import "./platform.css";
 import "./access.css";
 type Overview = {
@@ -30,6 +31,13 @@ type Overview = {
     paying_referrals: number | null;
     activated_total: number | null;
     credits: number | null;
+    discovery_source?: string;
+    discovery_detail?: string;
+    onboarding_answers?: { teamSize?: string; mainChallenge?: string };
+    creator_name?: string;
+    creator_email?: string;
+    creator_job_title?: string;
+    creator_work_phone?: string;
   }[];
   restaurants: {
     id: string;
@@ -37,6 +45,8 @@ type Overview = {
     organization_id: string;
     plan: Plan;
     user_roles: Role[];
+    industry?: Industry;
+    trade?: string;
   }[];
 };
 export function PlatformHome() {
@@ -46,6 +56,9 @@ export function PlatformHome() {
     [busy, setBusy] = useState(false),
     [name, setName] = useState(""),
     [selected, setSelected] = useState(""),
+    [industry, setIndustry] = useState<Industry>("restaurant"),
+    [trade, setTrade] = useState("Restaurant"),
+    [tradeDetail, setTradeDetail] = useState(""),
     [token, setToken] = useState("");
   const load = useCallback(async () => {
     const r = await fetch("/api/platform");
@@ -157,6 +170,7 @@ export function PlatformHome() {
                       </span>
                     </div>
                     <h2>{r.name}</h2>
+                    {r.trade && <p>{r.trade}</p>}
                     <p>Votre activité et votre administration, réunies.</p>
                     {plan !== 0 && (
                       <div className="actions">
@@ -194,7 +208,7 @@ export function PlatformHome() {
                       {o.paid_plan
                         ? [
                             `Abonnement Studio ${o.paid_plan} €${price.free ? " offert" : ""}`,
-                            `${price.total} € HT / mois`,
+                            `${price.total} € TTC / mois`,
                             `${o.occupied}/${o.seats} places utilisées`,
                           ]
                             .filter(Boolean)
@@ -205,6 +219,11 @@ export function PlatformHome() {
                             ? "Abonnement résilié · accès fermé"
                             : "Essai terminé · abonnement en attente d’activation"}
                     </p>
+                    {["OWNER","ADMIN"].includes(o.role) && o.discovery_source && <div>
+                      <p>Créé par {o.creator_name || "le propriétaire"}{o.creator_job_title ? " · " + o.creator_job_title : ""}{o.creator_work_phone ? " · " + o.creator_work_phone : ""}</p>
+                      <p>Découverte de Studio OS : {discoveryLabels[o.discovery_source as keyof typeof discoveryLabels] || o.discovery_source}{o.discovery_detail ? " · " + o.discovery_detail : ""}</p>
+                      {o.onboarding_answers?.mainChallenge && <p>Priorité déclarée : {o.onboarding_answers.mainChallenge}</p>}
+                    </div>}
                     {(trialActive || o.paid_plan > 0) && o.role === "OWNER" && (
                       <button type="button" disabled={busy} onClick={() => {
                         if (window.confirm("Résilier maintenant ? L’accès à cet espace sera fermé immédiatement."))
@@ -243,6 +262,7 @@ export function PlatformHome() {
                       action: "restaurant",
                       organization: selected,
                       name,
+                      activity: { industry, trade, tradeDetail },
                     });
                   }}
                 >
@@ -264,7 +284,7 @@ export function PlatformHome() {
                     </select>
                   </label>
                   <label>
-                    Nom du restaurant
+                    Nom de l’établissement
                     <input
                       required
                       minLength={2}
@@ -273,11 +293,23 @@ export function PlatformHome() {
                       onChange={(e) => setName(e.target.value)}
                     />
                   </label>
+                  <label>Famille d’activité
+                    <select value={industry} onChange={(e) => {
+                      const next=e.target.value as Industry;
+                      setIndustry(next);setTrade(trades[next][0]);setTradeDetail("");
+                    }}>{industries.map((item)=><option key={item} value={item}>{industryLabels[item]}</option>)}</select>
+                  </label>
+                  <label>Métier
+                    <select value={trade} onChange={(e)=>setTrade(e.target.value)}>{trades[industry].map((item)=><option key={item}>{item}</option>)}</select>
+                  </label>
+                  {trade.startsWith("Autre") && <label>Précisez votre activité
+                    <input required value={tradeDetail} onChange={(e)=>setTradeDetail(e.target.value)} />
+                  </label>}
                   {organization &&
                     organization.occupied >= organization.seats && (
                       <p>
                         Demandez l’activation d’une place supplémentaire à 39 €
-                        HT par mois.
+                        TTC par mois.
                       </p>
                     )}
                   <button
@@ -287,7 +319,7 @@ export function PlatformHome() {
                       organization.occupied >= organization.seats
                     }
                   >
-                    Créer le restaurant
+                    Créer l’établissement
                   </button>
                 </form>
               </section>
@@ -297,7 +329,7 @@ export function PlatformHome() {
                 <h2>Ouvrez votre premier espace</h2>
                 <p>
                   Souscrivez l’abonnement Studio pour préparer votre
-                  organisation et votre premier restaurant.
+                  organisation et votre premier établissement.
                 </p>
                 <Link className="button" href="/checkout/39">
                   Souscrire

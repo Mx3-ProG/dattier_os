@@ -18,6 +18,8 @@ import { effectiveTitle, effectiveDescription } from "@/features/seo/meta";
 import { DonutStore } from "@/components/cms-site/store";
 import { TenantSiteProvider } from "@/components/cms-site/context";
 import { AudienceBeacon } from "@/components/cms-site/audience-beacon";
+import { SiteLoaderSync } from "@/components/cms-site/site-loader";
+import { effectiveSiteLoader } from "@/features/cms/site-addons";
 import { isAudienceMode } from "@/features/analytics/consent";
 import "@/app/donuts.css";
 import "@/app/site-sections.css";
@@ -99,6 +101,7 @@ const loadSite = cache(
           if (isProduct && !product) notFound();
           return {
             product,
+            siteAddons: await cms.siteAddons(db),
             redirect: null,
             shopEnabled: plan >= 39 && shopInstalled,
             estimationEnabled,
@@ -226,6 +229,13 @@ export default async function Page(props: Props) {
       audience={isAudienceMode(data.audience) ? data.audience : null}
     >
       {isAudienceMode(data.audience) && <AudienceBeacon />}
+      {!data.preview && (
+        <SiteLoaderSync
+          renderer={effectiveSiteLoader(data.config.branding.loader, data.siteAddons.loadingScreens)}
+          primary={data.config.theme.colors.primary}
+          name={data.config.branding.publicName || data.context.name || ""}
+        />
+      )}
       {jsonLd && (
         <script
           type="application/ld+json"
@@ -243,6 +253,7 @@ export default async function Page(props: Props) {
         detailProduct={data.product}
         updatedAt={data.publishedAt}
         estimationEnabled={data.estimationEnabled}
+        siteAddons={data.siteAddons}
       />
     </TenantSiteProvider>
   );

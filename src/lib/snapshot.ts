@@ -10,6 +10,7 @@ import { type Actor, scope } from "./auth/session";
 import { can } from "./permissions";
 import { canArrange } from "@/features/floor/access";
 import { moduleEnabled } from "@/features/modules/access";
+import { availableModules } from "@/features/modules/availability";
 import { tableQuota } from "@/features/floor/service";
 import type { Snapshot, MenuItem, Restaurant, Order, Item } from "./types";
 import {
@@ -42,7 +43,8 @@ export async function snapshot(
   };
   const paidAddons=(await rows<{addon:string}>(db,
     `SELECT addon FROM unnest(ARRAY['invoices','attendance','client-invoices','payroll',
-      'offline-conflicts','connections','qr','loyalty','domain']) AS addon
+      'offline-conflicts','connections','qr','loyalty','domain',
+      'prospect-scanner','pipeline-crm','customer-health']) AS addon
      WHERE app.addon_installed($1,addon)`,[r])).map(row=>row.addon);
   const allowed = (p: Parameters<typeof can>[1]) =>
     (p === "customers" ? paidAddons.includes("loyalty") :
@@ -83,18 +85,23 @@ export async function snapshot(
     order.items = items.filter((i) => i.order_id === order.id);
   return {
     activeModules,
+    // Décision commerciale unique (app.module_available) : la navigation ne lit plus que ce champ.
+    modules: await availableModules(db, r),
     uninstalledAddons: (await rows<{ addon_id: string }>(db,
       "SELECT addon_id FROM addon_installations WHERE restaurant_id=$1 AND NOT installed", [r],
     )).map((row) => row.addon_id),
     addons: paidAddons,
     // Licences d’add-ons de mesure : la RLS limite déjà la lecture à l’établissement ouvert.
     licenses: (
-      await rows<{ product_id: string }>(
+      await rows<{ product_id: string; kind: string }>(
         db,
-        "SELECT l.product_id FROM addon_licenses l JOIN addon_products p ON p.id=l.product_id WHERE l.restaurant_id=$1 AND p.kind IN ('analytics','estimation') AND app.addon_installed($1,l.product_id)",
+        "SELECT l.product_id,p.kind FROM addon_licenses l JOIN addon_products p ON p.id=l.product_id WHERE l.restaurant_id=$1 AND p.kind IN ('analytics','estimation','business') AND app.addon_installed($1,l.product_id)",
         [r],
       )
-    ).map((license) => license.product_id),
+    ).flatMap((license) =>
+      // Les outils métier partagent une seule entrée de menu : « Outils métier ».
+      license.kind === "business" ? [license.product_id, "trade-tools"] : [license.product_id],
+    ).filter((id, index, all) => all.indexOf(id) === index),
     demo: demoEnabled(),
     categories: (
       await rows<{ category: string }>(

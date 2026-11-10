@@ -60,6 +60,11 @@ const modules = [
     title: "Faites revenir vos clients",
     text: "Un site, une boutique en ligne et des fiches clients reliés à votre activité. La fidélité est disponible en option.",
   },
+  {
+    icon: Sparkles,
+    title: "Personnalisez votre expérience",
+    text: "Adaptez STUDIO à vos besoins spécifiques avec des add-ons et des options de personnalisation. Rien n'est laissé au hasard.",
+  }
 ];
 
 const steps = [
@@ -69,11 +74,11 @@ const steps = [
   },
   {
     title: "Ajoutez votre structure",
-    text: "Nom, catalogue, espace de travail. La création est guidée pas à pas.",
+    text: "Nom, catalogue, espace de travail. La création est guidée pas à pas avec un tutoriel ultra complet et simple d'utilisation.",
   },
   {
     title: "Lancez votre activité",
-    text: "Invitez l’équipe, composez votre site et commencez à suivre vos commandes.",
+    text: "Invitez l'équipe, composez votre site et commencez à suivre vos commandes.",
   },
 ];
 
@@ -96,7 +101,7 @@ const faq = [
   },
   {
     q: "J’ouvre une deuxième adresse, que se passe-t-il ?",
-    a: "L’abonnement inclut un établissement. Ajoutez des établissements à 39 € HT par mois chacun. Ils bénéficient tous de l’abonnement de votre organisation et conservent leurs propres données.",
+    a: "L’abonnement inclut un établissement. Ajoutez des établissements à 39 € TTC par mois chacun. Ils bénéficient tous de l’abonnement de votre organisation et conservent leurs propres données.",
   },
   {
     q: "Le code est-il ouvert ?",
@@ -207,7 +212,7 @@ export function Landing({
               </a>
             </div>
             <p className="landing-note">
-              3 jours gratuits · Puis 39 € HT / mois après activation · Sans engagement
+              3 jours gratuits · Puis 39 € TTC / mois après activation · Sans engagement
             </p>
           </div>
           <div className="landing-hero-scene">
@@ -353,7 +358,7 @@ export function Landing({
                 <Check size={20} aria-hidden />
                 <p>
                   <strong>Choisissez un périmètre clair.</strong> Un abonnement à
-                  39 € HT par mois réunit la gestion, le site et la boutique.
+                  39 € TTC par mois réunit la gestion, le site et la boutique.
                   Ajoutez seulement les options dont vous avez besoin.
                 </p>
               </div>
@@ -649,8 +654,8 @@ export function Landing({
             <h2>Un abonnement. Des add-ons à la carte.</h2>
             <p>
               3 jours d’essai gratuits, sans paiement initial. Puis un établissement
-              inclus à 39 € HT par mois après activation. Chaque établissement supplémentaire coûte{" "}
-              {additionalRestaurantPrice} € HT par mois et bénéficie du même
+              inclus à 39 € TTC par mois après activation. Chaque établissement supplémentaire coûte{" "}
+              {additionalRestaurantPrice} € TTC par mois et bénéficie du même
               abonnement. Le hors ligne, la sécurité, la traçabilité et les
               tutoriels sont inclus. Résiliation à tout moment, sans engagement.
             </p>
@@ -676,7 +681,7 @@ export function Landing({
                 <span className="landing-eyebrow">Votre activité, à votre façon</span>
                 <h3>{p.title}</h3>
                 <strong className="landing-plan-quota">
-                  {p.price} € HT / mois
+                  {p.price} € TTC / mois
                 </strong>
                 <ul>
                   {p.features.map((feature) => (

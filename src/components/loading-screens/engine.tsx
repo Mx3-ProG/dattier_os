@@ -2,10 +2,11 @@
 import dynamic from "next/dynamic";
 import type { CSSProperties, ComponentType } from "react";
 import type { LoadingRendererId } from "@/features/addons/loading-screens";
+import { isThemedVisual } from "@/features/cms/themed-visuals";
 import "./engine.css";
 
 /** Un fichier par animation : seules celles réellement affichées sont téléchargées. */
-const loaders: Record<LoadingRendererId, () => Promise<{ default: ComponentType }>> = {
+const loaders: Partial<Record<LoadingRendererId, () => Promise<{ default: ComponentType }>>> = {
   magic: () => import("./screens/magic"),
   kitchen: () => import("./screens/kitchen"),
   "studio-s": () => import("./screens/studio-s"),
@@ -16,11 +17,17 @@ const loaders: Record<LoadingRendererId, () => Promise<{ default: ComponentType 
   infinity: () => import("./screens/infinity"),
   crystal: () => import("./screens/crystal"),
   golden: () => import("./screens/golden"),
+  santa: () => import("./screens/santa"),
+  snowflake: () => import("./screens/snowflake"),
+  giftbox: () => import("./screens/giftbox"),
+  wreath: () => import("./screens/wreath"),
 };
+const ThemedScreen = dynamic(() => import("./screens/themed"), { ssr: false });
 const screens = Object.fromEntries(
   Object.entries(loaders).map(([id, load]) => [id, dynamic(load, { ssr: false })]),
-) as Record<LoadingRendererId, ComponentType>;
-export const preloadLoadingScreen = (renderer: LoadingRendererId) => loaders[renderer]();
+) as Partial<Record<LoadingRendererId, ComponentType>>;
+export const preloadLoadingScreen = (renderer: LoadingRendererId) =>
+  isThemedVisual(renderer) ? import("./screens/themed") : loaders[renderer]!();
 
 export type LoadingScreenViewProps = {
   renderer: LoadingRendererId;
@@ -74,7 +81,7 @@ export function LoadingScreenView({
       )}
       <div className="ls-frame" aria-hidden>
         <div className="ls-stage">
-          <Screen />
+          {isThemedVisual(renderer) ? <ThemedScreen id={renderer} /> : Screen ? <Screen /> : null}
         </div>
       </div>
       {(!preview || message) && <p className="ls-label">{message || label}</p>}

@@ -234,3 +234,64 @@
   border-top: 1px solid var(--line);
   padding-block: 12px;
 }
+/* Outils métier */
+.addon-trade-preview {
+  display: grid;
+  align-content: end;
+  gap: 4px;
+  padding: 16px;
+  color: #fff;
+  background: linear-gradient(135deg, #344d3e, #5f7f69);
+}
+.addon-trade-preview small {
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  opacity: 0.85;
+}
+.addon-trade-preview strong {
+  font-family: var(--appearance-font, "Dattier Fraunces", Georgia, serif);
+  font-size: max(var(--appearance-min-text, 0px), calc(20px * var(--appearance-text-scale, 1)));
+  line-height: 1.2;
+}
+.addon-trade-preview.is-metier-restauration { background: linear-gradient(135deg, #8a3f24, #c8744a); }
+.addon-trade-preview.is-metier-btp { background: linear-gradient(135deg, #5b4a12, #c59a2b); }
+.addon-trade-preview.is-metier-coiffure { background: linear-gradient(135deg, #6a2f5b, #b5649d); }
+.addon-trade-preview.is-metier-commerce { background: linear-gradient(135deg, #1f4f73, #3f8cbf); }
+.addon-trade-preview.is-metier-tous { background: linear-gradient(135deg, #344d3e, #6b9a78); }
+.addon-trade-features {
+  display: grid;
+  gap: 4px;
+  margin: 0;
+  padding-left: 18px;
+  color: var(--muted);
+  font-size: max(var(--appearance-min-text, 0px), calc(13px * var(--appearance-text-scale, 1)));
+}
+.addon-notfound-preview {
+  display: grid;
+  overflow: hidden;
+}
+.addon-decoration-preview{display:grid;align-items:center;overflow:hidden;background:#183e39}
+.addon-decoration-preview .site-decoration{width:100%;height:100%;min-height:96px}
+.addon-background-preview .site-background-preview{height:100%;border-radius:0}
+.addon-notfound-preview .site-404 {
+  padding: 8px;
+  transform-origin: center;
+}
+.addon-notfound-preview .site-404-message,
+.addon-notfound-preview .site-404-brand {
+  display: none;
+}
+.addon-notfound-preview .site-404 h1 {
+  font-size: 15px;
+}
+.addon-notfound-preview .site-404-button {
+  min-height: 28px;
+  margin-top: 0;
+  padding: 0 12px;
+  font-size: 12px;
+}
+.addon-notfound-preview .site-404-art {
+  min-height: 60px;
+  font-size: 48px;
+}

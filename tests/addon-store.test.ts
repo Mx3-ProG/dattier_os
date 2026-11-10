@@ -13,9 +13,11 @@ import {
 import { readLoadingScreen } from "../src/features/addons/store-service";
 import {
   defaultStoreFilters,
+  categoryCounts,
   featuresVisible,
   filterProducts,
   formatPrice,
+  installedAddonCount,
   productAction,
   type StoreLicense,
   type StoreProduct,
@@ -29,6 +31,7 @@ import {
   restaurantFromLocation,
   safeLogo,
 } from "../src/features/addons/loading-screens";
+import { isThemedVisual, themedVisualIds, themedPrice } from "../src/features/cms/themed-visuals";
 
 async function database() {
   const db = new PGlite();
@@ -94,14 +97,14 @@ const settingsArgs = (product: string | null, enabled: boolean, revision: number
 ];
 const SAVE = "SELECT app.loading_screen_save($1,$2,$3,$4,$5,$6,$7,$8,$9) AS revision";
 
-test("catalogue : une catégorie, dix écrans, trois gratuits, sept premium aux bons prix", async () => {
+test("catalogue : trente-huit écrans aux bons prix TTC", async () => {
   const db = await database();
   try {
     const { rows } = await db.query<{ id: string; pricing_mode: string; price_cents: number; renderer: string; category_id: string }>(
       "SELECT id,pricing_mode,price_cents,renderer,category_id FROM addon_products WHERE kind='loading_screen' ORDER BY position",
     );
     assert.deepEqual(
-      rows.map((row) => [row.id, row.price_cents]),
+      rows.slice(0, 14).map((row) => [row.id, row.price_cents]),
       [
         ["magic-loader", 0],
         ["kitchen-loader", 0],
@@ -113,9 +116,14 @@ test("catalogue : une catégorie, dix écrans, trois gratuits, sept premium aux 
         ["infinity-loop", 700],
         ["crystal-morph", 900],
         ["golden-luxury", 900],
+        ["santa-loader", 900],
+        ["snowflake-loader", 900],
+        ["giftbox-loader", 900],
+        ["wreath-loader", 900],
       ],
     );
-    assert.equal(rows.filter((row) => row.pricing_mode === "free").length, 3);
+    assert.deepEqual(rows.slice(14).map((row) => [row.renderer, row.price_cents]), themedVisualIds.map((id) => [id, themedPrice(id)]));
+    assert.equal(rows.filter((row) => row.pricing_mode === "free").length, 9);
     assert.ok(rows.every((row) => row.category_id === "loading-screens"));
     assert.deepEqual(rows.map((row) => row.renderer).toSorted(), loadingRendererIds.toSorted());
     await assert.rejects(
@@ -406,7 +414,7 @@ test("administration : réservée à la plateforme, prix sans code, retrait sans
     await db.query("SELECT app.addon_admin_save_category($1::jsonb)", [
       JSON.stringify({ id: "themes", name: "Thèmes et apparence", description: "", position: 20, visible: true }),
     ]);
-    assert.equal((await db.query("SELECT id FROM addon_categories")).rows.length, 4);
+    assert.equal((await db.query("SELECT id FROM addon_categories WHERE id='themes'")).rows.length, 1);
     await db.query("SELECT app.addon_admin_delete_category('themes')");
     await assert.rejects(db.query("SELECT app.addon_admin_delete_category('loading-screens')"), /contient encore/);
     const price = await db.query<{ price_cents: number }>("SELECT price_cents FROM addon_products WHERE id='neon-pulse'");
@@ -492,12 +500,23 @@ test("boutique : bouton selon le statut, filtres et prix affiché", () => {
   assert.deepEqual(ids({ availability: "unavailable" }), ["off"]);
   assert.deepEqual(ids({ acquisition: "owned" }), ["paid"]);
   assert.ok(!ids({ acquisition: "not-owned" }).includes("paid"));
+  assert.deepEqual(categoryCounts(list, [owned("paid")], defaultStoreFilters, 3), {
+    "loading-screens": 3,
+    themes: 1,
+    features: 3,
+    all: 7,
+  });
+  assert.equal(installedAddonCount(["floor", "booking"], [
+    { product_id: "magic-loader", status: "active", valid_until: null },
+    { product_id: "floor", status: "active", valid_until: null },
+    { product_id: "expired", status: "active", valid_until: "2020-01-01T00:00:00Z" },
+  ], [{ addon_id: "booking", installed: false }], Date.parse("2026-11-10")), 2);
   assert.equal(featuresVisible(defaultStoreFilters), true);
   assert.equal(featuresVisible({ ...defaultStoreFilters, category: "loading-screens" }), false);
   assert.equal(featuresVisible({ ...defaultStoreFilters, price: "free" }), false);
   assert.equal(formatPrice(free), "Gratuit");
-  assert.equal(formatPrice(paid), "5 € HT");
-  assert.equal(formatPrice(product({ price_cents: 650 })), "6,50 € HT");
+  assert.equal(formatPrice(paid), "5 € TTC");
+  assert.equal(formatPrice(product({ price_cents: 650 })), "6,50 € TTC");
 });
 
 test("réglages : validation serveur des couleurs, vitesse, message et logo", () => {
@@ -548,6 +567,7 @@ test("performances et accessibilité : animations légères, chargées à la dem
   assert.match(css, /is-paused[\s\S]*animation-play-state: paused/);
   const files = await readdir("src/components/loading-screens/screens");
   for (const id of loadingRendererIds) {
+    if (isThemedVisual(id)) continue;
     assert.ok(engine.includes(`import("./screens/${id}")`), `${id} doit être importé à la demande`);
     assert.ok(!engine.includes(`from "./screens/${id}"`), `${id} ne doit pas être dans le lot initial`);
     assert.ok(files.includes(`${id}.tsx`) && files.includes(`${id}.css`));
@@ -562,6 +582,12 @@ test("performances et accessibilité : animations légères, chargées à la dem
       if ((loadingRenderers[id] as { colorable: boolean }).colorable)
         assert.ok(style.includes(color) || source.includes(color), `${id} doit utiliser ${color}`);
   }
+  assert.ok(engine.includes('import("./screens/themed")'), "le lot thématique reste chargé à la demande");
+  const themedSource = await readFile("src/components/loading-screens/screens/themed.tsx", "utf8");
+  const themedStyle = await readFile("src/components/loading-screens/screens/themed.css", "utf8");
+  assert.match(themedStyle, /@keyframes/);
+  assert.match(themedStyle, /var\(--ls-speed\)/);
+  assert.doesNotMatch(themedSource, /setTimeout|setInterval|requestAnimationFrame|fetch\(/);
   const loader = await readFile("src/components/loading-screens/tenant-loader.tsx", "utf8");
   assert.doesNotMatch(loader, /await[^;]*\n?[^;]*TenantLoader/);
   assert.match(loader, /UtensilsLoader/, "fallback natif immédiat");

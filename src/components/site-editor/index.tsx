@@ -34,6 +34,8 @@ import { Button } from "../ui/button";
 import { Modal } from "../forms";
 import { Field, ImageField } from "./fields";
 import { SeoIdentityFields } from "./seo-identity";
+import { SiteAddonIdentity } from "./site-addons-panel";
+import { addonSectionAddons, addonNames, emptySiteAddons, isAddonSection, type SiteAddonData } from "@/features/cms/site-addons";
 import {
   registry,
   addableTypes,
@@ -78,6 +80,7 @@ type EditorState = {
   settings: CmsSettings;
   defaults: SiteConfig;
   context: PlaceholderContext;
+  siteAddons?: SiteAddonData;
 };
 type Version = {
   id: string;
@@ -447,6 +450,11 @@ export function SiteEditor({
 
   const library =
     config && page ? addableTypes(config, page.kind, allowed) : [];
+  // Sections d’add-ons non installés : visibles pour faire découvrir l’add-on, pas ajoutables.
+  const lockedAddonSections =
+    page && ["content", "custom"].includes(page.kind)
+      ? (Object.keys(addonSectionAddons) as (keyof typeof addonSectionAddons)[]).filter((t) => !library.includes(t))
+      : [];
   const matching = library.filter((type) => {
     const normalize = (value: string) =>
       value
@@ -1094,11 +1102,25 @@ export function SiteEditor({
                   )}
                   {matching.map((t) => (
                     <button key={t} onClick={() => addSection(t)}>
-                      <b>{registry[t].label}</b>
+                      <b>
+                        {registry[t].label}
+                        {isAddonSection(t) && <span className="site-addon-badge">Add-on</span>}
+                      </b>
                       <small>{registry[t].description}</small>
                       <Plus size={16} />
                     </button>
                   ))}
+                  {lockedAddonSections.length > 0 && (
+                    <div className="site-library-locked" aria-label="Sections d’add-ons à installer">
+                      <p className="muted">Avec un add-on de la boutique :</p>
+                      {lockedAddonSections.map((t) => (
+                        <Link key={t} href={`/dashboard?restaurant=${encodeURIComponent(restaurant)}&module=addons`} className="site-library-locked-item">
+                          <b>{registry[t].label}<span className="site-addon-badge">Add-on</span></b>
+                          <small>Installez « {addonNames[addonSectionAddons[t]]} » pour ajouter cette section.</small>
+                        </Link>
+                      ))}
+                    </div>
+                  )}
                 </div>
               ) : (
                 <p className="muted">
@@ -1209,6 +1231,8 @@ export function SiteEditor({
                 config={config}
                 update={update}
                 context={meta.context}
+                siteAddons={meta.siteAddons ?? emptySiteAddons}
+                storeHref={`/dashboard?restaurant=${encodeURIComponent(restaurant)}&module=addons`}
               />
             )}
             {tab === "theme" && (
@@ -1552,10 +1576,14 @@ function BrandPanel({
   config,
   update,
   context,
+  siteAddons,
+  storeHref,
 }: {
   config: SiteConfig;
   update: Update;
   context: PlaceholderContext;
+  siteAddons: SiteAddonData;
+  storeHref: string;
 }) {
   const b = config.branding;
   const text = (
@@ -1583,6 +1611,7 @@ function BrandPanel({
   );
   return (
     <div className="site-form">
+      <SiteAddonIdentity config={config} update={update} addons={siteAddons} storeHref={storeHref} />
       <h4>Établissement</h4>
       {text(
         "Nom public",

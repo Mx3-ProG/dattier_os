@@ -10,7 +10,7 @@ import type { StoreState } from "./store-catalog";
 import { log } from "@/features/orders/service";
 import { authenticated as authenticatedRequest } from "@/features/platform/http";
 import { scope } from "@/lib/auth/session";
-import { one, rows, type DB } from "@/lib/database/db";
+import { demoEnabled, one, rows, type DB } from "@/lib/database/db";
 import { can } from "@/lib/permissions";
 
 /**
@@ -88,6 +88,7 @@ async function readStore(db: DB, restaurant: string, user: Parameters<typeof sco
     [restaurant],
   );
   return {
+    demo: demoEnabled(),
     categories: await rows(
       db,
       "SELECT id,name,description FROM addon_categories WHERE visible ORDER BY position,name",
@@ -217,7 +218,7 @@ export async function purchaseAddon(restaurant: string, product: string) {
           price_data: {
             currency: order.currency,
             unit_amount: order.amount_cents,
-            tax_behavior: "exclusive",
+            tax_behavior: "inclusive",
             product_data: { name: order.product_name, metadata: { addon_product: product } },
           },
         },

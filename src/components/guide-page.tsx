@@ -67,7 +67,7 @@ const faq = [
   ],
   [
     "Puis-je gérer plusieurs restaurants ?",
-    "Oui. Chaque forfait inclut un établissement. Les établissements supplémentaires coûtent 39 € HT par mois chacun et bénéficient du même forfait.",
+    "Oui. Chaque forfait inclut un établissement. Les établissements supplémentaires coûtent 39 € TTC par mois chacun et bénéficient du même forfait.",
   ],
   [
     "Mes données sont-elles séparées de celles des autres restaurants ?",
@@ -406,7 +406,7 @@ export function GuidePage({ demo }: { demo: boolean }) {
                 {packs.map((p) => (
                   <li key={p.id}>
                     <b>Pack {p.title}</b> : {p.credits.toLocaleString("fr-FR")}{" "}
-                    crédits pour {eur(p.priceCents)} HT · {p.hint}
+                    crédits pour {eur(p.priceCents)} TTC · {p.hint}
                   </li>
                 ))}
               </ul>

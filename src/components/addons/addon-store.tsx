@@ -14,6 +14,7 @@ import {
 } from "@/features/addons/loading-screens";
 import {
   compatibilityLabels,
+  categoryCounts,
   featuresCategoryId,
   filterProducts,
   formatPrice,
@@ -24,8 +25,13 @@ import {
   type StoreProduct,
   type StoreState,
 } from "@/features/addons/store-catalog";
-import { analyticsKind, earthTrackerProduct } from "@/features/analytics/modules";
-import { plannedAddons } from "@/features/addons/planned-catalog";
+import { analyticsKind } from "@/features/analytics/modules";
+import { tradeKind, tradeTool } from "@/features/trade/definitions";
+import { SiteNotFound } from "@/components/cms-site/site-not-found";
+import { SiteDecoration } from "@/components/cms-site/site-decoration";
+import { SiteBackgroundPreview } from "@/components/cms-site/site-background";
+import { isSiteBackground } from "@/features/cms/site-backgrounds";
+import { isNotFoundDesign, isSiteDecoration } from "@/features/cms/site-addons";
 import "./addon-store.css";
 import "@/components/analytics/earth-tracker.css";
 
@@ -144,10 +150,15 @@ function ProductCard({
   const [demoOpen, setDemoOpen] = useState(false);
   const isAnalytics = product.kind === analyticsKind;
   const isEstimation = product.kind === "estimation";
+  const isTrade = product.kind === tradeKind;
+  const isNotFound = product.kind === "not_found";
+  const isDecoration = product.kind === "site_decoration";
+  const isBackground = product.kind === "site_background";
+  const trade = isTrade ? tradeTool(product.id) : undefined;
   const license = state.licenses.find((entry) => entry.product_id === product.id);
   const owned = isOwned(license);
   const installed = owned && isInstalled(state, product.id);
-  const activeId = isEstimation ? product.id : isAnalytics
+  const activeId = isEstimation || isTrade || isNotFound || isDecoration || isBackground ? product.id : isAnalytics
     ? state.analyticsCollecting
       ? product.id
       : null
@@ -162,7 +173,7 @@ function ProductCard({
   );
   const definition = definitionOf(product);
   const statusText = {
-    active: isEstimation ? "Installé · prêt à configurer" : isAnalytics ? "Installé · mesure active" : "Installé · activé",
+    active: isNotFound || isDecoration || isBackground ? "Installé · à choisir dans Identité du site" : isTrade ? "Installé · prêt à l’emploi" : isEstimation ? "Installé · prêt à configurer" : isAnalytics ? "Installé · mesure active" : "Installé · activé",
     activate: isAnalytics ? "Installé · mesure non activée" : "Installé · non activé",
     install: "Non installé",
     buy: "Non acquis",
@@ -172,33 +183,53 @@ function ProductCard({
   }[action];
   return (
     <article className="card addon-card" aria-label={product.name} data-addon={product.id}>
-      {isAnalytics ? <AnalyticsPreview /> : isEstimation ? <div className="addon-preview addon-estimation-preview"><strong>€</strong><span>Prix · coûts · marge</span></div> : <LivePreview product={product} />}
+      {isBackground && isSiteBackground(product.renderer) ? (
+        <div className="addon-preview addon-background-preview"><SiteBackgroundPreview design={product.renderer} /></div>
+      ) : isDecoration && isSiteDecoration(product.renderer) ? (
+        <div className="addon-preview addon-decoration-preview"><SiteDecoration design={product.renderer} preview /></div>
+      ) : isNotFound && isNotFoundDesign(product.renderer) ? (
+        <div className="addon-preview addon-notfound-preview">
+          <SiteNotFound preview design={product.renderer} title="Page introuvable" message="" button="Accueil" home="#" brand=""
+            colors={{ primary: "#b5649d", background: "#fbf7f1", text: "#2f2a35" }} />
+        </div>
+      ) : trade ? (
+        <div className={`addon-preview addon-trade-preview is-${trade.category}`}>
+          <small>{trade.industry}</small>
+          <strong>{trade.tagline}</strong>
+        </div>
+      ) : isAnalytics ? <AnalyticsPreview /> : isEstimation ? <div className="addon-preview addon-estimation-preview"><strong>€</strong><span>Prix · coûts · marge</span></div> : <LivePreview product={product} />}
       <div className="addon-card-head">
         <h3>{product.name}</h3>
         <span className="addon-badges">
           <span className={`addon-badge ${product.pricing_mode === "free" ? "is-free" : "is-premium"}`}>
             {product.pricing_mode === "free" ? "Gratuit" : "Premium"}
           </span>
-          {owned && <span className="addon-badge is-owned">Possédé</span>}
+          {owned && <span className="addon-badge is-owned">{license?.source === "demo" ? "Essai démo" : "Possédé"}</span>}
         </span>
       </div>
       <p>{product.description}</p>
+      {trade && (
+        <ul className="addon-trade-features">
+          {trade.features.map((feature) => <li key={feature}>{feature}</li>)}
+        </ul>
+      )}
+      {trade?.requires && <p className="addon-hint">Fonctionne avec l’add-on « {tradeTool(trade.requires)?.name} ».</p>}
       {isEstimation && <p className="addon-hint">Le site internet doit être installé pour publier le simulateur public.</p>}
       <p className="addon-price">
         <strong>{formatPrice(product)}</strong>
         {product.pricing_mode === "one_time" && <span> · paiement unique, sans abonnement</span>}
       </p>
       {license?.valid_until && <p className="addon-hint">Accès valable jusqu’au {new Date(license.valid_until).toLocaleDateString("fr-FR")}</p>}
-      <p className="addon-status" data-status={action}>{owned && !installed ? "Possédé · désinstallé" : statusText}</p>
+      <p className="addon-status" data-status={action}>{owned && !installed ? `${license?.source === "demo" ? "Essai démo" : "Possédé"} · désinstallé` : license?.source === "demo" ? `Essai démo · ${installed ? "installé" : "désinstallé"}` : statusText}</p>
       <dl className="addon-facts">
         <div>
           <dt>Compatibilité</dt>
           <dd>{product.compatibility.map((entry) => compatibilityLabels[entry] ?? entry).join(", ")}</dd>
         </div>
         <div>
-          <dt>{isEstimation ? "Destination" : isAnalytics ? "Comprend" : "Personnalisation"}</dt>
+          <dt>{trade || isNotFound || isDecoration || isBackground ? "Destination" : isEstimation ? "Destination" : isAnalytics ? "Comprend" : "Personnalisation"}</dt>
           <dd>
-            {isEstimation ? "Pilotage · Estimation et page publique"
+            {isNotFound ? "Mon site web · Identité · Page 404" : isDecoration ? "Mon site web · Identité · Décoration" : isBackground ? "Mon site web · Identité · Fond du site" : trade ? "Gestion · Outils métier" : isEstimation ? "Pilotage · Estimation et page publique"
               : isAnalytics
               ? "Globe 3D et carte 2D, classements par zone, activité quasi réelle, consentement et conservation configurables"
               : definition?.colorable
@@ -241,12 +272,16 @@ function ProductCard({
         <Button onClick={() => onOpenModule("audience")}>Ouvrir {product.name}</Button>
       )}
       {installed && isEstimation && onOpenModule && <Button onClick={() => onOpenModule("estimation")}>Configurer l’estimation</Button>}
-      {installed && !isAnalytics && !isEstimation && action === "activate" && (
+      {installed && isTrade && onOpenModule && <Button onClick={() => onOpenModule("trade-tools")}>Ouvrir l’outil</Button>}
+      {installed && isNotFound && onOpenModule && <Button onClick={() => onOpenModule("site")}>Choisir dans mon site</Button>}
+      {installed && isDecoration && onOpenModule && <Button onClick={() => onOpenModule("site")}>Choisir dans mon site</Button>}
+      {installed && isBackground && onOpenModule && <Button onClick={() => onOpenModule("site")}>Choisir dans mon site</Button>}
+      {installed && !isAnalytics && !isEstimation && !isTrade && !isNotFound && !isDecoration && !isBackground && action === "activate" && (
         <Button variant="secondary" disabled={busy || !state.canCustomize} onClick={() => onActivate(product)}>
           Activer
         </Button>
       )}
-      {installed && !isAnalytics && !isEstimation && action === "active" && <Button disabled>Écran actif</Button>}
+      {installed && !isAnalytics && !isEstimation && !isTrade && !isNotFound && !isDecoration && !isBackground && action === "active" && <Button disabled>Écran actif</Button>}
     </article>
   );
 }
@@ -407,6 +442,8 @@ export function AddonStore({
   onOpenShop,
   onOpenModule,
   onLicensesChanged,
+  monthlyShopCount = 0,
+  pilotageMonthlyShopCount = 0,
 }: {
   restaurant: string;
   mode: "shop" | "library";
@@ -414,7 +451,9 @@ export function AddonStore({
   onFiltersChange: (filters: StoreFilters) => void;
   onOpenShop: () => void;
   onOpenModule?: (module: string) => void;
-  onLicensesChanged?: () => Promise<void> | void;
+  onLicensesChanged?: (state: StoreState) => Promise<void> | void;
+  monthlyShopCount?: number;
+  pilotageMonthlyShopCount?: number;
 }) {
   const [state, setState] = useState<StoreState | null>(null);
   const [revision, setRevision] = useState(0);
@@ -469,17 +508,19 @@ export function AddonStore({
     });
   const install = (product: StoreProduct) =>
     run(async () => {
-      setState(await request<StoreState>(url, jsonInit("POST", { action: "install", product: product.id })));
+      const next = await request<StoreState>(url, jsonInit("POST", { action: "install", product: product.id }));
+      setState(next);
       setRevision((value) => value + 1);
       setNotice(`${product.name} est installé. Vous pouvez l’activer quand vous le souhaitez.`);
-      if (product.id === earthTrackerProduct || product.kind === "estimation") await onLicensesChanged?.();
+      await onLicensesChanged?.(next);
     });
   const setInstallation = (product: StoreProduct, installed: boolean) =>
     run(async () => {
-      setState(await request<StoreState>(url, jsonInit("POST", { action: "set-installation", product: product.id, installed })));
+      const next = await request<StoreState>(url, jsonInit("POST", { action: "set-installation", product: product.id, installed }));
+      setState(next);
       setRevision((value) => value + 1);
       setNotice(installed ? `${product.name} est réinstallé sans nouveau paiement.` : `${product.name} est désinstallé ; votre droit d’accès est conservé.`);
-      if (product.id === earthTrackerProduct || product.kind === "estimation") await onLicensesChanged?.();
+      await onLicensesChanged?.(next);
     });
   const buy = (product: StoreProduct) =>
     run(async () => {
@@ -524,18 +565,20 @@ export function AddonStore({
     const allOwned = state.products.filter((product) =>
       isOwned(state.licenses.find((license) => license.product_id === product.id)),
     );
-    const owned = allOwned.filter((product) => product.kind === "loading_screen");
-    const tools = allOwned.filter((product) => product.kind !== "loading_screen");
+    const installedOwned = allOwned.filter((product) => isInstalled(state, product.id));
+    const uninstalled = allOwned.filter((product) => !isInstalled(state, product.id));
+    const owned = installedOwned.filter((product) => product.kind === "loading_screen");
+    const tools = installedOwned.filter((product) => product.kind !== "loading_screen");
     return (
       <section className="addon-store" aria-label="Mes écrans de chargement">
         {tools.length > 0 && (
-          <section aria-label="Mes outils d’analyse">
-            <h2>Mes outils d’analyse</h2>
+          <section aria-label="Mes outils">
+            <h2>Mes outils</h2>
             <div className="addon-grid">{tools.map(card)}</div>
           </section>
         )}
         <h2>Mes écrans de chargement</h2>
-        <p>Vos achats restent acquis : vous pouvez les réactiver gratuitement à tout moment.</p>
+        <p>{state.demo ? "Les modèles premium sont ouverts dans cette démo ; leur prix reste affiché dans la boutique." : "Vos achats restent acquis : vous pouvez les réactiver gratuitement à tout moment."}</p>
         {messages}
         {owned.length === 0 ? (
           <div className="card addon-empty">
@@ -550,10 +593,18 @@ export function AddonStore({
             <Customizer key={revision} state={state} busy={busy} onSave={(draft) => save(draft, state, "Écran de chargement enregistré pour toute l’équipe.")} />
           </>
         )}
+        {uninstalled.length > 0 && (
+          <section aria-label="Produits désinstallés">
+            <h2>À réinstaller</h2>
+            <p>Vos licences sont conservées et ne sont pas comptées parmi les add-ons installés.</p>
+            <div className="addon-grid">{uninstalled.map(card)}</div>
+          </section>
+        )}
       </section>
     );
   }
   const filtered = filterProducts(state.products, state.licenses, filters);
+  const counts = categoryCounts(state.products, state.licenses, filters, monthlyShopCount, pilotageMonthlyShopCount);
   const set = <K extends keyof StoreFilters>(key: K, value: StoreFilters[K]) =>
     onFiltersChange({ ...filters, [key]: value });
   const categories = [
@@ -570,6 +621,7 @@ export function AddonStore({
   return (
     <section className="addon-store" aria-label="Catalogue par catégorie">
       {messages}
+      {state.demo && <p role="status">Essai démo : les add-ons premium sont utilisables ici sans paiement. Sur un établissement réel, leur tarif reste applicable.</p>}
       <div className="addon-filters">
         <div role="group" aria-label="Catégories" className="addon-chips">
           {categories.map((category) => (
@@ -579,7 +631,7 @@ export function AddonStore({
               aria-pressed={filters.category === category.id}
               onClick={() => set("category", category.id)}
             >
-              {category.name}
+              {category.name} ({counts[category.id] ?? 0})
             </Button>
           ))}
         </div>
@@ -609,7 +661,7 @@ export function AddonStore({
             onChange={(event) => set("acquisition", event.target.value as StoreFilters["acquisition"])}
           >
             <option value="all">Tous</option>
-            <option value="owned">Possédés</option>
+            <option value="owned">{state.demo ? "Installés ou en essai" : "Possédés"}</option>
             <option value="not-owned">Non possédés</option>
           </select>
         </label>
@@ -621,27 +673,6 @@ export function AddonStore({
           <div className="addon-grid">{products.map(card)}</div>
         </section>
       ))}
-      {filters.category === "all" && filters.acquisition !== "owned" && filters.availability !== "available" && (
-        <section aria-label="Add-ons à venir" className="addon-roadmap">
-          <h2>À venir · composez votre espace par métier</h2>
-          <p>Ces idées donnent un aperçu des futures rubriques. Elles ne sont ni installables ni en vente pour le moment.</p>
-          {["Restauration", "BTP", "Coiffure", "Commerce", "Tous métiers"].map((industry) => (
-            <div key={industry}>
-              <h3>{industry}</h3>
-              <div className="addon-grid">
-                {plannedAddons.filter((addon) => addon.industry === industry).map((addon) => (
-                  <article className="card addon-card addon-planned" key={addon.id} aria-label={addon.name}>
-                    <div className="addon-card-head"><h4>{addon.name}</h4><span className="addon-badge">À venir</span></div>
-                    <p>{addon.description}</p>
-                    <p><strong>Future rubrique :</strong> {addon.destination}</p>
-                    <p className="addon-hint">Disponibilité et tarif à définir.</p>
-                  </article>
-                ))}
-              </div>
-            </div>
-          ))}
-        </section>
-      )}
     </section>
   );
 }

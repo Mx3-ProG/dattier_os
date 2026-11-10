@@ -24,7 +24,15 @@ const arranged = [
   ...legacy.filter((entry) => entry.id !== "addons" && entry.group === "PILOTAGE"),
   { id: "audience", name: "Statistiques du site", group: "PILOTAGE", icon: "Earth", permission: "analytics" as Permission },
   { id: "estimation", name: "Estimation", group: "PILOTAGE", icon: "Calculator", permission: "analytics" as Permission },
-  ...legacy.filter((entry) => entry.id !== "addons" && entry.group !== "PILOTAGE"),
+  { id: "prospect-scanner", name: "Scanner de prospects", group: "PILOTAGE", icon: "Activity", permission: "analytics" as Permission },
+  { id: "pipeline-crm", name: "Pipeline CRM", group: "PILOTAGE", icon: "ClipboardList", permission: "analytics" as Permission },
+  { id: "customer-health", name: "Customer Health", group: "PILOTAGE", icon: "Heart", permission: "customers" as Permission },
+  // Les outils métier se placent à la fin du groupe Gestion, après Livraisons.
+  ...legacy.filter((entry) => entry.id !== "addons" && entry.group !== "PILOTAGE").flatMap((entry) =>
+    entry.id === "deliveries"
+      ? [entry, { id: "trade-tools", name: "Outils métier", group: "GESTION", icon: "ClipboardCheck", permission: null }]
+      : [entry],
+  ),
   legacy.find((entry) => entry.id === "addons")!,
 ];
 test("navigation preserves existing entries and moves addons to the final Configuration group", () => {
@@ -47,14 +55,14 @@ test("navigation requires each independent paid add-on as well as the member rol
     ["CHEF", "ACCOUNTANT"],
     ["WAITER", "MANAGER"],
   ];
-  const paid: Record<string,string> = { qr:"qr", attendance:"attendance", hr:"attendance", billing:"client-invoices", invoices:"invoices", payroll:"payroll", customers:"loyalty" };
+  const paid: Record<string,string> = { qr:"qr", attendance:"attendance", hr:"attendance", billing:"client-invoices", invoices:"invoices", payroll:"payroll", customers:"loyalty", "prospect-scanner":"prospect-scanner", "pipeline-crm":"pipeline-crm", "customer-health":"customer-health" };
   for (const profile of profiles)
     for (const plan of [-1, 0, 39])
       for (const addons of [[], ["invoices"], ["bank"], ["invoices", "bank"]]) {
         const expected = arranged
           .filter(
             (m) =>
-              !["audience", "estimation"].includes(m.id) &&
+              !["audience", "estimation", "trade-tools"].includes(m.id) &&
               (!paid[m.id] || addons.includes(paid[m.id])) &&
               (!m.permission ||
               ((plan >= 39 ||
@@ -131,4 +139,10 @@ test("suspended floor and table booking disappear from navigation", () => {
   assert.equal(entries.some((entry) => entry.id === "dining"), false);
   assert.equal(entries.some((entry) => entry.id === "reservations"), false);
   assert.equal(entries.some((entry) => entry.id === "orders"), true);
+});
+
+test("outils métier : l’entrée n’apparaît qu’avec au moins un outil installé", () => {
+  const ids = (licenses: string[]) => workspaceNavigation.resolve({ roles: "WAITER", plan: 39, addons: [], licenses }).map((entry) => entry.id);
+  assert.equal(ids([]).includes("trade-tools"), false);
+  assert.equal(ids(["site-planning", "trade-tools"]).includes("trade-tools"), true);
 });

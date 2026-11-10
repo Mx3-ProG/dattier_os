@@ -4,9 +4,9 @@
 
 ## Périmètre livré
 
-Premier add-on raccordé : **Factures fournisseurs**, 9 € HT/mois par établissement. Les offres 69/99 le comprennent toujours. Un propriétaire d'organisation au forfait 39 peut ouvrir Checkout depuis le dashboard si la configuration serveur est prête. Les autres cartes restent non achetables : leur raccordement indépendant n'est pas terminé. Aucun débit en production n'est autorisé.
+Premier add-on raccordé : **Factures fournisseurs**, 9 € TTC/mois par établissement. Les offres 69/99 le comprennent toujours. Un propriétaire d'organisation au forfait 39 peut ouvrir Checkout depuis le dashboard si la configuration serveur est prête. Les autres cartes restent non achetables : leur raccordement indépendant n'est pas terminé. Aucun débit en production n'est autorisé.
 
-Une commande persistante précède Checkout. Une contrainte empêche plusieurs commandes ouvertes pour le même add-on/établissement. Le prix vient d'un Price Stripe côté serveur, vérifié : 900 centimes, EUR, mensuel, quantité 1, TVA exclusive, test. Stripe Tax est activé ; configurer ses paramètres dans le compte de test. La page de retour ne donne aucun droit.
+Une commande persistante précède Checkout. Une contrainte empêche plusieurs commandes ouvertes pour le même add-on/établissement. Le prix vient d'un Price Stripe côté serveur, vérifié : 900 centimes TTC, EUR, mensuel, quantité 1, TVA incluse, test. Stripe Tax est activé ; configurer ses paramètres dans le compte de test. La page de retour ne donne aucun droit.
 
 Le webhook vérifie la signature, refuse les événements réels et relit l'état Stripe actuel sous verrou de la commande pour éviter les doubles activations et les notifications désordonnées. L'échéance est stockée ; sans renouvellement confirmé, l'accès expire. Le chargement du catalogue par un administrateur réconcilie également les commandes en attente/actives. Un clic de résiliation arrête le renouvellement à la fin de la période payée.
 
@@ -16,7 +16,7 @@ L'accès Factures fournisseurs conserve le cadrage d'établissement et la permis
 
 - `STUDIO_BILLING_STRIPE_SECRET_KEY` : clé Stripe test uniquement.
 - `STUDIO_BILLING_STRIPE_WEBHOOK_SECRET` : signature du endpoint `/api/webhooks/addons`.
-- `STUDIO_ADDON_INVOICES_PRICE_ID` : Price test mensuel de 9 € HT avec TVA exclusive.
+- `STUDIO_ADDON_INVOICES_PRICE_ID` : Price test mensuel de 9 € TTC avec TVA incluse.
 - `STUDIO_BILLING_DATABASE_URL` : connexion dédiée de réconciliation, **pas** le rôle de l'application ordinaire.
 - `APP_URL` : origine de l'application.
 

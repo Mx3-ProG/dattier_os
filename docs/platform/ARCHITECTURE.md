@@ -49,3 +49,7 @@ Les mutations produisent des événements sans données clients détaillées. Le
 Les processus applicatifs sont réplicables grâce au pool, aux transactions et aux tâches persistantes. Le registre `organization_placements` prépare la localisation des organisations ; le routage vers plusieurs clusters et le déplacement en ligne ne sont pas implémentés. L’installation de référence reste sur un hôte. Toute promesse de capacité nécessite un test HTTP et métier représentatif, une analyse des coûts et des procédures d’exploitation. Les tâches de fond tournent dans trois groupes de workers, voir [WORKER_GROUPS.md](WORKER_GROUPS.md).
 
 Le contexte de transaction et le contexte de journalisation utilisent chacun un singleton AsyncLocalStorage partagé entre les bundles de routes Next.js. Les services CMS et sécurité exécutent aussi les politiques RLS en démonstration au moyen du rôle non propriétaire `atacuisine_app`. Les relations incident/correction/événement portent une contrainte composite d’établissement.
+
+## Feuille de route
+
+Découpage Core / Modules, diagnostic cache, files de tâches, indexation, IA et renommage Restaurant → Commerce : [CORE-ET-MODULES.md](CORE-ET-MODULES.md).

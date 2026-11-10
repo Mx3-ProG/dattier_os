@@ -1,6 +1,7 @@
 import { AsyncLocalStorage } from "node:async_hooks";
 export type DatabaseContext = {
   userId?: string;
+  /** Business (tenant) isolated by RLS. Historic name, see src/core/tenant/business.ts. */
   restaurantId?: string;
   public?: boolean;
   customerId?: string;

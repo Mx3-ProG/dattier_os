@@ -211,6 +211,14 @@ export const sectionProps = {
   promoBanner: z.object({ text: text(200), link: linkSchema }),
   categories: z.object({ kicker: text(80), title: text(160) }),
   hours: z.object({ title: text(120), note: text(160) }),
+  /* Sections d’add-ons : affichées seulement si l’add-on est installé. */
+  estimation: z.object({ kicker: text(80), title: text(160), lead: text(400), buttonLabel: text(60) }),
+  loyalty: z.object({ kicker: text(80), title: text(160), lead: text(400), perks: z.array(text(120)).max(6), buttonLabel: text(60) }),
+  reservation: z.object({ kicker: text(80), title: text(160), lead: text(400), buttonLabel: text(60) }),
+  allergens: z.object({ kicker: text(80), title: text(160), lead: text(400) }),
+  delivery: z.object({ kicker: text(80), title: text(160), lead: text(400), checker: z.boolean() }),
+  bundles: z.object({ kicker: text(80), title: text(160), lead: text(400) }),
+  services: z.object({ kicker: text(80), title: text(160), lead: text(400), buttonLabel: text(60), buttonLink: text(300) }),
   /** Additional text on a legal page. The mandatory legal text stays in code. */
   legal: z.object({ extra: z.array(text(2000)).max(10) }),
   /** Functional blocks rendered by existing code. Never editable from the CMS. */
@@ -379,6 +387,16 @@ export const siteConfigSchema = z.object({
     email: text(150),
     announcement: text(120),
     announcementHighlight: text(60),
+    /** Écran de chargement du site public (add-on acquis), absent = aucun. */
+    loader: z.object({ product: z.string().max(64).nullable() }).optional(),
+    /** Décoration visuelle du site public (add-on acquis), absente par défaut. */
+    decoration: z.object({ product: z.string().max(64).nullable() }).optional(),
+    /** Fond de page acquis pour cet établissement, absent = thème normal. */
+    background: z.object({ product: z.string().max(64).nullable() }).optional(),
+    /** Page 404 du site : modèle (add-on acquis) et textes. Absent = modèle par défaut. */
+    notFound: z
+      .object({ product: z.string().max(64).nullable(), title: text(120), message: text(400), button: text(60) })
+      .optional(),
   }),
   theme: themeSchema,
   seo: z.object({

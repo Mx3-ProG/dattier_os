@@ -6,6 +6,7 @@ import { seed } from "./seed";
 import type { Database, DB } from "./types";
 export type { DB } from "./types";
 import { DemoDatabase } from "./demo";
+import { grantDemoAddons } from "./demo-addons";
 import { PostgresDatabase } from "./postgres";
 export async function rows<T>(
   db: DB,
@@ -35,7 +36,7 @@ export async function assertLeastPrivilege(db: PostgresDatabase, label: string) 
     );
   }
 }
-const globalDb = globalThis as unknown as { atacuisineDb?: Promise<Database> };
+const globalDb = globalThis as unknown as { atacuisineDb?: Promise<Database>; demoAddonGrantsVersion?: number };
 export function demoEnabled() {
   return process.env.ATACUISINE_DEMO === "true" && !process.env.VERCEL;
 }
@@ -84,7 +85,7 @@ export async function getDb(): Promise<Database> {
           await applyMigrations(tx);
           await seed(tx);
         });
-      }
+      } else await migrate(db);
       return new DemoDatabase(db);
     })().catch((error) => {
       globalDb.atacuisineDb = undefined;
@@ -92,5 +93,9 @@ export async function getDb(): Promise<Database> {
     });
   const db = await globalDb.atacuisineDb;
   await migrate(db);
+  if (globalDb.demoAddonGrantsVersion !== 1) {
+    await db.transaction(grantDemoAddons);
+    globalDb.demoAddonGrantsVersion = 1;
+  }
   return db;
 }

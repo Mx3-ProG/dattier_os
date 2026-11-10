@@ -13,6 +13,7 @@ export default async function Page({
     <RestaurantHub
       restaurant={restaurant}
       restaurantName={access.restaurantName}
+      activity={access.activity}
       plan={access.plan}
       userRoles={access.roles}
       addons={access.addons}

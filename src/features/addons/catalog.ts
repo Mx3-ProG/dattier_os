@@ -1,4 +1,12 @@
 export const addonMonthlyCents = 900;
+export const monthlyAddonIds = ["invoices","attendance","client-invoices","payroll","offline-conflicts","connections","qr","loyalty","domain","prospect-scanner","pipeline-crm","customer-health"] as const;
+export type MonthlyAddonId = (typeof monthlyAddonIds)[number];
+export const pilotageAddonPrices = {
+  "prospect-scanner": 6900,
+  "pipeline-crm": 6900,
+  "customer-health": 8900,
+} as const;
+export const addonPriceCents = (id: string) => pilotageAddonPrices[id as keyof typeof pilotageAddonPrices] ?? addonMonthlyCents;
 export const addonCatalog = [
   {
     id: "floor",
@@ -43,6 +51,9 @@ export const addonCatalog = [
   { id: "connections", name: "Connexions", description: "Suivi des intégrations externes.", includedFrom: null, usage: false },
   { id: "qr", name: "QR codes", description: "Création et suivi de QR codes.", includedFrom: null, usage: false },
   { id: "domain", name: "Domaine personnalisé", description: "Publiez votre site sur votre propre nom de domaine.", includedFrom: null, usage: false },
+  { id: "prospect-scanner", name: "Scanner de prospects", description: "Recherchez et qualifiez des entreprises avec un score et la provenance des données.", includedFrom: null, usage: false },
+  { id: "pipeline-crm", name: "Pipeline CRM", description: "Suivez entreprises, opportunités, tâches et étapes de vente de A à Z.", includedFrom: null, usage: false },
+  { id: "customer-health", name: "Customer Health", description: "Suivez engagement, fréquence d’achat et valeur vie client à partir des ventes réelles.", includedFrom: null, usage: false },
   {
     id: "online-orders",
     name: "Boutique en ligne",
@@ -179,6 +190,9 @@ export const addonDetails: Record<
   connections: { target: "settings", action: "Ouvrir les connexions", features: ["Suivre les intégrations externes."], example: "Vérifier une connexion de caisse." },
   domain: { target: "site", action: "Ouvrir mon site web", features: ["Relier votre propre nom de domaine au site.", "Vérifier le domaine par DNS.", "Choisir le domaine principal de votre site."], example: "Publier votre site sur www.votre-restaurant.fr." },
   qr: { target: "qr", action: "Ouvrir les QR codes", features: ["Créer et consulter les QR codes."], example: "Créer un QR code pour une table." },
+  "prospect-scanner": { target: "prospect-scanner", action: "Ouvrir le scanner", features: ["Chercher des entreprises par activité, ville et rayon.", "Consulter les sources et les signaux du score.", "Qualifier les prospects puis les transférer au CRM."], example: "Repérer des entreprises proches d’un nouveau point de vente." },
+  "pipeline-crm": { target: "pipeline-crm", action: "Ouvrir le pipeline", features: ["Suivre les entreprises et les opportunités.", "Déplacer chaque affaire dans ses étapes de vente.", "Planifier les relances et conserver les activités."], example: "Passer une proposition commerciale en négociation et programmer un rappel." },
+  "customer-health": { target: "customer-health", action: "Ouvrir Customer Health", features: ["Voir l’activité et la valeur vie de chaque client.", "Comparer les périodes et repérer les clients inactifs.", "Visualiser les tendances sans inventer de données manquantes."], example: "Repérer les clients fidèles dont les achats ralentissent." },
 };
 /** UI shortcut only: both ownership and current workspace visibility are required. */
 export function addonDestination(

@@ -47,7 +47,7 @@ export default async function Page({ params }: { params: Promise<{ plan: string 
         <aside className="access-hero">
           <span className="access-label">Votre abonnement</span>
           <h1>{offer.title}</h1>
-          <p className="access-price"><strong>{offer.price} €</strong> HT / mois</p>
+          <p className="access-price"><strong>{offer.price} €</strong> TTC / mois</p>
           <p>3 jours d’essai gratuits dès la création de votre espace. Aucun paiement initial. Sans engagement.</p>
           <p>{offer.description}</p>
           <p>Premier établissement inclus.</p>
@@ -62,9 +62,9 @@ export default async function Page({ params }: { params: Promise<{ plan: string 
           {user ? (
             <>
               <span className="access-label">Connecté en tant que {user.name}</span>
-              <h2>Créer votre espace de commerce</h2>
+              <h2>Créer votre espace professionnel</h2>
               <p>Votre essai démarre à la création de l’espace et dure 3 jours. Après l’essai, l’abonnement payant est activé manuellement. Aucun prélèvement automatique ne démarre à la fin de l’essai. Vous pouvez arrêter l’essai ou résilier depuis votre espace à tout moment.</p>
-              <SubscriptionForm plan={offer.price} />
+              <SubscriptionForm plan={offer.price} userName={user.name} userEmail={user.email} />
             </>
           ) : (
             <>

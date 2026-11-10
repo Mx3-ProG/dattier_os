@@ -10,6 +10,7 @@ import { LoyaltyPanel } from "./loyalty-panel";
 import type { Settings } from "@/features/commerce/schema";
 import { can, roleLabels, type Role } from "@/lib/permissions";
 import { availableRestaurantModules, type RestaurantModuleId } from "@/features/platform/admin-navigation";
+import { industries, industryLabels, trades, type Industry } from "@/features/onboarding/catalog";
 import { RestaurantAdminShell } from "./restaurant-admin-shell";
 type Member = { id: string; name: string; email: string; role: string };
 type ShopOrder = {
@@ -33,12 +34,14 @@ const roleOptions = [
 export function RestaurantHub({
   restaurant,
   restaurantName,
+  activity,
   plan,
   userRoles,
   addons,
 }: {
   restaurant: string;
   restaurantName: string;
+  activity: { industry: Industry; trade: string; trade_detail: string };
   plan: number;
   userRoles: Role[];
   addons: string[];
@@ -47,8 +50,8 @@ export function RestaurantHub({
   const searchParams = useSearchParams();
   const [refreshVersion, setRefreshVersion] = useState(0);
   const accessibleTabs = useMemo(
-    () => availableRestaurantModules(userRoles, plan, addons),
-    [plan, userRoles, addons],
+    () => availableRestaurantModules(userRoles, plan, addons, activity.industry),
+    [plan, userRoles, addons, activity.industry],
   );
   const requestedTab = searchParams.get("module");
   const initialTab = accessibleTabs.some((module) => module.id === requestedTab)
@@ -62,6 +65,9 @@ export function RestaurantHub({
     [email, setEmail] = useState(""),
     [roles, setRoles] = useState(["WAITER"]),
     [invite, setInvite] = useState(""),
+    [activityIndustry,setActivityIndustry]=useState<Industry>(activity.industry),
+    [activityTrade,setActivityTrade]=useState(activity.trade),
+    [activityDetail,setActivityDetail]=useState(activity.trade_detail),
     [domain, setDomain] = useState(""),
     [stock, setStock] = useState<{
       ingredients: { id: string; name: string; unit: string }[];
@@ -159,11 +165,12 @@ export function RestaurantHub({
     <RestaurantAdminShell
       restaurant={restaurant}
       restaurantName={restaurantName}
+      industry={activity.industry}
       plan={plan}
       userRoles={userRoles}
       addons={addons}
       activeModule={tab as RestaurantModuleId}
-      pageTitle="Administration du restaurant"
+      pageTitle="Administration de l’établissement"
       contentClassName="platform"
     >
       <div className="platform-admin-content">
@@ -210,6 +217,25 @@ export function RestaurantHub({
         <>
           {tab === "team" && (
             <>
+              {userRoles.includes("OWNER") && <section>
+                <h2>Activité de l’établissement</h2>
+                <form onSubmit={(event)=>{
+                  event.preventDefault();
+                  void fetch("/api/platform",{method:"POST",headers:{"Content-Type":"application/json"},
+                    body:JSON.stringify({action:"activity",restaurant,activity:{industry:activityIndustry,trade:activityTrade,tradeDetail:activityDetail}})})
+                    .then(async(response)=>{const body=await response.json();if(!response.ok)throw new Error(body.error?.message||"Modification impossible.");window.location.reload();})
+                    .catch((cause)=>setError(cause instanceof Error?cause.message:"Modification impossible."));
+                }}>
+                  <label>Famille d’activité<select value={activityIndustry} onChange={(e)=>{
+                    const next=e.target.value as Industry;setActivityIndustry(next);setActivityTrade(trades[next][0]);setActivityDetail("");
+                  }}>{industries.map((item)=><option key={item} value={item}>{industryLabels[item]}</option>)}</select></label>
+                  <label>Métier<select value={activityTrade} onChange={(e)=>setActivityTrade(e.target.value)}>{trades[activityIndustry].map((item)=><option key={item}>{item}</option>)}</select></label>
+                  {activityTrade.startsWith("Autre")&&<label>Précisez votre activité<input required value={activityDetail} onChange={(e)=>setActivityDetail(e.target.value)}/></label>}
+                  <button>Enregistrer l’activité</button>
+                </form>
+                <p><Link href={"/restaurant/"+restaurant+"/import-clients"}>Importer des clients depuis un CSV</Link></p>
+                <p>Changer d’activité masque les anciens outils métier ; leurs données restent conservées.</p>
+              </section>}
               <section>
                 <h2>Inviter un collaborateur</h2>
                 <form
@@ -229,7 +255,8 @@ export function RestaurantHub({
                   </label>
                   <fieldset className="admin-role-options">
                     <legend>Rôles dans cet établissement</legend>
-                    {roleOptions.map((role) => (
+                    {(activity.industry === "restaurant" ? roleOptions :
+                      ["OWNER","MANAGER","WAITER","STOCK_MANAGER","PURCHASING","ACCOUNTANT"]).map((role) => (
                       <label className="inline" key={role}>
                         <input
                           type="checkbox"
@@ -242,7 +269,7 @@ export function RestaurantHub({
                             )
                           }
                         />
-                        {roleLabels[role as Role]}
+                        {role === "WAITER" && activity.industry !== "restaurant" ? "Collaborateur" : roleLabels[role as Role]}
                       </label>
                     ))}
                   </fieldset>

@@ -17,9 +17,10 @@ test("required dependencies are included once; optional dependencies are not pur
   assert.deepEqual(registry.resolve(["a", "b"]), ["b", "a"]);
   assert.deepEqual(registry.dependents("b", ["a", "b", "c"]), ["a"]);
 });
-test("floor suspension identifies visual booking; consumers cannot mutate registry", () => {
-  assert.deepEqual(moduleRegistry.resolve(["table-booking"]), ["floor", "table-booking"]);
-  assert.deepEqual(moduleRegistry.dependents("floor", ["floor", "table-booking"]), ["table-booking"]);
+test("bookings no longer require the floor plan; consumers cannot mutate registry", () => {
+  // Depuis la migration 100 : le plan de salle enrichit les réservations sans être requis.
+  assert.deepEqual(moduleRegistry.resolve(["table-booking"]), ["table-booking"]);
+  assert.deepEqual(moduleRegistry.dependents("floor", ["floor", "table-booking"]), []);
   const snapshot = moduleRegistry.list();
   snapshot[0].label = "changed";
   assert.equal(moduleRegistry.list()[0].label, "Salle");

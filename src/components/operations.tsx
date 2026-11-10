@@ -425,7 +425,12 @@ export function OrderList({
                     <Badge status={i.status} />
                   </div>
                   <div className="item-actions">
-                    {i.status === "ready" && o.status === "active" && (
+                    {o.status === "active" &&
+                      (i.status === "ready" ||
+                        // Sans module Cuisine ou Bar : service direct depuis « en attente ».
+                        (i.status === "waiting" &&
+                          !!data.modules &&
+                          !data.modules.includes(i.station === "bar" ? "bar" : "kitchen"))) && (
                       <Button
                         variant="secondary"
                         onClick={() =>

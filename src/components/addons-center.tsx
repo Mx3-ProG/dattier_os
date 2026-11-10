@@ -5,11 +5,17 @@ import {
   addonCollections,
   addonDetails,
   addonDestination,
-  addonMonthlyCents,
+  addonPriceCents,
+  monthlyAddonIds,
 } from "@/features/addons/catalog";
 import {
   defaultStoreFilters,
   featuresVisible,
+  installedAddonCount,
+  pilotageCategoryId,
+  pilotageMonthlyAddonIds,
+  featuresCategoryId,
+  type StoreState,
 } from "@/features/addons/store-catalog";
 
 import { Button } from "./ui/button";
@@ -57,6 +63,7 @@ export function AddonsCenter({
     readyAddons: string[];
     legacyGrants: string[];
     admin: boolean;
+    demo: boolean;
     subscriptions: {
       addon: string;
       status: string;
@@ -64,6 +71,7 @@ export function AddonsCenter({
       renewal_cancelled?: boolean | null;
     }[];
     installations: { addon_id: string; installed: boolean }[];
+    storeLicenses: { product_id: string; status: "active" | "disputed" | "revoked"; valid_until: string | null }[];
   } | null>(null);
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
@@ -265,10 +273,49 @@ export function AddonsCenter({
     finally { setBusy(false); }
   }
   const [filters, setFilters] = useState(defaultStoreFilters);
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    const timer = setInterval(() => setNow(Date.now()), 60_000);
+    return () => clearInterval(timer);
+  }, []);
   const collections = state
-    ? addonCollections(state.plan ?? plan, state.subscriptions, Date.now(), state.legacyGrants)
+    ? addonCollections(state.plan ?? plan, state.subscriptions, now, state.legacyGrants)
     : null;
-  const entries = view === "owned" ? collections?.owned : collections?.shop;
+  const installedCount = installedAddonCount(
+    collections?.owned.map((addon) => addon.id) ?? [],
+    state?.storeLicenses ?? [],
+    state?.installations ?? [],
+    now,
+  );
+  const isLegacyInstalled = (id: string) =>
+    state?.installations?.find((entry) => entry.addon_id === id)?.installed !== false;
+  const monthlyShopEntries = collections
+    ? state?.demo
+      ? [...collections.shop, ...collections.owned.filter((addon) => monthlyAddonIds.some((id) => id === addon.id))]
+      : collections.shop
+    : [];
+  const entries = view === "owned"
+    ? collections?.owned.filter((addon) => isLegacyInstalled(addon.id))
+    : monthlyShopEntries.filter((addon) =>
+        filters.category === "all" ||
+        (filters.category === pilotageCategoryId && pilotageMonthlyAddonIds.has(addon.id)) ||
+        (filters.category === featuresCategoryId && !pilotageMonthlyAddonIds.has(addon.id)),
+      );
+  const uninstalledEntries = view === "owned"
+    ? collections?.owned.filter((addon) => !isLegacyInstalled(addon.id)) ?? []
+    : [];
+  const handleStoreChange = async (next: StoreState) => {
+    setState((current) => current ? {
+      ...current,
+      installations: next.installations,
+      storeLicenses: next.licenses.map((license) => ({
+        product_id: license.product_id,
+        status: license.status,
+        valid_until: license.valid_until ?? null,
+      })),
+    } : current);
+    await onModulesChanged();
+  };
   return (
     <section aria-label="Gestion des add-ons">
       {error && <p role="alert">{error}</p>}
@@ -288,7 +335,7 @@ export function AddonsCenter({
           aria-pressed={view === "owned"}
           onClick={() => setView("owned")}
         >
-          Mes add-ons{collections ? ` (${collections.owned.length})` : ""}
+          Mes add-ons{collections ? ` (${installedCount})` : ""}
         </Button>
         <Button
           variant={view === "shop" ? "default" : "secondary"}
@@ -313,7 +360,9 @@ export function AddonsCenter({
           onFiltersChange={setFilters}
           onOpenShop={() => setView("shop")}
           onOpenModule={navigate}
-          onLicensesChanged={onModulesChanged}
+          monthlyShopCount={monthlyShopEntries.length}
+          pilotageMonthlyShopCount={monthlyShopEntries.filter((addon) => pilotageMonthlyAddonIds.has(addon.id)).length}
+          onLicensesChanged={handleStoreChange}
         />
       )}
       {view !== "credits" && (view === "owned" || featuresVisible(filters)) ? (
@@ -323,16 +372,13 @@ export function AddonsCenter({
           <h2>{view === "owned" ? "Mes add-ons" : "Boutique d’add-ons"}</h2>
           <p>
             {view === "owned"
-              ? "Les fonctionnalités incluses dans votre forfait et vos abonnements actifs. L’accès de chaque membre dépend de ses permissions."
-              : "Les fonctionnalités qui ne sont pas encore incluses ou actives pour cet établissement."}
+              ? state?.demo ? "Les add-ons de la démo sont utilisables sans paiement. L’accès de chaque membre dépend de ses permissions." : "Les fonctionnalités incluses dans votre forfait et vos abonnements actifs. L’accès de chaque membre dépend de ses permissions."
+              : state?.demo ? "Explorez les add-ons avec un accès de démonstration. Leur tarif commercial reste indiqué sur chaque fiche." : "Les fonctionnalités qui ne sont pas encore incluses ou actives pour cet établissement."}
           </p>
           {view === "shop" && (
             <p>
-              <strong>
-                {addonMonthlyCents / 100} € HT / mois par add-on supplémentaire.
-              </strong>{" "}
-              Par établissement. Les achats ouvrent progressivement ; le
-              paiement est disponible en mode test pour les modules configurés.
+              <strong>Tarif mensuel TTC indiqué sur chaque add-on.</strong>{" "}
+              {state?.demo ? "Ces abonnements sont utilisables dans la démo sans paiement. Sur un établissement réel, leur tarif reste applicable." : "Par établissement. Les achats ouvrent progressivement ; le paiement est disponible en mode test pour les modules configurés."}
             </p>
           )}
           {!collections && (
@@ -386,7 +432,7 @@ export function AddonsCenter({
                   <h3>{addon.name}</h3>
                   <p>{addon.description}</p>
                   {(addon.included || addon.active) && (
-                    <p><strong>{installed ? "Installé" : "Désinstallé"}</strong> · {addon.validUntil ? `accès valable jusqu’au ${new Date(addon.validUntil).toLocaleDateString("fr-FR")}` : "accès inclus dans le forfait"}</p>
+                    <p><strong>{installed ? "Installé" : "Désinstallé"}</strong> · {state?.demo && monthlyAddonIds.some((id) => id === addon.id) ? "accès d’essai démo" : addon.validUntil ? `accès valable jusqu’au ${new Date(addon.validUntil).toLocaleDateString("fr-FR")}` : "accès inclus dans le forfait"}</p>
                   )}
                   {state?.admin && (addon.included || addon.active) && (
                     <Button variant="secondary" disabled={busy} onClick={() => void setInstallation(addon.id, !installed)}>
@@ -468,13 +514,15 @@ export function AddonsCenter({
                     )}
                   <p>
                     <strong>
-                      {addon.included
+                      {state?.demo && monthlyAddonIds.some((id) => id === addon.id)
+                        ? `Essai démo · ${addonPriceCents(addon.id) / 100} € TTC / mois hors démo`
+                        : addon.included
                         ? state?.legacyGrants.includes(addon.id) ? "Accès historique conservé" : "Inclus dans votre forfait"
                         : addon.active
                           ? "Actif · abonnement de test"
                           : addon.pending
                             ? "Paiement de test en attente"
-                            : "9 € HT / mois"}
+                            : `${addonPriceCents(addon.id) / 100} € TTC / mois`}
                     </strong>
                   </p>
                   {destination && (
@@ -607,6 +655,24 @@ export function AddonsCenter({
               );
             })}
           </div>
+          {uninstalledEntries.length > 0 && (
+            <section aria-label="Add-ons désinstallés">
+              <h3>À réinstaller</h3>
+              <p>Ces add-ons restent acquis et ne sont pas comptés parmi les add-ons installés.</p>
+              <ul>
+                {uninstalledEntries.map((addon) => (
+                  <li key={addon.id}>
+                    {addon.name}{" "}
+                    {state?.admin && (
+                      <Button variant="secondary" disabled={busy} onClick={() => void setInstallation(addon.id, true)}>
+                        Réinstaller sans paiement
+                      </Button>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            </section>
+          )}
         </section>
       ) : view !== "credits" ? null : (
         <section aria-label="Crédits Studio">
@@ -644,6 +710,7 @@ export function AddonsCenter({
           filters={filters}
           onFiltersChange={setFilters}
           onOpenShop={() => setView("shop")}
+          onLicensesChanged={handleStoreChange}
         />
       )}
     </section>

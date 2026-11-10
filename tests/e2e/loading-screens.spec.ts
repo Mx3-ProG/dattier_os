@@ -26,15 +26,17 @@ async function asEmployee(browser: Browser, id: string) {
   return page;
 }
 
-test("catalogue : dix écrans animés, filtres, statuts et aucun achat possible sans Stripe", async ({ page }) => {
+test("catalogue : trente-huit écrans animés, filtres, statuts et aucun achat possible sans Stripe", async ({ page }) => {
   await login(page, "nadia");
   await openShop(page);
   const section = page.getByRole("region", { name: "Écrans de chargement" });
-  await expect(section.getByRole("article")).toHaveCount(10);
-  await expect(card(page, "Liquid Flow")).toContainText("5 € HT");
-  await expect(card(page, "Golden Luxury")).toContainText("9 € HT");
+  await expect(section.getByRole("article")).toHaveCount(38);
+  await expect(page.getByRole("button", { name: "Écrans de chargement (38)" })).toBeVisible();
+  await expect(card(page, "Liquid Flow")).toContainText("5 € TTC");
+  await expect(card(page, "Golden Luxury")).toContainText("9 € TTC");
+  await expect(card(page, "Tête de Père Noël")).toContainText("9 € TTC");
   await expect(card(page, "Golden Luxury")).toContainText("Vitesse, logo, message");
-  for (const name of ["Magic Loader", "Kitchen Loader", "Studio S", "Liquid Flow", "Neon Pulse", "Coffee Break", "Orbit Galaxy", "Infinity Loop", "Crystal Morph", "Golden Luxury"]) {
+  for (const name of ["Magic Loader", "Kitchen Loader", "Studio S", "Liquid Flow", "Neon Pulse", "Coffee Break", "Orbit Galaxy", "Infinity Loop", "Crystal Morph", "Golden Luxury", "Tête de Père Noël"]) {
     const article = card(page, name);
     await article.scrollIntoViewIfNeeded();
     await expect
@@ -48,11 +50,12 @@ test("catalogue : dix écrans animés, filtres, statuts et aucun achat possible 
       .toBeGreaterThan(0);
   }
   await page.getByLabel("Prix").selectOption("free");
-  await expect(section.getByRole("article")).toHaveCount(3);
+  await expect(section.getByRole("article")).toHaveCount(9);
+  await expect(page.getByRole("button", { name: "Écrans de chargement (9)" })).toBeVisible();
   await page.getByLabel("Prix").selectOption("all");
-  await page.getByRole("button", { name: "Fonctionnalités" }).click();
+  await page.getByRole("button", { name: /^Fonctionnalités \(/ }).click();
   await expect(section).toHaveCount(0);
-  await page.getByRole("button", { name: "Écrans de chargement" }).click();
+  await page.getByRole("button", { name: /^Écrans de chargement \(/ }).click();
   await expect(page.getByRole("region", { name: "Boutique d’add-ons", exact: true })).toHaveCount(0);
 });
 

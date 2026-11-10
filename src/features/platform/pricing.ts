@@ -7,15 +7,13 @@ export const plans = [
     price: basePlan,
     title: "Studio",
     description:
-      "Salle, réservations, commandes, carte, stocks, achats, équipe, site personnalisable, référencement, finances et rapports, boutique en ligne avec panier, créneaux et règlement au comptoir.",
+      "Un espace adapté à votre métier : équipe, site personnalisable, visibilité, pilotage et outils métier inclus selon votre activité. Les options payantes restent à votre choix.",
     features: [
-      "Salle et réservations",
-      "Commandes, carte et stocks",
-      "Achats et équipe",
+      "Espace et outils adaptés à votre métier",
+      "Gestion de l’équipe",
       "Site personnalisable et référencement",
-      "Finances et rapports",
-      "Boutique en ligne, panier et créneaux",
-      "Règlement au comptoir",
+      "Pilotage, finances et rapports",
+      "Fonctions métier incluses selon l’activité",
     ],
   },
 ] as const;

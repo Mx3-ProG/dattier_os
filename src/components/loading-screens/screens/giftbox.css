@@ -1,0 +1,10 @@
+.ls-giftbox { position: absolute; inset: 0; display: grid; place-items: center; }
+.ls-giftbox-body { position: absolute; top: 95px; width: 118px; height: 85px; border-radius: 7px 7px 13px 13px; background: linear-gradient(90deg, var(--ls-primary) 0 40%, var(--ls-secondary) 40% 55%, #ad2c3d 55%); box-shadow: 0 12px 20px #071d1b80; }
+.ls-giftbox-lid { position: absolute; top: 78px; width: 134px; height: 28px; z-index: 2; border-radius: 6px; background: linear-gradient(90deg, #d95761 0 43%, var(--ls-secondary) 43% 55%, #bb3446 55%); box-shadow: 0 5px 5px #071d1b33; animation: ls-giftbox-open calc(2.8s / var(--ls-speed)) ease-in-out infinite; transform-origin: 15% 90%; }
+.ls-giftbox-bow { position: absolute; top: 45px; z-index: 3; width: 62px; height: 35px; animation: ls-giftbox-open calc(2.8s / var(--ls-speed)) ease-in-out infinite; transform-origin: -50% 100%; }
+.ls-giftbox-bow i { position: absolute; top: 0; width: 35px; height: 26px; border: 7px solid var(--ls-secondary); border-radius: 80% 10% 80% 10%; transform: rotate(22deg); }
+.ls-giftbox-bow i:last-child { right: 0; transform: rotate(68deg); }
+.ls-giftbox-spark { position: absolute; width: 10px; height: 10px; background: var(--ls-secondary); transform: rotate(45deg); animation: ls-giftbox-spark calc(2.8s / var(--ls-speed)) ease-out infinite; }
+.ls-giftbox-spark.is-one { left: 34px; top: 65px; }.ls-giftbox-spark.is-two { right: 30px; top: 50px; animation-delay: .3s; }
+@keyframes ls-giftbox-open { 0%, 30%, 90%, 100% { transform: translateY(0) rotate(0); } 55%, 75% { transform: translate(-18px, -20px) rotate(-16deg); } }
+@keyframes ls-giftbox-spark { 0%, 30%, 100% { opacity: 0; scale: .4; } 55% { opacity: 1; scale: 1.2; } }

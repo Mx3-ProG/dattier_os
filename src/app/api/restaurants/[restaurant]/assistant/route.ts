@@ -14,6 +14,7 @@ import {
   packSchema,
   requestPack,
 } from "@/features/assistant/service";
+import { requireRestaurantIndustry } from "@/features/onboarding/access";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -25,7 +26,10 @@ async function routeGET(_req: NextRequest, c: Context) {
   try {
     const { restaurant } = await c.params;
     return json(
-      await authenticated(restaurant, (db) => assistantState(db, restaurant)),
+      await authenticated(restaurant, async (db) => {
+        await requireRestaurantIndustry(db,restaurant);
+        return assistantState(db, restaurant);
+      }),
     );
   } catch (e) {
     return failure(e);
@@ -40,11 +44,13 @@ async function routePOST(req: NextRequest, c: Context) {
     if (body?.kind === "pack") {
       const { pack } = packSchema.parse(body);
       return json(
-        await authenticated(restaurant, (db) =>
-          requestPack(db, restaurant, pack),
-        ),
+        await authenticated(restaurant, async (db) => {
+          await requireRestaurantIndustry(db,restaurant);
+          return requestPack(db, restaurant, pack);
+        }),
       );
     }
+    await authenticated(restaurant,(db)=>requireRestaurantIndustry(db,restaurant));
     return json(await ask(restaurant, askSchema.parse(body)));
   } catch (e) {
     return failure(e);
