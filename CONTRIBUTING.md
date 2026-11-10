@@ -1,4 +1,4 @@
-# Contribuer à Dattier OS
+# Contribuer à Studio OS
 
 Le code applicatif est sous AGPL-3.0-only. En proposant une contribution, vous confirmez disposer des droits nécessaires et acceptez sa distribution sous cette licence. Les notices tierces restent applicables.
 

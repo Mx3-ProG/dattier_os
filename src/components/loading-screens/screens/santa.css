@@ -1,0 +1,15 @@
+.ls-santa { overflow: visible; filter: drop-shadow(0 12px 18px #071d1a80); }
+.ls-santa-glow { fill: #f5d68a; opacity: .12; }
+.ls-santa-head { animation: ls-santa-bob calc(2.6s / var(--ls-speed)) ease-in-out infinite; transform-origin: 100px 108px; }
+.ls-santa-beard, .ls-santa-moustache, .ls-santa-trim, .ls-santa-pom { fill: var(--ls-secondary); }
+.ls-santa-face { fill: #efb794; }
+.ls-santa-nose { fill: #db8d7f; }
+.ls-santa-eye { fill: #2b2926; }
+.ls-santa-smile { fill: none; stroke: #a75051; stroke-width: 3; stroke-linecap: round; }
+.ls-santa-cap { fill: var(--ls-primary); }
+.ls-santa-hat { animation: ls-santa-hat calc(2.6s / var(--ls-speed)) ease-in-out infinite; transform-origin: 100px 85px; }
+.ls-santa-spark { fill: #f5d68a; animation: ls-santa-spark calc(1.7s / var(--ls-speed)) ease-in-out infinite alternate; }
+.ls-santa-spark.is-right { animation-delay: .7s; }
+@keyframes ls-santa-bob { 0%, 100% { transform: translateY(2px) rotate(-2deg); } 50% { transform: translateY(-5px) rotate(2deg); } }
+@keyframes ls-santa-hat { 0%, 100% { transform: rotate(-3deg); } 50% { transform: rotate(4deg); } }
+@keyframes ls-santa-spark { from { opacity: .25; transform: scale(.75); } to { opacity: 1; transform: scale(1.12); } }

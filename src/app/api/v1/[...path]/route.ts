@@ -1,3 +1,4 @@
+import { requirePlan } from "@/features/platform/entitlements";
 import { recordFailure } from "@/features/ops-security/http";
 import {
   withRequestContext,
@@ -13,7 +14,7 @@ import {
   rows,
   one,
 } from "@/lib/database/db";
-import { actor, isPlatformAdmin, login, scope } from "@/lib/auth/session";
+import { actor, login, scope } from "@/lib/auth/session";
 import { snapshot, menu } from "@/lib/snapshot";
 import {
   actionSchema,
@@ -29,8 +30,15 @@ import {
   dayQuery,
 } from "@/features/reservations/service";
 import { seed } from "@/lib/database/seed";
+import { requireRestaurantIndustry } from "@/features/onboarding/access";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
+/** Le tenant par défaut n'existe qu'en démonstration ; ailleurs il doit être demandé. */
+function tenant(value: unknown) {
+  if (typeof value === "string" && value) return value;
+  if (demoEnabled()) return "bernay";
+  throw new Error("Établissement requis.");
+}
 async function fail(e: unknown) {
   await recordFailure(e, {
     endpoint: requestContext()?.route || "/api/v1",
@@ -65,7 +73,7 @@ async function handleGet(req: NextRequest) {
       return NextResponse.json(
         await rows(
           db,
-          "SELECT p.* FROM profiles p WHERE EXISTS(SELECT 1 FROM memberships m WHERE m.profile_id=p.id) OR EXISTS(SELECT 1 FROM platform_admins a WHERE a.profile_id=p.id) ORDER BY p.id",
+          "SELECT p.* FROM profiles p WHERE EXISTS(SELECT 1 FROM memberships m WHERE m.profile_id=p.id) ORDER BY p.id",
         ),
       );
     if (endpoint === "reward") {
@@ -74,7 +82,7 @@ async function handleGet(req: NextRequest) {
       return NextResponse.json(
         await one(
           db,
-          "SELECT c.name,p.code,p.kind,p.value,p.expires_on,p.status,p.expires_on<CURRENT_DATE AS expired,r.name AS restaurant FROM promo_codes p JOIN customers c ON c.id=p.customer_id JOIN restaurants r ON r.id=p.restaurant_id WHERE p.token=$1",
+          "SELECT c.name,p.code,p.kind,p.value,p.expires_on,p.status,p.expires_on<CURRENT_DATE AS expired,r.name AS restaurant FROM promo_codes p JOIN customers c ON c.id=p.customer_id JOIN restaurants r ON r.id=p.restaurant_id WHERE p.token=$1 AND app.reward_plan_allowed(p.token)",
           [token],
         ),
         {
@@ -87,7 +95,9 @@ async function handleGet(req: NextRequest) {
     }
     if (endpoint === "calendar" || endpoint === "availability") {
       const params = Object.fromEntries(req.nextUrl.searchParams);
-      const r = params.restaurant || "bernay";
+      const r = tenant(params.restaurant);
+      await requirePlan(db, r, 39);
+      await requireRestaurantIndustry(db,r);
       return NextResponse.json(
         endpoint === "calendar"
           ? await calendar(db, r, calendarQuery.parse(params))
@@ -96,7 +106,8 @@ async function handleGet(req: NextRequest) {
       );
     }
     if (endpoint === "public") {
-      const r = req.nextUrl.searchParams.get("restaurant") || "bernay";
+      const r = tenant(req.nextUrl.searchParams.get("restaurant"));
+      await requirePlan(db, r, 39);
       return NextResponse.json({
         restaurants: await rows(
           db,
@@ -107,7 +118,7 @@ async function handleGet(req: NextRequest) {
       });
     }
     const user = await actor();
-    const r = req.nextUrl.searchParams.get("restaurant") || "bernay";
+    const r = tenant(req.nextUrl.searchParams.get("restaurant"));
     return NextResponse.json(
       await db.transaction((tx) => snapshot(tx, user, r)),
       { headers: { "Cache-Control": "no-store" } },
@@ -135,26 +146,30 @@ async function handlePost(req: NextRequest) {
     }
     if (endpoint === "reservation")
       return NextResponse.json({
-        id: await db.transaction((tx) =>
-          requestReservation(tx, reservationSchema.parse(body)),
-        ),
+        id: await db.transaction(async (tx) => {
+          const reservation = reservationSchema.parse(body);
+          await requirePlan(tx, reservation.restaurant, 39);
+          await requireRestaurantIndustry(tx,reservation.restaurant);
+          return requestReservation(tx, reservation);
+        }),
       });
     if (endpoint === "public-order") {
       const data = orderSchema.parse(body);
       if (data.channel === "staff") throw new Error("Canal non autorisé.");
       return NextResponse.json({
-        id: await db.transaction((tx) => createOrder(tx, data, null)),
+        id: await db.transaction(async(tx) => {
+          await requireRestaurantIndustry(tx,data.restaurant);
+          return createOrder(tx,data,null);
+        }),
       });
     }
     const user = await actor();
     if (endpoint === "reset") {
       if (!demoEnabled()) throw new Error("Réinitialisation non autorisée.");
-      // Resetting wipes every structure: platform administrators only.
-      if (!(await isPlatformAdmin(db, user.id)))
-        throw new Error(
-          "Réinitialisation réservée au Super Admin : accès refusé.",
-        );
-      if (body.confirm !== "RESET DEMO")
+      if (
+        !["OWNER", "SUPER_ADMIN"].includes(user.role) ||
+        body.confirm !== "RESET DEMO"
+      )
         throw new Error("Confirmation de réinitialisation requise.");
       await db.transaction(async (tx) => {
         await tx.exec("TRUNCATE restaurants,profiles CASCADE");
@@ -162,12 +177,12 @@ async function handlePost(req: NextRequest) {
       });
       return NextResponse.json({ ok: true });
     }
-    const restaurant =
-      typeof body.restaurant === "string" ? body.restaurant : "bernay";
+    const restaurant = tenant(body.restaurant);
     const data = actionSchema.parse(body);
-    const result = await db.transaction(async (tx) =>
-      perform(tx, restaurant, await scope(tx, user, restaurant), data),
-    );
+    const result = await db.transaction(async (tx) => {
+      await requireRestaurantIndustry(tx,restaurant);
+      return perform(tx, restaurant, await scope(tx, user, restaurant), data);
+    });
     return NextResponse.json({ ok: true, result });
   } catch (e) {
     return fail(e);
@@ -190,7 +205,9 @@ async function routeGET(req: NextRequest) {
     return await withDatabaseContext(
       {
         userId: user?.id,
-        restaurantId: req.nextUrl.searchParams.get("restaurant") || "bernay",
+        restaurantId:
+          req.nextUrl.searchParams.get("restaurant") ||
+          (demoEnabled() ? "bernay" : undefined),
         public: publicEndpoint,
       },
       () => handleGet(req),
@@ -212,7 +229,11 @@ async function routePOST(req: NextRequest) {
       {
         userId: user?.id,
         restaurantId:
-          typeof body.restaurant === "string" ? body.restaurant : "bernay",
+          typeof body.restaurant === "string"
+            ? body.restaurant
+            : demoEnabled()
+              ? "bernay"
+              : undefined,
         public: publicEndpoint,
       },
       () => handlePost(req),

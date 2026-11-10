@@ -1,3 +1,4 @@
+import { requirePlan, requireCommercialCapability, requirePaidAddon, restaurantPlan } from "@/features/platform/entitlements";
 import { createReward, rewardSchema } from "@/features/loyalty/service";
 import { offlinePerform } from "@/features/offline/service";
 import { securityAction } from "./security";
@@ -10,6 +11,8 @@ import { siteState, sitePerform } from "@/features/site/service";
 import { platformPerform } from "./service";
 import { log } from "@/features/orders/service";
 import { inventoryPerform, inventoryState } from "./inventory";
+import { seoPerform, seoState } from "@/features/seo/admin";
+import { requireRestaurantIndustry } from "@/features/onboarding/access";
 export async function adminState(
   db: DB,
   r: string,
@@ -18,17 +21,26 @@ export async function adminState(
   after = 0,
 ) {
   user = await scope(db, user, r);
+  if (["shop","inventory"].includes(module)) await requireRestaurantIndustry(db,r);
+  if (["site", "seo", "loyalty"].includes(module)) await requireCommercialCapability(db, r, module === "loyalty" ? "loyalty" : "website");
   if (module === "site") return siteState(db, r, user);
+  if (module === "seo") return seoState(db, r, user);
   if (module === "shop") {
     requirePermission(user.roles ?? user.role, "orders");
+    const plan = await restaurantPlan(db, r);
+    const shopEnabled = plan >= 39;
     return {
-      settings: await commerce(r).settings(db),
+      shopEnabled,
+      settings: shopEnabled ? await commerce(r).settings(db) : null,
       orders: await commerce(r).staffOrders(db, user),
-      reviews: await rows(
-        db,
-        "SELECT p.*,m.name AS product,c.name AS customer FROM product_reviews p JOIN menu_items m ON m.id=p.menu_id JOIN customers c ON c.id=p.customer_id WHERE p.restaurant_id=$1 ORDER BY created_at DESC LIMIT 100",
-        [r],
-      ),
+      reviews:
+        plan >= 39
+          ? await rows(
+              db,
+              "SELECT p.*,m.name AS product,c.name AS customer FROM product_reviews p JOIN menu_items m ON m.id=p.menu_id JOIN customers c ON c.id=p.customer_id WHERE p.restaurant_id=$1 ORDER BY created_at DESC LIMIT 100",
+              [r],
+            )
+          : [],
     };
   }
   if (module === "team") {
@@ -37,6 +49,12 @@ export async function adminState(
       members: await rows(
         db,
         "SELECT p.id,p.name,p.email,m.role FROM memberships m JOIN profiles p ON p.id=m.profile_id WHERE m.restaurant_id=$1 ORDER BY p.name,m.role",
+        [r],
+      ),
+      // Décisions explicites sur le droit de modifier le plan de salle.
+      floorLayout: await rows(
+        db,
+        "SELECT profile_id,allowed FROM floor_layout_access WHERE restaurant_id=$1",
         [r],
       ),
       invitations: await rows(
@@ -59,17 +77,19 @@ export async function adminState(
   if (module === "inventory") return inventoryState(db, r, user);
   if (module === "security") {
     requirePermission(user.roles ?? user.role, "audit");
+    const conflictsEnabled=(await one<{enabled:boolean}>(db,
+      "SELECT app.addon_installed($1,'offline-conflicts') AS enabled",[r])).enabled;
     return {
       events: await rows(
         db,
         "SELECT a.*,p.name FROM audit_logs a LEFT JOIN profiles p ON p.id=a.actor WHERE a.restaurant_id=$1 ORDER BY a.created_at DESC LIMIT 100 OFFSET $2",
         [r, after],
       ),
-      conflicts: await rows(
+      conflicts: conflictsEnabled ? await rows(
         db,
         "SELECT o.id,o.error,o.payload,d.name AS device FROM offline_operations o JOIN offline_devices d ON d.id=o.device_id WHERE d.restaurant_id=$1 AND o.status='conflict' ORDER BY o.created_at DESC LIMIT 100",
         [r],
-      ),
+      ) : [],
       incidents: await rows(
         db,
         "SELECT id,rule,message,status,updated_at FROM security_incidents WHERE restaurant_id=$1 ORDER BY updated_at DESC LIMIT 100",
@@ -108,6 +128,7 @@ export async function adminState(
   }
   if (module === "integrations") {
     requirePermission(user.roles ?? user.role, "settings");
+    await requirePaidAddon(db,r,"connections");
     return {
       connections: await rows(
         db,
@@ -133,9 +154,20 @@ export async function adminPerform(
   raw: unknown,
 ) {
   user = await scope(db, user, r);
+  if (["shop","inventory"].includes(module)) await requireRestaurantIndustry(db,r);
+  if (["site", "seo", "loyalty"].includes(module)) await requireCommercialCapability(db, r, module === "loyalty" ? "loyalty" : "website");
   if (module === "site") return sitePerform(db, r, user, raw);
-  if (module === "team")
-    return platformPerform(db, user, { ...(raw as object), restaurant: r });
+  if (module === "seo") return seoPerform(db, r, user, raw);
+  if (module === "team") {
+    const input = z
+      .object({ action: z.enum(["invite", "membership"]) })
+      .parse(raw);
+    return platformPerform(db, user, {
+      ...(raw as object),
+      action: input.action,
+      restaurant: r,
+    });
+  }
   if (module === "loyalty") {
     requirePermission(user.roles ?? user.role, "customers");
     const action = raw as { action?: string };
@@ -183,6 +215,9 @@ export async function adminPerform(
         })
         .parse(raw),
       shop = commerce(r);
+    if (input.action === "settings" || input.action === "product")
+      await requireCommercialCapability(db, r, "online-orders");
+    if (input.action === "moderate") await requirePlan(db, r, 39);
     if (input.action === "settings")
       return shop.updateSettings(db, user, input.data);
     if (input.action === "product")
@@ -209,19 +244,22 @@ export async function adminPerform(
       return { updated: true };
     }
     const a = z.object({ id: z.string(), value: z.string() }).parse(input.data);
-    if (input.action === "settle")
-      return shop.settle(
+    if (input.action === "settle") {
+      await shop.settle(
         db,
         a.id,
         z.enum(["cash", "card"]).parse(a.value),
         user,
       );
-    return shop.transition(
-      db,
-      a.id,
-      z.enum(["preparing", "ready", "served", "cancelled"]).parse(a.value),
-      user,
-    );
+    } else {
+      await shop.transition(
+        db,
+        a.id,
+        z.enum(["preparing", "ready", "served", "cancelled"]).parse(a.value),
+        user,
+      );
+    }
+    return { updated: true };
   }
   throw new Error("Module en lecture seule.");
 }

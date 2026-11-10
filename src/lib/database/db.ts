@@ -6,6 +6,8 @@ import { seed } from "./seed";
 import type { Database, DB } from "./types";
 export type { DB } from "./types";
 import { DemoDatabase } from "./demo";
+import { closeOnShutdown } from "./demo-shutdown";
+import { grantDemoAddons } from "./demo-addons";
 import { PostgresDatabase } from "./postgres";
 export async function rows<T>(
   db: DB,
@@ -23,41 +25,45 @@ export async function one<T>(
   if (!r[0]) throw new Error("Élément introuvable dans cet établissement.");
   return r[0];
 }
-const globalDb = globalThis as unknown as { dattierDb?: Promise<Database> };
+/** Refuse de démarrer si le rôle pourrait contourner la RLS : superutilisateur, BYPASSRLS ou propriétaire. */
+export async function assertLeastPrivilege(db: PostgresDatabase, label: string) {
+  const flags = await db.query<{ unsafe: boolean }>(
+    "SELECT (rolsuper OR rolbypassrls OR EXISTS(SELECT FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace WHERE n.nspname='public' AND pg_has_role(current_user,c.relowner,'MEMBER'))) AS unsafe FROM pg_roles WHERE rolname=current_user",
+  );
+  if (flags.rows[0]?.unsafe) {
+    await db.close();
+    throw new Error(
+      `${label} doit utiliser un rôle applicatif non propriétaire sans BYPASSRLS.`,
+    );
+  }
+}
+const globalDb = globalThis as unknown as { atacuisineDb?: Promise<Database>; demoAddonGrantsVersion?: number };
 export function demoEnabled() {
-  return process.env.DATTIER_DEMO === "true" && !process.env.VERCEL;
+  return process.env.ATACUISINE_DEMO === "true" && !process.env.VERCEL;
 }
 export function productionEnabled() {
-  return process.env.DATTIER_DEMO !== "true" && !!process.env.DATABASE_URL;
+  return process.env.ATACUISINE_DEMO !== "true" && !!process.env.DATABASE_URL;
 }
 export async function getDb(): Promise<Database> {
   if (productionEnabled()) {
-    if (!globalDb.dattierDb)
-      globalDb.dattierDb = (async () => {
+    if (!globalDb.atacuisineDb)
+      globalDb.atacuisineDb = (async () => {
         const db = new PostgresDatabase(process.env.DATABASE_URL!);
-        const flags = await db.query<{ unsafe: boolean }>(
-          "SELECT (rolsuper OR rolbypassrls OR EXISTS(SELECT FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace WHERE n.nspname='public' AND pg_has_role(current_user,c.relowner,'MEMBER'))) AS unsafe FROM pg_roles WHERE rolname=current_user",
-        );
-        if (flags.rows[0]?.unsafe) {
-          await db.close();
-          throw new Error(
-            "DATABASE_URL doit utiliser un rôle applicatif non propriétaire sans BYPASSRLS.",
-          );
-        }
+        await assertLeastPrivilege(db, "DATABASE_URL");
         return db;
       })().catch((error) => {
-        globalDb.dattierDb = undefined;
+        globalDb.atacuisineDb = undefined;
         throw error;
       });
-    return globalDb.dattierDb;
+    return globalDb.atacuisineDb;
   }
   if (!demoEnabled())
     throw new Error(
       "Mode local désactivé. Configurer une authentification de production avant publication.",
     );
-  if (!globalDb.dattierDb)
-    globalDb.dattierDb = (async () => {
-      const dir = process.env.DATTIER_DATA_DIR || ".data/dattier-demo";
+  if (!globalDb.atacuisineDb)
+    globalDb.atacuisineDb = (async () => {
+      const dir = process.env.ATACUISINE_DATA_DIR || ".data/atacuisine-demo";
       if (!dir.includes("demo"))
         throw new Error(
           "Le stockage doit être explicitement réservé à la démo.",
@@ -80,13 +86,20 @@ export async function getDb(): Promise<Database> {
           await applyMigrations(tx);
           await seed(tx);
         });
-      }
+      } else await migrate(db);
       return new DemoDatabase(db);
     })().catch((error) => {
-      globalDb.dattierDb = undefined;
+      globalDb.atacuisineDb = undefined;
       throw error;
     });
-  const db = await globalDb.dattierDb;
+  const db = await globalDb.atacuisineDb;
+  // Sans fermeture propre, la base peut ne plus redémarrer (voir demo-shutdown.ts).
+  // Enregistré ici, une fois par processus, y compris dans un serveur déjà lancé.
+  closeOnShutdown(() => db.close());
   await migrate(db);
+  if (globalDb.demoAddonGrantsVersion !== 1) {
+    await db.transaction(grantDemoAddons);
+    globalDb.demoAddonGrantsVersion = 1;
+  }
   return db;
 }

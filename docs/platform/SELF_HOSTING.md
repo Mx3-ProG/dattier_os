@@ -14,7 +14,7 @@ docker compose --env-file .env.production up --build -d
 
 Le générateur n’écrase jamais un fichier existant et crée des secrets locaux avec des permissions 0600. Ne publiez pas ce fichier. Les mots de passe générés sont compatibles avec les URL PostgreSQL ; si vous les remplacez, encodez les caractères réservés.
 
-La migration s’exécute avant l’application et le worker, sans seed fictif. Le script d’initialisation PostgreSQL sépare les comptes migration/application/worker/identité. Une modification des variables d’un volume existant ne change pas ses mots de passe : utilisez une procédure de rotation adaptée.
+La migration s’exécute avant l’application et le worker, sans seed fictif. Le script d’initialisation PostgreSQL sépare les comptes migration/application/worker/identité. Une modification des variables d’un volume existant ne change pas ses mots de passe : utilisez une procédure de rotation adaptée. Le worker est réparti en trois services (`worker-critical`, `worker-maintenance`, `worker-media`) avec leurs limites de ressources, voir [WORKER_GROUPS.md](WORKER_GROUPS.md). `scripts/migrate.ts` n’accorde plus de droits globaux : ils viennent des migrations.
 
 Le conteneur applicatif n’a pas les identifiants du migrateur ni ceux de la base d’identité. Les services PostgreSQL et stockage n’ont pas de port publié ; application et identité écoutent sur le loopback de l’hôte.
 

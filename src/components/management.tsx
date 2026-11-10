@@ -1,4 +1,9 @@
 "use client";
+import {
+  activityPresentation,
+  activityCategories,
+} from "@/features/appearance/categories";
+import { CategoryBadge } from "./appearance/category-badge";
 import { Recipes } from "./recipes";
 import { Catalog } from "./catalog";
 import { Customers } from "./customers";
@@ -10,6 +15,7 @@ import { money, dateTime } from "@/lib/domain";
 import { roleLabels } from "@/lib/permissions";
 import { Button } from "./ui/button";
 import { Form, Modal, Badge, type Act, type Field } from "./forms";
+import { QrButton } from "./qr/qr-portfolio";
 type Editor = {
   title: string;
   fields: Field[];
@@ -27,11 +33,17 @@ export function Management({
   act: Act;
 }) {
   const router = useRouter();
+  const [activityFilter, setActivityFilter] = useState("all");
   const [editor, setEditor] = useState<Editor | null>(null),
     [query, setQuery] = useState("");
   const edit = (title: string, fields: Field[], submit: Editor["submit"]) =>
     setEditor({ title, fields, submit });
   const matches = (s: string) => s.toLowerCase().includes(query.toLowerCase());
+  // Object opened from a QR scan (?focus=<id>): highlighted and scrolled to.
+  const focus =
+    typeof window === "undefined"
+      ? null
+      : new URLSearchParams(window.location.search).get("focus");
   let body: React.ReactNode = null;
   if (module === "stocks")
     body = (
@@ -242,7 +254,14 @@ export function Management({
               {data.reservations
                 .filter((r) => matches(r.name))
                 .map((r) => (
-                  <tr key={r.id}>
+                  <tr
+                    key={r.id}
+                    className={focus === r.id ? "is-focus" : ""}
+                    ref={(el) => {
+                      if (el && focus === r.id)
+                        el.scrollIntoView({ block: "center" });
+                    }}
+                  >
                     <td>
                       <b>{r.name}</b>
                       <small>{r.contact}</small>
@@ -258,6 +277,12 @@ export function Management({
                       <Badge status={r.status} />
                     </td>
                     <td>
+                      <QrButton
+                        restaurant={data.restaurant.id}
+                        kind="reservation"
+                        refId={r.id}
+                        label={`Réservation ${r.name}`}
+                      />
                       {["requested", "confirmed", "arrived"].includes(
                         r.status,
                       ) && (
@@ -293,7 +318,8 @@ export function Management({
                                     )[s],
                                   })),
                                 },
-                                {
+                                // Sans plan de salle actif, la réservation se gère sans table.
+                                ...(data.activeModules?.floor === false ? [] : [{
                                   name: "table",
                                   label: "Table",
                                   value: r.table_id || "",
@@ -310,7 +336,7 @@ export function Management({
                                       })),
                                   ],
                                   required: false,
-                                },
+                                }]),
                               ],
                               (v) =>
                                 act({
@@ -402,6 +428,18 @@ export function Management({
                   <h3>{s.name}</h3>
                   <p>{s.contact}</p>
                   <small>Délai indicatif : {s.lead_days} jours</small>
+                  {!!s.ingredient_ids?.length && (
+                    <small>
+                      Vend :{" "}
+                      {s.ingredient_ids
+                        .map(
+                          (id) =>
+                            data.ingredients.find((i) => i.id === id)?.name,
+                        )
+                        .filter(Boolean)
+                        .join(", ")}
+                    </small>
+                  )}
                 </article>
               ))}
           </div>
@@ -607,14 +645,60 @@ export function Management({
     body = (
       <>
         <h2>Le fil du restaurant</h2>
+        <div
+          className="activity-filters"
+          role="group"
+          aria-label="Filtrer les activités"
+        >
+          <button
+            className="btn secondary"
+            aria-pressed={activityFilter === "all"}
+            onClick={() => setActivityFilter("all")}
+          >
+            Toutes les activités
+          </button>
+          {Object.entries(activityCategories).map(([key, value]) => (
+            <button
+              className="activity-category"
+              data-activity-category={key}
+              key={key}
+              aria-pressed={activityFilter === key}
+              onClick={() => setActivityFilter(key)}
+            >
+              {value.label}
+            </button>
+          ))}
+        </div>
         <div className="card timeline">
           {data.audit
-            .filter((e) => matches(e.action + " " + e.name))
+            .filter(
+              (e) =>
+                activityFilter === "all" ||
+                activityPresentation(e.action).category === activityFilter,
+            )
+            .filter((e) =>
+              matches(
+                e.action +
+                  " " +
+                  e.name +
+                  " " +
+                  activityPresentation(e.action).label +
+                  " " +
+                  activityCategories[activityPresentation(e.action).category]
+                    .label,
+              ),
+            )
             .map((e) => (
-              <div key={e.id}>
+              <div
+                key={e.id}
+                data-activity-category={activityPresentation(e.action).category}
+              >
                 <span className="timeline-dot" />
                 <div>
-                  <b>{e.action}</b>
+                  <CategoryBadge
+                    category={activityPresentation(e.action).category}
+                  />
+                  <b title={e.action}>{activityPresentation(e.action).label}</b>
                   <small>
                     {e.name} · {dateTime(e.created_at)}{" "}
                     {e.object_id && `· #${e.object_id.slice(0, 6)}`}
@@ -660,43 +744,24 @@ export function Management({
             {data.restaurants.map((r) => (
               <p key={r.id}>{r.name}</p>
             ))}
+            <Button
+              variant="secondary"
+              onClick={() =>
+                edit(
+                  "Ajouter un établissement",
+                  [{ name: "name", label: "Nom" }],
+                  (v) => act({ action: "addRestaurant", ...v }),
+                )
+              }
+            >
+              Ajouter un établissement
+            </Button>
             <p className="muted">
-              Offre{" "}
-              {data.restaurant.plan === "premium" ? "Premium" : "Essentiel"} :{" "}
-              {data.restaurant.organization_restaurants ?? 1} /{" "}
-              {data.restaurant.plan === "premium" ? 10 : 1} structure
-              {data.restaurant.plan === "premium" ? "s" : ""} utilisée
-              {data.restaurant.plan === "premium" ? "s" : ""}.
+              Un nouvel établissement démarre vide. La création de sa carte, de
+              ses stocks et de ses tables se fait depuis les modules du
+              restaurant.
             </p>
-            {data.restaurant.plan === "premium" ||
-            data.user.role === "SUPER_ADMIN" ? (
-              <>
-                <Button
-                  variant="secondary"
-                  onClick={() =>
-                    edit(
-                      "Ajouter un établissement",
-                      [{ name: "name", label: "Nom" }],
-                      (v) => act({ action: "addRestaurant", ...v }),
-                    )
-                  }
-                >
-                  Ajouter un établissement
-                </Button>
-                <p className="muted">
-                  Un nouvel établissement démarre vide. La création de sa carte,
-                  de ses stocks et de ses tables se fait depuis les modules du
-                  restaurant.
-                </p>
-              </>
-            ) : (
-              <p className="muted">
-                L’offre Essentiel comprend une structure. Passez à l’offre
-                Premium pour gérer plusieurs établissements depuis le même
-                compte.
-              </p>
-            )}
-            {data.demo && data.user.role === "SUPER_ADMIN" && (
+            {data.demo && (
               <>
                 <h3>Démonstration</h3>
                 <p>

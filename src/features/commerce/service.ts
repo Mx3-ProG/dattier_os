@@ -1,5 +1,8 @@
 import { createHash, randomBytes, randomUUID } from "node:crypto";
 import { z } from "zod";
+import { processPayment } from "@/features/finance/books";
+import { enqueue } from "@/features/platform/jobs";
+import { minimumOnlineAmount, onlineReady } from "@/features/payments/config";
 import { one, rows, type DB } from "@/lib/database/db";
 import { menu } from "@/lib/snapshot";
 import {
@@ -7,6 +10,8 @@ import {
   reserve,
   log,
   changeItem,
+  completeSettledOrder,
+  notify,
 } from "@/features/orders/service";
 import { requirePermission } from "@/lib/permissions";
 import type { Actor } from "@/lib/auth/session";
@@ -14,6 +19,13 @@ import {
   recordCheckoutPromo,
   redeemCheckoutPromo,
 } from "@/features/loyalty/service";
+import {
+  accountEngagement,
+  awardOrderPoints,
+  liveFlashRules,
+  withFlashPrices,
+} from "./engagement";
+import { bestFlash } from "./engagement-rules";
 import {
   checkoutSchema,
   reviewSubmissionSchema,
@@ -83,7 +95,14 @@ export function commerce(SHOP: string) {
     const config = await settings(db);
     return {
       settings: config,
-      products: (await menu(db, SHOP))
+      // `menu()` selects m.*, which includes the commerce columns of Product.
+      products: (
+        await withFlashPrices(
+          db,
+          SHOP,
+          (await menu(db, SHOP)) as unknown as Product[],
+        )
+      )
         .filter((p) => p.enabled)
         .sort(
           (a, b) =>
@@ -101,7 +120,7 @@ export function commerce(SHOP: string) {
        ORDER BY pr.created_at DESC LIMIT 60`,
         [SHOP],
       ),
-      stripe: false,
+      stripe: await onlineReady(db, SHOP),
     };
   }
   async function submitReview(db: DB, raw: unknown, customerId: string) {
@@ -154,7 +173,7 @@ export function commerce(SHOP: string) {
       throw new Error("Lien de suivi invalide.");
     const o = await one<ShopOrder>(
       db,
-      "SELECT c.*,o.status,o.desired_at,o.created_at,o.customer_name,coalesce(pr.points_awarded,0)::int AS points_awarded FROM shop_orders c JOIN orders o ON o.id=c.order_id LEFT JOIN promo_redemptions pr ON pr.order_id=o.id WHERE c.token=$1 AND o.restaurant_id=$2",
+      "SELECT c.*,o.status,o.desired_at,o.created_at,o.customer_name,(c.loyalty_points+coalesce(pr.points_awarded,0))::int AS points_awarded FROM shop_orders c JOIN orders o ON o.id=c.order_id LEFT JOIN promo_redemptions pr ON pr.order_id=o.id WHERE c.token=$1 AND o.restaurant_id=$2",
       [token, SHOP],
     );
     o.items = await rows(
@@ -201,6 +220,11 @@ export function commerce(SHOP: string) {
       "SELECT token FROM shop_orders WHERE customer_id=$1 ORDER BY number DESC LIMIT 100",
       [customerId],
     );
+    const rewards = await rows<CustomerAccount["rewards"][number]>(
+      db,
+      "SELECT id,name,points_cost,kind,value FROM loyalty_rewards WHERE restaurant_id=$1 AND active=true ORDER BY points_cost,name",
+      [SHOP],
+    );
     return {
       customer: {
         name: customer.name,
@@ -208,13 +232,17 @@ export function commerce(SHOP: string) {
         points: customer.points,
         loyaltyConsent: customer.consent,
       },
-      rewards: await rows(
-        db,
-        "SELECT id,name,points_cost,kind FROM loyalty_rewards WHERE restaurant_id=$1 AND active=true ORDER BY points_cost,name",
-        [SHOP],
-      ),
+      rewards,
       orders: await Promise.all(
         orderTokens.map((order) => receipt(db, order.token)),
+      ),
+      engagement: await accountEngagement(
+        db,
+        SHOP,
+        customerId,
+        customer.points,
+        customer.consent,
+        rewards,
       ),
     };
   }
@@ -225,8 +253,8 @@ export function commerce(SHOP: string) {
   ) {
     const a = checkoutSchema.parse(raw),
       hash = createHash("sha256").update(JSON.stringify(a)).digest("hex");
-    if (a.payment !== "counter")
-      throw new Error("Paiement externe non raccordé.");
+    if (a.payment === "stripe" && !(await onlineReady(db, SHOP)))
+      throw new Error("Paiement en ligne indisponible.");
     await db.query(
       "SELECT restaurant_id FROM shop_settings WHERE restaurant_id=$1 FOR UPDATE",
       [SHOP],
@@ -258,10 +286,19 @@ export function commerce(SHOP: string) {
         "Ce créneau est fermé, complet ou dépassé. Choisissez un autre horaire.",
       );
     const products = (await menu(db, SHOP)) as unknown as Product[];
+    // Flash prices are recomputed here: the client price is never trusted.
+    const flashRules = await liveFlashRules(db, SHOP);
+    let flashItems = 0,
+      flashBonus = 0;
     const lines = a.items.map((i) => {
       const p = products.find((p) => p.id === i.menu && p.enabled);
       if (!p) throw new Error("Un produit est indisponible.");
-      let price = p.price;
+      const flash = bestFlash(flashRules, p.id, p.price);
+      if (flash) {
+        flashItems += i.quantity;
+        flashBonus += flash.rule.member_bonus_points * i.quantity;
+      }
+      let price = flash ? flash.price : p.price;
       const labels: string[] = [];
       const valid = new Set<string>();
       for (const group of p.options) {
@@ -349,12 +386,23 @@ export function commerce(SHOP: string) {
         )
       : null;
     const total = subtotal - (promo?.discount ?? 0);
+    if (a.payment === "stripe" && total < minimumOnlineAmount)
+      throw new Error("Montant trop faible pour un paiement en ligne.");
+    // Ordered from a table QR: the kitchen sees the table, served on site.
+    if (a.table)
+      await one(
+        db,
+        "SELECT id FROM dining_tables WHERE restaurant_id=$1 AND number=$2 AND archived_at IS NULL",
+        [SHOP, a.table],
+      ).catch(() => {
+        throw new Error("Cette table n’existe plus : demandez un nouveau QR code à l’équipe.");
+      });
     const id = await createOrder(
       db,
       {
         restaurant: SHOP,
         channel: "takeaway",
-        customer: a.customer,
+        customer: a.table ? `${a.customer} · Table ${a.table}` : a.customer,
         contact: a.email,
         desiredAt: a.slot,
         key: a.key,
@@ -368,10 +416,11 @@ export function commerce(SHOP: string) {
       [id],
     );
     for (let n = 0; n < items.length; n++) {
-      await db.query("UPDATE order_items SET price=$2 WHERE id=$1", [
-        items[n].id,
-        lines[n].price,
-      ]);
+      // Les options choisies comptent aussi dans le prix et le coût matière.
+      await db.query(
+        "UPDATE order_items SET price=$2,material_cost=material_cost+(SELECT coalesce(sum(o.quantity*i.cost),0) FROM option_recipes o JOIN ingredients i ON i.id=o.ingredient_id WHERE o.menu_id=$3 AND o.choice_id=ANY($4::text[])) WHERE id=$1",
+        [items[n].id, lines[n].price, items[n].menu_id, a.items[n].choices],
+      );
       await reserve(
         db,
         SHOP,
@@ -382,15 +431,26 @@ export function commerce(SHOP: string) {
         a.items[n].choices,
       );
     }
-    await db.query("UPDATE orders SET status='active' WHERE id=$1", [id]);
+    // En ligne : la cuisine ne voit la commande qu’une fois le paiement confirmé.
+    if (a.payment !== "stripe")
+      await db.query("UPDATE orders SET status='active' WHERE id=$1", [id]);
+    else
+      await enqueue(
+        db,
+        SHOP,
+        "online_order_timeout",
+        id,
+        { order: id },
+        new Date(Date.now() + 40 * 60_000),
+      );
     const token = randomBytes(32).toString("hex");
     await db.query(
-      "INSERT INTO shop_orders(order_id,token,request_hash,consumption,payment_method,total,subtotal,discount,promo_id,customer_id,reorder_items,terms_version,terms_accepted_at) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,now())",
+      "INSERT INTO shop_orders(order_id,token,request_hash,consumption,payment_method,total,subtotal,discount,promo_id,customer_id,reorder_items,terms_version,terms_accepted_at,flash_items,flash_bonus_points) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,now(),$13,$14)",
       [
         id,
         token,
         hash,
-        a.consumption,
+        a.table ? "onsite" : a.consumption,
         a.payment,
         total,
         subtotal,
@@ -399,12 +459,17 @@ export function commerce(SHOP: string) {
         customerId,
         JSON.stringify(a.items),
         TERMS_VERSION,
+        flashItems,
+        // The member bonus is reserved to logged-in customers.
+        authenticatedCustomerId ? flashBonus : 0,
       ],
     );
+    // Le mode de consommation n’est connu qu’ici : il fixe le taux de chaque ligne.
+    await db.query("SELECT app.fin_freeze_order_vat($1,true)", [id]);
     if (promo) await recordCheckoutPromo(db, promo, id, customerId);
     const order = await receipt(db, token),
       s = await settings(db);
-    const preview = `DÉMONSTRATION — e-mail non envoyé\nDattier OS · Commande #${order.number}\n${a.customer}\n${order.items.map((i) => `${i.quantity} × ${i.name} — ${((i.price * i.quantity) / 100).toFixed(2)} €\n${i.note}`).join("\n")}\n${promo?.discount ? `Remise : -${(promo.discount / 100).toFixed(2)} €\n` : ""}${promo?.points ? `${promo.points} points fidélité ajoutés\n` : ""}Total : ${(total / 100).toFixed(2)} €\n${a.consumption === "onsite" ? "Sur place · aucune table garantie" : "À emporter"}\nPaiement : ${a.payment === "counter" ? "À encaisser au comptoir" : "Stripe test, en attente de confirmation"}\nRetrait : ${new Date(a.slot).toLocaleString("fr-FR", { timeZone: "Europe/Paris" })}\n${s.address} · ${s.phone}`;
+    const preview = `DÉMONSTRATION — e-mail non envoyé\natacuisine · Commande #${order.number}\n${a.customer}\n${order.items.map((i) => `${i.quantity} × ${i.name} — ${((i.price * i.quantity) / 100).toFixed(2)} €\n${i.note}`).join("\n")}\n${promo?.discount ? `Remise : -${(promo.discount / 100).toFixed(2)} €\n` : ""}${promo?.points ? `${promo.points} points fidélité ajoutés\n` : ""}Total : ${(total / 100).toFixed(2)} €\n${a.consumption === "onsite" ? "Sur place · aucune table garantie" : "À emporter"}\nPaiement : ${a.payment === "counter" ? "À encaisser au comptoir" : "Stripe test, en attente de confirmation"}\nRetrait : ${new Date(a.slot).toLocaleString("fr-FR", { timeZone: "Europe/Paris" })}\n${s.address} · ${s.phone}`;
     await db.query(
       "UPDATE shop_orders SET email_preview=$2 WHERE order_id=$1",
       [id, preview],
@@ -441,6 +506,9 @@ export function commerce(SHOP: string) {
       payment_status: string;
       payment_method: string;
       total: number;
+      discount: number;
+      promo_id: string | null;
+      customer_id: string | null;
       status: string;
     }>(
       db,
@@ -451,15 +519,87 @@ export function commerce(SHOP: string) {
       throw new Error("Un paiement Stripe doit être confirmé par Stripe.");
     if (o.status === "cancelled") throw new Error("Commande annulée.");
     if (o.payment_status === "paid") return;
+    const declaration = randomUUID();
     await db.query(
-      "INSERT INTO payment_declarations(id,order_id,amount,method,actor) VALUES($1,$2,$3,$4,$5)",
-      [randomUUID(), id, o.total, method, user.id],
+      "INSERT INTO payment_declarations(id,order_id,amount,method,actor,discount,promo_id,customer_id) VALUES($1,$2,$3,$4,$5,$6,$7,$8)",
+      [
+        declaration,
+        id,
+        o.total,
+        method,
+        user.id,
+        o.discount,
+        o.promo_id,
+        o.customer_id,
+      ],
     );
     await db.query(
       "UPDATE shop_orders SET payment_status='paid' WHERE order_id=$1",
       [id],
     );
-    await log(db, SHOP, user.id, "Encaissement comptoir déclaré (démo)", id);
+    await completeSettledOrder(db, id);
+    if (o.total > 0) await processPayment(db, SHOP, declaration);
+    await log(db, SHOP, user.id, "Encaissement comptoir déclaré", id);
+    await awardOrderPoints(db, SHOP, id);
+  }
+  /** Paiement en ligne confirmé par Stripe : la commande part en cuisine. */
+  async function confirmOnline(db: DB, id: string) {
+    const o = await one<{
+      payment_status: string;
+      total: number;
+      discount: number;
+      promo_id: string | null;
+      customer_id: string | null;
+      number: number;
+    }>(
+      db,
+      "SELECT c.* FROM shop_orders c JOIN orders o ON o.id=c.order_id WHERE c.order_id=$1 AND o.restaurant_id=$2 FOR UPDATE",
+      [id, SHOP],
+    );
+    if (o.payment_status === "paid") return;
+    const declaration = randomUUID();
+    await db.query(
+      "UPDATE orders SET status='active' WHERE id=$1 AND status='pending'",
+      [id],
+    );
+    await db.query(
+      "INSERT INTO payment_declarations(id,order_id,amount,method,discount,promo_id,customer_id) VALUES($1,$2,$3,'online',$4,$5,$6)",
+      [declaration, id, o.total, o.discount, o.promo_id, o.customer_id],
+    );
+    await db.query(
+      "UPDATE shop_orders SET payment_status='paid' WHERE order_id=$1",
+      [id],
+    );
+    await processPayment(db, SHOP, declaration);
+    await log(db, SHOP, null, "Paiement en ligne confirmé par Stripe", id);
+    await notify(db, SHOP, `Nouvelle commande payée en ligne · n° ${o.number}`);
+    await awardOrderPoints(db, SHOP, id);
+  }
+  /** Paiement abandonné : la commande est annulée et son stock libéré. */
+  async function cancelUnpaidOnline(db: DB, id: string) {
+    const o = await rows<{ payment_status: string; status: string }>(
+      db,
+      "SELECT c.payment_status,o.status FROM shop_orders c JOIN orders o ON o.id=c.order_id WHERE c.order_id=$1 AND o.restaurant_id=$2 FOR UPDATE OF c",
+      [id, SHOP],
+    );
+    if (!o[0] || o[0].payment_status === "paid" || o[0].status !== "pending")
+      return;
+    // Action de la plateforme, sans membre de l’équipe à son origine.
+    const system = {
+      id: null as unknown as string,
+      name: "Paiement en ligne",
+      role: "OWNER",
+    } as Actor;
+    await db.query("UPDATE orders SET status='active' WHERE id=$1", [id]);
+    const items = await rows<{ id: string }>(
+      db,
+      "SELECT id FROM order_items WHERE order_id=$1",
+      [id],
+    );
+    for (const item of items)
+      await changeItem(db, SHOP, item.id, "cancelled", system);
+    await db.query("UPDATE orders SET status='cancelled' WHERE id=$1", [id]);
+    await log(db, SHOP, null, "Commande en ligne non payée : annulée", id);
   }
   async function transition(db: DB, id: string, target: string, user: Actor) {
     requirePermission(user.roles ?? user.role, "orders");
@@ -491,6 +631,7 @@ export function commerce(SHOP: string) {
     }
     if (target === "cancelled")
       await db.query("UPDATE orders SET status='cancelled' WHERE id=$1", [id]);
+    if (target === "served") await awardOrderPoints(db, SHOP, id);
   }
   const image = z
     .string()
@@ -571,6 +712,8 @@ export function commerce(SHOP: string) {
     checkout,
     staffOrders,
     settle,
+    confirmOnline,
+    cancelUnpaidOnline,
     transition,
     updateDetails,
     updateSettings,

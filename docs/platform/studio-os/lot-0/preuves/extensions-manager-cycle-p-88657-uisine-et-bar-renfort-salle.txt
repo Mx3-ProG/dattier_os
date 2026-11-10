@@ -1,0 +1,13 @@
+# Test info
+
+- Name: extensions.spec.ts >> manager : cycle produit, code client et règlement ; cuisine et bar : renfort salle
+- Location: tests/e2e/extensions.spec.ts:7:1
+
+# Error details
+
+```
+Test timeout of 60000ms exceeded.
+```
+
+
+Captures et traces complètes conservées dans la copie temporaire ; diagnostic ci-dessus conservé dans le dépôt.

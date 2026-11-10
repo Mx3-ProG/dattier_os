@@ -1,0 +1,23 @@
+DROP FUNCTION IF EXISTS app.addon_admin_purchases(integer);
+DROP FUNCTION IF EXISTS app.addon_admin_stats();
+DROP FUNCTION IF EXISTS app.addon_admin_save_product(jsonb);
+DROP FUNCTION IF EXISTS app.addon_admin_delete_category(text);
+DROP FUNCTION IF EXISTS app.addon_admin_save_category(jsonb);
+DROP FUNCTION IF EXISTS app.addon_admin_guard();
+DROP FUNCTION IF EXISTS app.loading_screen_save(text,text,boolean,text,text,numeric,boolean,text,integer);
+DROP FUNCTION IF EXISTS app.addon_purchase_apply(text,text,text,text,integer);
+DROP FUNCTION IF EXISTS app.addon_purchase_by_intent(text);
+DROP FUNCTION IF EXISTS app.addon_purchase_lock(text);
+DROP FUNCTION IF EXISTS app.addon_purchase_attach(text,text);
+DROP FUNCTION IF EXISTS app.addon_purchase_open(text,text);
+DROP FUNCTION IF EXISTS app.addon_install_free(text,text);
+DROP FUNCTION IF EXISTS app.addon_store_manager(text);
+DROP TABLE IF EXISTS public.addon_catalog_events;
+DROP TABLE IF EXISTS public.loading_screen_settings;
+DROP TABLE IF EXISTS public.addon_license_events;
+DROP TABLE IF EXISTS public.addon_licenses;
+DROP TABLE IF EXISTS public.addon_purchases;
+DROP TABLE IF EXISTS public.addon_products;
+DROP TABLE IF EXISTS public.addon_categories;
+-- Billing role is shared with later migrations (Studio credits); retain it.
+DELETE FROM schema_versions WHERE version=49;

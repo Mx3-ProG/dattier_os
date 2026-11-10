@@ -1,8 +1,23 @@
+import { observeStaffFloor } from "@/features/floor/capabilities";
+import { restaurantPlan } from "@/features/platform/entitlements";
+import {
+  messagingProviders,
+  recentMessages,
+} from "@/features/messaging/service";
 import { registerPresence } from "@/features/ops-security/presence";
 import { type DB, rows, one, demoEnabled } from "./database/db";
 import { type Actor, scope } from "./auth/session";
 import { can } from "./permissions";
+import { canArrange } from "@/features/floor/access";
+import { moduleEnabled } from "@/features/modules/access";
+import { availableModules } from "@/features/modules/availability";
+import { readModuleDisplay } from "@/features/modules/service";
+import { tableQuota } from "@/features/floor/service";
 import type { Snapshot, MenuItem, Restaurant, Order, Item } from "./types";
+import {
+  adminFlashPromotions,
+  engagementSettings,
+} from "@/features/commerce/engagement";
 export async function menu(
   db: DB,
   r: string,
@@ -22,14 +37,32 @@ export async function snapshot(
 ): Promise<Snapshot> {
   user = await scope(db, user, r);
   await registerPresence(db, r, user);
+  const plan = await restaurantPlan(db, r);
+  const activeModules = {
+    floor: await moduleEnabled(db, r, "floor"),
+    "table-booking": await moduleEnabled(db, r, "table-booking"),
+  };
+  const paidAddons=(await rows<{addon:string}>(db,
+    `SELECT addon FROM unnest(ARRAY['invoices','attendance','client-invoices','payroll',
+      'offline-conflicts','connections','qr','loyalty','domain',
+      'prospect-scanner','pipeline-crm','customer-health']) AS addon
+     WHERE app.addon_installed($1,addon)`,[r])).map(row=>row.addon);
   const allowed = (p: Parameters<typeof can>[1]) =>
+    (p === "customers" ? paidAddons.includes("loyalty") :
+      p === "payroll" ? paidAddons.includes("payroll") :
+      plan >= 39 || !["finance", "website"].includes(p)) &&
     can(user.roles ?? user.role, p);
+  const floorVisible =
+    activeModules.floor &&
+    observeStaffFloor(
+      "floor.view",
+      user.roles ?? [user.role],
+      allowed("orders") || allowed("reservations"),
+    );
   const restaurants = await rows<Restaurant>(
     db,
-    user.role === "SUPER_ADMIN"
-      ? "SELECT r.* FROM restaurants r ORDER BY r.id"
-      : "SELECT DISTINCT r.* FROM restaurants r JOIN memberships m ON m.restaurant_id=r.id WHERE m.profile_id=$1 ORDER BY r.id",
-    user.role === "SUPER_ADMIN" ? [] : [user.id],
+    "SELECT DISTINCT r.* FROM restaurants r JOIN memberships m ON m.restaurant_id=r.id WHERE m.profile_id=$1 ORDER BY r.id",
+    [user.id],
   );
   const orders =
     allowed("orders") ||
@@ -38,7 +71,7 @@ export async function snapshot(
     allowed("finance")
       ? await rows<Order>(
           db,
-          `SELECT o.id,o.status,o.channel,o.created_at,o.session_id,${allowed("orders") ? "o.customer_name,o.contact" : "'' AS customer_name"},t.number AS table_number,pd.amount AS payment_amount,pd.discount FROM orders o LEFT JOIN table_sessions s ON s.id=o.session_id LEFT JOIN dining_tables t ON t.id=s.table_id LEFT JOIN payment_declarations pd ON pd.order_id=o.id OR pd.session_id=o.session_id WHERE o.restaurant_id=$1 ORDER BY o.created_at DESC LIMIT 150`,
+          `SELECT o.id,o.status,o.channel,o.created_at,o.session_id,${allowed("orders") ? "o.customer_name,o.contact" : "'' AS customer_name"},t.number AS table_number,pd.amount AS payment_amount,pd.discount FROM orders o LEFT JOIN table_sessions s ON s.id=o.session_id LEFT JOIN dining_tables t ON t.id=s.table_id LEFT JOIN payment_declarations pd ON pd.order_id=o.id OR pd.session_id=o.session_id WHERE o.restaurant_id=$1 AND NOT EXISTS(SELECT 1 FROM shop_orders so WHERE so.order_id=o.id AND so.payment_method='stripe' AND so.payment_status<>'paid') ORDER BY o.created_at DESC LIMIT 150`,
           [r],
         )
       : [];
@@ -52,6 +85,26 @@ export async function snapshot(
   for (const order of orders)
     order.items = items.filter((i) => i.order_id === order.id);
   return {
+    activeModules,
+    // Décision commerciale unique (app.module_available) : la navigation ne lit plus que ce champ.
+    modules: await availableModules(db, r),
+    // Choix d’affichage du tableau de bord : présentation seulement, jamais une autorisation.
+    moduleDisplay: await readModuleDisplay(db, r),
+    uninstalledAddons: (await rows<{ addon_id: string }>(db,
+      "SELECT addon_id FROM addon_installations WHERE restaurant_id=$1 AND NOT installed", [r],
+    )).map((row) => row.addon_id),
+    addons: paidAddons,
+    // Licences d’add-ons de mesure : la RLS limite déjà la lecture à l’établissement ouvert.
+    licenses: (
+      await rows<{ product_id: string; kind: string }>(
+        db,
+        "SELECT l.product_id,p.kind FROM addon_licenses l JOIN addon_products p ON p.id=l.product_id WHERE l.restaurant_id=$1 AND p.kind IN ('analytics','estimation','business') AND app.addon_installed($1,l.product_id)",
+        [r],
+      )
+    ).flatMap((license) =>
+      // Les outils métier partagent une seule entrée de menu : « Outils métier ».
+      license.kind === "business" ? [license.product_id, "trade-tools"] : [license.product_id],
+    ).filter((id, index, all) => all.indexOf(id) === index),
     demo: demoEnabled(),
     categories: (
       await rows<{ category: string }>(
@@ -63,20 +116,26 @@ export async function snapshot(
     now: new Date().toISOString(),
     user,
     restaurants,
-    restaurant: await one(
-      db,
-      "SELECT r.*,o.plan,(SELECT count(*)::int FROM restaurants x WHERE x.organization_id=r.organization_id) AS organization_restaurants FROM restaurants r JOIN organizations o ON o.id=r.organization_id WHERE r.id=$1",
-      [r],
-    ),
+    restaurant: await one(db, "SELECT * FROM restaurants WHERE id=$1", [r]),
     menu: await menu(db, r, allowed("finance"), allowed("catalog")),
-    tables:
-      allowed("orders") || allowed("reservations")
-        ? await rows(
-            db,
-            "SELECT * FROM dining_tables WHERE restaurant_id=$1 ORDER BY number",
-            [r],
-          )
-        : [],
+    tables: floorVisible
+      ? await rows(
+          db,
+          "SELECT * FROM dining_tables WHERE restaurant_id=$1 ORDER BY number",
+          [r],
+        )
+      : [],
+    zones: floorVisible
+      ? await rows(
+          db,
+          "SELECT id,name,position FROM floor_zones WHERE restaurant_id=$1 ORDER BY position,created_at",
+          [r],
+        )
+      : [],
+    floorPlan: {
+      canArrange: await canArrange(db, r, user),
+      ...(await tableQuota(db, r)),
+    },
     orders,
     ingredients:
       allowed("stock") || allowed("purchases")
@@ -100,13 +159,14 @@ export async function snapshot(
           [r],
         )
       : [],
-    reservations: allowed("reservations")
-      ? await rows(
-          db,
-          "SELECT * FROM reservations WHERE restaurant_id=$1 ORDER BY starts_at",
-          [r],
-        )
-      : [],
+    reservations:
+      activeModules["table-booking"] && allowed("reservations")
+        ? await rows(
+            db,
+            "SELECT * FROM reservations WHERE restaurant_id=$1 ORDER BY starts_at",
+            [r],
+          )
+        : [],
     notifications: await rows(
       db,
       "SELECT n.*,EXISTS(SELECT 1 FROM notification_reads nr WHERE nr.notification_id=n.id AND nr.profile_id=$2) AS read FROM notifications n WHERE restaurant_id=$1 ORDER BY created_at DESC LIMIT 40",
@@ -122,7 +182,7 @@ export async function snapshot(
     suppliers: allowed("purchases")
       ? await rows(
           db,
-          "SELECT * FROM suppliers WHERE restaurant_id=$1 ORDER BY name",
+          "SELECT s.*,coalesce((SELECT array_agg(si.ingredient_id ORDER BY si.ingredient_id) FROM supplier_ingredients si WHERE si.supplier_id=s.id),'{}') AS ingredient_ids FROM suppliers s WHERE s.restaurant_id=$1 ORDER BY s.name",
           [r],
         )
       : [],
@@ -149,9 +209,10 @@ export async function snapshot(
       : [],
     timeEntries: await rows(
       db,
-      `SELECT t.*,p.name FROM time_entries t JOIN profiles p ON p.id=t.profile_id WHERE restaurant_id=$1 ${allowed("team") ? "" : "AND profile_id=$2"} ORDER BY created_at DESC LIMIT 50`,
+      `SELECT t.*,p.name FROM time_entries t JOIN profiles p ON p.id=t.profile_id WHERE restaurant_id=$1 AND t.voided_at IS NULL ${allowed("team") ? "" : "AND profile_id=$2"} ORDER BY created_at DESC LIMIT 50`,
       allowed("team") ? [r] : [r, user.id],
     ),
+    plan,
     promos: allowed("customers")
       ? await rows(
           db,
@@ -159,20 +220,31 @@ export async function snapshot(
           [r],
         )
       : [],
-    checkoutCustomers: allowed("payments")
-      ? await rows(
-          db,
-          "SELECT id,name FROM customers WHERE restaurant_id=$1 ORDER BY name",
-          [r],
-        )
-      : [],
+    engagement: allowed("customers") ? await engagementSettings(db, r) : null,
+    flashPromotions:
+      plan >= 39 && can(user.roles ?? user.role, "catalog")
+        ? await adminFlashPromotions(db, r)
+        : [],
+    checkoutCustomers:
+      plan >= 39 && allowed("payments")
+        ? await rows(
+            db,
+            "SELECT id,name FROM customers WHERE restaurant_id=$1 ORDER BY name",
+            [r],
+          )
+        : [],
     customers: allowed("customers")
       ? await rows(
           db,
-          "SELECT *,coalesce(app.customer_points(id),points) AS points FROM customers WHERE restaurant_id=$1",
+          `SELECT c.*,coalesce(app.customer_points(c.id),c.points) AS points,oc.email AS account_email,
+            coalesce(oc.marketing_consent,false) AS marketing_consent,
+            (SELECT max(m.created_at) FROM customer_messages m WHERE m.customer_id=c.id AND m.status<>'error') AS last_message_at
+           FROM customers c LEFT JOIN organization_customers oc ON oc.id=c.account_id WHERE c.restaurant_id=$1 ORDER BY c.name`,
           [r],
         )
       : [],
+    customerMessages: allowed("customers") ? await recentMessages(db, r) : [],
+    messaging: messagingProviders(),
     expenses: allowed("finance")
       ? await rows(
           db,

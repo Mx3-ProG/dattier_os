@@ -5,9 +5,12 @@ export type CustomerIdentity = { id: string; name: string; email: string };
 export function CustomerAuth({
   onAuthenticated,
   compact = false,
+  returnQuery = "",
 }: {
   onAuthenticated: (identity: CustomerIdentity) => void;
   compact?: boolean;
+  /** Query kept through the login round trip (e.g. a referral code). */
+  returnQuery?: string;
   initialMode?: "login" | "register" | "forgot" | "reset";
   resetToken?: string;
 }) {
@@ -23,7 +26,7 @@ export function CustomerAuth({
       </p>
       <a
         className="donut-button"
-        href={`/auth/login?returnTo=${encodeURIComponent(base + "/compte")}`}
+        href={`/auth/login?returnTo=${encodeURIComponent(base + "/compte" + returnQuery)}`}
       >
         Créer mon compte ou me connecter
       </a>

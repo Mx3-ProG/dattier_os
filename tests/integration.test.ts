@@ -337,3 +337,32 @@ test("commandes successives regroupées dans une addition et QR sans session ref
     /table/,
   );
 });
+
+test("la fiche produit conserve ses informations lors d’une modification du prix", async () => {
+  const base = {
+    action: "menu" as const,
+    id: "bernay-Plats-6",
+    name: "Couscous agneau",
+    price: 2800,
+    enabled: true,
+    description: "Exemple de description publique",
+  };
+  await db.transaction(async (tx) => {
+    await perform(tx, "bernay", nadia, {
+      ...base,
+      public_composition: "Composition de test",
+      allergens: "Allergènes de test",
+      seo_title: "Titre de test",
+      seo_description: "Description SEO de test",
+    });
+    await perform(tx, "bernay", nadia, { ...base, price: 2900 });
+    const product = (await menu(tx, "bernay")).find(
+      (item) => item.id === base.id,
+    );
+    assert.equal(product?.price, 2900);
+    assert.equal(product.public_composition, "Composition de test");
+    assert.equal(product.allergens, "Allergènes de test");
+    assert.equal(product.seo_title, "Titre de test");
+    assert.equal(product.seo_description, "Description SEO de test");
+  });
+});

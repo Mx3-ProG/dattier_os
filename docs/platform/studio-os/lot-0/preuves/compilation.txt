@@ -1,0 +1,93 @@
+
+> atacuisine_os@1.0.0 build
+> next build --webpack
+
+▲ Next.js 16.4.4 (webpack)
+✓ Running next.config.ts took 167ms
+
+  Creating an optimized production build ...
+✓ Compiled successfully in 53s
+  Running TypeScript ...
+  Finished TypeScript in 7.5s ...
+  Collecting page data using 9 workers ...
+  Generating static pages using 9 workers (0/23) ...
+  Generating static pages using 9 workers (5/23) 
+  Generating static pages using 9 workers (11/23) 
+  Generating static pages using 9 workers (17/23) 
+✓ Generating static pages using 9 workers (23/23) in 741ms
+  Finalizing page optimization ...
+  Collecting build traces ...
+
+Route (app)
+┌ ƒ /
+├ ƒ /_not-found
+├ ƒ /api/cms/[restaurant]
+├ ƒ /api/cms/[restaurant]/media
+├ ƒ /api/cms/[restaurant]/media/[file]
+├ ƒ /api/demo/customer
+├ ƒ /api/health
+├ ƒ /api/me/appearance
+├ ƒ /api/media/[restaurant]/[asset]
+├ ƒ /api/ops-security/[restaurant]
+├ ƒ /api/platform
+├ ƒ /api/platform/referrals
+├ ƒ /api/restaurants/[restaurant]/[module]
+├ ƒ /api/restaurants/[restaurant]/assistant
+├ ƒ /api/restaurants/[restaurant]/bank
+├ ƒ /api/restaurants/[restaurant]/billing
+├ ƒ /api/restaurants/[restaurant]/billing/[invoice]/[format]
+├ ƒ /api/restaurants/[restaurant]/exports
+├ ƒ /api/restaurants/[restaurant]/finance
+├ ƒ /api/restaurants/[restaurant]/finance/dashboard
+├ ƒ /api/restaurants/[restaurant]/finance/fec
+├ ƒ /api/restaurants/[restaurant]/hr
+├ ƒ /api/restaurants/[restaurant]/hr/export
+├ ƒ /api/restaurants/[restaurant]/invoices
+├ ƒ /api/restaurants/[restaurant]/invoices/[invoice]
+├ ƒ /api/restaurants/[restaurant]/media
+├ ƒ /api/restaurants/[restaurant]/offline
+├ ƒ /api/restaurants/[restaurant]/payments
+├ ƒ /api/restaurants/[restaurant]/qr
+├ ƒ /api/store/[restaurant]/[action]
+├ ƒ /api/v1/[...path]
+├ ƒ /api/webhooks/stripe
+├ ○ /apple-icon.png
+├ ƒ /auth/callback
+├ ƒ /auth/login
+├ ƒ /auth/logout
+├ ƒ /avantage
+├ ƒ /checkout/[plan]
+├ ƒ /connexion
+├ ƒ /dashboard
+├ ƒ /demo
+├ ƒ /guide
+├ ○ /icon.svg
+├ ○ /manifest.webmanifest
+├ ƒ /offline
+├ ○ /opengraph-image
+├ ƒ /parrainage/[code]
+├ ƒ /platform
+├ ƒ /platform/parrainage
+├ ƒ /pointage
+├ ƒ /q/[token]
+├ ƒ /r/[restaurant]/[[...page]]
+├ ƒ /r/[restaurant]/llms.txt
+├ ƒ /r/[restaurant]/robots.txt
+├ ƒ /r/-/sitemap.xml
+├ ƒ /restaurant/[restaurant]
+├ ƒ /restaurant/[restaurant]/security
+├ ƒ /restaurant/[restaurant]/seo
+├ ƒ /restaurant/[restaurant]/site
+├ ƒ /robots.txt
+├ ƒ /site-demo/[[...page]]
+├ ƒ /sitemap-platform.xml
+├ ƒ /sitemap.xml
+├ ƒ /source
+└ ○ /twitter-image
+
+
+ƒ Proxy (Middleware)
+
+○  (Static)   prerendered as static content
+ƒ  (Dynamic)  server-rendered on demand
+

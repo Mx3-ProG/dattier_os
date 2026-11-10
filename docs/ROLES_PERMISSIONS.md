@@ -14,19 +14,17 @@ Source centrale : `src/lib/permissions.ts`. Les contrôles sont exécutés côt�
 | PURCHASING | Fournisseurs, commandes et réceptions |
 | ACCOUNTANT | Rapports financiers et dépenses |
 
+La permission `floor` donne accès au plan de salle. Le propriétaire peut gérer le droit d’aménagement de chaque membre. Le forfait Exploitation permet 50 tables actives par établissement.
+
 ## Isolation des structures (SaaS)
 
-Chaque structure (établissement) appartient à une seule organisation cliente. Un propriétaire, son équipe et son site ne voient et ne modifient que les structures de leur organisation : contrôle applicatif (`scope`) et politiques RLS en base (`app.has_restaurant`).
+Chaque structure (établissement) appartient à une seule organisation cliente. Un propriétaire, son équipe et son site ne voient et ne modifient que les structures de leur organisation : contrôle applicatif (`scope`) et RLS PostgreSQL (`app.has_restaurant`).
 
-- Offre **Essentiel** : une structure par organisation.
-- Offre **Premium** (`organizations.plan='premium'`) : jusqu’à 10 structures dans la même organisation.
-- Un compte propriétaire ne peut posséder des structures que dans une seule organisation (pas de contournement en créant une seconde organisation).
-- Ces règles sont imposées par des déclencheurs SQL (migration `017_tenancy_plans.sql`), quel que soit le chemin de création.
-- Seul le Super Admin plateforme a une vue transverse ; le rôle `SUPER_ADMIN` ne peut pas être attribué à un membre de structure.
+- Nombre de structures : places de l’abonnement Studio de l’organisation (`app.configure_organization_plan`, déclencheur `check_restaurant_seat`). Les offres Essentiel / Premium envisagées le 3 novembre 2026 ont été remplacées par la formule unique Studio (9 novembre 2026).
+- L’équipe plateforme n’a pas de vue transverse permanente : elle accède à une structure par une autorisation de support limitée dans le temps et journalisée (`support_grants`).
+- `SUPER_ADMIN` reste un rôle d’établissement (super admin de la structure, gestion des add-ons).
 
-Démo : Nadia (Premium, Le Dattier + L’Atelier), Hugo (Essentiel, Le Bistrot de Hugo), Slimane (Super Admin plateforme).
-
-La permission `floor` (aménagement du plan de salle : ajouter, modifier les places/l’état, déplacer, archiver, supprimer une table) est accordée à SUPER_ADMIN, OWNER, MANAGER, WAITER et BARTENDER. Une table occupée ne peut ni changer d’état manuellement ni être archivée ; une table avec historique ne peut qu’être archivée ; réduire les places est refusé si une réservation à venir dépasse la nouvelle capacité.
+Démo : Nadia (Studio Restau + L’Atelier), Hugo (client indépendant, Le Bistrot de Hugo).
 
 Tous les profils peuvent consulter les notifications de leur établissement et pointer leur propre service. Les confirmations de réservation ne sont pas publiques. Le public ne peut demander qu’une réservation ou une commande à confirmer. Les profils publics de `/demo` ne sont disponibles que lorsque la démo locale est activée.
 
@@ -35,3 +33,5 @@ Les jetons ne contiennent aucun rôle choisi par le navigateur ; le serveur reli
 Premier administrateur de production : procédure à ajouter côté serveur hors HTTP public. Créer l’identité Auth, vérifier explicitement son UUID, utiliser une commande CLI de bootstrap exécutée par l’opérateur avec accès à la base, interdire le bootstrap si un admin existe déjà, tracer l’attribution, puis retirer les droits de bootstrap. Ne jamais transposer le sélecteur démo en mécanisme de production.
 
 Les permissions `catalog` et `payments` sont distinctes de `settings` et `orders`. OWNER, MANAGER et SUPER_ADMIN gèrent la carte. OWNER, MANAGER, SUPER_ADMIN et WAITER déclarent les règlements (avec code nominatif éventuel). Les permissions clients permettent l’attribution et l’annulation de codes ; les profils de salle ne voient au règlement que les identifiants/noms des clients et doivent saisir le code fourni par son titulaire. Les jetons des fiches privées ne sont jamais renvoyés aux rôles cuisine/bar/salle.
+
+La permission `payroll` couvre contrats, coûts, clôture et export de paie : Propriétaire, Super Admin et Comptabilité. Le Manager gère heures et absences mais ne voit pas les rémunérations.

@@ -11,7 +11,7 @@ test("parcours complet, réservations publiques, responsive et accès serveur", 
 }) => {
   const errors: string[] = [];
   page.on("pageerror", (e) => errors.push(e.message));
-  await profile(page, "Slimane");
+  await profile(page, "Nadia");
   const reset = await page.request.post("/api/v1/reset", {
     headers: { origin: process.env.E2E_URL || "http://127.0.0.1:3000" },
     data: { confirm: "RESET DEMO" },
@@ -83,7 +83,7 @@ test("parcours complet, réservations publiques, responsive et accès serveur", 
     page.getByRole("cell", { name: "consumption", exact: true }).first(),
   ).toBeVisible();
   await profile(page, "Nadia");
-  await expect(page.getByText("CA déclaré aujourd’hui")).toBeVisible();
+  await expect(page.getByText("Encaissé aujourd’hui")).toBeVisible();
   await page.screenshot({
     path: "docs/dashboard-desktop.png",
     animations: "disabled",

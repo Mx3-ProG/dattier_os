@@ -1,0 +1,307 @@
+.addon-store {
+  display: grid;
+  gap: 16px;
+  margin-block: 20px;
+}
+.addon-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 270px), 1fr));
+  gap: 16px;
+  margin-block: 16px;
+}
+.addon-card {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 16px;
+}
+.addon-estimation-preview { display:grid; place-content:center; text-align:center; gap:.4rem; background:linear-gradient(135deg,#e8f5ea,#d0e8da); color:#184d3b; }
+.addon-estimation-preview strong { font-size:4rem; line-height:1; }
+.addon-estimation-preview span { font-weight:700; }
+.addon-card > button {
+  margin-top: auto;
+}
+.addon-card p {
+  margin: 0;
+}
+.addon-card-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.addon-card-head h3 {
+  margin: 0;
+}
+.addon-preview {
+  width: 100%;
+  aspect-ratio: 16 / 10;
+  border-radius: 12px;
+  background: var(--sand);
+  overflow: hidden;
+}
+.addon-badges {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.addon-badge {
+  padding: 2px 9px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  font-size: max(var(--appearance-min-text, 0px), calc(12px * var(--appearance-text-scale, 1)));
+  font-weight: 600;
+}
+.addon-badge.is-free {
+  background: var(--sand);
+}
+.addon-badge.is-premium {
+  border-color: var(--terracotta);
+  color: var(--terracotta);
+}
+.addon-badge.is-owned {
+  background: var(--green);
+  border-color: var(--green);
+  color: var(--paper);
+}
+.addon-status,
+.addon-hint,
+.addon-price span {
+  color: var(--muted);
+  font-size: max(var(--appearance-min-text, 0px), calc(13px * var(--appearance-text-scale, 1)));
+}
+.addon-facts {
+  display: grid;
+  gap: 4px;
+  margin: 0;
+  font-size: max(var(--appearance-min-text, 0px), calc(13px * var(--appearance-text-scale, 1)));
+}
+.addon-facts > div {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+.addon-facts dt {
+  font-weight: 600;
+}
+.addon-facts dt::after {
+  content: " :";
+}
+.addon-facts dd {
+  margin: 0;
+  color: var(--muted);
+}
+.addon-filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 12px;
+}
+.addon-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  flex-basis: 100%;
+}
+.addon-filters label,
+.addon-customizer-form label {
+  display: grid;
+  gap: 4px;
+  font-weight: 600;
+  font-size: max(var(--appearance-min-text, 0px), calc(13px * var(--appearance-text-scale, 1)));
+}
+.addon-filters select,
+.addon-customizer-form select,
+.addon-customizer-form input[type="text"] {
+  min-height: 40px;
+  width: 100%;
+  padding-inline: 10px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--paper);
+  color: var(--ink);
+  font: inherit;
+  font-weight: 400;
+}
+.addon-empty {
+  display: grid;
+  justify-items: start;
+  gap: 12px;
+}
+.addon-customizer-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr);
+  gap: 24px;
+  margin-top: 12px;
+}
+.addon-customizer-form {
+  display: grid;
+  gap: 14px;
+  align-content: start;
+}
+.addon-customizer-form .addon-check {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 400;
+}
+.addon-colors {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+.addon-colors input {
+  width: 64px;
+  height: 40px;
+  padding: 2px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--paper);
+}
+.addon-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+@media (max-width: 720px) {
+  .addon-customizer-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .addon-customizer-preview {
+    order: -1;
+  }
+}
+/* Administration */
+.addon-admin {
+  max-width: 1120px;
+  margin-inline: auto;
+  padding: 32px 16px 64px;
+  display: grid;
+  gap: 24px;
+}
+.addon-admin h1,
+.addon-admin h2 {
+  margin: 0;
+}
+.addon-admin-table {
+  overflow-x: auto;
+}
+.addon-admin-table table {
+  width: 100%;
+  border-collapse: collapse;
+}
+.addon-admin-table th,
+.addon-admin-table td {
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--line);
+  text-align: left;
+  white-space: nowrap;
+}
+.addon-admin-form {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 190px), 1fr));
+  gap: 12px;
+  align-items: end;
+  margin-block: 12px;
+}
+.addon-admin-form label {
+  display: grid;
+  gap: 4px;
+  font-weight: 600;
+  font-size: max(var(--appearance-min-text, 0px), calc(13px * var(--appearance-text-scale, 1)));
+}
+.addon-admin-form input:not([type="checkbox"]),
+.addon-admin-form select {
+  min-height: 40px;
+  width: 100%;
+  padding-inline: 10px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--paper);
+  color: var(--ink);
+  font: inherit;
+  font-weight: 400;
+}
+.addon-admin-form .addon-check {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 40px;
+  font-weight: 400;
+}
+.addon-admin-item {
+  border-top: 1px solid var(--line);
+  padding-block: 12px;
+}
+/* Outils métier */
+.addon-trade-preview {
+  display: grid;
+  align-content: end;
+  gap: 4px;
+  padding: 16px;
+  color: #fff;
+  background: linear-gradient(135deg, #344d3e, #5f7f69);
+}
+.addon-trade-preview small {
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  opacity: 0.85;
+}
+.addon-trade-preview strong {
+  font-family: var(--appearance-font, "Dattier Fraunces", Georgia, serif);
+  font-size: max(var(--appearance-min-text, 0px), calc(20px * var(--appearance-text-scale, 1)));
+  line-height: 1.2;
+}
+.addon-trade-preview.is-metier-restauration { background: linear-gradient(135deg, #8a3f24, #c8744a); }
+.addon-trade-preview.is-metier-btp { background: linear-gradient(135deg, #5b4a12, #c59a2b); }
+.addon-trade-preview.is-metier-coiffure { background: linear-gradient(135deg, #6a2f5b, #b5649d); }
+.addon-trade-preview.is-metier-commerce { background: linear-gradient(135deg, #1f4f73, #3f8cbf); }
+.addon-trade-preview.is-metier-tous { background: linear-gradient(135deg, #344d3e, #6b9a78); }
+.addon-trade-features {
+  display: grid;
+  gap: 4px;
+  margin: 0;
+  padding-left: 18px;
+  color: var(--muted);
+  font-size: max(var(--appearance-min-text, 0px), calc(13px * var(--appearance-text-scale, 1)));
+}
+.addon-notfound-preview {
+  display: grid;
+  overflow: hidden;
+}
+.addon-decoration-preview{display:grid;align-items:center;overflow:hidden;background:#183e39}
+.addon-decoration-preview .site-decoration{width:100%;height:100%;min-height:96px}
+.addon-background-preview .site-background-preview{height:100%;border-radius:0}
+.addon-notfound-preview .site-404 {
+  padding: 8px;
+  transform-origin: center;
+}
+.addon-notfound-preview .site-404-message,
+.addon-notfound-preview .site-404-brand {
+  display: none;
+}
+.addon-notfound-preview .site-404 h1 {
+  font-size: 15px;
+}
+.addon-notfound-preview .site-404-button {
+  min-height: 28px;
+  margin-top: 0;
+  padding: 0 12px;
+  font-size: 12px;
+}
+.addon-notfound-preview .site-404-art {
+  min-height: 60px;
+  font-size: 48px;
+}
+
+/* Afficher / masquer un add-on dans le tableau de bord. */
+.addon-display { display: grid; gap: 8px; margin-block: 8px; }
+.addon-display .addon-hint { display: flex; align-items: center; gap: 6px; margin: 0; }
+.addon-display[data-visible="false"] .addon-hint { opacity: 0.8; }
+.addon-link {
+  justify-self: start; padding: 0; border: 0; background: none; color: inherit;
+  font: inherit; font-size: 0.875rem; text-decoration: underline; cursor: pointer; opacity: 0.8;
+}
+.addon-link:disabled { cursor: progress; opacity: 0.5; }

@@ -1,0 +1,60 @@
+.ls-studio {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  perspective: 620px;
+}
+.ls-studio-glow {
+  position: absolute;
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  background: var(--ls-secondary);
+  opacity: 0.22;
+  filter: blur(26px);
+  animation: ls-studio-glow calc(4s / var(--ls-speed)) ease-in-out infinite;
+}
+.ls-studio-letter {
+  position: relative;
+  width: 110px;
+  height: 140px;
+  transform: rotateY(-24deg);
+  transform-style: preserve-3d;
+  animation: ls-studio-turn calc(4s / var(--ls-speed)) cubic-bezier(0.45, 0.05, 0.55, 0.95) infinite;
+}
+.ls-studio-letter span {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  font-family: "Dattier Fraunces", Georgia, "Times New Roman", serif;
+  font-size: 132px;
+  font-weight: 600;
+  line-height: 1;
+  color: color-mix(in srgb, var(--ls-primary) 72%, var(--ls-secondary));
+}
+.ls-studio-letter .is-front,
+.ls-studio-letter .is-back {
+  color: var(--ls-primary);
+  text-shadow: 0 0 18px color-mix(in srgb, var(--ls-secondary) 55%, transparent);
+}
+@keyframes ls-studio-turn {
+  from {
+    transform: rotateY(-24deg);
+  }
+  to {
+    transform: rotateY(336deg);
+  }
+}
+@keyframes ls-studio-glow {
+  0%,
+  100% {
+    opacity: 0.16;
+    transform: scale(0.9);
+  }
+  50% {
+    opacity: 0.34;
+    transform: scale(1.12);
+  }
+}

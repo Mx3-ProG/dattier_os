@@ -2,6 +2,7 @@ import { randomUUID as uuid } from "node:crypto";
 import { z } from "zod";
 import { rows, one, type DB } from "@/lib/database/db";
 import { log, notify } from "@/features/orders/service";
+import { moduleEnabled, requireModule } from "@/features/modules/access";
 
 /**
  * Horaires de réservation en ligne (heure de Paris). Valeurs de démonstration
@@ -85,14 +86,18 @@ export type PublicTable = {
   shape: string;
   pos_x: number;
   pos_y: number;
+  rotation: number;
   status: string;
 };
 type Hold = { table_id: string; starts_at: string; ends_at: string };
 
 async function load(db: DB, r: string, from: number, to: number) {
-  const tables = await rows<PublicTable>(
+  // Sans plan de salle actif, aucune table : chaque demande est enregistrée sans table
+  // et l'équipe l'organise (même chemin que les groupes trop grands pour une table).
+  const floor = await moduleEnabled(db, r, "floor");
+  const tables = !floor ? [] : await rows<PublicTable>(
     db,
-    "SELECT id,number,capacity,label,zone,shape,pos_x,pos_y,status FROM dining_tables WHERE restaurant_id=$1 AND bookable AND archived_at IS NULL ORDER BY number",
+    "SELECT t.id,t.number,t.capacity,t.label,t.zone,t.shape,t.pos_x,t.pos_y,t.rotation,t.status FROM dining_tables t LEFT JOIN floor_zones z ON z.id=t.zone_id WHERE t.restaurant_id=$1 AND t.bookable AND t.archived_at IS NULL ORDER BY z.position,t.number",
     [r],
   );
   const holds = await rows<Hold>(
@@ -140,6 +145,7 @@ export async function calendar(
   q: z.infer<typeof calendarQuery>,
   now = Date.now(),
 ) {
+  await requireModule(db, r, "table-booking");
   const first = `${q.month}-01`,
     days: string[] = [];
   for (let d = first; d.startsWith(q.month); d = addDays(d, 1)) days.push(d);
@@ -194,6 +200,7 @@ export async function availability(
   q: z.infer<typeof dayQuery>,
   now = Date.now(),
 ) {
+  await requireModule(db, r, "table-booking");
   const data = await load(
     db,
     r,
@@ -208,6 +215,8 @@ export async function availability(
     open,
     group,
     durationMinutes: booking.durationMinutes,
+    /** Zones dans l’ordre du plan, chacune affichée sur son propre canevas. */
+    zones: [...new Set(data.tables.map((t) => t.zone))],
     tables: data.tables.map(({ status, ...t }) => ({
       ...t,
       unavailable: today && status === "unavailable",
@@ -247,6 +256,7 @@ export async function requestReservation(
   a: z.infer<typeof reservationSchema>,
   now = Date.now(),
 ) {
+  await requireModule(db, a.restaurant, "table-booking");
   const start = Date.parse(a.start),
     local = paris(start);
   if (start < now) throw new Error("Choisissez un créneau futur.");
@@ -258,6 +268,8 @@ export async function requestReservation(
     throw new Error("Ce créneau n’est pas ouvert à la réservation.");
   await one(db, "SELECT id FROM restaurants WHERE id=$1", [a.restaurant]);
   const end = start + booking.durationMinutes * 60000;
+  if (a.table && !(await moduleEnabled(db, a.restaurant, "floor")))
+    throw new Error("Le choix de table n’est pas proposé par cet établissement.");
   if (a.table) {
     // Verrou de ligne : deux demandes simultanées sur la même table se suivent.
     const t = await one<{ capacity: number; status: string }>(

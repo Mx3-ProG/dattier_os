@@ -1,0 +1,84 @@
+/* Reprend le mouvement historique ; le pivot explicite le rend plus régulier. */
+.ls-kitchen-fork,
+.ls-kitchen-knife {
+  stroke: var(--ls-primary);
+  transform-box: view-box !important;
+  transform-origin: 24px 24px !important;
+  will-change: transform;
+  transform: rotate(-45deg);
+  animation: ls-kitchen-fork calc(2.4s / var(--ls-speed)) cubic-bezier(0.55, 0, 0.35, 1) infinite;
+}
+.ls-kitchen-knife {
+  transform: rotate(45deg);
+  animation-name: ls-kitchen-knife;
+}
+.ls-kitchen-spark {
+  stroke: var(--ls-secondary);
+  stroke-width: 2.6;
+  opacity: 0;
+  animation: ls-kitchen-spark calc(2.4s / var(--ls-speed)) ease-out infinite;
+}
+.ls-kitchen-shadow {
+  fill: var(--ls-primary);
+  opacity: 0.16;
+  animation: ls-kitchen-shadow calc(2.4s / var(--ls-speed)) cubic-bezier(0.55, 0, 0.35, 1) infinite;
+}
+@keyframes ls-kitchen-fork {
+  0%,
+  12% {
+    transform: rotate(-45deg);
+  }
+  38% {
+    transform: translate(-16px, -10px) rotate(-170deg);
+  }
+  62% {
+    transform: translate(0, -16px) rotate(-315deg);
+  }
+  84% {
+    transform: translate(10px, -5px) rotate(-380deg);
+  }
+  100% {
+    transform: rotate(-405deg);
+  }
+}
+@keyframes ls-kitchen-knife {
+  0%,
+  12% {
+    transform: rotate(45deg);
+  }
+  38% {
+    transform: translate(16px, -10px) rotate(170deg);
+  }
+  62% {
+    transform: translate(0, -16px) rotate(315deg);
+  }
+  84% {
+    transform: translate(-10px, -5px) rotate(380deg);
+  }
+  100% {
+    transform: rotate(405deg);
+  }
+}
+@keyframes ls-kitchen-spark {
+  0% {
+    opacity: 1;
+    transform: translateY(2px) scale(0.6);
+  }
+  14%,
+  100% {
+    opacity: 0;
+    transform: translateY(-4px) scale(1.15);
+  }
+}
+@keyframes ls-kitchen-shadow {
+  0%,
+  12%,
+  100% {
+    transform: scaleX(1);
+    opacity: 0.18;
+  }
+  62% {
+    transform: scaleX(0.55);
+    opacity: 0.08;
+  }
+}

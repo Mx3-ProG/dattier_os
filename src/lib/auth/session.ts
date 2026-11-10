@@ -1,9 +1,10 @@
+import { requirePlan } from "@/features/platform/entitlements";
 import { createHash, randomBytes } from "node:crypto";
 import { cookies } from "next/headers";
 import { getDb, demoEnabled, one, rows, type DB } from "../database/db";
 import type { Role } from "../permissions";
 import { bindActor } from "@/features/ops-security/context";
-import { oidcActor } from "./oidc";
+import { appOrigin, oidcActor } from "./oidc";
 export type Actor = {
   id: string;
   name: string;
@@ -24,10 +25,10 @@ export async function login(id: string) {
     "INSERT INTO sessions VALUES($1,$2,now()+interval '12 hours')",
     [hash(token), profile.id],
   );
-  (await cookies()).set("dattier_session", token, {
+  (await cookies()).set("atacuisine_session", token, {
     httpOnly: true,
     sameSite: "strict",
-    secure: !!process.env.VERCEL,
+    secure: appOrigin().startsWith("https:"),
     path: "/",
     maxAge: 43200,
   });
@@ -39,7 +40,7 @@ export async function actor(): Promise<Actor> {
     bindActor(user.id, hash(`${user.id}:${user.authIssuedAt}`));
     return user;
   }
-  const token = (await cookies()).get("dattier_session")?.value;
+  const token = (await cookies()).get("atacuisine_session")?.value;
   if (!token) throw new Error("Connexion requise.");
   const user = await one<Actor & { auth_issued_at: number }>(
     await getDb(),
@@ -49,25 +50,8 @@ export async function actor(): Promise<Actor> {
   bindActor(user.id, hash(token));
   return { ...user, authIssuedAt: user.auth_issued_at };
 }
-/** Platform administrators (table platform_admins) are the only accounts with a view on every structure. */
-export async function isPlatformAdmin(db: DB, profileId: string) {
-  return (
-    await rows<{ allowed: boolean }>(
-      db,
-      "SELECT EXISTS(SELECT 1 FROM platform_admins a JOIN profiles p ON p.id=a.profile_id WHERE a.profile_id=$1 AND p.status='active') AS allowed",
-      [profileId],
-    )
-  )[0].allowed;
-}
 export async function scope(db: DB, user: Actor, r: string) {
-  if (await isPlatformAdmin(db, user.id)) {
-    await one(db, "SELECT id FROM restaurants WHERE id=$1", [r]);
-    return {
-      ...user,
-      role: "SUPER_ADMIN" as Role,
-      roles: ["SUPER_ADMIN"] as Role[],
-    };
-  }
+  await requirePlan(db, r, 39);
   const revoked = await rows<{ not_before: string }>(
     db,
     "SELECT not_before FROM restaurant_session_revocations WHERE restaurant_id=$1 AND profile_id=$2",

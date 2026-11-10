@@ -1,0 +1,19 @@
+# Test info
+
+- Name: appearance.spec.ts >> préférences personnelles : aperçu, sauvegarde, navigation, réseau et isolation
+- Location: tests/e2e/appearance.spec.ts:31:1
+
+# Error details
+
+```
+Error: locator.evaluate: Error: strict mode violation: locator('.workspace') resolved to 2 elements:
+    1) <div class="workspace restaurant-workspace ">…</div> aka locator('div').nth(2)
+    2) <div class="workspace restaurant-workspace ">…</div> aka locator('div').filter({ hasText: 'atacuisinePersonnaliser mon' }).nth(3)
+
+Call log:
+  - waiting for locator('.workspace')
+
+```
+
+
+Captures et traces complètes conservées dans la copie temporaire ; diagnostic ci-dessus conservé dans le dépôt.

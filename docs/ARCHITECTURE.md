@@ -27,6 +27,6 @@ Le tableau de bord interroge une projection cohérente toutes les 3 s ; le site 
 
 ## Sécurité locale
 
-Origine POST contrôlée, entrées Zod bornées, requêtes paramétrées, cookies HttpOnly et SameSite strict, jetons hachés, coûts masqués aux rôles non financiers. Les routes publiques ne retournent ni coordonnées privées, ni stocks détaillés, ni coûts. La démo exige `DATTIER_DEMO=true` et refuse Vercel. RLS activée partout sans politique publique par défaut ; connexion locale privilégiée, RBAC dans les services. Ce n’est pas encore une validation RLS sous un utilisateur Supabase.
+Origine POST contrôlée, entrées Zod bornées, requêtes paramétrées, cookies HttpOnly et SameSite strict, jetons hachés, coûts masqués aux rôles non financiers. Les routes publiques ne retournent ni coordonnées privées, ni stocks détaillés, ni coûts. La démo exige `ATACUISINE_DEMO=true` et refuse Vercel. RLS activée partout sans politique publique par défaut ; connexion locale privilégiée, RBAC dans les services. Ce n’est pas encore une validation RLS sous un utilisateur Supabase.
 
 Avant toute exposition réseau réelle : authentification de production, autorisations SQL par opération, limitation de débit persistante, limites de corps effectives au proxy, monitoring, sauvegardes, politiques de conservation et tests de pénétration ciblés. Le serveur de démo reste lié à 127.0.0.1.

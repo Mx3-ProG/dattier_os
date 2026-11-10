@@ -1,0 +1,67 @@
+.ls-neon-halo {
+  fill: var(--ls-primary);
+  opacity: 0.16;
+  filter: blur(18px);
+  animation: ls-neon-beat calc(1.6s / var(--ls-speed)) ease-in-out infinite;
+}
+.ls-neon-ring {
+  stroke: var(--ls-primary);
+  stroke-width: 3;
+  filter: drop-shadow(0 0 6px var(--ls-primary));
+}
+.ls-neon-pulse {
+  stroke: var(--ls-primary);
+  stroke-width: 2;
+  opacity: 0;
+  animation: ls-neon-pulse calc(2.4s / var(--ls-speed)) cubic-bezier(0.2, 0.6, 0.3, 1) infinite;
+}
+.ls-neon-pulse.is-b {
+  stroke: var(--ls-secondary);
+  animation-delay: calc(-1.2s / var(--ls-speed));
+}
+.ls-neon-arc {
+  stroke: var(--ls-secondary);
+  stroke-width: 4;
+  stroke-linecap: round;
+  stroke-dasharray: 22 78;
+  filter: drop-shadow(0 0 5px var(--ls-secondary));
+  animation: ls-neon-spin calc(1.8s / var(--ls-speed)) linear infinite;
+}
+.ls-neon-arc.is-b {
+  stroke: var(--ls-primary);
+  stroke-width: 2.5;
+  stroke-dasharray: 34 66;
+  animation-duration: calc(2.8s / var(--ls-speed));
+  animation-direction: reverse;
+}
+.ls-neon-core {
+  fill: var(--ls-primary);
+  filter: drop-shadow(0 0 8px var(--ls-primary));
+  animation: ls-neon-beat calc(1.6s / var(--ls-speed)) ease-in-out infinite;
+}
+@keyframes ls-neon-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@keyframes ls-neon-pulse {
+  0% {
+    transform: scale(0.85);
+    opacity: 0.8;
+  }
+  100% {
+    transform: scale(1.55);
+    opacity: 0;
+  }
+}
+@keyframes ls-neon-beat {
+  0%,
+  100% {
+    transform: scale(0.92);
+    opacity: 0.7;
+  }
+  50% {
+    transform: scale(1.08);
+    opacity: 1;
+  }
+}

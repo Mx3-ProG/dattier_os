@@ -1,8 +1,11 @@
-const CACHE = "dattier-shell-v2";
+const CACHE = "atacuisine-shell-v4";
 self.addEventListener("install", (event) => {
   event.waitUntil(
     caches.open(CACHE).then(async (cache) => {
-      const response = await fetch("/offline", { cache: "reload" });
+      const response = await fetch("/offline", {
+        cache: "reload",
+        credentials: "omit",
+      });
       if (!response.ok) throw new Error("Offline shell unavailable");
       const html = await response.clone().text();
       await cache.put("/offline", response);
@@ -20,11 +23,13 @@ self.addEventListener("activate", (event) => {
       .keys()
       .then((keys) =>
         Promise.all(
-          keys.filter((k) => k !== CACHE).map((k) => caches.delete(k)),
+          keys
+            .filter((k) => k.startsWith("atacuisine-shell-") && k !== CACHE)
+            .map((k) => caches.delete(k)),
         ),
-      ),
+      )
+      .then(() => self.clients.claim()),
   );
-  self.clients.claim();
 });
 self.addEventListener("fetch", (event) => {
   const url = new URL(event.request.url);
@@ -41,11 +46,17 @@ self.addEventListener("fetch", (event) => {
   if (url.pathname.startsWith("/_next/static/"))
     event.respondWith(
       caches.open(CACHE).then(async (cache) => {
-        const old = await cache.match(event.request);
-        if (old) return old;
-        const response = await fetch(event.request);
-        if (response.ok) await cache.put(event.request, response.clone());
-        return response;
+        // Development asset URLs can stay unchanged when their contents change.
+        // Prefer current assets; keep the last successful copy for offline use.
+        try {
+          const response = await fetch(event.request);
+          if (response.ok) await cache.put(event.request, response.clone());
+          return response;
+        } catch (error) {
+          const cached = await cache.match(event.request);
+          if (cached) return cached;
+          throw error;
+        }
       }),
     );
 });

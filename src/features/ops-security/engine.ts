@@ -268,9 +268,9 @@ export type Rule = {
   detect: (db: PGlite) => Promise<Detection[]>;
 };
 const health = globalThis as unknown as {
-  dattierOpsSecurityProbe?: { at: string; latencyMs: number; ok: boolean };
+  atacuisineOpsSecurityProbe?: { at: string; latencyMs: number; ok: boolean };
 };
-export const lastProbe = () => health.dattierOpsSecurityProbe ?? null;
+export const lastProbe = () => health.atacuisineOpsSecurityProbe ?? null;
 export const rules: Rule[] = [
   {
     id: "auth_repeated_failures",
@@ -505,7 +505,7 @@ const mode = async (db: DB) =>
   (
     await one<{ m: "observation" | "active" }>(
       db,
-      "SELECT remediation_mode AS m FROM ops_security_settings LIMIT 1",
+      "SELECT remediation_mode AS m FROM ops_security_settings WHERE restaurant_id=coalesce(nullif(current_setting('app.restaurant_id',true),''),restaurant_id) LIMIT 1",
     )
   ).m;
 
@@ -778,12 +778,12 @@ export async function probe(db: DB) {
   } catch {
     ok = false;
   }
-  health.dattierOpsSecurityProbe = {
+  health.atacuisineOpsSecurityProbe = {
     at: new Date().toISOString(),
     latencyMs: Math.round(performance.now() - start),
     ok,
   };
-  return health.dattierOpsSecurityProbe;
+  return health.atacuisineOpsSecurityProbe;
 }
 /** Nightly work, idempotent: archive missing days, verify, purge once per Paris day. */
 export async function nightly(
@@ -829,7 +829,7 @@ export async function tick(db: PGlite, archive: ArchiveOptions = {}) {
   );
 }
 const scheduler = globalThis as unknown as {
-  dattierOpsSecurityScheduler?: {
+  atacuisineOpsSecurityScheduler?: {
     timer: NodeJS.Timeout;
     running: boolean;
     lastTick: string | null;
@@ -837,11 +837,11 @@ const scheduler = globalThis as unknown as {
   };
 };
 export const schedulerState = () =>
-  scheduler.dattierOpsSecurityScheduler
+  scheduler.atacuisineOpsSecurityScheduler
     ? {
         running: true,
-        lastTick: scheduler.dattierOpsSecurityScheduler.lastTick,
-        lastError: scheduler.dattierOpsSecurityScheduler.lastError,
+        lastTick: scheduler.atacuisineOpsSecurityScheduler.lastTick,
+        lastError: scheduler.atacuisineOpsSecurityScheduler.lastError,
       }
     : { running: false, lastTick: null, lastError: null };
 /**

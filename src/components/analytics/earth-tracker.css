@@ -1,0 +1,165 @@
+.earth-tracker { display: grid; gap: 16px; }
+.et-toolbar { display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-end; justify-content: space-between; }
+.et-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.et-dates, .et-settings-row { display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-end; }
+.et-dates label, .et-site, .et-settings-row label, .et-traffic-head label { display: grid; gap: 4px; font-size: 13px; color: var(--muted); }
+.et-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 170px), 1fr)); gap: 12px; }
+.et-stat { display: grid; gap: 4px; padding: 14px 16px; align-content: start; }
+.et-stat span { font-size: 13px; color: var(--muted); }
+.et-stat strong { font-size: 28px; line-height: 1.1; color: var(--ink); font-variant-numeric: tabular-nums; }
+.et-stat small { font-size: 12px; color: var(--muted); }
+.et-muted { margin: 0; font-size: 13px; color: var(--muted); }
+.et-notice { margin: 0; padding: 10px 14px; border: 1px solid var(--line); border-radius: 10px; background: var(--sand); color: var(--ink); font-size: 14px; }
+.et-filter-note { margin: 0; font-size: 14px; color: var(--ink); }
+.et-filter-note button { background: none; border: 0; padding: 0; color: inherit; text-decoration: underline; cursor: pointer; }
+.et-main { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 320px); gap: 16px; align-items: start; }
+.et-visual { display: grid; gap: 8px; min-width: 0; }
+.et-side { display: grid; gap: 16px; min-width: 0; }
+.et-empty-note { margin: 0; font-size: 14px; color: var(--ink); }
+
+/* Le globe garde son ambiance spatiale quel que soit le thème de l’espace de gestion. */
+.et-globe {
+  position: relative;
+  height: clamp(340px, 62vh, 640px);
+  border-radius: var(--radius);
+  overflow: hidden;
+  color: #e8f1ff;
+  background: radial-gradient(120% 120% at 50% 40%, #0c1c3a 0%, #060c1e 55%, #03060f 100%);
+}
+.et-globe.is-fullscreen { height: 100vh; border-radius: 0; }
+.et-stage { position: absolute; inset: 0; outline-offset: -3px; }
+.et-stage canvas { touch-action: none; cursor: grab; }
+.et-stage-loading { position: absolute; inset: 0; display: grid; place-items: center; margin: 0; font-size: 14px; color: #b8c9e6; }
+.et-stage-2d { position: absolute; inset: 0; display: flex; flex-direction: column; justify-content: center; padding: 12px; }
+.et-fallback-note, .et-map-error { margin: 0 0 8px; font-size: 13px; color: #cfe0fa; text-align: center; }
+.et-map { width: 100%; max-height: 100%; }
+.et-map-sphere { fill: #0a2140; stroke: rgba(150, 210, 255, .2); }
+.et-map-land { fill: #2f8f83; stroke: #0a2140; stroke-width: .5; cursor: pointer; }
+.et-map-land:hover { fill: #3aa897; }
+.et-map-land.is-selected { fill: #7fd8c6; }
+.et-map-marker { fill: rgba(255, 200, 107, .72); stroke: #fff2d0; stroke-width: 1; cursor: pointer; }
+.et-map-pulse { fill: none; stroke: #fff2d0; stroke-width: 2; transform-box: fill-box; transform-origin: center; animation: et-map-pulse 1.8s ease-out forwards; }
+@keyframes et-map-pulse { from { transform: scale(.4); opacity: 1; } to { transform: scale(4); opacity: 0; } }
+.et-tooltip {
+  position: absolute;
+  z-index: 2;
+  transform: translate(14px, -50%);
+  display: grid;
+  gap: 2px;
+  max-width: min(260px, 70%);
+  padding: 8px 12px;
+  border: 1px solid rgba(150, 210, 255, .25);
+  border-radius: 10px;
+  background: rgba(6, 14, 34, .92);
+  font-size: 13px;
+  pointer-events: none;
+}
+.et-tooltip small { color: #b8c9e6; }
+.et-tooltip-fixed { left: 12px; bottom: 12px; transform: none; }
+.et-controls { position: absolute; z-index: 2; top: 12px; right: 12px; display: flex; flex-wrap: wrap; gap: 6px; justify-content: flex-end; max-width: 60%; }
+.et-controls button {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border: 1px solid rgba(150, 210, 255, .28);
+  border-radius: 10px;
+  background: rgba(6, 14, 34, .72);
+  color: inherit;
+  cursor: pointer;
+}
+.et-controls button:hover { background: rgba(30, 58, 110, .85); }
+.et-controls button:focus-visible, .et-stage:focus-visible { outline: 2px solid #ffc86b; }
+.et-demo-badge {
+  position: absolute;
+  z-index: 2;
+  top: 12px;
+  left: 12px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: #ffc86b;
+  color: #231a05;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.et-rank, .et-activity, .et-country, .et-traffic, .et-settings { padding: 16px; min-width: 0; }
+.et-rank h3, .et-activity h3, .et-country h3, .et-traffic h3, .et-settings h3 { margin: 0 0 8px; font-size: 16px; }
+.et-activity h3 { display: flex; align-items: center; gap: 6px; }
+.et-rank table { width: 100%; border-collapse: collapse; font-size: 14px; }
+.et-rank thead th { font-size: 12px; font-weight: 500; color: var(--muted); text-align: right; padding-bottom: 6px; }
+.et-rank thead th:first-child { text-align: left; }
+.et-rank tbody th { font-weight: 500; text-align: left; padding: 6px 8px 6px 0; width: 100%; overflow-wrap: anywhere; }
+.et-rank tbody td { text-align: right; padding: 6px 0 6px 10px; font-variant-numeric: tabular-nums; white-space: nowrap; vertical-align: top; }
+.et-rank tbody th button { background: none; border: 0; padding: 0; font: inherit; color: var(--ink); text-align: left; cursor: pointer; }
+.et-rank tbody th button:hover { text-decoration: underline; }
+.et-rank tr.is-selected th button { font-weight: 700; text-decoration: underline; }
+.et-bar { display: block; height: 4px; margin-top: 4px; border-radius: 2px; background: var(--line); }
+.et-bar i { display: block; height: 100%; border-radius: 2px; background: var(--appearance-link, #ad6545); }
+.et-list { list-style: none; margin: 10px 0 0; padding: 0; display: grid; gap: 8px; font-size: 14px; }
+.et-list li { display: flex; justify-content: space-between; gap: 12px; }
+.et-list time { flex: none; font-size: 12px; color: var(--muted); }
+.et-country dl { display: grid; gap: 6px; margin: 0 0 10px; }
+.et-country dl div { display: flex; justify-content: space-between; gap: 12px; font-size: 14px; }
+.et-country dt { color: var(--muted); }
+.et-country dd { margin: 0; font-weight: 600; font-variant-numeric: tabular-nums; }
+.et-analytics { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr)); gap: 16px; align-items: start; }
+.et-traffic { grid-column: 1 / -1; }
+.et-traffic-head { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 12px; align-items: flex-end; margin-bottom: 8px; }
+.et-chart { width: 100%; min-height: 240px; }
+
+.et-settings form { display: grid; gap: 14px; }
+.et-settings fieldset { display: grid; gap: 10px; margin: 0; padding: 0; border: 0; }
+.et-settings legend { padding: 0 0 6px; font-weight: 600; font-size: 14px; }
+.et-check, .et-radio { display: flex; gap: 10px; align-items: flex-start; font-size: 14px; cursor: pointer; }
+.et-check input, .et-radio input { flex: none; margin-top: 3px; }
+.et-check span, .et-radio span { display: grid; gap: 2px; }
+.et-check small, .et-radio small { color: var(--muted); font-size: 13px; }
+.et-exemption { padding: 12px 14px; border: 1px solid var(--line); border-radius: 10px; font-size: 14px; }
+.et-exemption p { margin: 0 0 6px; }
+.et-exemption ul { margin: 0 0 10px; padding-left: 18px; }
+.et-settings > p { margin: 10px 0 0; font-size: 14px; }
+.et-settings > p.et-muted { font-size: 13px; }
+.et-danger { margin-top: 12px; font-size: 14px; }
+.et-danger summary { cursor: pointer; color: var(--muted); }
+
+/* Vitrine de la boutique : animation CSS, sans WebGL ni données réelles. */
+.et-preview {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: radial-gradient(120% 120% at 50% 40%, #0c1c3a, #03060f);
+}
+.et-preview-earth {
+  position: relative;
+  width: 52%;
+  aspect-ratio: 1;
+  max-height: 84%;
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at 34% 30%, rgba(170, 225, 255, .3), transparent 45%),
+    radial-gradient(circle at 22% 42%, #2f8f83 0 14%, transparent 15%),
+    radial-gradient(circle at 58% 34%, #2f8f83 0 20%, transparent 21%),
+    radial-gradient(circle at 68% 66%, #2f8f83 0 12%, transparent 13%),
+    #0b2747;
+  box-shadow: 0 0 22px rgba(86, 182, 255, .55), inset -10px -8px 22px rgba(0, 0, 0, .55);
+}
+.et-preview-dot { position: absolute; width: 8px; height: 8px; margin: -4px; border-radius: 50%; background: #ffc86b; box-shadow: 0 0 10px #ffc86b; animation: et-dot 2.4s ease-out infinite; }
+@keyframes et-dot { 0% { transform: scale(.6); opacity: .5; } 40% { transform: scale(1.5); opacity: 1; } 100% { transform: scale(.6); opacity: .5; } }
+.et-preview small { position: absolute; left: 8px; bottom: 6px; padding: 2px 8px; border-radius: 999px; background: rgba(6, 14, 34, .8); color: #e8f1ff; font-size: 11px; }
+.et-demo { width: min(960px, calc(100vw - 24px)); max-height: calc(100dvh - 24px); padding: 16px; border: 0; border-radius: var(--radius); background: var(--paper); color: var(--ink); }
+.et-demo::backdrop { background: rgba(3, 6, 15, .7); }
+.et-demo header { display: flex; justify-content: space-between; gap: 12px; align-items: flex-start; margin-bottom: 10px; }
+.et-demo h2, .et-demo p { margin: 0; }
+.et-demo-note { margin-top: 10px !important; font-size: 14px; }
+
+@media (max-width: 900px) {
+  .et-main { grid-template-columns: minmax(0, 1fr); }
+  .et-globe { height: clamp(320px, 56vh, 520px); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .et-preview-dot, .et-map-pulse { animation: none; }
+}

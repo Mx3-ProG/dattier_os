@@ -42,7 +42,27 @@ export const fontIds = [
 ] as const;
 export type FontId = (typeof fontIds)[number];
 
+export const presentationSchema = z.object({
+  layout: z.enum([
+    "bistrot",
+    "jardin",
+    "comptoir",
+    "pause",
+    "signature",
+    "riviera",
+    "atelier",
+    "escale",
+  ]),
+  stickyHeader: z.boolean(),
+  stickyAction: z.enum(["none", "order", "reserve"]),
+  motion: z.boolean(),
+  surprise: z.boolean(),
+});
+export type Presentation = z.infer<typeof presentationSchema>;
+
 export const themeSchema = z.object({
+  // Optional for existing published sites: no migration or visual change required.
+  presentation: presentationSchema.optional(),
   colors: z.object({
     primary: hex,
     primaryDark: hex,
@@ -191,6 +211,17 @@ export const sectionProps = {
   promoBanner: z.object({ text: text(200), link: linkSchema }),
   categories: z.object({ kicker: text(80), title: text(160) }),
   hours: z.object({ title: text(120), note: text(160) }),
+  /* Sections d’add-ons : affichées seulement si l’add-on est installé. */
+  estimation: z.object({ kicker: text(80), title: text(160), lead: text(400), buttonLabel: text(60) }),
+  loyalty: z.object({ kicker: text(80), title: text(160), lead: text(400), perks: z.array(text(120)).max(6), buttonLabel: text(60) }),
+  reservation: z.object({ kicker: text(80), title: text(160), lead: text(400), buttonLabel: text(60) }),
+  allergens: z.object({ kicker: text(80), title: text(160), lead: text(400) }),
+  delivery: z.object({ kicker: text(80), title: text(160), lead: text(400), checker: z.boolean() }),
+  bundles: z.object({ kicker: text(80), title: text(160), lead: text(400) }),
+  services: z.object({ kicker: text(80), title: text(160), lead: text(400), buttonLabel: text(60), buttonLink: text(300) }),
+  /* Services et Produits créés dans Gestion : seuls ceux marqués « Sur le site » apparaissent. */
+  offerServices: z.object({ kicker: text(80), title: text(160), lead: text(400), category: text(80), limit: z.number().int().min(0).max(100), buttonLabel: text(60), buttonLink: text(300) }),
+  offerProducts: z.object({ kicker: text(80), title: text(160), lead: text(400), category: text(80), limit: z.number().int().min(0).max(100), buttonLabel: text(60), buttonLink: text(300) }),
   /** Additional text on a legal page. The mandatory legal text stays in code. */
   legal: z.object({ extra: z.array(text(2000)).max(10) }),
   /** Functional blocks rendered by existing code. Never editable from the CMS. */
@@ -278,6 +309,77 @@ export const legalIdentitySchema = z.object({
   mediator: text(300),
 });
 
+/* ───────────────────────── SEO identity ───────────────────────── */
+
+export const localeSchema = z.object({
+  language: z
+    .string()
+    .regex(/^[a-z]{2,3}(-[A-Z]{2})?$/, "Langue au format « fr » ou « en-GB »."),
+  country: z.union([
+    z.string().regex(/^[A-Z]{2}$/, "Pays au format « FR »."),
+    z.literal(""),
+  ]),
+});
+/** Site-relative path: /ancienne-page (no query, no protocol-relative URL). */
+const sitePath = z
+  .string()
+  .max(200)
+  .regex(/^\/(?!\/)[A-Za-z0-9._~\-/%]*$/, "Chemin au format /ancienne-page.");
+export const redirectSchema = z
+  .object({
+    from: sitePath.refine(
+      (p) => p !== "/",
+      "L’accueil ne peut pas être redirigé.",
+    ),
+    to: z.union([
+      sitePath,
+      z
+        .string()
+        .max(500)
+        .regex(/^https:\/\/[^\s]+$/, "Adresse https attendue."),
+    ]),
+    permanent: z.boolean(),
+  })
+  .refine(
+    (r) => r.from !== r.to,
+    "Une redirection ne peut pas pointer vers elle-même.",
+  );
+export const businessTypes = [
+  "Restaurant",
+  "FastFoodRestaurant",
+  "CafeOrCoffeeShop",
+  "Bakery",
+  "BarOrPub",
+  "IceCreamShop",
+  "FoodEstablishment",
+  "Store",
+  "LocalBusiness",
+  /** No premises open to the public (online only): no address or hours published. */
+  "Organization",
+] as const;
+export const businessSchema = z.object({
+  type: z.enum(businessTypes),
+  cuisines: z.array(text(60)).max(8),
+  priceRange: text(10),
+  /** Official profiles (social networks, directories) owned by the business. */
+  sameAs: z
+    .array(
+      z
+        .string()
+        .max(300)
+        .regex(/^https:\/\/[^\s]+$/, "Adresse https attendue."),
+    )
+    .max(10),
+  areaServed: z.array(text(80)).max(10),
+  geo: z
+    .object({
+      latitude: z.number().min(-90).max(90),
+      longitude: z.number().min(-180).max(180),
+    })
+    .nullable(),
+});
+export type Business = z.infer<typeof businessSchema>;
+
 export const siteConfigSchema = z.object({
   schemaVersion: z.literal(SCHEMA_VERSION),
   branding: z.object({
@@ -288,6 +390,16 @@ export const siteConfigSchema = z.object({
     email: text(150),
     announcement: text(120),
     announcementHighlight: text(60),
+    /** Écran de chargement du site public (add-on acquis), absent = aucun. */
+    loader: z.object({ product: z.string().max(64).nullable() }).optional(),
+    /** Décoration visuelle du site public (add-on acquis), absente par défaut. */
+    decoration: z.object({ product: z.string().max(64).nullable() }).optional(),
+    /** Fond de page acquis pour cet établissement, absent = thème normal. */
+    background: z.object({ product: z.string().max(64).nullable() }).optional(),
+    /** Page 404 du site : modèle (add-on acquis) et textes. Absent = modèle par défaut. */
+    notFound: z
+      .object({ product: z.string().max(64).nullable(), title: text(120), message: text(400), button: text(60) })
+      .optional(),
   }),
   theme: themeSchema,
   seo: z.object({
@@ -297,7 +409,19 @@ export const siteConfigSchema = z.object({
     ogImage: optionalMedia,
     favicon: optionalMedia,
     shareName: text(80),
+    /** robots.txt preferences for identified AI crawlers (absent = allowed). */
+    aiCrawlers: z
+      .object({ search: z.boolean(), training: z.boolean() })
+      .optional(),
+    /** Site language (BCP 47) and main country (ISO 3166). Absent = fr / FR. */
+    locale: localeSchema.optional(),
+    /** Publish /llms.txt (optional summary for AI tools; absent = not published). */
+    llmsTxt: z.boolean().optional(),
+    /** Redirects of former addresses (after a page is renamed or removed). */
+    redirects: z.array(redirectSchema).max(100).optional(),
   }),
+  /** Business identity used for structured data. Every field is optional. */
+  business: businessSchema.optional(),
   header: z.object({
     navMenu: text(40),
     navUniverse: text(40),

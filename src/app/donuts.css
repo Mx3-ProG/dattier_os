@@ -27,7 +27,7 @@
   font-size: clamp(38px, 4.2vw, 62px);
 }
 .donut-site em {
-  color: var(--pink);
+  color: var(--public-link, var(--pink));
   font-style: italic;
 }
 .donut-site button,
@@ -38,7 +38,7 @@
   position: absolute;
   top: -60px;
   z-index: 100;
-  background: white;
+  background: var(--public-surface, white);
   padding: 12px;
 }
 .donut-skip:focus {
@@ -47,7 +47,7 @@
 .donut-announcement {
   background: var(--site-accent, #f5b8d0);
   text-align: center;
-  font-size: 10px;
+  font-size: 14px;
   font-weight: 800;
   letter-spacing: 1.8px;
   padding: 9px 12px;
@@ -61,7 +61,7 @@
   justify-content: space-between;
   gap: 24px;
   padding: 16px max(5vw, 24px);
-  border-bottom: 1px solid #eddcd5;
+  border-bottom: 1px solid var(--public-line, #eddcd5);
   background: var(--cream);
   position: sticky;
   top: 0;
@@ -83,16 +83,16 @@
   object-fit: contain;
 }
 .brand-dot {
-  color: var(--pink);
+  color: var(--public-link, var(--pink));
 }
 .donut-header nav {
   display: flex;
   gap: 30px;
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 650;
 }
 .donut-header nav a:hover {
-  color: var(--pink);
+  color: var(--public-link, var(--pink));
 }
 .donut-nav-actions {
   display: flex;
@@ -104,9 +104,9 @@
   height: 42px;
   display: grid;
   place-items: center;
-  border: 1px solid #decfc8;
+  border: 1px solid var(--public-line, #decfc8);
   border-radius: 50%;
-  background: #fff9f5;
+  background: var(--public-surface, #fff9f5);
 }
 .donut-button {
   display: inline-flex;
@@ -133,7 +133,7 @@
 }
 .donut-button.compact {
   padding: 12px 17px;
-  font-size: 12px;
+  font-size: 14px;
   gap: 15px;
 }
 .donut-button.outline {
@@ -145,7 +145,7 @@
   width: max-content;
 }
 .donut-button.dark {
-  background: var(--site-ink, #26201f);
+  background: var(--public-accent, var(--site-ink, #26201f));
 }
 .donut-bag {
   position: relative;
@@ -160,12 +160,12 @@
   position: absolute;
   right: 0;
   top: 0;
-  background: var(--site-ink, #26201f);
+  background: var(--public-accent, var(--site-ink, #26201f));
   color: #fff;
   border-radius: 50%;
   height: 19px;
   width: 19px;
-  font-size: 11px;
+  font-size: 14px;
   display: grid;
   place-items: center;
 }
@@ -183,7 +183,7 @@
   align-self: center;
 }
 .donut-kicker {
-  font-size: 10px;
+  font-size: 14px;
   letter-spacing: 2px;
   font-weight: 800;
   margin-bottom: 24px;
@@ -214,7 +214,7 @@
   display: inline-flex;
   align-items: center;
   gap: 10px;
-  font-size: 12px;
+  font-size: 14px;
   font-weight: 700;
   border-bottom: 1px solid var(--site-ink, #26201f);
   padding: 8px 0;
@@ -224,8 +224,8 @@
   grid-template-columns: repeat(2, minmax(0, max-content));
   gap: 9px;
   margin-top: 42px;
-  font-size: 11px;
-  color: #766762;
+  font-size: 14px;
+  color: var(--public-ink, #766762);
 }
 .donut-service span {
   display: flex;
@@ -233,13 +233,13 @@
   gap: 7px;
   min-height: 38px;
   padding: 8px 11px;
-  border: 1px solid #ecd7df;
+  border: 1px solid var(--public-line, #ecd7df);
   border-radius: 10px;
-  background: #fffdfbd9;
+  background: var(--public-surface, #fffdfbd9);
 }
 .donut-hero-art {
   position: relative;
-  background: #f4b4d0;
+  background: var(--public-surface, #f4b4d0);
   margin: 30px 30px 30px 0;
   border-radius: 150px 12px 12px 12px;
   min-height: 530px;
@@ -260,12 +260,12 @@
   justify-content: center;
   flex-direction: column;
   background: var(--cyan);
-  color: #102a2b;
+  color: var(--public-ink, #041010);
   width: 118px;
   height: 118px;
   border-radius: 50%;
   border: 4px solid var(--cream);
-  font-size: 12px;
+  font-size: 14px;
   font-weight: 800;
   line-height: 1.1;
   box-shadow: 0 4px 0 var(--site-ink, #26201f);
@@ -295,8 +295,8 @@
     serif;
   line-height: 0.9;
   transform: rotate(10deg);
-  color: #64283d;
-  background: #fff9f5d9;
+  color: var(--public-ink, #64283d);
+  background: var(--public-surface, #fff9f5d9);
   border-radius: 10px;
   padding: 8px;
 }
@@ -304,7 +304,7 @@
   position: absolute;
   top: -20px;
   left: 22px;
-  color: var(--pink);
+  color: var(--public-link, var(--pink));
   font-size: 90px;
   line-height: 1;
 }
@@ -360,13 +360,13 @@
   margin-bottom: 35px;
 }
 .donut-section-title > p {
-  color: #77625d;
+  color: var(--public-ink, #77625d);
   font-size: 14px;
   padding-bottom: 6px;
 }
 .donut-section-title small {
   display: block;
-  font-size: 10px;
+  font-size: 14px;
   margin-top: 12px;
 }
 .donut-categories {
@@ -376,17 +376,17 @@
   padding: 4px 0 24px;
 }
 .donut-categories button {
-  border: 1px solid #dbc9c2;
+  border: 1px solid var(--public-line, #dbc9c2);
   border-radius: 30px;
   padding: 11px 24px;
   white-space: nowrap;
-  font-size: 12px;
+  font-size: 14px;
   font-weight: 700;
   background: transparent;
   min-height: 44px;
 }
 .donut-categories .selected {
-  background: var(--site-ink, #26201f);
+  background: var(--public-accent, var(--site-ink, #26201f));
   color: #fff;
   border-color: var(--site-ink, #26201f);
 }
@@ -397,7 +397,7 @@
 }
 .donut-order-start {
   padding: 70px max(5vw, 24px) 55px;
-  background: linear-gradient(135deg, #ffe2ee, #fff9f5 55%, #dff7f5);
+  background: linear-gradient(135deg, var(--public-surface, #ffe2ee), var(--public-surface, #fff9f5) 55%, var(--public-surface, #dff7f5));
   text-align: center;
   scroll-margin-top: 105px;
 }
@@ -411,7 +411,7 @@
   margin: auto;
 }
 .donut-order-start > p:not(.donut-kicker) {
-  color: #715b63;
+  color: var(--public-ink, #715b63);
   margin: 20px auto 30px;
 }
 .donut-order-paths,
@@ -425,9 +425,9 @@
 .donut-order-paths button,
 .donut-mode-picker button {
   position: relative;
-  border: 1px solid #e5cbd6;
+  border: 1px solid var(--public-line, #e5cbd6);
   border-radius: 16px;
-  background: #fffdfbdd;
+  background: var(--public-surface, #fffdfbdd);
   padding: 24px;
   text-align: left;
   display: grid;
@@ -445,8 +445,8 @@
 }
 .donut-order-paths button > span,
 .donut-mode-picker button > span {
-  color: #aa195a;
-  font-size: 11px;
+  color: var(--public-muted, #aa195a);
+  font-size: 14px;
   font-weight: 800;
   letter-spacing: 1px;
   text-transform: uppercase;
@@ -459,7 +459,7 @@
 }
 .donut-order-paths small,
 .donut-mode-picker small {
-  color: #735e66;
+  color: var(--public-ink, #735e66);
   line-height: 1.5;
   max-width: 85%;
 }
@@ -475,8 +475,8 @@
   padding: 0;
   color: var(--site-ink, #26201f);
   text-align: left;
-  border: 1px solid #e9d9d0;
-  background: #fffdfb;
+  border: 1px solid var(--public-line, #e9d9d0);
+  background: var(--public-surface, #fffdfb);
   border-radius: 12px;
   overflow: hidden;
   cursor: pointer;
@@ -488,12 +488,12 @@
 }
 .donut-product:hover {
   transform: translateY(-5px);
-  background: #ffe1ee;
+  background: var(--public-surface, #ffe1ee);
   border-color: #e83e91;
   box-shadow: 0 18px 42px #ba326328;
 }
 .donut-product:nth-child(even):hover {
-  background: #eee0f6;
+  background: var(--public-surface, #eee0f6);
   border-color: #9e55bb;
   box-shadow: 0 18px 42px #743f9228;
 }
@@ -510,18 +510,18 @@
   height: 240px;
   display: block;
   position: relative;
-  background: #f9d5e3;
+  background: var(--public-surface, #f9d5e3);
   border: 0;
   overflow: hidden;
 }
 .tone-1 .donut-product-image {
-  background: #d8eeeb;
+  background: var(--public-surface, #d8eeeb);
 }
 .tone-2 .donut-product-image {
-  background: #f4e1bc;
+  background: var(--public-surface, #f4e1bc);
 }
 .tone-3 .donut-product-image {
-  background: #ebd9ee;
+  background: var(--public-surface, #ebd9ee);
 }
 .donut-product-image img {
   width: 100%;
@@ -536,12 +536,12 @@
   position: absolute;
   top: 14px;
   left: 14px;
-  font-size: 9px;
+  font-size: 14px;
   text-transform: uppercase;
   letter-spacing: 1px;
   padding: 5px 10px;
   border-radius: 20px;
-  background: #fffaf0c9;
+  background: var(--public-surface, #fffaf0c9);
   font-weight: 700;
 }
 .donut-product-info {
@@ -563,8 +563,8 @@
   font-size: 14px;
 }
 .donut-product-info p {
-  font-size: 12px;
-  color: #806b64;
+  font-size: 14px;
+  color: var(--public-muted, #806b64);
   min-height: 42px;
   margin: 10px 0 18px;
 }
@@ -575,18 +575,18 @@
   width: 100%;
   background: transparent;
   border: 0;
-  border-top: 1px solid #e9d9d0;
+  border-top: 1px solid var(--public-line, #e9d9d0);
   padding: 13px 0 0;
-  font-size: 12px;
+  font-size: 14px;
   font-weight: 800;
-  color: #a71f5d;
+  color: var(--public-muted, #a71f5d);
   min-height: 44px;
 }
 .donut-product:nth-child(even):hover .donut-add {
-  color: #7e359b;
+  color: var(--public-muted, #7e359b);
 }
 .donut-about {
-  background: #ffd6e7;
+  background: var(--public-surface, #ffd6e7);
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 8vw;
@@ -597,7 +597,7 @@
   position: relative;
   display: grid;
   place-items: center;
-  background: repeating-conic-gradient(#efb6cc 0% 25%, transparent 0% 50%) 0
+  background: repeating-conic-gradient(var(--public-surface, #efb6cc) 0% 25%, transparent 0% 50%) 0
     0/70px 70px;
   border-radius: 12px;
   transform: rotate(-3deg);
@@ -612,7 +612,7 @@
   position: absolute;
   bottom: -20px;
   right: -15px;
-  background: #00b8c8;
+  background: var(--public-soft, #00b8c8);
   padding: 18px;
   border-radius: 50%;
   width: 130px;
@@ -626,7 +626,7 @@
   transform: rotate(12deg);
 }
 .donut-about p:not(.donut-kicker) {
-  color: #71515f;
+  color: var(--public-ink, #71515f);
   font-size: 14px;
   margin-top: 22px;
   max-width: 450px;
@@ -647,7 +647,7 @@
   margin: 22px 0;
   font-size: 14px;
   line-height: 1.8;
-  color: #705e56;
+  color: var(--public-ink, #705e56);
 }
 .donut-visit a:not(.donut-button) {
   display: flex;
@@ -658,10 +658,10 @@
 }
 .donut-visit small {
   display: block;
-  font-size: 11px;
+  font-size: 14px;
   max-width: 330px;
   margin-top: 18px;
-  color: #806b64;
+  color: var(--public-muted, #806b64);
 }
 .donut-burger-stack {
   position: relative;
@@ -671,16 +671,16 @@
   margin-top: 30px;
   padding: 0;
   overflow: hidden;
-  border: 1px solid #e4cbd6;
+  border: 1px solid var(--public-line, #e4cbd6);
   border-radius: 28px;
   background:
     radial-gradient(
       circle at 50% 46%,
-      #fff 0 20%,
-      #fff4f8 48%,
+      var(--public-surface, #fff) 0 20%,
+      var(--public-surface, #fff4f8) 48%,
       transparent 72%
     ),
-    linear-gradient(145deg, #ffe9f2, #e5f9f7);
+    linear-gradient(145deg, var(--public-surface, #ffe9f2), var(--public-surface, #e5f9f7));
   cursor: pointer;
   box-shadow: 0 22px 55px #6b376216;
   isolation: isolate;
@@ -691,8 +691,8 @@
   border-radius: 50%;
   background: radial-gradient(
     circle,
-    #fff 0 12%,
-    #f7b7d977 35%,
+    var(--public-surface, #fff) 0 12%,
+    var(--public-surface, #f7b7d977) 35%,
     transparent 68%
   );
   filter: blur(8px);
@@ -763,10 +763,10 @@
   gap: 2px;
   padding: 10px 14px;
   border-radius: 13px;
-  color: #261f22;
+  color: var(--public-ink, #261f22);
   text-align: left;
   white-space: nowrap;
-  background: #fffdfbea;
+  background: var(--public-surface, #fffdfbea);
   box-shadow: 0 8px 28px #41202e22;
   transition:
     opacity 0.25s ease,
@@ -779,28 +779,28 @@
 }
 .donut-burger-caption small {
   margin: 0;
-  font-size: 10px;
+  font-size: 14px;
 }
 .donut-hours {
-  border: 1px solid #e2d1c6;
+  border: 1px solid var(--public-line, #e2d1c6);
   border-radius: 12px;
   padding: 30px;
-  background: #fffdfb;
+  background: var(--public-surface, #fffdfb);
 }
 .donut-hours h3 {
   font-family: Georgia, serif;
   font-size: 25px;
 }
 .donut-hours > p {
-  font-size: 11px !important;
+  font-size: 14px !important;
   margin: 5px 0 18px !important;
 }
 .donut-hours > div {
   display: flex;
   justify-content: space-between;
-  border-bottom: 1px solid #f1e8e1;
+  border-bottom: 1px solid var(--public-line, #f1e8e1);
   padding: 8px 0;
-  font-size: 12px;
+  font-size: 14px;
 }
 .donut-hours .donut-button {
   width: 100%;
@@ -811,7 +811,7 @@
   grid-template-columns: minmax(0, 1.2fr) minmax(280px, 0.8fr);
   gap: clamp(36px, 7vw, 100px);
   align-items: center;
-  background: #f4e8f8;
+  background: var(--public-surface, #f4e8f8);
 }
 .donut-reviews > div > p:not(.donut-kicker) {
   color: var(--site-muted, #6d5c5b);
@@ -829,8 +829,8 @@
   min-height: 270px;
   padding: 38px;
   border-radius: 22px;
-  background: #fff;
-  border: 1px solid #dfcce8;
+  background: var(--public-surface, #fff);
+  border: 1px solid var(--public-line, #dfcce8);
   box-shadow: 0 24px 70px #6b37621c;
   display: flex;
   flex-direction: column;
@@ -915,7 +915,7 @@
   gap: 7px;
   border: 0;
   background: transparent;
-  color: #a71f5d;
+  color: var(--public-muted, #a71f5d);
   font: inherit;
   font-weight: 800;
   cursor: pointer;
@@ -924,17 +924,17 @@
   width: fit-content;
   margin: 0 0 12px;
   padding: 7px 11px;
-  border: 1px solid #df9dbc;
+  border: 1px solid var(--public-line, #df9dbc);
   border-radius: 999px;
-  background: #fff7fb;
-  font-size: 11px;
+  background: var(--public-surface, #fff7fb);
+  font-size: 14px;
 }
 .donut-review-quick:hover,
 .donut-review-quick:focus-visible,
 .donut-review-link:hover,
 .donut-review-inline:hover {
-  color: #78349a;
-  background: #f3e5fa;
+  color: var(--public-muted, #78349a);
+  background: var(--public-surface, #f3e5fa);
 }
 .donut-review-link {
   margin-top: 12px;
@@ -943,7 +943,7 @@
 .donut-review-inline {
   margin-top: 9px;
   padding: 5px 0;
-  font-size: 11px;
+  font-size: 14px;
 }
 .donut-review-product {
   display: flex;
@@ -951,14 +951,14 @@
   gap: 15px;
   padding: 12px;
   border-radius: 16px;
-  background: #fff3f8;
+  background: var(--public-surface, #fff3f8);
 }
 .donut-review-product img {
   width: 72px;
   height: 58px;
   object-fit: contain;
   border-radius: 12px;
-  background: white;
+  background: var(--public-surface, white);
 }
 .donut-review-product div {
   display: grid;
@@ -974,8 +974,8 @@
   margin-left: 8px;
   padding: 3px 7px;
   border-radius: 999px;
-  color: #6d277e;
-  background: #f0def5;
+  color: var(--public-muted, #6d277e);
+  background: var(--public-surface, #f0def5);
   font-weight: 800;
 }
 .donut-review-list {
@@ -987,8 +987,8 @@
 .donut-review-list > article {
   padding: 24px;
   border-radius: 20px;
-  background: #fff;
-  border: 1px solid #dfcce8;
+  background: var(--public-surface, #fff);
+  border: 1px solid var(--public-line, #dfcce8);
   display: flex;
   flex-direction: column;
   gap: 8px;
@@ -1007,7 +1007,7 @@
 .donut-review-list blockquote {
   margin-top: 10px !important;
   padding: 14px;
-  background: #fff0f6;
+  background: var(--public-surface, #fff0f6);
   border-left: 3px solid #e83e91;
 }
 .donut-review-form-section {
@@ -1020,8 +1020,8 @@
 .donut-review-login {
   padding: clamp(22px, 4vw, 38px);
   border-radius: 24px;
-  background: #fff;
-  border: 1px solid #f0d8e2;
+  background: var(--public-surface, #fff);
+  border: 1px solid var(--public-line, #f0d8e2);
   box-shadow: 0 20px 60px #6b376216;
 }
 .donut-review-form {
@@ -1036,10 +1036,10 @@
 .donut-review-form select,
 .donut-review-form textarea {
   width: 100%;
-  border: 1px solid #dbc8d0;
+  border: 1px solid var(--public-line, #dbc8d0);
   border-radius: 12px;
   padding: 13px;
-  background: #fffaf7;
+  background: var(--public-surface, #fffaf7);
   font: inherit;
 }
 .donut-review-form textarea {
@@ -1064,12 +1064,12 @@
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  color: var(--pink-dark);
+  color: var(--public-link, var(--pink-dark));
   margin-top: 14px;
 }
 .donut-map-section {
   padding: 70px max(5vw, 24px) 0;
-  background: #fff9f5;
+  background: var(--public-surface, #fff9f5);
 }
 .donut-map-heading {
   display: flex;
@@ -1100,14 +1100,14 @@
   gap: 14px;
   padding: 35px;
   border-radius: 22px 22px 0 0;
-  background: #f2e6df;
+  background: var(--public-surface, #f2e6df);
 }
 .donut-map-consent p {
   max-width: 520px;
   margin: 0;
 }
 .donut-footer {
-  background: #28201f;
+  background: var(--public-accent, #28201f);
   color: #fff8f2;
   padding: 45px max(5vw, 24px) 22px;
 }
@@ -1129,9 +1129,9 @@
   display: flex;
   gap: 20px;
   justify-content: space-between;
-  border-top: 1px solid #65534d;
+  border-top: 1px solid var(--public-line, #65534d);
   padding: 24px 0 16px;
-  font-size: 10px;
+  font-size: 14px;
 }
 .donut-footer-bottom button {
   border: 0;
@@ -1142,16 +1142,16 @@
   cursor: pointer;
 }
 .donut-footer > p {
-  font-size: 9px;
-  color: #c1ada5;
+  font-size: 14px;
+  color: var(--public-muted, #c1ada5);
 }
 .donut-footer > p a {
   text-decoration: underline;
 }
 .donut-error {
-  background: #fff0ec;
+  background: var(--public-surface, #fff0ec);
   border: 1px solid #c14656;
-  color: #982e3c;
+  color: var(--public-muted, #982e3c);
   padding: 14px 24px;
   margin: 15px;
   display: flex;
@@ -1167,7 +1167,7 @@
   bottom: 30px;
   left: 50%;
   transform: translateX(-50%);
-  background: var(--site-ink, #26201f);
+  background: var(--public-accent, var(--site-ink, #26201f));
   color: white;
   z-index: 100;
   padding: 16px 24px;
@@ -1177,7 +1177,7 @@
   gap: 12px;
   align-items: center;
   max-width: 90vw;
-  font-size: 13px;
+  font-size: 14px;
   animation: donut-pop 0.25s ease-out;
 }
 .donut-mobile-cart {
@@ -1193,7 +1193,7 @@
   max-height: 220px;
   width: 100%;
   object-fit: contain;
-  background: #ffd6e7;
+  background: var(--public-surface, #ffd6e7);
   border-radius: 12px;
 }
 .donut-product-modal p {
@@ -1216,15 +1216,15 @@
 .donut-back-choice {
   border: 0;
   background: transparent;
-  color: #aa195a;
+  color: var(--public-muted, #aa195a);
   font-weight: 750;
   padding: 10px 0;
 }
 .donut-product-modal small {
-  color: #77605b;
+  color: var(--public-ink, #77605b);
 }
 .donut-product-modal fieldset {
-  border: 1px solid #e6d5cc;
+  border: 1px solid var(--public-line, #e6d5cc);
   border-radius: 10px;
   margin: 18px 0;
   padding: 14px;
@@ -1245,9 +1245,9 @@
   margin-top: 12px;
 }
 .donut-choice-grid button {
-  border: 1px solid #ead8df;
+  border: 1px solid var(--public-line, #ead8df);
   border-radius: 10px;
-  background: white;
+  background: var(--public-surface, white);
   padding: 8px;
   display: grid;
   text-align: left;
@@ -1255,22 +1255,22 @@
 }
 .donut-choice-grid button.selected {
   border: 2px solid #e83e91;
-  background: #fff0f7;
+  background: var(--public-surface, #fff0f7);
 }
 .donut-choice-grid img {
   width: 100%;
   height: 75px;
   object-fit: contain;
-  background: #ffddea;
+  background: var(--public-surface, #ffddea);
   border-radius: 7px;
 }
 .donut-choice-grid span {
-  font-size: 11px;
+  font-size: 14px;
   font-weight: 750;
 }
 .donut-choice-grid b {
-  font-size: 10px;
-  color: #aa195a;
+  font-size: 14px;
+  color: var(--public-muted, #aa195a);
   margin: 0;
 }
 .donut-product-modal input {
@@ -1283,9 +1283,9 @@
 .donut-checkout select {
   width: 100%;
   padding: 12px;
-  border: 1px solid #dbc8c1;
+  border: 1px solid var(--public-line, #dbc8c1);
   border-radius: 7px;
-  background: white;
+  background: var(--public-surface, white);
 }
 .donut-product-modal > .donut-button {
   width: 100%;
@@ -1299,8 +1299,8 @@
   margin: 52px auto 90px;
   padding: clamp(24px, 5vw, 58px);
   color: var(--site-ink, #26201f);
-  background: #fffaf7;
-  border: 1px solid #ead8d0;
+  background: var(--public-surface, #fffaf7);
+  border: 1px solid var(--public-line, #ead8d0);
   border-radius: 26px;
   box-shadow: 0 22px 70px rgb(84 41 61 / 10%);
 }
@@ -1321,9 +1321,9 @@
   height: 44px;
   display: grid;
   place-items: center;
-  border: 1px solid #dfc8c0;
+  border: 1px solid var(--public-line, #dfc8c0);
   border-radius: 50%;
-  background: white;
+  background: var(--public-surface, white);
 }
 .modal-page-content .donut-checkout {
   display: grid;
@@ -1336,8 +1336,8 @@
   grid-row: 1 / span 20;
   padding: 28px;
   border-radius: 18px;
-  background: white;
-  border: 1px solid #ead8d0;
+  background: var(--public-surface, white);
+  border: 1px solid var(--public-line, #ead8d0);
 }
 .modal-page-footer {
   display: flex;
@@ -1366,14 +1366,14 @@
   display: flex;
   gap: 12px;
   padding: 18px 0;
-  border-bottom: 1px solid #e9d9d0;
+  border-bottom: 1px solid var(--public-line, #e9d9d0);
   align-items: center;
 }
 .donut-cart-line > img {
   width: 70px;
   height: 70px;
   object-fit: contain;
-  background: #ffd6e7;
+  background: var(--public-surface, #ffd6e7);
   border-radius: 10px;
 }
 .donut-cart-line > div {
@@ -1381,12 +1381,12 @@
   min-width: 0;
 }
 .donut-cart-line > div small {
-  font-size: 11px;
+  font-size: 14px;
   display: block;
 }
 .donut-cart-line > b {
   white-space: nowrap;
-  font-size: 13px;
+  font-size: 14px;
 }
 .donut-quantity {
   display: flex;
@@ -1397,11 +1397,11 @@
 .donut-quantity button {
   width: 38px;
   height: 38px;
-  border: 1px solid #e9d9d0;
+  border: 1px solid var(--public-line, #e9d9d0);
   display: grid;
   place-items: center;
   border-radius: 6px;
-  background: #fff9f5;
+  background: var(--public-surface, #fff9f5);
 }
 .donut-quantity span {
   width: 25px;
@@ -1412,7 +1412,7 @@
   justify-content: space-between;
   gap: 20px;
   padding: 18px 0;
-  border-bottom: 1px solid #e9d9d0;
+  border-bottom: 1px solid var(--public-line, #e9d9d0);
 }
 .donut-checkout h3 {
   margin: 15px 0 0;
@@ -1425,18 +1425,18 @@
   width: 100%;
 }
 .donut-checkout .form > small {
-  color: #76645e;
-  font-size: 11px;
+  color: var(--public-ink, #76645e);
+  font-size: 14px;
 }
 .donut-order-finality {
   padding: 16px;
-  border: 1px solid #d88aa8;
+  border: 1px solid var(--public-line, #d88aa8);
   border-radius: 10px;
-  background: #fff0f7;
+  background: var(--public-surface, #fff0f7);
 }
 .donut-order-finality p {
   margin: 6px 0 0;
-  font-size: 12px;
+  font-size: 14px;
   line-height: 1.5;
 }
 .donut-terms-check {
@@ -1446,7 +1446,7 @@
 .donut-terms-check a,
 .donut-account-note a,
 .donut-legal a {
-  color: #a51f5f;
+  color: var(--public-muted, #a51f5f);
   text-decoration: underline;
 }
 
@@ -1457,9 +1457,9 @@
   right: 22px;
   bottom: 22px;
   padding: 22px;
-  border: 1px solid #d9c4bb;
+  border: 1px solid var(--public-line, #d9c4bb);
   border-radius: 16px;
-  background: #fffaf6;
+  background: var(--public-surface, #fffaf6);
   box-shadow: 0 20px 70px #3f172c42;
   display: flex;
   align-items: center;
@@ -1479,12 +1479,12 @@
 .donut-cookie-banner small {
   margin: 6px 0;
   line-height: 1.45;
-  color: #675752;
+  color: var(--public-ink, #675752);
 }
 .donut-cookie-banner a {
-  color: #9a1955;
+  color: var(--public-muted, #9a1955);
   text-decoration: underline;
-  font-size: 12px;
+  font-size: 14px;
 }
 .donut-cookie-actions {
   display: flex;
@@ -1504,7 +1504,7 @@
   display: grid;
   place-items: center;
   padding: 20px;
-  background: #28131d9c;
+  background: var(--public-accent, #28131d9c);
 }
 .donut-cookie-settings {
   position: relative;
@@ -1513,7 +1513,7 @@
   overflow: auto;
   padding: 34px;
   border-radius: 18px;
-  background: #fffaf6;
+  background: var(--public-surface, #fffaf6);
 }
 .donut-cookie-settings h2 {
   font-size: clamp(28px, 5vw, 44px);
@@ -1528,7 +1528,7 @@
 .donut-cookie-choice {
   margin: 14px 0;
   padding: 18px;
-  border: 1px solid #e5d3ca;
+  border: 1px solid var(--public-line, #e5d3ca);
   border-radius: 12px;
   display: flex;
   justify-content: space-between;
@@ -1541,7 +1541,7 @@
 }
 .donut-cookie-choice small {
   margin-top: 5px;
-  color: #75625c;
+  color: var(--public-ink, #75625c);
   line-height: 1.4;
 }
 .donut-cookie-choice input {
@@ -1567,7 +1567,7 @@
 }
 .donut-legal > nav a {
   padding: 10px 14px;
-  border: 1px solid #decfc8;
+  border: 1px solid var(--public-line, #decfc8);
   border-radius: 30px;
   text-decoration: none;
 }
@@ -1589,7 +1589,7 @@
   margin: 24px 0;
   padding: 20px;
   border-radius: 12px;
-  background: #fff0f7;
+  background: var(--public-surface, #fff0f7);
   border-left: 5px solid var(--pink);
 }
 .donut-legal-warning p,
@@ -1597,127 +1597,9 @@
   margin: 7px 0 0;
 }
 .donut-legal-date {
-  color: #76645e;
+  color: var(--public-ink, #76645e);
 }
 
-.donut-account {
-  max-width: 1180px;
-  margin: auto;
-}
-.donut-account-empty {
-  text-align: center;
-  max-width: 720px;
-}
-.donut-account-empty > p:not(.donut-kicker) {
-  line-height: 1.6;
-}
-.donut-account-empty .donut-button {
-  margin-top: 20px;
-}
-.donut-account-heading,
-.donut-account-summary,
-.donut-order-history > div:first-child,
-.donut-order-history article header,
-.donut-order-history article footer {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 20px;
-}
-.donut-account-summary {
-  align-items: stretch;
-  margin: 38px 0 55px;
-}
-.donut-points-card,
-.donut-rewards-card {
-  border-radius: 20px;
-  padding: 28px;
-}
-.donut-points-card {
-  min-width: 280px;
-  color: white;
-  background: linear-gradient(135deg, #a91f62, #e83e91);
-  display: grid;
-  grid-template-columns: 1fr auto;
-  gap: 4px 14px;
-}
-.donut-points-card > svg,
-.donut-points-card > span,
-.donut-points-card > small {
-  grid-column: 1 / -1;
-}
-.donut-points-card strong {
-  font:
-    700 64px Georgia,
-    serif;
-}
-.donut-points-card b {
-  align-self: end;
-  padding-bottom: 12px;
-}
-.donut-rewards-card {
-  flex: 1;
-  display: flex;
-  gap: 18px;
-  background: #fff0f7;
-}
-.donut-rewards-card ul {
-  margin: 13px 0 0;
-  padding: 0;
-  list-style: none;
-}
-.donut-rewards-card li {
-  padding: 9px 0;
-  border-top: 1px solid #e8cbd7;
-  display: flex;
-  justify-content: space-between;
-  gap: 25px;
-}
-.donut-rewards-card li b {
-  color: #9a1955;
-  font-size: 12px;
-}
-.donut-order-history > div:first-child {
-  justify-content: flex-start;
-}
-.donut-order-history h2 {
-  margin: 0;
-  font-size: 32px;
-}
-.donut-order-history .donut-kicker {
-  margin: 0 0 4px;
-}
-.donut-order-history article {
-  margin-top: 14px;
-  padding: 22px;
-  border: 1px solid #e6d5cc;
-  border-radius: 14px;
-  background: white;
-}
-.donut-order-history article header span,
-.donut-order-history article header small {
-  display: block;
-}
-.donut-order-history article header small {
-  margin-top: 3px;
-  color: #75625c;
-}
-.donut-order-history article p {
-  color: #695853;
-}
-.donut-order-actions {
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  gap: 10px;
-  flex-wrap: wrap;
-}
-.donut-order-actions .donut-button {
-  width: auto;
-  min-width: 158px;
-  min-height: 48px;
-  margin: 0;
-}
 .donut-rate-order {
   cursor: pointer;
 }
@@ -1731,16 +1613,16 @@
   align-items: center;
   gap: 8px;
   padding: 9px 13px;
-  border: 1px solid #d6aad0;
+  border: 1px solid var(--public-line, #d6aad0);
   border-radius: 999px;
-  color: #7d2e82;
-  background: #f8eefb;
+  color: var(--public-muted, #7d2e82);
+  background: var(--public-surface, #f8eefb);
   font: inherit;
   font-weight: 800;
   cursor: pointer;
 }
 .donut-review-suggestion:hover {
-  background: #efdef5;
+  background: var(--public-surface, #efdef5);
 }
 .modal .donut-review-form > .donut-button {
   width: 100%;
@@ -1753,37 +1635,20 @@
 .modal .donut-review-form > .donut-button:focus-visible {
   background: #c62473;
 }
-.donut-review-sent {
-  margin: 16px 0 0 !important;
-  padding: 11px 14px;
-  border-radius: 10px;
-  color: #5b2467 !important;
-  background: #f4e4f7;
-  font-weight: 800;
-}
-.donut-account-note {
-  margin-top: 30px;
-  font-size: 12px;
-  color: #75625c;
-}
-.donut-account-actions {
-  display: flex;
-  gap: 20px;
-  align-items: center;
-}
+
 .donut-auth {
   width: min(650px, 100%);
   margin: 32px auto 0;
   padding: 28px;
   text-align: left;
-  border: 1px solid #e4d0c8;
+  border: 1px solid var(--public-line, #e4d0c8);
   border-radius: 18px;
-  background: white;
+  background: var(--public-surface, white);
 }
 .donut-auth.compact {
   margin: 24px 0 0;
   padding: 22px;
-  background: #fff8f3;
+  background: var(--public-surface, #fff8f3);
 }
 .donut-auth-heading {
   display: flex;
@@ -1804,7 +1669,7 @@
   margin: 22px 0 14px;
   padding: 5px;
   border-radius: 10px;
-  background: #f3e8e1;
+  background: var(--public-surface, #f3e8e1);
 }
 .donut-auth-tabs button {
   min-height: 42px;
@@ -1814,7 +1679,7 @@
   font-weight: 750;
 }
 .donut-auth-tabs button[aria-selected="true"] {
-  background: white;
+  background: var(--public-surface, white);
   box-shadow: 0 4px 14px #6f304019;
 }
 .donut-auth .form {
@@ -1830,14 +1695,14 @@
 .donut-auth > small {
   display: block;
   margin-top: 18px;
-  color: #75625c;
+  color: var(--public-ink, #75625c);
   line-height: 1.5;
 }
 .donut-auth-success {
   padding: 12px;
   border-radius: 8px;
-  background: #e2f5ed;
-  color: #276a55;
+  background: var(--public-surface, #e2f5ed);
+  color: var(--public-ink, #276a55);
 }
 .donut-checkout-account {
   display: flex;
@@ -1845,23 +1710,23 @@
   justify-content: space-between;
   gap: 18px;
   padding: 15px;
-  border: 1px solid #e4d0c8;
+  border: 1px solid var(--public-line, #e4d0c8);
   border-radius: 10px;
-  background: #fff8f3;
+  background: var(--public-surface, #fff8f3);
 }
 .donut-checkout-account strong,
 .donut-checkout-account small {
   display: block;
 }
 .donut-checkout-account a {
-  color: #a51f5f;
+  color: var(--public-muted, #a51f5f);
   text-decoration: underline;
-  font-size: 12px;
+  font-size: 14px;
 }
 .donut-upsell {
   margin: 22px 0;
   padding: 20px;
-  background: #fff0f7;
+  background: var(--public-surface, #fff0f7);
   border-radius: 14px;
 }
 .donut-upsell .donut-kicker {
@@ -1878,7 +1743,7 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  background: white;
+  background: var(--public-surface, white);
   border-radius: 10px;
   padding: 8px 43px 8px 8px;
 }
@@ -1889,7 +1754,7 @@
 }
 .donut-upsell article span {
   display: grid;
-  font-size: 10px;
+  font-size: 14px;
   flex: 1;
 }
 .donut-upsell article button {
@@ -1922,7 +1787,7 @@
   place-items: center;
   width: 60px;
   height: 60px;
-  background: #00b8c8;
+  background: var(--public-soft, #00b8c8);
   border-radius: 50%;
   margin: auto;
 }
@@ -1934,21 +1799,21 @@
   margin: 35px 0;
 }
 .donut-progress span {
-  background: #e9e3df;
+  background: var(--public-surface, #e9e3df);
   padding: 10px 15px;
   border-radius: 30px;
-  font-size: 12px;
+  font-size: 14px;
 }
 .donut-progress .done {
-  background: #b4e8de;
+  background: var(--public-surface, #b4e8de);
 }
 .donut-receipt {
-  background: white;
+  background: var(--public-surface, white);
   padding: 30px;
   max-width: 680px;
   margin: auto;
   border-radius: 15px;
-  border: 1px solid #eddcd5;
+  border: 1px solid var(--public-line, #eddcd5);
   text-align: left;
 }
 .donut-receipt h2 {
@@ -1958,7 +1823,7 @@
 }
 .donut-receipt small {
   display: block;
-  color: #806b64;
+  color: var(--public-muted, #806b64);
 }
 .donut-receipt p {
   margin-top: 15px;
@@ -1969,20 +1834,20 @@
 .donut-receipt pre {
   white-space: pre-wrap;
   overflow-wrap: anywhere;
-  font-size: 12px;
+  font-size: 14px;
   padding: 15px;
-  background: #fff9f5;
+  background: var(--public-surface, #fff9f5);
 }
 .donut-product-modal textarea,
 .form textarea {
   font: inherit;
   width: 100%;
-  border: 1px solid #ddd;
+  border: 1px solid var(--public-line, #ddd);
   padding: 12px;
   border-radius: 8px;
 }
 .form fieldset {
-  border: 1px solid #ddd;
+  border: 1px solid var(--public-line, #ddd);
   padding: 15px;
   border-radius: 8px;
 }
@@ -1994,7 +1859,7 @@
   animation: donut-bounce 0.5s;
 }
 .donut-site :focus-visible {
-  outline: 3px solid #007983;
+  outline: 3px solid var(--public-line, #007983);
   outline-offset: 5px;
 }
 @keyframes donut-float {
@@ -2027,7 +1892,7 @@
 }
 @keyframes donut-reveal {
   from {
-    opacity: 0.5;
+    opacity: 1;
     transform: translateY(20px);
   }
   to {
@@ -2080,7 +1945,7 @@
 }
 @media (max-width: 700px) {
   .donut-announcement {
-    font-size: 8px;
+    font-size: 14px;
     letter-spacing: 1px;
   }
   .donut-announcement span {
@@ -2119,7 +1984,7 @@
     gap: 8px;
   }
   .donut-button.compact {
-    font-size: 10px;
+    font-size: 14px;
     padding: 10px 12px;
     min-height: 42px;
     gap: 7px;
@@ -2157,7 +2022,7 @@
     letter-spacing: -2.5px;
   }
   .donut-kicker {
-    font-size: 9px;
+    font-size: 14px;
     letter-spacing: 1.5px;
     margin-bottom: 19px;
   }
@@ -2171,16 +2036,16 @@
   }
   .donut-hero-actions .donut-button {
     padding: 15px 18px;
-    font-size: 12px;
+    font-size: 14px;
     gap: 12px;
   }
   .donut-text-link {
-    font-size: 10px;
+    font-size: 14px;
     gap: 5px;
   }
   .donut-service {
     margin-top: 25px;
-    font-size: 10px;
+    font-size: 14px;
     grid-template-columns: 1fr;
   }
   .donut-hero-art {
@@ -2192,7 +2057,7 @@
     right: -8px;
     width: 92px;
     height: 92px;
-    font-size: 9px;
+    font-size: 14px;
     top: 12px;
   }
   .donut-sticker b {
@@ -2214,7 +2079,7 @@
     font-size: 20px;
   }
   .donut-marquee {
-    font-size: 13px;
+    font-size: 14px;
     gap: 20px;
     padding: 16px 0;
   }
@@ -2232,7 +2097,7 @@
     letter-spacing: -1.7px;
   }
   .donut-section-title > p {
-    font-size: 12px;
+    font-size: 14px;
   }
   .donut-section-title > p br {
     display: none;
@@ -2246,7 +2111,7 @@
   }
   .donut-categories button {
     padding: 10px 17px;
-    font-size: 11px;
+    font-size: 14px;
   }
   .donut-product-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -2267,18 +2132,18 @@
     font-size: 15px;
   }
   .donut-product-info b {
-    font-size: 12px;
+    font-size: 14px;
   }
   .donut-product-info p {
-    font-size: 10px;
+    font-size: 14px;
     min-height: 58px;
     margin: 8px 0;
   }
   .donut-add {
-    font-size: 11px;
+    font-size: 14px;
   }
   .donut-product-image > span {
-    font-size: 7px;
+    font-size: 14px;
     top: 8px;
     left: 8px;
   }
@@ -2301,7 +2166,7 @@
     right: -12px;
   }
   .donut-about p:not(.donut-kicker) {
-    font-size: 13px;
+    font-size: 14px;
   }
   .donut-visit {
     grid-template-columns: 1fr;
@@ -2346,7 +2211,7 @@
   .donut-footer-bottom {
     flex-wrap: wrap;
     gap: 18px;
-    font-size: 10px;
+    font-size: 14px;
   }
   .donut-footer-bottom > span {
     width: 100%;
@@ -2366,7 +2231,7 @@
     bottom: 85px;
     width: max-content;
     max-width: 90%;
-    font-size: 12px;
+    font-size: 14px;
     padding: 14px;
     animation: none;
   }
@@ -2377,7 +2242,7 @@
     gap: 8px;
   }
   .donut-progress span {
-    font-size: 10px;
+    font-size: 14px;
   }
   .donut-receipt {
     padding: 20px;
@@ -2436,9 +2301,7 @@
     align-items: stretch;
     flex-direction: column;
   }
-  .donut-account-summary {
-    margin: 28px 0 45px;
-  }
+  
   .donut-account-actions,
   .donut-checkout-account {
     align-items: flex-start;
@@ -2447,25 +2310,11 @@
   .donut-auth {
     padding: 20px;
   }
-  .donut-points-card {
-    min-width: 0;
-  }
-  .donut-rewards-card li {
-    align-items: flex-start;
-    flex-direction: column;
-    gap: 3px;
-  }
-  .donut-order-history article footer .donut-button {
-    width: 100%;
-  }
-  .donut-order-actions {
-    width: 100%;
-    align-items: stretch;
-    flex-direction: column;
-  }
-  .donut-order-actions .donut-button {
-    width: 100%;
-  }
+  
+  
+  
+  
+  
   .donut-legal-content {
     font-size: 14px;
   }
@@ -2482,10 +2331,166 @@
 
 .tenant-demo-banner {
   padding: 0.65rem 1rem;
-  background: #184d3b;
+  background: var(--public-accent, #184d3b);
   color: white;
   text-align: center;
   font:
     600 0.8rem Arial,
     sans-serif;
+}
+
+.donut-extra-pages {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 24px;
+  margin-block: 12px;
+}
+.donut-extra-pages a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  overflow-wrap: anywhere;
+}
+
+/* Réservation embarquée : même parcours que la vitrine de démonstration. */
+.donut-booking > .booking {
+  padding: clamp(48px, 7vw, 96px) max(5vw, 24px);
+}
+.donut-site .booking-head h1,
+.donut-site .booking-done-card h1 {
+  font-size: clamp(34px, 5vw, 56px);
+  letter-spacing: -1.5px;
+}
+.donut-nav-actions .donut-reserve-link {
+  gap: 8px;
+}
+.donut-nav-actions .donut-reserve-link.outline {
+  display: inline-flex;
+  width: auto;
+  margin: 0;
+  color: var(--public-ink, var(--site-ink, #26201f)) !important;
+  border-color: var(--public-line, currentColor);
+}
+.donut-nav-actions .donut-reserve-link.outline:hover {
+  background: var(--public-soft, transparent);
+}
+@media (min-width: 761px) {
+  .donut-header nav a {
+    white-space: nowrap;
+  }
+}
+@media (min-width: 761px) and (max-width: 1480px) {
+  .donut-header nav {
+    gap: 20px;
+  }
+  .donut-nav-actions {
+    gap: 12px;
+  }
+}
+@media (min-width: 761px) and (max-width: 1240px) {
+  /* Icône seule : la navigation garde sa ligne. */
+  .donut-nav-actions .donut-reserve-link {
+    padding: 12px;
+  }
+  .donut-nav-actions .donut-reserve-link span {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+}
+.donut-hours > p.donut-hours-empty {
+  font-size: 15px !important;
+  margin: 0 0 18px !important;
+  padding: 14px 0;
+  border-bottom: 1px solid var(--public-line, #f1e8e1);
+}
+@media (max-width: 760px) {
+  .donut-nav-actions .donut-reserve-link {
+    padding: 10px;
+  }
+  .donut-nav-actions .donut-reserve-link span {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+}
+
+/* Fiche produit : visuel, prix et actions comme sur la démonstration. */
+.donut-product-page .product-details,
+.donut-product-page .product-suggestions {
+  max-width: 1180px;
+  margin-inline: auto;
+}
+.donut-product-page .product-details > img {
+  background: var(--public-soft, #f3efe6);
+  border: 1px solid var(--public-line, #e2d1c6);
+}
+.donut-product-page .product-details > img[src$="restaurant.svg"],
+.donut-product-page .product-suggestion-card img[src$="restaurant.svg"] {
+  object-fit: contain;
+  padding: 10%;
+}
+.donut-product-page .product-details-copy > p:first-child {
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--public-muted, #77625d);
+}
+.donut-site .donut-product-page .product-details-copy h1 {
+  font-size: clamp(40px, 5vw, 64px);
+  letter-spacing: -2px;
+  margin: 6px 0 14px;
+}
+.donut-site .donut-product-page .product-details-copy h2 {
+  font-size: 22px;
+  letter-spacing: -0.3px;
+  margin: 28px 0 6px;
+}
+.donut-product-page .product-details-actions {
+  align-items: center;
+  gap: 14px 20px;
+}
+.donut-product-page .product-details-actions .donut-button {
+  gap: 10px;
+}
+.donut-product-page .product-details-actions .donut-button.outline {
+  display: inline-flex;
+  margin: 0;
+}
+.donut-site .donut-product-page .product-suggestions h2 {
+  font-size: clamp(28px, 3.4vw, 40px);
+  letter-spacing: -1px;
+}
+.donut-product-page .product-suggestion-card {
+  overflow: hidden;
+  background: var(--public-surface, #fffdfb);
+  color: var(--public-ink, var(--site-ink, #26201f));
+  border-color: var(--public-line, #e2d1c6);
+  transition: transform 0.2s;
+}
+.donut-product-page .product-suggestion-card:hover {
+  transform: translateY(-3px);
+}
+.donut-product-page .product-suggestion-card img {
+  background: var(--public-soft, #f3efe6);
+}
+.donut-site .donut-product-page .product-suggestion-grid h3 {
+  color: inherit;
+  font-family: inherit;
+  font-size: 17px;
+  letter-spacing: 0;
+}
+.donut-product-page .product-suggestion-card span {
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--public-muted, #77625d);
 }

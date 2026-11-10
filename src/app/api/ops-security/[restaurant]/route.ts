@@ -25,7 +25,7 @@ async function routeGET(req: NextRequest, c: Context) {
     const { restaurant } = await c.params;
     return json(
       await authenticated(restaurant, async (tx, user) => {
-        await tx.exec("SET LOCAL ROLE dattier_app");
+        await tx.exec("SET LOCAL ROLE atacuisine_app");
         const db = nestedDatabase(tx),
           scope = await securityScope(db, user, restaurant),
           params = req.nextUrl.searchParams,
@@ -53,7 +53,7 @@ async function routePOST(req: NextRequest, c: Context) {
       body = await readBody(req);
     return json(
       await authenticated(restaurant, async (tx, user) => {
-        await tx.exec("SET LOCAL ROLE dattier_app");
+        await tx.exec("SET LOCAL ROLE atacuisine_app");
         const db = nestedDatabase(tx);
         return securityAction(
           db,

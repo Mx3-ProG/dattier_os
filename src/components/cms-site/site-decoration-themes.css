@@ -1,0 +1,19 @@
+.site-decoration.is-themed { height: 70px; }
+.site-decoration.is-themed.is-preview { height: 96px; }
+.site-decoration-themed { display: flex; align-items: flex-start; justify-content: space-around; width: 100%; height: 70px; padding: 7px 0 0; border-top: 3px solid var(--dec-accent); background: linear-gradient(to bottom, var(--dec-tint) 0, transparent 68%); }
+.site-decoration-themed span { display: block; color: var(--dec-accent); font-size: clamp(13px, 2.4vw, 28px); line-height: 1; opacity: .72; filter: drop-shadow(0 4px 4px #152b2326); }
+.site-decoration-themed span:nth-child(even) { margin-top: 19px; font-size: clamp(10px, 1.6vw, 20px); opacity: .48; }
+.site-decoration.is-space .site-decoration-themed { border-top-style: dotted; }
+.site-decoration.is-nature .site-decoration-themed { border-top-style: solid; border-top-width: 6px; border-radius: 0 0 50% 50%; }
+.site-decoration.is-six .site-decoration-themed span:nth-child(3n) { color: var(--dec-tint); text-shadow: 0 0 5px var(--dec-accent); }
+.site-decoration.is-nine .site-decoration-themed span { text-shadow: 0 0 7px var(--dec-accent); }
+.site-decoration.is-deluxe .site-decoration-themed { height: 90px; background: radial-gradient(ellipse at 50% 0, var(--dec-tint), transparent 65%); }
+.site-decoration.is-deluxe .site-decoration-themed span { animation: themed-decoration-float 4s ease-in-out infinite alternate; }
+.site-decoration.is-space-wormhole .site-decoration-themed span:nth-child(3n) { border:2px solid var(--dec-accent); border-radius:50%; padding:5px; }
+.site-decoration.is-space-supernova .site-decoration-themed span { text-shadow:0 0 12px var(--dec-accent); }
+.site-decoration.is-space-cosmos .site-decoration-themed { border-top-style:double; border-top-width:8px; }
+.site-decoration.is-nature-biosphere .site-decoration-themed span:nth-child(3n) { border:2px solid var(--dec-accent); border-radius:50%; padding:4px; }
+.site-decoration.is-nature-coral .site-decoration-themed { border-top-style:dashed; }
+.site-decoration.is-nature-rainforest .site-decoration-themed span:nth-child(even) { transform:rotate(25deg); }
+@keyframes themed-decoration-float { to { transform: translateY(10px) rotate(18deg); opacity: .36; } }
+@media (prefers-reduced-motion: reduce) { .site-decoration.is-themed .site-decoration-themed span { animation: none; } }

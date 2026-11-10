@@ -33,7 +33,7 @@ export type SecurityScope = {
   user: Actor;
   platformAdmin: boolean;
   current: string;
-  /** Restaurants whose events this viewer may read. */
+  /** The tenant route is always scoped to the selected establishment. */
   restaurants: string[];
 };
 /** Server-side gate: membership, then the `security` permission. */
@@ -51,8 +51,8 @@ export async function securityScope(
   return { user: scoped, platformAdmin, current: restaurant, restaurants };
 }
 /**
- * Tenant clause. A restaurant admin only ever sees the selected restaurant;
- * the super admin sees authorized restaurants plus platform events (NULL).
+ * Tenant route: even an owner or platform administrator sees only the selected
+ * establishment. Cross-establishment monitoring needs a separate audited route.
  */
 function visibility(
   s: SecurityScope,
@@ -60,19 +60,10 @@ function visibility(
   params: unknown[],
   filter?: string,
 ) {
-  if (!s.platformAdmin) {
-    params.push(s.current);
-    return `${column}=$${params.length}`;
-  }
-  if (filter === "platform") return `${column} IS NULL`;
-  if (filter && filter !== "all") {
-    if (!s.restaurants.includes(filter))
-      throw new Error("Établissement non autorisé.");
-    params.push(filter);
-    return `${column}=$${params.length}`;
-  }
-  params.push(s.restaurants);
-  return `(${column}=ANY($${params.length}) OR ${column} IS NULL)`;
+  if (filter && filter !== "all" && filter !== s.current)
+    throw new Error("Établissement non autorisé.");
+  params.push(s.current);
+  return `${column}=$${params.length}`;
 }
 const redact = <T extends { technical_details?: unknown; context?: unknown }>(
   s: SecurityScope,
@@ -167,7 +158,7 @@ export async function listArchives(db: DB, s: SecurityScope) {
     `SELECT to_char(day,'YYYY-MM-DD') AS day,event_count,
        (SELECT count(*)::int FROM jsonb_array_elements(payload) x WHERE x->>'restaurant_id'=$1) AS restaurant_event_count,
        sha256,chain_sha256,created_at,${s.platformAdmin ? "file_path" : "NULL AS file_path"}
-     FROM ops_security_archives ORDER BY day DESC`,
+     FROM ops_security_archives WHERE restaurant_id=$1 ORDER BY day DESC`,
     [s.current],
   );
 }
@@ -180,8 +171,8 @@ export async function exportArchive(db: DB, s: SecurityScope, day: string) {
     chain_sha256: string;
   }>(
     db,
-    "SELECT payload,sha256,chain_sha256 FROM ops_security_archives WHERE day=$1",
-    [day],
+    "SELECT payload,sha256,chain_sha256 FROM ops_security_archives WHERE day=$1 AND restaurant_id=$2",
+    [day, s.current],
   );
   const events = s.platformAdmin
     ? a.payload
@@ -331,7 +322,7 @@ export async function overview(
     retention_days: number;
   }>(
     db,
-    "SELECT remediation_mode,retention_days FROM ops_security_settings LIMIT 1",
+    "SELECT remediation_mode,retention_days FROM ops_security_settings WHERE restaurant_id=coalesce(nullif(current_setting('app.restaurant_id',true),''),restaurant_id) LIMIT 1",
   );
   const incidentCount = async (min: number, max: number) => {
     const params: unknown[] = [];
@@ -557,7 +548,7 @@ const knowledge: Record<string, Knowledge> = {
   "system.database.unavailable": {
     causes: [["Mode démo désactivé ou dossier de données invalide.", false]],
     checks: [
-      "Vérifier DATTIER_DEMO et DATTIER_DATA_DIR.",
+      "Vérifier ATACUISINE_DEMO et ATACUISINE_DATA_DIR.",
       "Redémarrer le serveur local.",
     ],
   },

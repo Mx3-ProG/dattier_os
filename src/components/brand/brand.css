@@ -1,0 +1,284 @@
+/* Couverts Dattier : loader animé et pages système (404). Palette de landing.css. */
+.dattier-loader {
+  --dl-ink: var(--appearance-link, #344d3e);
+  --dl-accent: var(--appearance-link, #ac6848);
+  --dl-text: var(--appearance-ink, #5b6556);
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: 18px;
+  padding: 32px 16px;
+  color: var(--dl-ink);
+}
+.dattier-loader.is-fullscreen {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  background: var(--appearance-bg, #f8f5ed);
+}
+.dattier-loader-stage {
+  position: relative;
+  display: grid;
+  place-items: center;
+}
+.dattier-loader-svg {
+  width: 136px;
+  height: 136px;
+  overflow: visible;
+}
+.dattier-loader-fork,
+.dattier-loader-knife {
+  /* Les tracés sont centrés sur (24, 24) : on encadre chaque rotation de
+     deux translations pour pivoter autour de ce point. */
+  animation: dattier-fork 2.4s cubic-bezier(0.55, 0, 0.35, 1) infinite;
+}
+.dattier-loader-knife {
+  animation-name: dattier-knife;
+}
+.dattier-loader-spark {
+  color: var(--dl-accent);
+  stroke: var(--dl-accent);
+  stroke-width: 2.6;
+  opacity: 0;
+  animation: dattier-spark 2.4s ease-out infinite;
+}
+.dattier-loader-shadow {
+  width: 64px;
+  height: 8px;
+  margin-top: 4px;
+  border-radius: 50%;
+  background: var(--appearance-accent, rgba(52, 77, 62, 0.16));
+  animation: dattier-shadow 2.4s cubic-bezier(0.55, 0, 0.35, 1) infinite;
+}
+.dattier-loader-label {
+  margin: 0;
+  font-family: var(--appearance-font, "Dattier Fraunces", Georgia, serif);
+  font-size: max(var(--appearance-min-text, 0px), calc((17px) * var(--appearance-text-scale, 1)));
+  color: var(--dl-text);
+  letter-spacing: 0.01em;
+}
+.dattier-loader-dots i {
+  font-style: normal;
+  animation: dattier-dot 1.2s infinite;
+}
+.dattier-loader-dots i:nth-child(2) {
+  animation-delay: 0.2s;
+}
+.dattier-loader-dots i:nth-child(3) {
+  animation-delay: 0.4s;
+}
+
+@keyframes dattier-fork {
+  0%,
+  12% {
+    transform: translate(24px, 24px) translate(0, 0) rotate(-45deg)
+      translate(-24px, -24px);
+  }
+  38% {
+    transform: translate(24px, 24px) translate(-16px, -10px) rotate(-170deg)
+      translate(-24px, -24px);
+  }
+  62% {
+    transform: translate(24px, 24px) translate(0, -16px) rotate(-315deg)
+      translate(-24px, -24px);
+  }
+  84% {
+    transform: translate(24px, 24px) translate(10px, -5px) rotate(-380deg)
+      translate(-24px, -24px);
+  }
+  100% {
+    transform: translate(24px, 24px) translate(0, 0) rotate(-405deg)
+      translate(-24px, -24px);
+  }
+}
+@keyframes dattier-knife {
+  0%,
+  12% {
+    transform: translate(24px, 24px) translate(0, 0) rotate(45deg)
+      translate(-24px, -24px);
+  }
+  38% {
+    transform: translate(24px, 24px) translate(16px, -10px) rotate(170deg)
+      translate(-24px, -24px);
+  }
+  62% {
+    transform: translate(24px, 24px) translate(0, -16px) rotate(315deg)
+      translate(-24px, -24px);
+  }
+  84% {
+    transform: translate(24px, 24px) translate(-10px, -5px) rotate(380deg)
+      translate(-24px, -24px);
+  }
+  100% {
+    transform: translate(24px, 24px) translate(0, 0) rotate(405deg)
+      translate(-24px, -24px);
+  }
+}
+/* Le « tchin » : une petite étincelle quand les couverts se recroisent. */
+@keyframes dattier-spark {
+  0% {
+    opacity: 1;
+    transform: translate(0, 2px) scale(0.6);
+  }
+  14% {
+    opacity: 0;
+    transform: translate(0, -4px) scale(1.15);
+  }
+  100% {
+    opacity: 0;
+  }
+}
+@keyframes dattier-shadow {
+  0%,
+  12%,
+  100% {
+    transform: scaleX(1);
+    opacity: 1;
+  }
+  62% {
+    transform: scaleX(0.55);
+    opacity: 0.5;
+  }
+}
+@keyframes dattier-dot {
+  0%,
+  100% {
+    opacity: 0.2;
+  }
+  40% {
+    opacity: 1;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .dattier-loader-fork {
+    animation: none;
+    transform: translate(24px, 24px) rotate(-45deg) translate(-24px, -24px);
+  }
+  .dattier-loader-knife {
+    animation: none;
+    transform: translate(24px, 24px) rotate(45deg) translate(-24px, -24px);
+  }
+  .dattier-loader-spark,
+  .dattier-loader-shadow {
+    animation: none;
+  }
+  .dattier-loader-svg {
+    animation: dattier-dot 1.6s infinite;
+  }
+}
+
+/* Page 404 */
+.dattier-404 {
+  min-height: 100vh;
+  min-height: 100dvh;
+  display: grid;
+  place-items: center;
+  padding: 48px 16px;
+  background:
+    radial-gradient(circle at 50% 28%, var(--appearance-soft, #eee5d6) 0, transparent 55%), var(--appearance-bg, #f8f5ed);
+  color: var(--appearance-ink, #2f4034);
+  font-family: var(--appearance-font, "Dattier Inter", Arial, Helvetica, sans-serif);
+  text-align: center;
+}
+.dattier-404-card {
+  max-width: 520px;
+  display: grid;
+  justify-items: center;
+  gap: 14px;
+}
+.dattier-404-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  font-size: max(var(--appearance-min-text, 0px), calc((13px) * var(--appearance-text-scale, 1)));
+  color: var(--appearance-ink, #344d3e);
+  margin-bottom: 18px;
+}
+.dattier-404-brand span {
+  color: var(--appearance-muted, #9a6646);
+}
+.dattier-404-code {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--appearance-font, "Dattier Fraunces", Georgia, serif);
+  font-size: max(var(--appearance-min-text, 0px), calc((clamp(88px, 22vw, 148px)) * var(--appearance-text-scale, 1)));
+  line-height: 1;
+  font-weight: 600;
+  color: var(--appearance-ink, #344d3e);
+  letter-spacing: -0.04em;
+}
+/* Le « 0 » central est une assiette vide, couverts posés en X. */
+.dattier-404-plate {
+  display: grid;
+  place-items: center;
+  width: 0.78em;
+  height: 0.78em;
+  border-radius: 50%;
+  background: var(--appearance-surface, #fdfbf6);
+  border: 0.06em solid var(--appearance-line, #344d3e);
+  box-shadow:
+    inset 0 0 0 0.07em #fdfbf6,
+    inset 0 0 0 0.085em #e3dece,
+    0 0.08em 0.2em rgba(47, 64, 52, 0.12);
+}
+.dattier-404-plate svg {
+  width: 52%;
+  height: 52%;
+  color: var(--appearance-muted, #9a6646);
+}
+.dattier-404 h1 {
+  margin: 8px 0 0;
+  font-family: var(--appearance-font, "Dattier Fraunces", Georgia, serif);
+  font-size: max(var(--appearance-min-text, 0px), calc((clamp(24px, 5vw, 32px)) * var(--appearance-text-scale, 1)));
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  color: var(--appearance-ink, #2f4034);
+}
+.dattier-404 p {
+  margin: 0;
+  color: var(--appearance-ink, #5b6556);
+  font-size: max(var(--appearance-min-text, 0px), calc((16px) * var(--appearance-text-scale, 1)));
+  line-height: 1.6;
+}
+.dattier-404-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 18px;
+}
+.dattier-404-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 46px;
+  padding: 0 20px;
+  border-radius: 999px;
+  font-weight: 600;
+  font-size: max(var(--appearance-min-text, 0px), calc((15px) * var(--appearance-text-scale, 1)));
+  border: 1px solid var(--appearance-line, #344d3e);
+  transition:
+    background 0.15s,
+    color 0.15s,
+    transform 0.15s;
+}
+.dattier-404-btn.primary {
+  background: var(--appearance-accent, #344d3e);
+  color: #fdfbf6;
+}
+.dattier-404-btn.primary:hover {
+  background: var(--appearance-accent, #243c2d);
+}
+.dattier-404-btn.ghost {
+  color: var(--appearance-ink, #344d3e);
+  background: transparent;
+}
+.dattier-404-btn.ghost:hover {
+  background: var(--appearance-soft, #eee5d6);
+}
+.dattier-404-btn:active {
+  transform: translateY(1px);
+}

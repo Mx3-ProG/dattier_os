@@ -1,32 +1,48 @@
 "use client";
-import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { SiteEditor } from "./index";
 import { TenantSiteProvider } from "../cms-site/context";
+import type { Role } from "@/lib/permissions";
+import { RestaurantAdminShell } from "@/components/platform/restaurant-admin-shell";
+import type { Industry } from "@/features/onboarding/catalog";
+
 export function WebsiteStudio({
   restaurant,
+  restaurantName,
+  industry = "restaurant",
+  plan,
+  userRoles,
+  addons,
   demo,
 }: {
   restaurant: string;
+  restaurantName: string;
+  industry?: Industry;
+  plan: number;
+  userRoles: Role[];
+  addons: string[];
   demo: boolean;
 }) {
-  const router = useRouter();
+  const dashboard = `/dashboard?restaurant=${encodeURIComponent(restaurant)}`;
   return (
     <TenantSiteProvider restaurant={restaurant} demo={demo}>
-      <main className="website-studio">
-        <header className="studio-heading">
-          <Link href={`/restaurant/${restaurant}`}>
-            ← Administration du restaurant
-          </Link>
-          <h1>Mon site web</h1>
-          {demo && (
-            <p>
-              Démonstration locale · modifications propres à cet établissement.
-            </p>
-          )}
-        </header>
-        <SiteEditor navigate={() => router.push(`/restaurant/${restaurant}`)} />
-      </main>
+      <RestaurantAdminShell
+        restaurant={restaurant}
+        restaurantName={restaurantName}
+        industry={industry}
+        plan={plan}
+        userRoles={userRoles}
+        addons={addons}
+        activeModule="site"
+        demo={demo}
+      >
+        <SiteEditor
+          liveDataHref={(module) =>
+            industry !== "restaurant" ? dashboard + "&module=trade-tools" : module === "menu"
+              ? `${dashboard}&module=menu`
+              : `/restaurant/${restaurant}?module=shop${module === "reviews" ? "#avis" : "#reglages-commande"}`
+          }
+        />
+      </RestaurantAdminShell>
     </TenantSiteProvider>
   );
 }

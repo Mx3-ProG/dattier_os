@@ -32,6 +32,13 @@ type Row = {
 const INSERT = `INSERT INTO ops_security_events(event_id,occurred_at,severity,event_type,module,action,actor_id,restaurant_id,session_id,correlation_id,resource_id,status,error_code,message,technical_details,resolution_status,incident_id)
 VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17) ON CONFLICT(event_id) DO NOTHING`;
 
+// Le canal public ne relit pas ce journal : ON CONFLICT y serait refusé par la RLS.
+// event_id est tiré au hasard à chaque événement, le doublon n'existe que pour un flush rejoué.
+const insertSql = () =>
+  databaseContext.getStore()?.public
+    ? INSERT.replace(" ON CONFLICT(event_id) DO NOTHING", "")
+    : INSERT;
+
 /** Events that could not be written. Bounded; flushed by the maintenance tick. */
 const tenantBuffers = new Map<string, { rows: Row[]; dropped: number }>();
 const buffer = (create = false) => {
@@ -111,7 +118,7 @@ function keep(row: Row, error: unknown) {
  */
 export async function emit(db: DB, input: EventInput) {
   const row = build(input);
-  await db.query(INSERT, row.values);
+  await db.query(insertSql(), row.values);
   return row.event_id;
 }
 
@@ -125,13 +132,13 @@ export async function record(db: DB, input: EventInput) {
     if (inTransaction(db)) {
       await db.exec("SAVEPOINT security_event");
       try {
-        await db.query(INSERT, row.values);
+        await db.query(insertSql(), row.values);
         await db.exec("RELEASE SAVEPOINT security_event");
       } catch (error) {
         await db.exec("ROLLBACK TO SAVEPOINT security_event");
         throw error;
       }
-    } else await db.query(INSERT, row.values);
+    } else await db.query(insertSql(), row.values);
   } catch (error) {
     keep(row, error);
   }

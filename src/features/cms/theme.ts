@@ -88,12 +88,12 @@ export function themeCss(theme: Theme): string {
     c.primary !== d.colors.primary
   )
     rules.push(
-      `.donut-site .donut-button:not(.outline):not(.dark),.donut-mobile-cart{background:${c.buttonBg};color:${c.buttonText}!important}`,
-      `.donut-site .donut-button:not(.outline):not(.dark):hover{background:${c.buttonBg};filter:brightness(.9)}`,
+      `.donut-site .donut-button:not(.outline):not(.dark),.donut-mobile-cart{background:var(--public-accent,${c.buttonBg});color:var(--public-on-accent,${c.buttonText})!important}`,
+      `.donut-site .donut-button:not(.outline):not(.dark):hover{background:var(--public-accent,${c.buttonBg});filter:brightness(.9)}`,
     );
   if (c.link !== d.colors.link)
     rules.push(
-      `.donut-site .donut-text-link{color:${c.link};border-bottom-color:${c.link}}`,
+      `.donut-site .donut-text-link{color:var(--public-link,${c.link});border-bottom-color:var(--public-link,${c.link})}`,
     );
   if (theme.fonts.heading !== d.fonts.heading)
     rules.push(

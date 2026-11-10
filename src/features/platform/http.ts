@@ -1,3 +1,4 @@
+import { requirePlan } from "@/features/platform/entitlements";
 import { registerPresence } from "@/features/ops-security/presence";
 import { recordFailure } from "@/features/ops-security/http";
 import { NextRequest, NextResponse } from "next/server";
@@ -73,6 +74,7 @@ export async function authenticated<T>(
           if (profile.rows[0]?.status !== "active")
             throw new Error("Compte suspendu ou non autorisé.");
           if (restaurant) {
+            await requirePlan(tx, restaurant, 39);
             const grants = await tx.query<{ id: string }>(
               "SELECT id FROM support_grants WHERE profile_id=$1 AND restaurant_id=$2 AND expires_at>now() AND revoked_at IS NULL",
               [user.id, restaurant],
@@ -143,9 +145,11 @@ export function failure(error: unknown) {
         message:
           error instanceof ZodError
             ? "Données invalides."
-            : safe
-              ? m.slice(0, 500)
-              : "Opération impossible. Vérifiez les données et réessayez.",
+            : m.includes("Quota d’établissements atteint")
+              ? "Quota d’établissements atteint."
+              : safe
+                ? m.slice(0, 500)
+                : "Opération impossible. Vérifiez les données et réessayez.",
       },
     },
     status,

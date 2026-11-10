@@ -1,10 +1,23 @@
 import type { NextConfig } from "next";
 const config: NextConfig = {
   serverExternalPackages: ["@electric-sql/pglite", "pg"],
+  // Keep the bound origin for internal rewrites from restaurant domains.
+  skipProxyUrlNormalize: true,
+  // proxy.ts tronque les corps à 10 Mo par défaut ; l'éditeur accepte les vidéos jusqu'à 100 Mo.
+  experimental: { proxyClientMaxBodySize: "101mb" },
   poweredByHeader: false,
   devIndicators: false,
   async headers() {
     return [
+      {
+        source: "/sw.js",
+        headers: [
+          {
+            key: "Cache-Control",
+            value: "no-cache, max-age=0, must-revalidate",
+          },
+        ],
+      },
       {
         source: "/:path*",
         headers: [

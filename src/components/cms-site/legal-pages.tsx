@@ -1,6 +1,6 @@
 "use client";
 
-import { TenantLink as Link } from "./context";
+import { TenantLink as Link, useTenantSite } from "./context";
 import { createContext, useContext, type ReactNode } from "react";
 import { openCookieSettings } from "./cookie-consent";
 
@@ -85,7 +85,39 @@ export function LegalPage({
     </LegalContext.Provider>
   );
 }
+/** Section présente uniquement quand l’établissement a activé la mesure d’audience. */
+function AudienceNotice() {
+  const { audience } = useTenantSite();
+  if (!audience) return null;
+  return (
+    <>
+      <h2>Mesure d’audience</h2>
+      <p>
+        Ce site mesure sa propre fréquentation pour le compte de l’établissement :
+        pages vues, sessions et visiteurs estimés, zone géographique approximative
+        (pays, région, ville) déduite des données réseau. Aucun cookie n’est déposé
+        et aucun profil individuel n’est créé. L’adresse IP sert uniquement au
+        moment de la requête, sous forme de condensat combiné à un secret renouvelé
+        chaque jour, et n’est pas conservée. Les statistiques sont agrégées et ne
+        sont ni partagées avec d’autres établissements, ni croisées avec d’autres
+        sites.
+      </p>
+      <p>
+        {audience === "consent_required"
+          ? "Cette mesure ne s’active qu’avec votre accord."
+          : "Cette mesure est active par défaut et vous pouvez vous y opposer à tout moment."}{" "}
+        Les signaux « Global Privacy Control » et « Do Not Track » de votre
+        navigateur sont respectés.
+      </p>
+      <button className="donut-button" onClick={openCookieSettings}>
+        Gérer la mesure d’audience
+      </button>
+    </>
+  );
+}
+
 function LegalBody({ route }: { route: string }) {
+  const { audience } = useTenantSite();
   if (route === "mentions-legales")
     return (
       <LegalLayout title="Mentions légales" eyebrow="TRANSPARENCE">
@@ -151,6 +183,7 @@ function LegalBody({ route }: { route: string }) {
           navigateur peut supprimer l’accès automatique au compte de cette
           démonstration.
         </p>
+        <AudienceNotice />
         <h2>Durées, destinataires et droits</h2>
         <p>
           Les durées définitives de conservation, les sous-traitants et
@@ -167,12 +200,13 @@ function LegalBody({ route }: { route: string }) {
       <LegalLayout title="Cookies et stockage local" eyebrow="VOS CHOIX">
         <h2>Ce que le site utilise</h2>
         <p>
-          Cette version n’installe aucun traceur publicitaire ni outil de mesure
-          d’audience. Elle utilise le stockage local du navigateur pour garder
+          Cette version n’installe aucun traceur publicitaire
+          {audience ? "" : " ni outil de mesure d’audience"}. Elle utilise le stockage local du navigateur pour garder
           le panier, votre choix de consentement et la clé privée permettant de
           retrouver le compte sur cet appareil. Ces éléments sont nécessaires
           aux fonctions demandées.
         </p>
+        <AudienceNotice />
         <h2>Contenu externe facultatif</h2>
         <p>
           La carte Google Maps intégrée est bloquée tant que vous ne l’avez pas

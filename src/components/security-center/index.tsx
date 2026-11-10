@@ -1,4 +1,6 @@
 "use client";
+import { UtensilsLoader } from "@/components/brand/utensils";
+import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import {
   Activity,
@@ -207,8 +209,24 @@ export function SecurityCenter({ restaurant }: { restaurant: string }) {
   }
 
   if (!data)
-    return (
-      <p className="muted">{error || "Chargement du centre de sécurité…"}</p>
+    return error ? (
+      <section className="security-access-state" role="alert">
+        <ShieldCheck size={22} aria-hidden="true" />
+        <div>
+          <h2>Ce centre n’est pas disponible avec votre profil</h2>
+          <p>{error}</p>
+          <div className="actions">
+            <Link href={`/restaurant/${restaurant}`}>
+              Retour à l’administration
+            </Link>
+            <Link href={`/dashboard?restaurant=${encodeURIComponent(restaurant)}`}>
+              Ouvrir le poste de travail
+            </Link>
+          </div>
+        </div>
+      </section>
+    ) : (
+      <UtensilsLoader label="Chargement du centre de sécurité" fullscreen={false} />
     );
   const admin = data.platformAdmin;
   const open = incidents.filter(

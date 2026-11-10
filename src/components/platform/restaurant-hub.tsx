@@ -1,11 +1,17 @@
 "use client";
+import { UtensilsLoader } from "@/components/brand/utensils";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
+import { useSearchParams } from "next/navigation";
 import "./platform.css";
 import { ShopSettings } from "./shop-settings";
 import { LoyaltyPanel } from "./loyalty-panel";
 import type { Settings } from "@/features/commerce/schema";
+import { can, roleLabels, type Role } from "@/lib/permissions";
+import { availableRestaurantModules, type RestaurantModuleId } from "@/features/platform/admin-navigation";
+import { industries, industryLabels, trades, type Industry } from "@/features/onboarding/catalog";
+import { RestaurantAdminShell } from "./restaurant-admin-shell";
 type Member = { id: string; name: string; email: string; role: string };
 type ShopOrder = {
   order_id: string;
@@ -25,21 +31,33 @@ const roleOptions = [
   "PURCHASING",
   "ACCOUNTANT",
 ];
-const tabs = [
-  ["team", "Équipe"],
-  ["shop", "Boutique et avis"],
-  ["loyalty", "Fidélité"],
-  ["site", "Mon site"],
-  ["domains", "Domaines"],
-  ["inventory", "Stocks et achats"],
-  ["security", "Sécurité"],
-  ["reconciliation", "Conflits hors ligne"],
-  ["integrations", "Connexions"],
-];
-export function RestaurantHub({ restaurant }: { restaurant: string }) {
+export function RestaurantHub({
+  restaurant,
+  restaurantName,
+  activity,
+  plan,
+  userRoles,
+  addons,
+}: {
+  restaurant: string;
+  restaurantName: string;
+  activity: { industry: Industry; trade: string; trade_detail: string };
+  plan: number;
+  userRoles: Role[];
+  addons: string[];
+}) {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [refreshVersion, setRefreshVersion] = useState(0);
-  const [tab, setTab] = useState("team"),
+  const accessibleTabs = useMemo(
+    () => availableRestaurantModules(userRoles, plan, addons, activity.industry),
+    [plan, userRoles, addons, activity.industry],
+  );
+  const requestedTab = searchParams.get("module");
+  const initialTab = accessibleTabs.some((module) => module.id === requestedTab)
+    ? requestedTab!
+    : accessibleTabs[0]?.id || "team";
+  const [tab, setTab] = useState(initialTab),
     [responseData, setData] = useState<Record<string, unknown>>(),
     [error, setError] = useState(""),
     [message, setMessage] = useState(""),
@@ -47,6 +65,9 @@ export function RestaurantHub({ restaurant }: { restaurant: string }) {
     [email, setEmail] = useState(""),
     [roles, setRoles] = useState(["WAITER"]),
     [invite, setInvite] = useState(""),
+    [activityIndustry,setActivityIndustry]=useState<Industry>(activity.industry),
+    [activityTrade,setActivityTrade]=useState(activity.trade),
+    [activityDetail,setActivityDetail]=useState(activity.trade_detail),
     [domain, setDomain] = useState(""),
     [stock, setStock] = useState<{
       ingredients: { id: string; name: string; unit: string }[];
@@ -85,6 +106,17 @@ export function RestaurantHub({ restaurant }: { restaurant: string }) {
   );
   const data = responseData?._module === tab ? responseData : undefined;
   useEffect(() => {
+    if (
+      requestedTab &&
+      accessibleTabs.some((module) => module.id === requestedTab) &&
+      requestedTab !== tab
+    ) {
+      setData(undefined);
+      setTab(requestedTab as RestaurantModuleId);
+    }
+  }, [requestedTab, accessibleTabs, tab]);
+  useEffect(() => {
+    if (!accessibleTabs.length) return;
     let active = true;
     setData(undefined);
     setError("");
@@ -105,7 +137,7 @@ export function RestaurantHub({ restaurant }: { restaurant: string }) {
     return () => {
       active = false;
     };
-  }, [api, tab, restaurant, refreshVersion]);
+  }, [api, tab, restaurant, refreshVersion, accessibleTabs.length]);
 
   async function perform(body: unknown) {
     setBusy(true);
@@ -125,41 +157,24 @@ export function RestaurantHub({ restaurant }: { restaurant: string }) {
     }
   }
   const members = (data?.members || []) as Member[];
+  const floorLayout = (data?.floorLayout || []) as {
+    profile_id: string;
+    allowed: boolean;
+  }[];
   return (
-    <main className="platform">
-      <header>
-        <Link href="/platform">← Mes restaurants</Link>
-        <h1>Administration du restaurant</h1>
-        <div className="actions">
-          <Link className="button" href={`/dashboard?restaurant=${restaurant}`}>
-            Poste de travail
-          </Link>
-          <Link href={`/r/${restaurant}`}>Site et boutique</Link>
-          <Link href={`/offline?restaurant=${restaurant}`}>
-            Poste hors ligne
-          </Link>
-        </div>
-      </header>
-      <nav aria-label="Modules du restaurant">
-        {tabs.map(([id, label]) => (
-          <button
-            key={id}
-            aria-pressed={tab === id}
-            disabled={busy}
-            onClick={() => {
-              if (["site", "security"].includes(id)) {
-                router.push(`/restaurant/${restaurant}/${id}`);
-                return;
-              }
-              setData(undefined);
-              setTab(id);
-            }}
-          >
-            {label}
-          </button>
-        ))}
-      </nav>
-      {error && (
+    <RestaurantAdminShell
+      restaurant={restaurant}
+      restaurantName={restaurantName}
+      industry={activity.industry}
+      plan={plan}
+      userRoles={userRoles}
+      addons={addons}
+      activeModule={tab as RestaurantModuleId}
+      pageTitle="Administration de l’établissement"
+      contentClassName="platform"
+    >
+      <div className="platform-admin-content">
+      {error && data && (
         <p role="alert" className="error">
           {error}
         </p>
@@ -169,12 +184,58 @@ export function RestaurantHub({ restaurant }: { restaurant: string }) {
           {message}
         </p>
       )}
-      {!data ? (
-        <p role="status">Chargement…</p>
+      {!accessibleTabs.length ? (
+        <section className="platform-empty-state" role="status">
+          <h2>Aucun module d’administration n’est associé à votre profil</h2>
+          <p>Ouvrez votre poste de travail pour accéder aux tâches de votre rôle.</p>
+          <Link className="button" href={`/dashboard?restaurant=${restaurant}`}>
+            Ouvrir le poste de travail
+          </Link>
+        </section>
+      ) : !data ? (
+        error ? (
+          <section className="platform-empty-state" role="alert">
+            <h2>
+              {error.includes("Accès refusé")
+                ? "Ce module n’est pas disponible avec votre profil"
+                : "Impossible de charger ce module"}
+            </h2>
+            <p>{error}</p>
+            <div className="actions">
+              <button onClick={() => setRefreshVersion((value) => value + 1)}>
+                Réessayer
+              </button>
+              <Link className="button" href={`/dashboard?restaurant=${restaurant}`}>
+                Ouvrir le poste de travail
+              </Link>
+            </div>
+          </section>
+        ) : (
+          <UtensilsLoader fullscreen={false} />
+        )
       ) : (
         <>
           {tab === "team" && (
             <>
+              {userRoles.includes("OWNER") && <section>
+                <h2>Activité de l’établissement</h2>
+                <form onSubmit={(event)=>{
+                  event.preventDefault();
+                  void fetch("/api/platform",{method:"POST",headers:{"Content-Type":"application/json"},
+                    body:JSON.stringify({action:"activity",restaurant,activity:{industry:activityIndustry,trade:activityTrade,tradeDetail:activityDetail}})})
+                    .then(async(response)=>{const body=await response.json();if(!response.ok)throw new Error(body.error?.message||"Modification impossible.");window.location.reload();})
+                    .catch((cause)=>setError(cause instanceof Error?cause.message:"Modification impossible."));
+                }}>
+                  <label>Famille d’activité<select value={activityIndustry} onChange={(e)=>{
+                    const next=e.target.value as Industry;setActivityIndustry(next);setActivityTrade(trades[next][0]);setActivityDetail("");
+                  }}>{industries.map((item)=><option key={item} value={item}>{industryLabels[item]}</option>)}</select></label>
+                  <label>Métier<select value={activityTrade} onChange={(e)=>setActivityTrade(e.target.value)}>{trades[activityIndustry].map((item)=><option key={item}>{item}</option>)}</select></label>
+                  {activityTrade.startsWith("Autre")&&<label>Précisez votre activité<input required value={activityDetail} onChange={(e)=>setActivityDetail(e.target.value)}/></label>}
+                  <button>Enregistrer l’activité</button>
+                </form>
+                <p><Link href={"/restaurant/"+restaurant+"/import-clients"}>Importer des clients depuis un CSV</Link></p>
+                <p>Changer d’activité masque les anciens outils métier ; leurs données restent conservées.</p>
+              </section>}
               <section>
                 <h2>Inviter un collaborateur</h2>
                 <form
@@ -192,9 +253,10 @@ export function RestaurantHub({ restaurant }: { restaurant: string }) {
                       onChange={(e) => setEmail(e.target.value)}
                     />
                   </label>
-                  <fieldset>
+                  <fieldset className="admin-role-options">
                     <legend>Rôles dans cet établissement</legend>
-                    {roleOptions.map((role) => (
+                    {(activity.industry === "restaurant" ? roleOptions :
+                      ["OWNER","MANAGER","WAITER","STOCK_MANAGER","PURCHASING","ACCOUNTANT"]).map((role) => (
                       <label className="inline" key={role}>
                         <input
                           type="checkbox"
@@ -207,7 +269,7 @@ export function RestaurantHub({ restaurant }: { restaurant: string }) {
                             )
                           }
                         />
-                        {role}
+                        {role === "WAITER" && activity.industry !== "restaurant" ? "Collaborateur" : roleLabels[role as Role]}
                       </label>
                     ))}
                   </fieldset>
@@ -236,9 +298,41 @@ export function RestaurantHub({ restaurant }: { restaurant: string }) {
                         {m.email} ·{" "}
                         {members
                           .filter((x) => x.id === id)
-                          .map((x) => x.role)
+                          .map((x) => roleLabels[x.role as Role] ?? x.role)
                           .join(", ")}
                       </p>
+                      {(() => {
+                        const memberRoles = members
+                          .filter((x) => x.id === id)
+                          .map((x) => x.role as Role);
+                        // Le propriétaire garde toujours ce droit ; les rôles sans accès à la salle ne l’ont pas.
+                        if (
+                          memberRoles.includes("OWNER") ||
+                          !can(memberRoles, "floor")
+                        )
+                          return null;
+                        const allowed =
+                          floorLayout.find((f) => f.profile_id === id)
+                            ?.allowed ?? true;
+                        return (
+                          <label className="inline">
+                            <input
+                              type="checkbox"
+                              checked={allowed}
+                              disabled={busy}
+                              onChange={(e) =>
+                                perform({
+                                  action: "floorLayout",
+                                  profile: id,
+                                  allowed: e.target.checked,
+                                })
+                              }
+                            />
+                            Peut modifier le plan de salle (zones, ajout,
+                            déplacement et rotation des tables)
+                          </label>
+                        );
+                      })()}
                       <button
                         disabled={busy}
                         onClick={() =>
@@ -286,13 +380,30 @@ export function RestaurantHub({ restaurant }: { restaurant: string }) {
                   data.domains as {
                     hostname: string;
                     verified_at: string | null;
+                    is_primary?: boolean;
                   }[]
                 ).map((d) => (
                   <article key={d.hostname}>
                     <p>
                       {d.hostname} · {d.verified_at ? "Vérifié" : "À vérifier"}
+                      {d.is_primary
+                        ? " · Domaine principal (référencement)"
+                        : ""}
                     </p>
                     <div className="actions">
+                      {d.verified_at && !d.is_primary && (
+                        <button
+                          disabled={busy}
+                          onClick={() =>
+                            perform({
+                              action: "primaryDomain",
+                              hostname: d.hostname,
+                            })
+                          }
+                        >
+                          Définir comme principal
+                        </button>
+                      )}
                       <button
                         disabled={busy}
                         onClick={() =>
@@ -398,61 +509,65 @@ export function RestaurantHub({ restaurant }: { restaurant: string }) {
                   </article>
                 ))}
               </section>
-              <section>
-                <h2>Avis à modérer</h2>
-                {(
-                  data.reviews as {
-                    id: string;
-                    product: string;
-                    body: string;
-                    rating: number;
-                    status: string;
-                  }[]
-                ).map((review) => (
-                  <article key={review.id}>
-                    <h3>
-                      {review.product} · {review.rating}/5
-                    </h3>
-                    <p>{review.body}</p>
-                    <p>{review.status}</p>
-                    <div className="actions">
-                      {["published", "rejected", "archived"].map((status) => (
-                        <button
-                          disabled={busy}
-                          key={status}
-                          onClick={() =>
-                            perform({
-                              action: "moderate",
-                              data: { id: review.id, status, reply: "" },
-                            })
-                          }
-                        >
-                          {
-                            (
-                              {
-                                published: "Publier",
-                                rejected: "Refuser",
-                                archived: "Archiver",
-                              } as Record<string, string>
-                            )[status]
-                          }
-                        </button>
-                      ))}
-                    </div>
-                  </article>
-                ))}
-              </section>
-              <section>
-                <h2>Réglages de commande</h2>
-                <ShopSettings
-                  key={JSON.stringify(data.settings)}
-                  initial={data.settings as Settings}
-                  busy={busy}
-                  save={(value) =>
-                    void perform({ action: "settings", data: value })
-                  }
-                />
-              </section>
+              {plan >= 39 && (
+                <section id="avis">
+                  <h2>Avis à modérer</h2>
+                  {(
+                    data.reviews as {
+                      id: string;
+                      product: string;
+                      body: string;
+                      rating: number;
+                      status: string;
+                    }[]
+                  ).map((review) => (
+                    <article key={review.id}>
+                      <h3>
+                        {review.product} · {review.rating}/5
+                      </h3>
+                      <p>{review.body}</p>
+                      <p>{review.status}</p>
+                      <div className="actions">
+                        {["published", "rejected", "archived"].map((status) => (
+                          <button
+                            disabled={busy}
+                            key={status}
+                            onClick={() =>
+                              perform({
+                                action: "moderate",
+                                data: { id: review.id, status, reply: "" },
+                              })
+                            }
+                          >
+                            {
+                              (
+                                {
+                                  published: "Publier",
+                                  rejected: "Refuser",
+                                  archived: "Archiver",
+                                } as Record<string, string>
+                              )[status]
+                            }
+                          </button>
+                        ))}
+                      </div>
+                    </article>
+                  ))}
+                </section>
+              )}
+              {data.shopEnabled === true && (
+                <section id="reglages-commande">
+                  <h2>Réglages de commande</h2>
+                  <ShopSettings
+                    key={JSON.stringify(data.settings)}
+                    initial={data.settings as Settings}
+                    busy={busy}
+                    save={(value) =>
+                      void perform({ action: "settings", data: value })
+                    }
+                  />
+                </section>
+              )}
             </>
           )}
           {tab === "inventory" && (
@@ -876,7 +991,8 @@ export function RestaurantHub({ restaurant }: { restaurant: string }) {
           )}
         </>
       )}
-    </main>
+      </div>
+    </RestaurantAdminShell>
   );
 }
 

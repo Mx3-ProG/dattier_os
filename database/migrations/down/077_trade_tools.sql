@@ -1,0 +1,10 @@
+DROP TABLE IF EXISTS public.trade_records;
+DROP FUNCTION IF EXISTS app.trade_records_quota();
+DROP FUNCTION IF EXISTS app.trade_records_immutable();
+DELETE FROM public.addon_installations WHERE addon_id IN (SELECT id FROM public.addon_products WHERE kind='business');
+DELETE FROM public.addon_license_events WHERE product_id IN (SELECT id FROM public.addon_products WHERE kind='business');
+DELETE FROM public.addon_purchases WHERE product_id IN (SELECT id FROM public.addon_products WHERE kind='business');
+DELETE FROM public.addon_licenses WHERE product_id IN (SELECT id FROM public.addon_products WHERE kind='business');
+DELETE FROM public.addon_products WHERE kind='business';
+DELETE FROM public.addon_categories WHERE id IN ('metier-restauration','metier-btp','metier-coiffure','metier-commerce','metier-tous');
+DELETE FROM schema_versions WHERE version=77;

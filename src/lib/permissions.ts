@@ -26,7 +26,9 @@ export type Permission =
   | "settings"
   | "audit"
   | "reservations"
-  | "floor";
+  | "floor"
+  | "payroll"
+  | "analytics";
 const grants: Record<Role, Permission[]> = {
   SUPER_ADMIN: [
     "security",
@@ -45,6 +47,8 @@ const grants: Record<Role, Permission[]> = {
     "audit",
     "reservations",
     "floor",
+    "payroll",
+    "analytics",
   ],
   OWNER: [
     "security",
@@ -63,6 +67,8 @@ const grants: Record<Role, Permission[]> = {
     "audit",
     "reservations",
     "floor",
+    "payroll",
+    "analytics",
   ],
   MANAGER: [
     "website",
@@ -78,13 +84,14 @@ const grants: Record<Role, Permission[]> = {
     "audit",
     "reservations",
     "floor",
+    "analytics",
   ],
   WAITER: ["orders", "payments", "reservations", "floor"],
   CHEF: ["kitchen", "stock", "orders"],
   BARTENDER: ["bar", "stock", "orders", "floor"],
   STOCK_MANAGER: ["stock", "purchases"],
   PURCHASING: ["purchases"],
-  ACCOUNTANT: ["finance"],
+  ACCOUNTANT: ["finance", "payroll"],
 };
 export const can = (role: Role | readonly Role[], permission: Permission) =>
   (Array.isArray(role) ? role : [role]).some((r) =>

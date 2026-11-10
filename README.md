@@ -1,8 +1,8 @@
-# Dattier OS
+# Studio OS
 
 OS open source pour les restaurateurs : commandes, salle, cuisine, bar, stocks, achats, équipes, clients, fidélité, boutique et sites par établissement.
 
-**AGPL-3.0-only** · France en premier · installation auto-hébergeable. Une organisation peut gérer plusieurs restaurants et plusieurs rôles par utilisateur. L’abonnement hébergé de 20–30 € est une hypothèse économique, pas une offre activée.
+**AGPL-3.0-only** · France en premier · installation auto-hébergeable. Une organisation peut gérer plusieurs restaurants et plusieurs rôles par utilisateur. L’offre hébergée propose trois forfaits au niveau de l’organisation. Voir [la gestion du pilote](docs/platform/BILLING.md).
 
 ## Essayer localement
 
@@ -12,7 +12,7 @@ npm ci
 npm run dev
 ```
 
-La démonstration est sur `/demo`, le poste de travail sur `/dashboard`. Les données sont fictives et conservées dans un dossier explicitement nommé `demo`. Un seul processus peut ouvrir ce dossier. [Guide de la démonstration](docs/LOCAL_DEMO.md).
+La démonstration est sur `/demo`, le poste de travail sur `/dashboard`, le guide d’utilisation complet sur `/guide`. Dans le poste, le bouton « Guide » ouvre la visite interactive (15 parcours adaptés au rôle, contenu partagé avec `/guide` dans `src/features/guide/content.ts`) ; `/dashboard?tour=all` ou `?tour=<parcours>` la lance directement. Les données sont fictives et conservées dans un dossier explicitement nommé `demo`. Un seul processus peut ouvrir ce dossier. [Guide de la démonstration](docs/LOCAL_DEMO.md).
 
 ## Nouvelle plateforme
 
@@ -49,7 +49,7 @@ Les scénarios PostgreSQL réels et de charge utilisent exclusivement des bases 
 
 ## État et limites
 
-Les parcours locaux et les contrôles SQL sont vérifiables ; leur présence ne vaut pas lancement commercial. Paiements en ligne, caisse, paie, comptabilité et livraison ne sont pas raccordés à des comptes prestataires. Les exports de ventes/pointages sont des données à rapprocher, sans prétention de conformité comptable ou de paie.
+Les parcours locaux et les contrôles SQL sont vérifiables ; leur présence ne vaut pas lancement commercial. Caisse, paie, comptabilité et livraison ne sont pas raccordées à des comptes prestataires. Le paiement en ligne est développé mais fermé sans clé Stripe, et n’a été vérifié qu’avec Stripe simulé ([détails](docs/platform/ONLINE_PAYMENTS.md)). Les exports de ventes/pointages sont des données à rapprocher, sans prétention de conformité comptable ou de paie.
 
 Le mode hors ligne fonctionne par appareils indépendants : aucun transfert automatique de ticket pendant une coupure. Quotas et opérations locales doivent être réconciliés avant de retirer un appareil. Un navigateur effacé peut perdre ses opérations non synchronisées.
 
@@ -58,3 +58,28 @@ Le mode hors ligne fonctionne par appareils indépendants : aucun transfert auto
 ### Studio du site et sécurité
 
 Après connexion, « Mon site web » ouvre l’éditeur complet repris des Temps des Donuts. Il permet d’ajouter des sections et pages, de personnaliser Ma story, l’identité, les polices et le référencement, puis de prévisualiser, publier et restaurer une version. « Sécurité opérationnelle » ouvre le journal, les incidents, corrections et archives, avec accès limité au restaurant courant. Voir [l’état détaillé](docs/platform/IMPLEMENTATION_STATUS.md).
+
+### Démo publique
+
+La démo tourne sur une instance Docker dédiée, accessible via un proxy HTTPS sur
+un sous-domaine distinct. Elle utilise les profils fictifs et une base locale
+partagée par les visiteurs. Les modifications disparaissent quand le conteneur
+est recréé.
+
+Dans cette instance, les add-ons payants visibles dans la boutique et les
+abonnements mensuels sont ouverts à l’essai, avec leur prix TTC toujours affiché.
+Aucun achat ni abonnement Stripe n’est créé. Cette ouverture s’applique seulement
+à l’instance de démonstration ; les établissements du site commercial conservent
+leurs droits payants habituels.
+
+```sh
+DEMO_APP_URL=https://demo.example.com \
+ATACUISINE_PURCHASE_URL=https://app.example.com/#offres \
+docker compose -f compose.demo.yaml up -d --build
+```
+
+Sur l’hôte Docker, dirigez le proxy HTTPS vers `127.0.0.1:3100`. Sur
+l’instance commerciale, configurez
+`ATACUISINE_PUBLIC_DEMO_URL=https://demo.example.com/demo` pour afficher le
+lien « Essayer la démo ». Gardez les paramètres de production (PostgreSQL,
+identité, paiement et messagerie) sur l’instance commerciale.

@@ -1,4 +1,14 @@
 "use client";
+import { workspaceNavigation } from "@/features/navigation/catalog";
+import { restaurantOnlyNavigation } from "@/features/onboarding/catalog";
+import { dashboardEntries } from "@/features/modules/display";
+import { currentNavigation } from "@/core/navigation/registry";
+import { moduleCategory } from "@/features/appearance/categories";
+import { CategoryBadge } from "./appearance/category-badge";
+import {
+  AppearanceScope,
+  AppearanceButton,
+} from "@/components/appearance/appearance";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useCallback, useEffect, useState, useRef } from "react";
@@ -15,11 +25,20 @@ import {
   Users,
   Clock,
   Wallet,
+  ClipboardCheck,
+  FileText,
+  FileSignature,
+  Landmark,
+  CalendarOff,
+  HandCoins,
+  Banknote,
   Receipt,
   Heart,
   Settings,
   Activity,
   Globe,
+  Earth,
+  Calculator,
   Bell,
   Menu,
   X,
@@ -27,159 +46,112 @@ import {
   ArrowUpRight,
   Leaf,
   ShieldCheck,
+  GraduationCap,
+  QrCode,
 } from "lucide-react";
-import { can, type Permission, roleLabels } from "@/lib/permissions";
+import { roleLabels } from "@/lib/permissions";
 import type { Snapshot } from "@/lib/types";
 import { Dining, Kds, OrderList } from "./operations";
+import { AddonsCenter } from "./addons-center";
+import {
+  LoadingScreenSync,
+  TenantLoader,
+} from "./loading-screens/tenant-loader";
 import { Management } from "./management";
 import dynamic from "next/dynamic";
 const Overview = dynamic(() => import("./overview").then((m) => m.Overview), {
   loading: () => <p>Chargement du tableau de bord…</p>,
 });
 const Finance = dynamic(() => import("./overview").then((m) => m.Finance));
+const BillingCenter = dynamic(() =>
+  import("./billing-center").then((m) => m.BillingCenter),
+);
+const HrCenter = dynamic(() => import("./hr-center").then((m) => m.HrCenter));
+const BankCenter = dynamic(() =>
+  import("./bank-center").then((m) => m.BankCenter),
+);
+const InvoicesCenter = dynamic(() =>
+  import("./invoices-center").then((m) => m.InvoicesCenter),
+);
+const PayoutsCenter = dynamic(() =>
+  import("./payouts-center").then((m) => m.PayoutsCenter),
+);
+// Le globe et three.js ne sont téléchargés qu’à l’ouverture de cette page.
+const EarthTracker = dynamic(() =>
+  import("./analytics/earth-tracker").then((m) => m.EarthTracker),
+);
+const EstimationCenter = dynamic(() => import("./estimation/center").then((m) => m.EstimationCenter));
+const ProspectScannerCenter = dynamic(() => import("./pilotage-addons/center").then((m) => m.ProspectScannerCenter));
+const PipelineCrmCenter = dynamic(() => import("./pilotage-addons/center").then((m) => m.PipelineCrmCenter));
+const CustomerHealthCenter = dynamic(() => import("./pilotage-addons/center").then((m) => m.CustomerHealthCenter));
+const OffersCenter = dynamic(() => import("./offers/offers-center").then((m) => m.OffersCenter));
+const TradeCenter = dynamic(() => import("./trade/trade-center").then((m) => m.TradeCenter));
+const FinanceCenter = dynamic(() =>
+  import("./finance-center").then((m) => m.FinanceCenter),
+);
 import { dateTime } from "@/lib/domain";
-const modules = [
+import { Tutorial } from "./tutorial/tour";
+import { CuisineIa } from "./assistant/cuisine-ia";
+import { QrPortfolio } from "./qr/qr-portfolio";
+const navigationIcons = {
+  Package,
+  LayoutDashboard,
+  Activity,
+  QrCode,
+  UtensilsCrossed,
+  ClipboardList,
+  ChefHat,
+  Wine,
+  CalendarDays,
+  BookOpen,
+  Truck,
+  Users,
+  Clock,
+  CalendarOff,
+  Wallet,
+  ClipboardCheck,
+  FileSignature,
+  FileText,
+  Landmark,
+  HandCoins,
+  Banknote,
+  Receipt,
+  Heart,
+  Settings,
+  Globe,
+  Earth,
+  Calculator,
+  ShieldCheck,
+};
+const decorateNavigation = (
+  entries: ReturnType<typeof workspaceNavigation.list>,
+) => entries.map((entry) => ({ ...entry, icon: navigationIcons[entry.icon] }));
+const modules = decorateNavigation(workspaceNavigation.list());
+type ModuleGroup = (typeof modules)[number]["group"];
+// Barre d’onglets façon app mobile (tablette et téléphone) : cinq entrées
+// maximum, chacune regroupant une ou plusieurs familles du menu latéral.
+const dockTabs: {
+  id: string;
+  label: string;
+  icon: typeof LayoutDashboard;
+  groups: ModuleGroup[];
+}[] = [
   {
-    id: "overview",
-    name: "Vue d’ensemble",
-    group: "PILOTAGE",
+    id: "pilotage",
+    label: "Pilotage",
     icon: LayoutDashboard,
-    permission: "finance",
+    groups: ["PILOTAGE", "PILOTAGE FINANCIER"],
   },
   {
-    id: "activity",
-    name: "Activité",
-    group: "PILOTAGE",
-    icon: Activity,
-    permission: "audit",
-  },
-  {
-    id: "dining",
-    name: "Plan de salle",
-    group: "OPÉRATIONS",
+    id: "operations",
+    label: "Opérations",
     icon: UtensilsCrossed,
-    permission: "orders",
+    groups: ["OPÉRATIONS"],
   },
-  {
-    id: "orders",
-    name: "Commandes",
-    group: "OPÉRATIONS",
-    icon: ClipboardList,
-    permission: "orders",
-  },
-  {
-    id: "kitchen",
-    name: "Cuisine",
-    group: "OPÉRATIONS",
-    icon: ChefHat,
-    permission: "kitchen",
-  },
-  {
-    id: "bar",
-    name: "Bar",
-    group: "OPÉRATIONS",
-    icon: Wine,
-    permission: "bar",
-  },
-  {
-    id: "reservations",
-    name: "Réservations",
-    group: "OPÉRATIONS",
-    icon: CalendarDays,
-    permission: "reservations",
-  },
-  {
-    id: "stocks",
-    name: "Stocks & inventaire",
-    group: "GESTION",
-    icon: Package,
-    permission: "stock",
-  },
-  {
-    id: "recipes",
-    name: "Recettes",
-    group: "GESTION",
-    icon: BookOpen,
-    permission: "stock",
-  },
-  {
-    id: "suppliers",
-    name: "Fournisseurs",
-    group: "GESTION",
-    icon: Truck,
-    permission: "purchases",
-  },
-  {
-    id: "deliveries",
-    name: "Livraisons",
-    group: "GESTION",
-    icon: Package,
-    permission: "purchases",
-  },
-  {
-    id: "team",
-    name: "Équipe & planning",
-    group: "ÉQUIPE",
-    icon: Users,
-    permission: "team",
-  },
-  {
-    id: "attendance",
-    name: "Présences",
-    group: "ÉQUIPE",
-    icon: Clock,
-    permission: null,
-  },
-  {
-    id: "finance",
-    name: "Finances & rapports",
-    group: "PILOTAGE FINANCIER",
-    icon: Wallet,
-    permission: "finance",
-  },
-  {
-    id: "expenses",
-    name: "Dépenses",
-    group: "PILOTAGE FINANCIER",
-    icon: Receipt,
-    permission: "finance",
-  },
-  {
-    id: "customers",
-    name: "Clients & fidélité",
-    group: "RELATION CLIENT",
-    icon: Heart,
-    permission: "customers",
-  },
-  {
-    id: "menu",
-    name: "La carte",
-    group: "CONFIGURATION",
-    icon: BookOpen,
-    permission: "catalog",
-  },
-  {
-    id: "settings",
-    name: "Établissements",
-    group: "CONFIGURATION",
-    icon: Settings,
-    permission: "settings",
-  },
-  {
-    id: "site",
-    name: "Mon site web",
-    group: "CONFIGURATION",
-    icon: Globe,
-    permission: "website",
-  },
-  {
-    id: "security",
-    name: "Sécurité opérationnelle",
-    group: "CONFIGURATION",
-    icon: ShieldCheck,
-    permission: "security",
-  },
-] as const;
+  { id: "gestion", label: "Gestion", icon: Package, groups: ["GESTION"] },
+  { id: "equipe", label: "Équipe", icon: Users, groups: ["ÉQUIPE"] },
+  { id: "clients", label: "Clients", icon: Heart, groups: ["RELATION CLIENT"] },
+];
 export function Workspace() {
   const router = useRouter();
   const [data, setData] = useState<Snapshot | null>(null),
@@ -188,11 +160,17 @@ export function Workspace() {
     [error, setError] = useState(""),
     [mobile, setMobile] = useState(false),
     [notifications, setNotifications] = useState(false),
+    [guide, setGuide] = useState(false),
+    [dockSheet, setDockSheet] = useState(""),
     [updated, setUpdated] = useState("");
   const cursor = useRef(0);
   useEffect(() => {
-    const r = new URLSearchParams(window.location.search).get("restaurant");
+    const query = new URLSearchParams(window.location.search);
+    const r = query.get("restaurant");
+    const requestedModule = query.get("module");
     if (r) setRestaurant(r);
+    if (requestedModule && modules.some((item) => item.id === requestedModule))
+      setModule(requestedModule);
   }, []);
   const load = useCallback(async () => {
     const r = await fetch(
@@ -248,30 +226,29 @@ export function Workspace() {
       if (!r.ok) throw new Error(d.error);
       setError("");
       await load();
+      return d.result as unknown;
+      return d.result;
     } catch (e) {
       setError((e as Error).message);
       throw e;
     }
   }
   const allowed = data
-    ? modules.filter(
-        (m) =>
-          !m.permission ||
-          can(data.user.roles ?? data.user.role, m.permission as Permission),
+    ? decorateNavigation(
+        dashboardEntries(workspaceNavigation.resolve({
+          plan: data.plan,
+          roles: data.user.roles ?? data.user.role,
+          addons: data.addons,
+          licenses: data.licenses,
+          uninstalledAddons: data.uninstalledAddons,
+          activeModules: data.activeModules,
+          modules: data.modules,
+        }), data.restaurant.industry, restaurantOnlyNavigation, data.moduleDisplay).map((entry) =>
+            entry.id === "trade-tools" && data.restaurant.industry !== "restaurant"
+              ? { ...entry, name: "Mon métier" } : entry),
       )
     : [];
-  const current =
-    allowed.find((m) => m.id === module) ||
-    allowed.find(
-      (m) =>
-        m.id ===
-        (data?.user.role === "CHEF"
-          ? "kitchen"
-          : data?.user.role === "BARTENDER"
-            ? "bar"
-            : ""),
-    ) ||
-    allowed[0];
+  const current = currentNavigation(allowed, module, data?.user.role);
   const navigate = (s: string) => {
     if (["site", "security"].includes(s)) {
       router.push(`/restaurant/${restaurant}/${s}`);
@@ -279,26 +256,46 @@ export function Workspace() {
     }
     setModule(s);
     setMobile(false);
+    setDockSheet("");
+    window.scrollTo({ top: 0 });
   };
+  const dock = dockTabs
+    .map((tab) => ({
+      ...tab,
+      items: allowed.filter((m) =>
+        (tab.groups as readonly string[]).includes(m.group),
+      ),
+    }))
+    .filter((tab) => tab.items.length > 0);
+  const openSheet = dock.find((tab) => tab.id === dockSheet);
+  if (!data && !error)
+    return (
+      <TenantLoader
+        restaurant={restaurant}
+        label="Votre restaurant se prépare"
+      />
+    );
   if (!data)
     return (
       <main className="loading">
         <Leaf />
-        <h1>DATTIER OS</h1>
+        <h1>STUDIO OS</h1>
         <p>{error || "Votre restaurant se prépare…"}</p>
         <Link href="/platform">Mes restaurants et connexion</Link>
       </main>
     );
   return (
-    <div className="workspace">
+    <AppearanceScope userId={data.user.id} className="workspace">
+      <LoadingScreenSync restaurant={restaurant} />
       <aside className={`sidebar ${mobile ? "open" : ""}`}>
         <Link href="/dashboard" className="brand">
           <span className="brand-mark">
             <Leaf size={23} />
           </span>
-          DATTIER <span>OS</span>
+          STUDIO OS
         </Link>
-        <div className="restaurant-switch">
+        <AppearanceButton />
+        <div className="restaurant-switch" data-tour="restaurant-switch">
           <small>VOTRE ÉTABLISSEMENT</small>
           <select
             aria-label="Établissement"
@@ -315,7 +312,7 @@ export function Workspace() {
             ))}
           </select>
         </div>
-        <nav>
+        <nav data-tour="nav">
           {allowed.map((m, i) => (
             <div key={m.id}>
               {(i === 0 || allowed[i - 1].group !== m.group) && (
@@ -323,6 +320,8 @@ export function Workspace() {
               )}
               <button
                 className={current?.id === m.id ? "active" : ""}
+                data-tour={`nav-${m.id}`}
+                data-activity-category={moduleCategory(m.id)}
                 onClick={() => navigate(m.id)}
               >
                 <m.icon size={18} />
@@ -337,10 +336,19 @@ export function Workspace() {
             </div>
           ))}
         </nav>
-        <Link href={`/r/${restaurant}`} target="_blank" className="public-link">
+        <Link
+          href={`/r/${restaurant}`}
+          target="_blank"
+          className="public-link"
+          data-tour="public-link"
+        >
           <Globe size={17} /> Voir le site public <ArrowUpRight size={16} />
         </Link>
-        <Link href={`/restaurant/${restaurant}`} className="sidebar-profile">
+        <Link
+          href={`/restaurant/${restaurant}`}
+          className="sidebar-profile"
+          data-tour="profile"
+        >
           <span className="avatar">{data.user.name.slice(0, 2)}</span>
           <div>
             <b>{data.user.name}</b>
@@ -370,11 +378,11 @@ export function Workspace() {
               <Menu />
             </button>
             <span className="breadcrumb">
-              Mon restaurant <span>/</span> <b>{current?.name}</b>
+              Mon établissement <span>/</span> <b>{current?.name}</b>
             </span>
           </div>
           <div className="topbar-actions">
-            <span className="live">
+            <span className="live" data-tour="live">
               <i /> Synchro {updated}
             </span>
             <span className="date">
@@ -385,7 +393,16 @@ export function Workspace() {
               })}
             </span>
             <button
+              className="guide-button"
+              data-tour="guide-button"
+              aria-label="Guide et visite guidée"
+              onClick={() => setGuide(true)}
+            >
+              <GraduationCap size={16} /> <span>Guide</span>
+            </button>
+            <button
               className="icon-button notification-button"
+              data-tour="notifications"
               aria-label="Notifications"
               onClick={() => setNotifications(!notifications)}
             >
@@ -398,13 +415,13 @@ export function Workspace() {
           </div>
         </header>
         {data.demo ? (
-          <div className="demo-banner">
+          <div className="demo-banner" data-tour="banner">
             <span>ESPACE DÉMONSTRATION</span> Données fictives · opérations
             locales · aucun encaissement réel{" "}
             <Link href="/demo">Changer de profil →</Link>
           </div>
         ) : (
-          <div className="demo-banner">
+          <div className="demo-banner" data-tour="banner">
             <span>{data.restaurant.name}</span>
             <Link href={`/restaurant/${restaurant}`}>
               Administrer le restaurant
@@ -441,7 +458,11 @@ export function Workspace() {
             ))}
           </section>
         )}
-        <main className="content">
+        <main
+          className="content"
+          data-activity-category={moduleCategory(current?.id || "overview")}
+        >
+          <CategoryBadge category={moduleCategory(current?.id || "overview")} />
           {error && (
             <div className="error" role="alert">
               {error}
@@ -456,8 +477,22 @@ export function Workspace() {
               <h1>{current?.name}</h1>
             </div>
           )}
-          {current?.id === "overview" ? (
-            <Overview data={data} navigate={navigate} />
+          {current?.id === "addons" ? (
+            <AddonsCenter
+              key={restaurant}
+              plan={data.plan}
+              restaurant={restaurant}
+              accountId={data.user.id}
+              accessibleModules={allowed.map((entry) => entry.id)}
+              moduleDisplay={data.moduleDisplay ?? []}
+              industry={data.restaurant.industry}
+              navigate={navigate}
+              onModulesChanged={load}
+            />
+          ) : current?.id === "overview" ? (
+            data.restaurant.industry && data.restaurant.industry !== "restaurant"
+              ? <section className="card"><h1>Bienvenue chez {data.restaurant.name}</h1><p>Votre espace {data.restaurant.trade || "professionnel"} réunit vos outils, votre équipe et votre activité.</p><div className="actions"><button onClick={() => navigate("trade-tools")}>Ouvrir mes outils métier</button><Link href={"/restaurant/" + restaurant + "/import-clients"}>Importer des clients</Link><Link href={"/restaurant/" + restaurant + "?module=team"}>Inviter mon équipe</Link></div></section>
+              : <Overview data={data} navigate={navigate} />
           ) : current?.id === "dining" ? (
             <Dining data={data} act={act} />
           ) : current?.id === "orders" ? (
@@ -468,8 +503,46 @@ export function Workspace() {
               station={current.id === "kitchen" ? "kitchen" : "bar"}
               act={act}
             />
+          ) : current?.id === "qr" ? (
+            <QrPortfolio restaurant={restaurant} />
+          ) : current?.id === "audience" ? (
+            <EarthTracker key={restaurant} restaurant={restaurant} />
+          ) : current?.id === "estimation" ? (
+            <EstimationCenter key={restaurant} restaurant={restaurant} />
+          ) : current?.id === "prospect-scanner" ? (
+            <ProspectScannerCenter key={restaurant} restaurant={restaurant} onOpenCrm={() => navigate("pipeline-crm")} />
+          ) : current?.id === "pipeline-crm" ? (
+            <PipelineCrmCenter key={restaurant} restaurant={restaurant} />
+          ) : current?.id === "customer-health" ? (
+            <CustomerHealthCenter key={restaurant} restaurant={restaurant} />
+          ) : current?.id === "services" || current?.id === "products" ? (
+            <OffersCenter
+              key={`${current.id}-${restaurant}`}
+              restaurant={restaurant}
+              kind={current.id}
+              onOpenSite={allowed.some((entry) => entry.id === "site") ? () => navigate("site") : undefined}
+              onOpenStock={allowed.some((entry) => entry.id === "stocks") ? () => navigate("stocks") : undefined}
+            />
+          ) : current?.id === "trade-tools" ? (
+            <TradeCenter key={restaurant} restaurant={restaurant} act={act} onOpenStore={() => navigate("addons")} />
           ) : current?.id === "finance" ? (
             <Finance data={data} />
+          ) : current?.id === "accounting" ? (
+            <FinanceCenter key={restaurant} restaurant={restaurant} />
+          ) : current?.id === "billing" ? (
+            <BillingCenter key={restaurant} restaurant={restaurant} />
+          ) : current?.id === "invoices" ? (
+            <InvoicesCenter key={restaurant} restaurant={restaurant} />
+          ) : current?.id === "bank" ? (
+            <BankCenter key={restaurant} restaurant={restaurant} />
+          ) : current?.id === "hr" || current?.id === "payroll" ? (
+            <HrCenter
+              key={`${current.id}-${restaurant}`}
+              restaurant={restaurant}
+              payrollView={current.id === "payroll"}
+            />
+          ) : current?.id === "payouts" ? (
+            <PayoutsCenter key={restaurant} restaurant={restaurant} />
           ) : (
             <Management
               key={`${current?.id}-${restaurant}`}
@@ -480,14 +553,80 @@ export function Workspace() {
           )}
         </main>
         <footer className="workspace-footer">
-          DATTIER OS <span>Un service bien orchestré.</span>
+          STUDIO OS <span>Un service bien orchestré.</span>
           <small>
             {data.demo
               ? "Démonstration · données fictives"
-              : "Dattier OS · commandes et stocks partagés"}
+              : "STUDIO OS · commandes et stocks partagés"}
           </small>
         </footer>
       </div>
-    </div>
+      {dock.length > 0 && (
+        <>
+          {openSheet && (
+            <>
+              <button
+                className="dock-scrim"
+                aria-label="Fermer le menu"
+                onClick={() => setDockSheet("")}
+              />
+              <div
+                className="dock-sheet"
+                role="dialog"
+                aria-label={openSheet.label}
+              >
+                {openSheet.items.map((m, i) => (
+                  <div key={m.id}>
+                    {(i === 0 || openSheet.items[i - 1].group !== m.group) &&
+                      openSheet.groups.length > 1 && (
+                        <span className="nav-group">{m.group}</span>
+                      )}
+                    <button
+                      className={current?.id === m.id ? "active" : ""}
+                      onClick={() => navigate(m.id)}
+                    >
+                      <m.icon size={18} />
+                      {m.name}
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </>
+          )}
+          <nav className="workspace-dock" aria-label="Navigation rapide">
+            {dock.map((tab) => {
+              const active = tab.items.some((m) => m.id === current?.id);
+              return (
+                <button
+                  key={tab.id}
+                  className={`${active ? "active" : ""} ${dockSheet === tab.id ? "open" : ""}`}
+                  aria-current={active ? "page" : undefined}
+                  aria-expanded={
+                    tab.items.length > 1 ? dockSheet === tab.id : undefined
+                  }
+                  onClick={() =>
+                    tab.items.length === 1
+                      ? navigate(tab.items[0].id)
+                      : setDockSheet(dockSheet === tab.id ? "" : tab.id)
+                  }
+                >
+                  <tab.icon size={21} />
+                  <span>{tab.label}</span>
+                </button>
+              );
+            })}
+          </nav>
+        </>
+      )}
+      {data.restaurant.industry === "restaurant" && <CuisineIa restaurant={restaurant} execute={act} onNavigate={navigate} />}
+      {data.restaurant.industry === "restaurant" && <Tutorial
+        data={data}
+        restaurant={restaurant}
+        modules={allowed.map((m) => m.id)}
+        navigate={navigate}
+        open={guide}
+        setOpen={setGuide}
+      />}
+    </AppearanceScope>
   );
 }

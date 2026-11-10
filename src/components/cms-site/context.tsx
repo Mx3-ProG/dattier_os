@@ -1,5 +1,6 @@
 "use client";
 import NextLink from "next/link";
+import type { AudienceMode } from "@/features/analytics/consent";
 import {
   createContext,
   useContext,
@@ -12,23 +13,36 @@ const Context = createContext<{
   demo: boolean;
   platformOrigin: string;
   preview: boolean;
-}>({ restaurant: "", demo: false, platformOrigin: "", preview: false });
+  shopEnabled: boolean;
+  audience: AudienceMode | null;
+}>({
+  restaurant: "",
+  demo: false,
+  platformOrigin: "",
+  preview: false,
+  shopEnabled: true,
+  audience: null,
+});
 export function TenantSiteProvider({
   restaurant,
   demo = false,
   platformOrigin = "",
   preview = false,
+  shopEnabled = true,
+  audience = null,
   children,
 }: {
   restaurant: string;
   demo?: boolean;
   platformOrigin?: string;
   preview?: boolean;
+  shopEnabled?: boolean;
+  audience?: AudienceMode | null;
   children: ReactNode;
 }) {
   const value = useMemo(
-    () => ({ restaurant, demo, platformOrigin, preview }),
-    [restaurant, demo, platformOrigin, preview],
+    () => ({ restaurant, demo, platformOrigin, preview, shopEnabled, audience }),
+    [restaurant, demo, platformOrigin, preview, shopEnabled, audience],
   );
   return <Context.Provider value={value}>{children}</Context.Provider>;
 }
@@ -37,6 +51,11 @@ export function useTenantSite() {
   return useMemo(() => {
     const base = `/r/${encodeURIComponent(context.restaurant)}`;
     function href(path: string) {
+      if (
+        !context.shopEnabled &&
+        /^\/(commander|checkout|panier)([?#]|$)/.test(path)
+      )
+        path = "/carte";
       if (
         !path.startsWith("/") ||
         path.startsWith("//") ||

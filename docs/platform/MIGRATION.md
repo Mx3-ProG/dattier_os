@@ -1,8 +1,8 @@
 # Migration et import
 
-Les migrations 001–003 Dattier restent en place. Les migrations 004 et suivantes reprennent les schémas commerce Donuts et ajoutent la plateforme. Aucun script de seed ou de nettoyage des établissements Donuts n’a été repris. Les numéros de migration du projet Donuts ne sont pas utilisés comme preuve de compatibilité.
+Les migrations 001–003 Studio OS restent en place. Les migrations 004 et suivantes reprennent les schémas commerce Donuts et ajoutent la plateforme. Aucun script de seed ou de nettoyage des établissements Donuts n’a été repris. Les numéros de migration du projet Donuts ne sont pas utilisés comme preuve de compatibilité.
 
-Sur une ancienne démonstration Dattier, les migrations sont appliquées à l’ouverture, sans réinitialiser les commandes, lots, recettes ou réservations. Les établissements historiques sont rattachés à une organisation `legacy`. Leur boutique est initialement fermée. Les nouveaux établissements reçoivent une configuration vide, sans produits, clients ou stocks fictifs.
+Sur une ancienne démonstration Studio OS, les migrations sont appliquées à l’ouverture, sans réinitialiser les commandes, lots, recettes ou réservations. Les établissements historiques sont rattachés à une organisation `legacy`. Leur boutique est initialement fermée. Les nouveaux établissements reçoivent une configuration vide, sans produits, clients ou stocks fictifs.
 
 ## PostgreSQL neuf
 

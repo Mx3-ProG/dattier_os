@@ -22,11 +22,31 @@ Contraintes : quantités positives, stock réservé ≤ physique, unicité de se
 
 Le stock historique du seed est consommé et historisé, les ventes viennent des déclarations liées aux commandes. Les horodatages historiques sont fictifs. L’horloge de PostgreSQL gouverne la validité des lots ; dates financières affichées Europe/Paris.
 
+## Pré-comptabilité
+
+Migration `036_finance_core.sql`, avec son retour arrière `down/036_finance_core.sql`, réservé à la préproduction car il détruit les écritures. Détails et limites : `docs/platform/FINANCIAL_AUDIT.md`.
+
+- Un trigger sur `payment_declarations` crée l’événement `fin_events`, quel que soit le chemin d’insertion. Les règlements et le journal sont en ajout seul.
+- `processPayment` (`src/features/finance/books.ts`) écrit dans la transaction du règlement, ou ouvre une ligne dans `fin_review_items` s’il manque une information. L’unicité par événement empêche toute seconde écriture.
+- Écritures créées uniquement par les fonctions `app.fin_*`. Lecture réservée aux rôles financiers ; le canal public ne voit rien. Une nouvelle table financière suit le même modèle, jamais la politique générale `tenant_access`.
+
+Migration `037_online_payments.sql` : TVA par catégorie, comptes connectés, paiements en ligne et versements. Écritures réservées au rôle `atacuisine_worker`, que le rôle web ne peut pas endosser. Voir `docs/platform/ONLINE_PAYMENTS.md`.
+
+Migration `038_supplier_invoices.sql` : justificatifs en ajout seul, factures, unicité par fournisseur et numéro. Voir `docs/platform/SUPPLIER_INVOICES.md`.
+
+Migration `039_bank_reconciliation.sql` : comptes, relevés, mouvements protégés et rapprochements. Voir `docs/platform/BANK_RECONCILIATION.md`.
+
+Migration `040_hr_payroll.sql` : corrections de pointage tracées, contrats, absences et mois clôturés. Voir `docs/platform/HR_PAYROLL.md`.
+
+Migration `041_sales_invoices.sql` : identité de facturation, numérotation continue, factures, avoirs et règlements clients. Voir `docs/platform/SALES_INVOICES.md`.
+
+Migration `042_finance_alignment.sql` : alignement des bases de développement ; sans effet sur une installation neuve.
+
 ## Réinitialisation et sauvegarde
 
 Paramètres → Réinitialiser, confirmation obligatoire, propriétaire/admin seulement. La route est désactivée hors démo. Elle vide exclusivement la base locale dédiée et recharge le seed dans une transaction ; elle révoque les sessions locales. Aucun connecteur distant n’est appelé.
 
-Pour sauvegarder localement : arrêter le processus serveur, copier le dossier `.data/dattier-demo`, puis redémarrer. Ne pas copier une base ouverte pour une sauvegarde fiable. Un export/restauration SQL interopérable PostgreSQL devra être ajouté avant migration réelle.
+Pour sauvegarder localement : arrêter le processus serveur, copier le dossier `.data/atacuisine-demo`, puis redémarrer. Ne pas copier une base ouverte pour une sauvegarde fiable. Un export/restauration SQL interopérable PostgreSQL devra être ajouté avant migration réelle.
 
 Le runner (`src/lib/database/migrate.ts`) applique chaque version manquante de sa liste transactionnellement, y compris sur une base ouverte avant la mise à jour, et vérifie la version pour ne pas la rejouer. Une nouvelle migration s’ajoute à cette liste. Ne pas modifier la migration initiale sur une installation contenant des données à conserver.
 

@@ -1,0 +1,33 @@
+.site-404.is-themed {
+  color: #24343d;
+  background: radial-gradient(circle at 14% 12%, var(--visual-tint), transparent 38%),
+    radial-gradient(circle at 88% 78%, var(--visual-tint), transparent 44%), var(--visual-base);
+}
+.site-404.is-themed .site-404-button { color: #fff; background: var(--visual-accent); }
+.site-404.is-themed .site-404-themed-scene {
+  position: relative; display: grid; place-items: center; width: 3em; height: 1.4em;
+  overflow: hidden; border-radius: .24em; isolation: isolate;
+  background: linear-gradient(145deg, var(--visual-base), var(--visual-tint));
+  box-shadow: 0 .08em .25em color-mix(in srgb, var(--visual-accent) 26%, transparent);
+}
+.site-404.is-themed .site-404-themed-scene strong { z-index: 2; color: var(--visual-accent); font-size: .76em; letter-spacing: -.07em; text-shadow: 0 2px #fff9; }
+.site-404-themed-icon { position: absolute; left: 12%; top: 12%; color: var(--visual-accent); font-size: .45em; opacity: .58; transform: rotate(-15deg); }
+.site-404-themed-orbit { position: absolute; width: 2.6em; height: 1em; border: 2px solid var(--visual-accent); border-radius: 50%; opacity: .24; transform: rotate(-24deg); }
+.site-404-themed-orbit.is-second { width: 1.8em; height: 1.2em; transform: rotate(39deg); opacity: .16; }
+.site-404-themed-spark { position: absolute; width: .075em; height: .075em; border-radius: 50%; background: var(--visual-accent); box-shadow: 0 0 .15em var(--visual-accent); }
+.site-404-themed-spark.is-one { left: 13%; bottom: 20%; }.site-404-themed-spark.is-two { right: 15%; top: 20%; }.site-404-themed-spark.is-three { right: 22%; bottom: 13%; }
+.site-404.is-themed.is-nature .site-404-themed-orbit { border-radius: 0 90% 0 90%; transform: rotate(-30deg); }
+.site-404.is-themed.is-six .site-404-themed-scene { background: radial-gradient(circle at 75% 25%, #fff9, transparent 30%), linear-gradient(145deg, var(--visual-base), var(--visual-tint)); }
+.site-404.is-themed.is-nine .site-404-themed-scene { background: radial-gradient(circle at 25% 40%, var(--visual-accent) 0 2%, transparent 3%), radial-gradient(circle at 72% 20%, #fff 0 3%, transparent 4%), linear-gradient(145deg, var(--visual-base), var(--visual-tint)); }
+.site-404.is-themed.is-deluxe .site-404-themed-scene { background: radial-gradient(circle at 23% 20%, #fff, transparent 30%), radial-gradient(circle at 80% 75%, var(--visual-accent), transparent 46%), linear-gradient(145deg, var(--visual-base), var(--visual-tint)); }
+.site-404.is-themed.is-deluxe .site-404-themed-orbit { animation: themed-404-orbit 13s linear infinite; }
+.site-404.is-themed.is-deluxe .site-404-themed-icon { animation: themed-404-float 4s ease-in-out infinite alternate; }
+.site-404.is-space-wormhole .site-404-themed-orbit { width:2.8em; height:.7em; }
+.site-404.is-space-supernova .site-404-themed-orbit { border-style:dotted; box-shadow:0 0 .35em var(--visual-accent); }
+.site-404.is-space-cosmos .site-404-themed-orbit { width:2.6em; height:.65em; transform:rotate(25deg); }
+.site-404.is-nature-biosphere .site-404-themed-orbit { border-radius:50%; border-style:dashed; }
+.site-404.is-nature-coral .site-404-themed-orbit { border-width:6px; border-radius:15% 65% 30% 70%; }
+.site-404.is-nature-rainforest .site-404-themed-orbit { border-width:8px; border-radius:5% 80% 15% 70%; }
+@keyframes themed-404-orbit { to { transform: rotate(336deg); } }
+@keyframes themed-404-float { to { transform: translateY(-.12em) rotate(12deg); } }
+@media (prefers-reduced-motion: reduce) { .site-404.is-themed .site-404-themed-orbit, .site-404.is-themed .site-404-themed-icon { animation: none; } }

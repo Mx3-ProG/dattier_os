@@ -9,8 +9,8 @@ import {
   ImageIcon,
   Plus,
   Trash2,
-  Upload,
 } from "lucide-react";
+import { MediaDropzone } from "./media-upload";
 import { Button } from "../ui/button";
 import { Modal } from "../forms";
 import type { FieldDef } from "@/features/cms/registry";
@@ -27,6 +27,8 @@ type Media = {
   size: number;
   width: number | null;
   height: number | null;
+  status?: "processing" | "ready" | "failed";
+  processing_error?: string | null;
 };
 type Limits = { imageBytes: number; videoBytes: number };
 
@@ -43,7 +45,6 @@ export function MediaPicker({
   const { request: fetch } = useTenantSite();
   const [items, setItems] = useState<Media[]>([]),
     [limits, setLimits] = useState<Limits | null>(null),
-    [busy, setBusy] = useState(false),
     [error, setError] = useState("");
   const load = useCallback(async () => {
     const r = await fetch("/api/v1/site?view=media");
@@ -55,33 +56,6 @@ export function MediaPicker({
   useEffect(() => {
     load().catch((e) => setError(e.message));
   }, [load]);
-  async function upload(file: File) {
-    setBusy(true);
-    setError("");
-    try {
-      if (
-        limits &&
-        file.size > (kind === "image" ? limits.imageBytes : limits.videoBytes)
-      )
-        throw new Error(
-          `Fichier trop lourd (${Math.round(file.size / 1048576)} Mo).`,
-        );
-      const form = new FormData();
-      form.append("file", file);
-      const r = await fetch("/api/v1/site-media", {
-        method: "POST",
-        body: form,
-      });
-      const d = await r.json();
-      if (!r.ok) throw new Error(d.error);
-      await load();
-      pick(d.url);
-    } catch (e) {
-      setError((e as Error).message);
-    } finally {
-      setBusy(false);
-    }
-  }
   const list = items.filter((m) => m.kind === kind);
   return (
     <Modal
@@ -89,28 +63,17 @@ export function MediaPicker({
       description={
         kind === "image"
           ? `JPG, PNG ou WebP${limits ? `, ${Math.round(limits.imageBytes / 1048576)} Mo maximum` : ""}. Les images sont redimensionnées et converties automatiquement.`
-          : `MP4 ou WebM${limits ? `, ${Math.round(limits.videoBytes / 1048576)} Mo maximum` : ""}. Pour une vidéo longue, préférez YouTube ou Vimeo.`
+          : `MP4, MOV ou WebM${limits ? `, ${Math.round(limits.videoBytes / 1048576)} Mo maximum` : ""}. Compression MP4 automatique, 2 minutes maximum. Pour une vidéo longue, préférez YouTube ou Vimeo.`
       }
       close={close}
     >
-      <label className="site-upload">
-        <Upload size={18} />
-        {busy ? "Import en cours…" : "Importer depuis mon ordinateur"}
-        <input
-          type="file"
-          accept={
-            kind === "image"
-              ? "image/jpeg,image/png,image/webp"
-              : "video/mp4,video/webm"
-          }
-          disabled={busy}
-          onChange={(e) => {
-            const file = e.target.files?.[0];
-            if (file) void upload(file);
-            e.target.value = "";
-          }}
-        />
-      </label>
+      <MediaDropzone
+        kind={kind}
+        onUploaded={(media) => {
+          void load().catch((e) => setError(e.message));
+          pick(media.url);
+        }}
+      />
       {error && (
         <div className="error" role="alert">
           {error}
@@ -120,18 +83,31 @@ export function MediaPicker({
         {(kind === "image"
           ? [...list.map((m) => m.url), ...builtInImages]
           : list.map((m) => m.url)
-        ).map((url) => (
-          <button type="button" key={url} onClick={() => pick(url)} title={url}>
-            {kind === "image" ? (
-              <img src={url} alt="" loading="lazy" />
-            ) : (
-              <span className="site-media-video">
-                <Film size={22} />
-                {items.find((m) => m.url === url)?.original_name}
-              </span>
-            )}
-          </button>
-        ))}
+        ).map((url) => {
+          const media = items.find((m) => m.url === url);
+          const pending = media?.status === "processing";
+          const failed = media?.status === "failed";
+          return (
+            <button
+              type="button"
+              key={url}
+              disabled={pending || failed}
+              onClick={() => pick(url)}
+              title={failed ? media?.processing_error || url : url}
+            >
+              {kind === "image" ? (
+                <img src={url} alt="" loading="lazy" />
+              ) : (
+                <span className="site-media-video">
+                  <Film size={22} />
+                  {media?.original_name}
+                  {pending && <small>Optimisation en cours…</small>}
+                  {failed && <small>Échec de l’optimisation</small>}
+                </span>
+              )}
+            </button>
+          );
+        })}
         {kind === "video" && !list.length && (
           <p className="muted">Aucune vidéo importée.</p>
         )}
@@ -360,6 +336,11 @@ export function ImageField({
   return (
     <fieldset className="site-group" disabled={disabled}>
       <legend>{label}</legend>
+      <MediaDropzone
+        kind="image"
+        disabled={disabled}
+        onUploaded={(media) => onChange({ ...value, src: media.url })}
+      />
       <div className="site-image-field">
         {value.src ? (
           <img src={value.src} alt="" />
@@ -421,6 +402,13 @@ function ImagesField({
   return (
     <fieldset className="site-group" disabled={disabled}>
       <legend>{def.label}</legend>
+      <MediaDropzone
+        kind="image"
+        disabled={disabled || value.length >= (def.max ?? 24)}
+        onUploaded={(media) =>
+          onChange([...value, { src: media.url, alt: "" }])
+        }
+      />
       {value.map((img, i) => (
         <div className="site-list-row" key={`${img.src}-${i}`}>
           <img src={img.src} alt="" className="site-thumb" />
@@ -704,6 +692,14 @@ function VideoField({
   return (
     <fieldset className="site-group" disabled={disabled}>
       <legend>Vidéo</legend>
+      <MediaDropzone
+        kind="video"
+        disabled={disabled}
+        onUploaded={(media) => {
+          onChange({ kind: "file", src: media.url, poster: value.poster });
+          setMode("file");
+        }}
+      />
       <div className="tabs site-mini-tabs">
         <button
           type="button"

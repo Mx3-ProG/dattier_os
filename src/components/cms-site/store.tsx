@@ -1,4 +1,14 @@
 "use client";
+import { OfferServicesSection, OfferProductsSection } from "@/components/site/offer-sections";
+import { emptyOffers, type PublicOffers } from "@/features/offers/model";
+import { PublicAppearance, PublicModeSwitch } from "./public-appearance";
+import { SiteDecoration } from "./site-decoration";
+import { SiteBackgroundMotion } from "./site-background";
+import { TemplateExtras } from "./template-extras";
+import "./templates.css";
+import { ProductRecommendations } from "../product-recommendations";
+import { ProductDetails } from "../product-details";
+import { productPath } from "@/lib/product-pages";
 import { useTenantSite } from "./context";
 /* eslint-disable @next/next/no-img-element */
 import { TenantLink as Link } from "./context";
@@ -25,6 +35,8 @@ import {
   Star,
   ExternalLink,
   UserRound,
+  Zap,
+  CalendarDays,
 } from "lucide-react";
 import type {
   Product,
@@ -38,9 +50,21 @@ import { prepLabels } from "@/features/commerce/client";
 import { money } from "@/lib/domain";
 import { CookieConsent } from "./cookie-consent";
 import { CustomerAccount } from "./customer-account";
+import { OrderQrCard } from "./account/qr-sheet";
 import { CustomerAuth } from "./customer-auth";
 import type { CustomerIdentity } from "./customer-auth";
 import { LegalPage } from "./legal-pages";
+import {
+  AllergensSection,
+  BundlesSection,
+  DeliverySection,
+  EstimationSection,
+  LoyaltySection,
+  ReservationSection,
+  ServicesSection,
+} from "../site/addon-sections";
+import { effectiveSiteBackground, effectiveSiteDecoration, emptySiteAddons, isAddonSection, sectionAvailable, type SiteAddonData } from "@/features/cms/site-addons";
+import { siteBackgrounds, siteBackgroundStyle } from "@/features/cms/site-backgrounds";
 import {
   siteConfigSchema,
   type Section,
@@ -48,6 +72,7 @@ import {
 } from "@/features/cms/schema";
 import { rich, type PlaceholderContext } from "@/features/cms/text";
 import { themeCss } from "@/features/cms/theme";
+import { bookingFirst } from "@/features/cms/defaults";
 import {
   Categories,
   Cta,
@@ -89,8 +114,9 @@ const badgeIcons = {
 } as const;
 /** Messages exchanged with the CMS editor (same origin only). */
 export type PreviewMessage =
-  | { type: "cms:config"; config: SiteConfig }
+  | { type: "cms:config"; config: SiteConfig; page?: string }
   | { type: "cms:select"; id: string | null }
+  | { type: "cms:drop"; files: File[]; id: string | null }
   | { type: "cms:ready" }
   | { type: "cms:pick"; id: string };
 function linePrice(p: Product | undefined, l: Line) {
@@ -103,22 +129,49 @@ function linePrice(p: Product | undefined, l: Line) {
   );
 }
 export function DonutStore({
-  route,
+  route: initialRoute,
   config: initialConfig,
   context,
   preview = false,
+  initialData = null,
+  updatedAt = null,
+  initialCategory = "Tout",
+  detailProduct,
+  estimationEnabled = false,
+  siteAddons = emptySiteAddons,
+  offers = emptyOffers,
 }: {
   route: string;
   config: SiteConfig;
   context: PlaceholderContext;
   /** CMS preview inside the editor iframe: live config, click-to-select, no navigation. */
   preview?: boolean;
+  /** Catalogue loaded on the server so products are present in the initial HTML. */
+  initialData?: Data | null;
+  /** Publication date of the live version, shown so visitors and machines know how fresh the site is. */
+  updatedAt?: string | null;
+  initialCategory?: string;
+  detailProduct?: Product;
+  estimationEnabled?: boolean;
+  /** Add-ons installés visibles sur le site, et leurs données publiques. */
+  siteAddons?: SiteAddonData;
+  /** Services et produits publiés depuis Gestion. */
+  offers?: PublicOffers;
 }) {
   const nextRouter = useRouter();
-  const { request: fetch, shopPost, href, restaurant, demo } = useTenantSite();
+  const {
+    request: fetch,
+    shopPost,
+    href,
+    restaurant,
+    demo,
+    shopEnabled,
+  } = useTenantSite();
   const router = { push: (path: string) => nextRouter.push(href(path)) };
   const [config, setConfig] = useState(initialConfig),
+    [previewPage, setPreviewPage] = useState<string>(),
     [selectedSection, setSelectedSection] = useState<string | null>(null);
+  const route = previewPage ?? initialRoute;
   useEffect(() => setConfig(initialConfig), [initialConfig]);
   useEffect(() => {
     if (!preview || window.parent === window) return;
@@ -129,7 +182,13 @@ export function DonutStore({
         return;
       if (event.data?.type === "cms:config") {
         const parsed = siteConfigSchema.safeParse(event.data.config);
-        if (parsed.success) setConfig(parsed.data as SiteConfig);
+        if (parsed.success) {
+          setConfig(parsed.data as SiteConfig);
+          const key = event.data.page;
+          setPreviewPage(
+            key && parsed.data.pages[key]?.kind === "custom" ? key : undefined,
+          );
+        }
       }
       if (event.data?.type === "cms:select") {
         setSelectedSection(event.data.id);
@@ -149,15 +208,38 @@ export function DonutStore({
         send({ type: "cms:pick", id: block.getAttribute("data-cms-section")! });
       }
     };
+    const onDragOver = (event: DragEvent) => {
+      if (!event.dataTransfer?.types.includes("Files")) return;
+      event.preventDefault();
+      event.dataTransfer.dropEffect = "copy";
+    };
+    const onDrop = (event: DragEvent) => {
+      if (!event.dataTransfer?.files.length) return;
+      event.preventDefault();
+      event.stopPropagation();
+      const target =
+        event.target instanceof Element
+          ? event.target.closest("[data-cms-section]")
+          : null;
+      send({
+        type: "cms:drop",
+        files: Array.from(event.dataTransfer.files),
+        id: target?.getAttribute("data-cms-section") || null,
+      });
+    };
+    document.addEventListener("dragover", onDragOver);
+    document.addEventListener("drop", onDrop);
     window.addEventListener("message", onMessage);
     document.addEventListener("click", onClick, true);
     send({ type: "cms:ready" });
     return () => {
       window.removeEventListener("message", onMessage);
       document.removeEventListener("click", onClick, true);
+      document.removeEventListener("dragover", onDragOver);
+      document.removeEventListener("drop", onDrop);
     };
   }, [preview]);
-  const [data, setData] = useState<Data | null>(null),
+  const [data, setData] = useState<Data | null>(initialData),
     [error, setError] = useState(""),
     [cart, setCart] = useState<Line[]>([]),
     [hydrated, setHydrated] = useState(false),
@@ -169,7 +251,7 @@ export function DonutStore({
     [menuTreat, setMenuTreat] = useState(""),
     [choices, setChoices] = useState<string[]>([]),
     [note, setNote] = useState(""),
-    [category, setCategory] = useState("Tout"),
+    [category, setCategory] = useState(initialCategory),
     [toast, setToast] = useState(""),
     [nav, setNav] = useState(false),
     [burgerOpen, setBurgerOpen] = useState(false),
@@ -182,7 +264,28 @@ export function DonutStore({
     [consumption, setConsumption] = useState("takeaway"),
     [payment, setPayment] = useState("counter"),
     [slot, setSlot] = useState(""),
-    [receipt, setReceipt] = useState<ShopOrder | null>(null);
+    [receipt, setReceipt] = useState<ShopOrder | null>(null),
+    // Table QR scanned (?table=7): orders go to that table, served on site.
+    [tableNumber, setTableNumber] = useState<number | null>(null);
+  useEffect(() => {
+    const key = `atacuisine-table:${restaurant}`;
+    try {
+      const fromUrl = Number(new URLSearchParams(location.search).get("table"));
+      if (Number.isInteger(fromUrl) && fromUrl > 0) {
+        sessionStorage.setItem(key, String(fromUrl));
+        setTableNumber(fromUrl);
+        setConsumption("onsite");
+        return;
+      }
+      const saved = Number(sessionStorage.getItem(key));
+      if (Number.isInteger(saved) && saved > 0) {
+        setTableNumber(saved);
+        setConsumption("onsite");
+      }
+    } catch {
+      /* Storage unavailable: table mode only for this page. */
+    }
+  }, [restaurant]);
   const refresh = useCallback(async () => {
     const r = await fetch("/api/shop/catalog");
     const d = await r.json();
@@ -195,7 +298,7 @@ export function DonutStore({
     try {
       const saved = JSON.parse(
         localStorage.getItem(
-          `dattier-cart:${restaurant}${preview ? ":preview" : ""}`,
+          `atacuisine-cart:${restaurant}${preview ? ":preview" : ""}`,
         ) || "[]",
       );
       if (Array.isArray(saved))
@@ -235,7 +338,7 @@ export function DonutStore({
     if (hydrated) {
       try {
         localStorage.setItem(
-          `dattier-cart:${restaurant}${preview ? ":preview" : ""}`,
+          `atacuisine-cart:${restaurant}${preview ? ":preview" : ""}`,
           JSON.stringify(cart),
         );
       } catch {
@@ -253,7 +356,7 @@ export function DonutStore({
     const token =
       location.hash.slice(1) ||
       sessionStorage.getItem(
-        `dattier-receipt:${restaurant}${preview ? ":preview" : ""}`,
+        `atacuisine-receipt:${restaurant}${preview ? ":preview" : ""}`,
       );
     if (!token) {
       setError(
@@ -287,16 +390,18 @@ export function DonutStore({
           l.quantity,
       0,
     );
-  function select(p: Product) {
+  function select(p: Product, intent = purchaseIntent) {
+    if (!shopEnabled) return;
     setError("");
     setProduct(p);
-    setPurchaseMode(p.category === "Menus" ? "solo" : purchaseIntent);
+    setPurchaseMode(p.category === "Menus" ? "solo" : intent);
     setMenuDrink("");
     setMenuTreat("");
     setChoices([]);
     setNote("");
   }
   function addLines(lines: Line[], message: string) {
+    if (!shopEnabled) return;
     setCart((current) => {
       const next = current.map((line) => ({ ...line }));
       for (const line of lines) {
@@ -401,7 +506,14 @@ export function DonutStore({
       `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`,
     googleReviewUrl = data?.settings.googleReviewUrl,
     googleMapUrl = `https://www.google.com/maps?q=${encodeURIComponent(address)}&output=embed`;
+  const extraPages = Object.entries(config.pages).filter(
+    ([, page]) => page.kind === "custom" && page.visible,
+  );
   const page = config.pages[route || "home"] ?? { sections: [] as Section[] },
+    canReserve = !!config.pages.reservations?.sections.some(
+      (s) =>
+        s.visible && s.type === "system" && s.props.block === "reservationForm",
+    ),
     ctx: PlaceholderContext = {
       ...context,
       ...(data
@@ -414,12 +526,33 @@ export function DonutStore({
       preview ? { "data-cms-section": section.id } : {},
     { branding, header, footer } = config;
   const css = useMemo(() => themeCss(config.theme), [config.theme]);
+  const backgroundDesign = effectiveSiteBackground(config.branding.background, siteAddons.backgrounds);
   // Each section of the page, in the order chosen in the CMS. The JSX of the
   // original sections is unchanged; only their texts and media come from the
   // configuration. Business data (products, prices, hours, reviews) stays live.
   function renderSection(section: Section) {
     const attrs = cms(section);
+    // Add-on désinstallé : sa section disparaît du site sans casser la page.
+    if (isAddonSection(section.type) && !sectionAvailable(section.type, siteAddons)) return null;
     switch (section.type) {
+      case "estimation":
+        return <EstimationSection key={section.id} props={section.props} ctx={ctx} attrs={attrs} enabled={estimationEnabled} />;
+      case "loyalty":
+        return <LoyaltySection key={section.id} props={section.props} ctx={ctx} attrs={attrs} />;
+      case "reservation":
+        return <ReservationSection key={section.id} props={section.props} ctx={ctx} attrs={attrs} canReserve={canReserve} />;
+      case "allergens":
+        return <AllergensSection key={section.id} props={section.props} ctx={ctx} attrs={attrs} products={data?.products ?? []} />;
+      case "delivery":
+        return <DeliverySection key={section.id} props={section.props} ctx={ctx} attrs={attrs} data={siteAddons} />;
+      case "bundles":
+        return <BundlesSection key={section.id} props={section.props} ctx={ctx} attrs={attrs} data={siteAddons} />;
+      case "offerServices":
+        return <OfferServicesSection key={section.id} props={section.props} ctx={ctx} attrs={attrs} offers={offers} />;
+      case "offerProducts":
+        return <OfferProductsSection key={section.id} props={section.props} ctx={ctx} attrs={attrs} offers={offers} />;
+      case "services":
+        return <ServicesSection key={section.id} props={section.props} ctx={ctx} attrs={attrs} data={siteAddons} />;
       case "hero": {
         const p = section.props;
         return (
@@ -564,41 +697,50 @@ export function DonutStore({
                   .slice(0, fp.limit && category === "Tout" ? fp.limit : 100)
                   .map((p, i) => (
                     <article
-                      role="button"
-                      tabIndex={p.enabled && p.portions > 0 ? 0 : -1}
                       className={`donut-product tone-${i % 4}`}
                       key={p.id}
-                      onClick={() => {
-                        if (p.enabled && p.portions > 0) select(p);
-                      }}
-                      onKeyDown={(event) => {
-                        if (
-                          p.enabled &&
-                          p.portions > 0 &&
-                          (event.key === "Enter" || event.key === " ")
-                        ) {
-                          event.preventDefault();
-                          select(p);
-                        }
-                      }}
-                      aria-disabled={!p.enabled || p.portions < 1}
-                      aria-label={`Personnaliser ${p.name}`}
                     >
-                      <span className="donut-product-image">
-                        <img
-                          loading="lazy"
-                          src={p.images[0] || "/cms/restaurant.svg"}
-                          alt={`Photo de ${p.name}`}
-                          width="600"
-                          height="480"
-                        />
-                        <span>{p.category}</span>
-                      </span>
+                      <Link
+                        href={productPath(p.id)}
+                        aria-label={`Voir la fiche de ${p.name}`}
+                      >
+                        <span className="donut-product-image">
+                          <img
+                            loading="lazy"
+                            src={p.images[0] || "/cms/restaurant.svg"}
+                            alt={`Photo de ${p.name}`}
+                            width="600"
+                            height="480"
+                          />
+                          <span>{p.category}</span>
+                        </span>
+                      </Link>
                       <span className="donut-product-info">
                         <div>
-                          <h3>{p.name}</h3>
-                          <b>{money(p.price)}</b>
+                          <h3>
+                            <Link
+                              className="product-name-link"
+                              href={productPath(p.id)}
+                            >
+                              {p.name}
+                            </Link>
+                          </h3>
+                          <b>
+                            {money(p.price)}
+                            {p.flash && (
+                              <s className="donut-flash-was">
+                                {money(p.flash.regular_price)}
+                              </s>
+                            )}
+                          </b>
                         </div>
+                        {p.flash && (
+                          <span className="donut-flash-tag">
+                            <Zap size={13} /> Flash −{p.flash.percent} %
+                            {p.flash.member_bonus_points > 0 &&
+                              ` · +${p.flash.member_bonus_points} pts membre`}
+                          </span>
+                        )}
                         <p>{p.description}</p>
                         {data.reviews.some(
                           (review) => review.menu_id === p.id,
@@ -639,14 +781,21 @@ export function DonutStore({
                         >
                           <Star size={15} /> Noter ce produit
                         </button>
-                        <span className="donut-add">
-                          {p.portions < 1
-                            ? "Victime de son succès"
-                            : purchaseIntent === "menu"
-                              ? "Composer mon menu"
-                              : "Choisir solo ou menu"}
-                          <Plus size={20} />
-                        </span>
+                        {shopEnabled && (
+                          <button
+                            type="button"
+                            className="donut-add"
+                            disabled={p.portions < 1}
+                            onClick={() => select(p)}
+                          >
+                            {p.portions < 1
+                              ? "Victime de son succès"
+                              : purchaseIntent === "menu"
+                                ? "Composer mon menu"
+                                : "Choisir solo ou menu"}
+                            <Plus size={20} aria-hidden />
+                          </button>
+                        )}
                       </span>
                     </article>
                   ))}
@@ -668,6 +817,8 @@ export function DonutStore({
           >
             <div className="donut-about-art">
               <img
+                loading="lazy"
+                decoding="async"
                 src={p.image.src}
                 width="320"
                 height="320"
@@ -708,7 +859,7 @@ export function DonutStore({
               >
                 {data?.settings.phone || ""} <ArrowUpRight size={18} />
               </a>
-              {p.burger && (
+              {p.burger && !config.theme.presentation && (
                 <button
                   type="button"
                   className={`donut-burger-stack ${burgerOpen ? "is-open" : ""}`}
@@ -724,6 +875,8 @@ export function DonutStore({
                   {Array.from({ length: 6 }, (_, layer) => (
                     <img
                       key={layer}
+                      loading="lazy"
+                      decoding="async"
                       className={`donut-burger-layer layer-${layer + 1}`}
                       src="/cms/restaurant.svg"
                       alt=""
@@ -739,7 +892,12 @@ export function DonutStore({
             <div className="donut-hours">
               <h3>{r(p.hoursTitle)}</h3>
               {p.hoursNote && <p>{r(p.hoursNote)}</p>}
-              {[
+              {data && data.settings.hours.length === 0 ? (
+                <p className="donut-hours-empty">
+                  Horaires communiqués prochainement par l’établissement.
+                </p>
+              ) : (
+              [
                 "Dimanche",
                 "Lundi",
                 "Mardi",
@@ -758,7 +916,8 @@ export function DonutStore({
                       .join(" / ") || "Fermé"}
                   </b>
                 </div>
-              ))}
+              ))
+              )}
               <SiteLink link={p.cta} className="donut-button">
                 <ArrowRight size={18} />
               </SiteLink>
@@ -1027,9 +1186,9 @@ export function DonutStore({
       );
     if (block === "reservationForm")
       return (
-        <section className="donut-section">
+        <div className="donut-booking">
           <PublicReservation />
-        </section>
+        </div>
       );
     if (block === "orderStart")
       return (
@@ -1155,12 +1314,28 @@ export function DonutStore({
                     <b>− {money(receipt.discount)}</b>
                   </div>
                 )}
-                {receipt.points_awarded > 0 && (
-                  <p className="note">
-                    +{receipt.points_awarded} points ajoutés à votre compte
-                    fidélité.
-                  </p>
+                {!preview && (
+                  <OrderQrCard
+                    storageKey={`atacuisine-receipt:${restaurant}`}
+                  />
                 )}
+                <div className="donut-points-earned">
+                  <Star size={22} fill="currentColor" />
+                  <span>
+                    <b>
+                      {receipt.points_awarded > 0
+                        ? `+${receipt.points_awarded} points ajoutés à votre compte`
+                        : "Vos points fidélité sont crédités dès le retrait"}
+                    </b>
+                    <small>
+                      Partagez votre lien de parrainage : vos amis reçoivent un
+                      cadeau, vous gagnez des points.{" "}
+                      <Link href="/compte?onglet=parrainage">
+                        Partager et gagner →
+                      </Link>
+                    </small>
+                  </span>
+                </div>
                 <div className="donut-receipt-line">
                   <b>Total</b>
                   <b>{money(receipt.total)}</b>
@@ -1175,6 +1350,7 @@ export function DonutStore({
                         try {
                           const d = await shopPost("payment", {
                             token: receipt.token,
+                            path: location.pathname + location.hash,
                           });
                           location.href = d.url;
                         } catch (e) {
@@ -1184,7 +1360,7 @@ export function DonutStore({
                         }
                       }}
                     >
-                      Continuer le paiement Stripe test
+                      Payer en ligne
                     </button>
                   )}
                 <p>
@@ -1293,7 +1469,21 @@ export function DonutStore({
     );
   }
   return (
-    <div className={`donut-site${preview ? " is-cms-preview" : ""}`}>
+    <PublicAppearance theme={config.theme}
+      style={backgroundDesign ? siteBackgroundStyle(backgroundDesign) : undefined}
+      data-site-background={backgroundDesign ?? undefined}
+      data-bg-tier={backgroundDesign ? siteBackgrounds[backgroundDesign].tier : undefined}
+      className={`donut-site${preview ? " is-cms-preview" : ""}`}
+      data-template={config.theme.presentation?.layout}
+      data-sticky-header={config.theme.presentation?.stickyHeader}
+      data-motion={config.theme.presentation?.motion}
+      data-action-bar={
+        config.theme.presentation?.stickyAction !== undefined &&
+        config.theme.presentation.stickyAction !== "none"
+      }
+    >
+      <SiteBackgroundMotion design={backgroundDesign} />
+      {effectiveSiteDecoration(config.branding.decoration, siteAddons.decorations) && <SiteDecoration design={effectiveSiteDecoration(config.branding.decoration, siteAddons.decorations)!} />}
       {demo && (
         <aside className="tenant-demo-banner">
           Démonstration locale · données fictives · aucun paiement réel.
@@ -1306,6 +1496,27 @@ export function DonutStore({
       <a className="donut-skip" href="#main">
         Aller au contenu
       </a>
+      {tableNumber && !preview && (
+        <div className="donut-table-banner" role="status">
+          <span>
+            Commande à table · <b>Table {tableNumber}</b> · servie sur place
+          </span>
+          <button
+            type="button"
+            onClick={() => {
+              try {
+                sessionStorage.removeItem(`atacuisine-table:${restaurant}`);
+              } catch {
+                /* Nothing to forget. */
+              }
+              setTableNumber(null);
+              setConsumption("takeaway");
+            }}
+          >
+            Quitter
+          </button>
+        </div>
+      )}
       {(branding.announcement || branding.announcementHighlight) && (
         <div
           className="donut-announcement"
@@ -1335,8 +1546,10 @@ export function DonutStore({
           <Link href="/histoire">{header.navUniverse}</Link>
           <Link href="/contact">{header.navContact}</Link>
           <Link href="/compte">{header.navAccount}</Link>
+          {estimationEnabled && <Link href="/estimation">Estimation</Link>}
         </nav>
         <div className="donut-nav-actions">
+          <PublicModeSwitch />
           <Link
             className="donut-account-link"
             href="/compte"
@@ -1344,17 +1557,31 @@ export function DonutStore({
           >
             <UserRound size={20} />
           </Link>
-          <Link className="donut-button compact" href="/commander">
-            {header.orderLabel} <ArrowUpRight size={17} />
-          </Link>
-          <button
-            className={`donut-bag ${toast ? "bounce" : ""}`}
-            aria-label={`Ouvrir le panier, ${count} produits`}
-            onClick={() => router.push("/checkout")}
-          >
-            <ShoppingBag size={23} />
-            <span>{count}</span>
-          </button>
+          {canReserve && (
+            <Link
+              className={`donut-button compact donut-reserve-link${shopEnabled ? " outline" : ""}`}
+              href="/reservations"
+              aria-label="Réserver une table"
+            >
+              <CalendarDays size={17} aria-hidden />
+              <span>Réserver</span>
+            </Link>
+          )}
+          {shopEnabled && (
+            <>
+              <Link className="donut-button compact" href="/commander">
+                {header.orderLabel} <ArrowUpRight size={17} />
+              </Link>
+              <button
+                className={`donut-bag ${toast ? "bounce" : ""}`}
+                aria-label={`Ouvrir le panier, ${count} produits`}
+                onClick={() => router.push("/checkout")}
+              >
+                <ShoppingBag size={23} />
+                <span>{count}</span>
+              </button>
+            </>
+          )}
           <button
             className="donut-mobile-menu"
             aria-label="Menu"
@@ -1373,13 +1600,72 @@ export function DonutStore({
             </button>
           </div>
         )}
-        {page.sections.filter((s) => s.visible).map(renderSection)}
+        {detailProduct ? (
+          <section className="donut-section donut-product-page">
+            <ProductDetails
+              product={detailProduct}
+              image={detailProduct.images[0] || "/cms/restaurant.svg"}
+            >
+              <Link className="donut-button outline" href="/carte">
+                Retour à la carte
+              </Link>
+              {shopEnabled && !preview && detailProduct.portions > 0 && (
+                <button
+                  type="button"
+                  className="donut-button primary"
+                  onClick={() => select(detailProduct)}
+                >
+                  <ShoppingBag size={18} aria-hidden /> Ajouter à ma commande
+                </button>
+              )}
+              {canReserve && (
+                <Link className="donut-text-link" href="/reservations">
+                  Le déguster sur place ? Réserver une table
+                </Link>
+              )}
+            </ProductDetails>
+            <ProductRecommendations
+              product={detailProduct}
+              items={data?.products ?? []}
+              href={(item) => href(productPath(item.id))}
+              image={(item) => item.images[0] || "/cms/restaurant.svg"}
+            >
+              {shopEnabled &&
+                !preview &&
+                (detailProduct.portions > 0 &&
+                detailProduct.category !== "Menus" &&
+                (detailProduct.category === "Boissons" || drinks.length > 0) &&
+                (detailProduct.category === "Desserts" || treats.length > 0) ? (
+                  <button
+                    type="button"
+                    className="donut-button"
+                    onClick={() => select(detailProduct, "menu")}
+                  >
+                    Composer mon menu
+                  </button>
+                ) : (
+                  <Link
+                    className="donut-button outline"
+                    href="/commander#start"
+                  >
+                    Voir les options à emporter
+                  </Link>
+                ))}
+            </ProductRecommendations>
+          </section>
+        ) : (
+          bookingFirst(route, page.sections)
+            .filter((s) => s.visible)
+            .map(renderSection)
+        )}
       </main>
       {route !== "checkout" && (
         <footer className="donut-footer" {...cms({ id: "site-footer" })}>
           <div className="donut-footer-top">
             <Link href="/" className="donut-brand">
               <img
+                loading="lazy"
+                decoding="async"
                 src={branding.logo.src}
                 width="70"
                 height="70"
@@ -1387,10 +1673,28 @@ export function DonutStore({
               />
               <span>{r(footer.tagline)}</span>
             </Link>
-            <Link href="/commander">
-              {footer.cta} <ArrowUpRight />
-            </Link>
+            {shopEnabled && (
+              <Link href="/commander">
+                {footer.cta} <ArrowUpRight />
+              </Link>
+            )}
           </div>
+          {extraPages.length > 0 && (
+            <nav
+              className="donut-extra-pages"
+              aria-label="Autres pages du restaurant"
+            >
+              {extraPages.map(([key, page]) => (
+                <Link
+                  key={key}
+                  href={`/${key}`}
+                  aria-current={key === route ? "page" : undefined}
+                >
+                  {page.title}
+                </Link>
+              ))}
+            </nav>
+          )}
           <div className="donut-footer-bottom">
             <span>
               {r(footer.credit)} · <Link href="/source">Code source</Link>
@@ -1409,7 +1713,29 @@ export function DonutStore({
             <Link href="/demo">Espace équipe ↗</Link>
           </div>
           {footer.notice && <p>{r(footer.notice)}</p>}
+          {updatedAt && !preview && (
+            <p className="donut-updated">
+              <small>
+                Site mis à jour le{" "}
+                <time dateTime={new Date(updatedAt).toISOString()}>
+                  {new Date(updatedAt).toLocaleDateString("fr-FR", {
+                    timeZone: "Europe/Paris",
+                    day: "numeric",
+                    month: "long",
+                    year: "numeric",
+                  })}
+                </time>
+              </small>
+            </p>
+          )}
         </footer>
+      )}
+      {!["checkout", "compte", "suivi"].includes(route || "") && (
+        <TemplateExtras
+          presentation={config.theme.presentation}
+          shopEnabled={shopEnabled}
+          cartVisible={count > 0 && shopEnabled}
+        />
       )}
       <CookieConsent onChange={setExternalMediaAllowed} />
       {toast && (
@@ -1418,7 +1744,7 @@ export function DonutStore({
           {toast}
         </div>
       )}
-      {count > 0 && route !== "checkout" && (
+      {shopEnabled && count > 0 && route !== "checkout" && (
         <button
           className="donut-mobile-cart donut-button"
           onClick={() => router.push("/checkout")}
@@ -1582,7 +1908,14 @@ export function DonutStore({
                   <Star size={16} /> Donner mon avis sur ce produit
                 </button>
               </div>
-              <b>{money(product.price)}</b>
+              <b>
+                {money(product.price)}
+                {product.flash && (
+                  <s className="donut-flash-was">
+                    {money(product.flash.regular_price)}
+                  </s>
+                )}
+              </b>
             </div>
             <p>
               <b>Allergènes :</b>{" "}
@@ -1853,12 +2186,12 @@ export function DonutStore({
                       const values = new FormData(e.currentTarget);
                       try {
                         let key = sessionStorage.getItem(
-                          `dattier-checkout-key:${restaurant}${preview ? ":preview" : ""}`,
+                          `atacuisine-checkout-key:${restaurant}${preview ? ":preview" : ""}`,
                         );
                         if (!key) {
                           key = crypto.randomUUID();
                           sessionStorage.setItem(
-                            `dattier-checkout-key:${restaurant}${preview ? ":preview" : ""}`,
+                            `atacuisine-checkout-key:${restaurant}${preview ? ":preview" : ""}`,
                             key,
                           );
                         }
@@ -1866,7 +2199,8 @@ export function DonutStore({
                           key,
                           customer: customerIdentity.name,
                           email: customerIdentity.email,
-                          consumption,
+                          consumption: tableNumber ? "onsite" : consumption,
+                          table: tableNumber ?? undefined,
                           payment,
                           slot,
                           promo: values.get("promo"),
@@ -1875,14 +2209,14 @@ export function DonutStore({
                           items: cart,
                         });
                         sessionStorage.setItem(
-                          `dattier-receipt:${restaurant}${preview ? ":preview" : ""}`,
+                          `atacuisine-receipt:${restaurant}${preview ? ":preview" : ""}`,
                           order.token,
                         );
                         sessionStorage.removeItem(
-                          `dattier-checkout-key:${restaurant}${preview ? ":preview" : ""}`,
+                          `atacuisine-checkout-key:${restaurant}${preview ? ":preview" : ""}`,
                         );
                         localStorage.removeItem(
-                          `dattier-cart:${restaurant}${preview ? ":preview" : ""}`,
+                          `atacuisine-cart:${restaurant}${preview ? ":preview" : ""}`,
                         );
                         setCart([]);
                         router.push(`/suivi#${order.token}`);
@@ -1979,7 +2313,7 @@ export function DonutStore({
                           Au comptoir · carte ou espèces
                         </option>
                         <option value="stripe" disabled={!data?.stripe}>
-                          En ligne · Stripe test{" "}
+                          En ligne · carte bancaire{" "}
                           {data?.stripe ? "" : "(non configuré)"}
                         </option>
                       </select>
@@ -2023,6 +2357,6 @@ export function DonutStore({
           </div>
         </Modal>
       )}
-    </div>
+    </PublicAppearance>
   );
 }

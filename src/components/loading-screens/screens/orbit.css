@@ -1,0 +1,41 @@
+.ls-orbit-ring {
+  stroke: var(--ls-primary);
+  stroke-width: 1.5;
+  opacity: 0.45;
+}
+.ls-orbit-ring.is-front {
+  opacity: 0.8;
+}
+.ls-orbit-glow {
+  fill: var(--ls-primary);
+  opacity: 0.25;
+  filter: blur(14px);
+  animation: ls-orbit-glow calc(4s / var(--ls-speed)) ease-in-out infinite;
+}
+.ls-orbit-dot {
+  fill: var(--ls-secondary);
+  offset-rotate: 0deg;
+  offset-distance: var(--o);
+  filter: drop-shadow(0 0 3px var(--ls-secondary));
+  animation: ls-orbit-move calc(var(--d) / var(--ls-speed)) linear infinite;
+}
+.ls-orbit-dot.is-alt {
+  fill: #fff;
+}
+@keyframes ls-orbit-move {
+  from {
+    offset-distance: var(--o);
+  }
+  to {
+    offset-distance: calc(var(--o) + 100%);
+  }
+}
+@keyframes ls-orbit-glow {
+  0%,
+  100% {
+    opacity: 0.18;
+  }
+  50% {
+    opacity: 0.38;
+  }
+}

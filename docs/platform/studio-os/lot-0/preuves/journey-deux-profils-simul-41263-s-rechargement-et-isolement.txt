@@ -1,0 +1,13 @@
+# Test info
+
+- Name: journey.spec.ts >> deux profils simultanés : synchronisation sans rechargement et isolement
+- Location: tests/e2e/journey.spec.ts:139:1
+
+# Error details
+
+```
+Test timeout of 60000ms exceeded.
+```
+
+
+Captures et traces complètes conservées dans la copie temporaire ; diagnostic ci-dessus conservé dans le dépôt.

@@ -1,15 +1,17 @@
+import type { CustomerMessage } from "@/features/messaging/service";
+import type { ProductPageFields } from "./product-pages";
 import type { Actor } from "./auth/session";
 export type Restaurant = {
   id: string;
   name: string;
+  industry?: import("@/features/onboarding/catalog").Industry;
+  trade?: string;
+  trade_detail?: string;
   address: string;
   phone: string;
   goal: number;
-  organization_id?: string;
-  plan?: "essentiel" | "premium";
-  organization_restaurants?: number;
 };
-export type MenuItem = {
+export type MenuItem = ProductPageFields & {
   id: string;
   name: string;
   category: string;
@@ -81,12 +83,15 @@ export type Table = {
   status: string;
   label: string;
   zone: string;
+  zone_id: string | null;
   shape: "round" | "square" | "rect";
   pos_x: number;
   pos_y: number;
+  rotation: number;
   bookable: boolean;
   archived_at: string | null;
 };
+export type Zone = { id: string; name: string; position: number };
 export type Event = {
   id: string;
   action: string;
@@ -105,6 +110,8 @@ export type Supplier = {
   name: string;
   contact: string;
   lead_days: number;
+  /** Ingrédients vendus par ce fournisseur (catalogue fournisseur). */
+  ingredient_ids?: string[];
 };
 export type Purchase = {
   id: string;
@@ -139,6 +146,9 @@ export type Customer = {
   contact: string;
   consent: boolean;
   points: number;
+  account_email?: string | null;
+  marketing_consent?: boolean;
+  last_message_at?: string | null;
 };
 export type Expense = {
   id: string;
@@ -167,9 +177,27 @@ export type Promo = {
   expired: boolean;
 };
 export type Snapshot = {
+  activeModules?: { floor: boolean; "table-booking": boolean };
+  /** Modules disponibles (app.module_available) ; prioritaire pour la navigation. */
+  modules?: string[];
+  /** Afficher / masquer chaque module dans le tableau de bord (table module_display). */
+  moduleDisplay?: { module_id: string; shown: boolean }[];
+  addons?: string[];
+  licenses?: string[];
+  uninstalledAddons?: string[];
+  plan: import("@/features/platform/pricing").Plan;
   demo: boolean;
   categories: string[];
   promos: Promo[];
+  /** Gamification settings of the customer account (Clients & fidélité). */
+  engagement:
+    import("@/features/commerce/engagement-rules").EngagementSettings | null;
+  /** Current and upcoming flash promotions (La carte). */
+  flashPromotions: Awaited<
+    ReturnType<
+      typeof import("@/features/commerce/engagement").adminFlashPromotions
+    >
+  >;
   checkoutCustomers: { id: string; name: string }[];
   now: string;
   user: Actor;
@@ -177,6 +205,14 @@ export type Snapshot = {
   restaurant: Restaurant;
   menu: MenuItem[];
   tables: Table[];
+  zones: Zone[];
+  /** Droit d’aménager du profil connecté et plafond de tables de l’offre. */
+  floorPlan: {
+    canArrange: boolean;
+    plan: number;
+    quota: number | null;
+    active: number;
+  };
   orders: Order[];
   ingredients: Ingredient[];
   lots: Lot[];
@@ -195,6 +231,8 @@ export type Snapshot = {
     created_at: string;
   }[];
   customers: Customer[];
+  customerMessages?: CustomerMessage[];
+  messaging?: { email: boolean; sms: boolean };
   expenses: Expense[];
   recipes: RecipeLine[];
   sales: { day: string; total: number }[];

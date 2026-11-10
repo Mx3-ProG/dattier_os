@@ -1,0 +1,10 @@
+
+> atacuisine_os@1.0.0 lint
+> eslint .
+
+
+Oops! Something went wrong! :(
+
+ESLint: 9.39.5
+
+Error: ENOENT: no such file or directory, open '/Users/mathieu_pro/Empire/wayne-web/site-internet/restaurant/dattier_os/.claude/worktrees/tenant-isolation/.next/static/S9tB06J2CG019jx0meB6O/_buildManifest.js'

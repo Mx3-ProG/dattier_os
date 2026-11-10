@@ -3,6 +3,8 @@ import { createHash } from "node:crypto";
 import { NextRequest } from "next/server";
 import { getDb, demoEnabled, one } from "@/lib/database/db";
 import { login } from "@/lib/auth/session";
+import { customerForActor } from "@/features/commerce/account";
+import { seedDemoEngagement } from "@/features/commerce/engagement-demo";
 import {
   assertOrigin,
   readBody,
@@ -27,6 +29,17 @@ async function routePOST(req: NextRequest) {
       [id],
     );
     const identity = await login(id);
+    // Fictive data so the gamified account is complete in the demo.
+    await db.transaction(async (tx) =>
+      seedDemoEngagement(
+        tx,
+        body.restaurant as string,
+        await customerForActor(tx, body.restaurant as string, {
+          ...identity,
+          email: "camille@example.test",
+        }),
+      ),
+    );
     return json({
       id: identity.id,
       name: identity.name,

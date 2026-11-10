@@ -1,0 +1,16 @@
+/* Preview compositions mirror the public templates without affecting the shop shell. */
+.tpl-site-bistrot .tpl-site-hero { margin: 10px; border: 1px solid var(--tpl-primary); }
+.tpl-site-jardin .tpl-site-photo { order: -1; border-radius: 50% 50% 4px 4px; }
+.tpl-site-comptoir .tpl-site-hero strong { text-transform: uppercase; font-weight: 900; }
+.tpl-site-comptoir .tpl-site-cta { border-radius: 0; box-shadow: 2px 2px 0 #26201f; }
+.tpl-site-pause .tpl-site-hero { grid-template-columns: 1fr; text-align: center; }
+.tpl-site-pause .tpl-site-photo { min-height: 90px; border-radius: 90px; background-size: contain; background-repeat: no-repeat; }
+.tpl-site-signature .tpl-site-hero { grid-template-columns: .8fr 1.2fr; }
+.tpl-site-signature .tpl-site-photo { min-height: 175px; border-radius: 0; }
+.tpl-site-riviera .tpl-site-hero { background: repeating-linear-gradient(90deg, transparent 0 25px, #21547509 25px 50px); }
+.tpl-site-riviera .tpl-site-photo { order: -1; }
+.tpl-site-atelier .tpl-site-hero { grid-template-columns: 1fr; }
+.tpl-site-atelier .tpl-site-hero strong { font-size: 30px; letter-spacing: -.06em; }
+.tpl-site-atelier .tpl-site-photo { min-height: 80px; background-size: contain; background-repeat: no-repeat; }
+.tpl-site-escale .tpl-site-photo { transform: rotate(5deg); border-radius: 4px; box-shadow: 5px 5px 0 var(--tpl-primary); }
+.tpl-variant-dock { display: flex; justify-content: space-between; gap: 12px; margin: 0 20px 12px; padding: 8px 12px; border: 1px solid var(--tpl-primary); border-radius: 15px; font: 8px Arial,sans-serif; }

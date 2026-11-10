@@ -1,0 +1,54 @@
+.ls-magic-glow {
+  fill: var(--ls-primary);
+  opacity: 0.28;
+  filter: blur(14px);
+  animation: ls-magic-glow calc(3s / var(--ls-speed)) ease-in-out infinite;
+}
+.ls-magic-core {
+  fill: var(--ls-secondary);
+  animation: ls-magic-glow calc(1.5s / var(--ls-speed)) ease-in-out infinite;
+}
+.ls-magic-ring {
+  transform-box: view-box !important;
+  transform-origin: 100px 100px !important;
+  animation: ls-magic-turn calc(14s / var(--ls-speed)) linear infinite;
+}
+.ls-magic-ring.is-inner {
+  animation-duration: calc(9s / var(--ls-speed));
+  animation-direction: reverse;
+}
+.ls-magic-star {
+  fill: var(--ls-primary);
+  animation: ls-magic-twinkle calc(2.4s / var(--ls-speed)) ease-in-out infinite;
+  animation-delay: calc(var(--i) * -0.37s / var(--ls-speed));
+}
+.ls-magic-star.is-alt {
+  fill: var(--ls-secondary);
+}
+@keyframes ls-magic-turn {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@keyframes ls-magic-twinkle {
+  0%,
+  100% {
+    opacity: 0;
+    transform: scale(0.2) rotate(0deg);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1) rotate(45deg);
+  }
+}
+@keyframes ls-magic-glow {
+  0%,
+  100% {
+    opacity: 0.22;
+    transform: scale(0.9);
+  }
+  50% {
+    opacity: 0.5;
+    transform: scale(1.1);
+  }
+}

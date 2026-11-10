@@ -1,3 +1,6 @@
+import { observeStaffFloor } from "@/features/floor/capabilities";
+import { moduleEnabled, requireModule } from "@/features/modules/access";
+import { requirePlan, requirePaidAddon } from "@/features/platform/entitlements";
 import {
   productSchema,
   createProduct,
@@ -9,16 +12,31 @@ import {
   cancelPromo,
 } from "@/features/loyalty/service";
 import {
+  awardBookingPoints,
+  createFlashPromotion,
+  engagementSettingsSchema,
+  flashSchema,
+  saveEngagementSettings,
+  stopFlashPromotion,
+  stopFlashSchema,
+} from "@/features/commerce/engagement";
+import {
   tableSchema,
   saveTable,
   moveTable,
+  rotateTable,
   tableLifecycle,
+  zoneSchemas,
+  saveZone,
+  moveZone,
+  deleteZone,
 } from "@/features/floor/service";
+import { messageSchema, messageCustomer } from "@/features/messaging/service";
 import { randomUUID as uuid } from "node:crypto";
 import { z } from "zod";
 import { rows, one, type DB } from "./database/db";
 import type { Actor } from "./auth/session";
-import { requirePermission } from "./permissions";
+import { can, requirePermission, type Permission } from "./permissions";
 import {
   changeItem,
   createOrder,
@@ -36,6 +54,10 @@ const text = z.string().trim().min(1).max(300),
 export const actionSchema = z.discriminatedUnion("action", [
   productSchema,
   promoSchema,
+  engagementSettingsSchema,
+  flashSchema,
+  stopFlashSchema,
+  messageSchema,
   z.object({
     action: z.literal("productLifecycle"),
     id,
@@ -62,6 +84,7 @@ export const actionSchema = z.discriminatedUnion("action", [
     status: z.enum(["free", "cleaning", "unavailable"]),
   }),
   tableSchema,
+  ...zoneSchemas,
   z.object({
     action: z.literal("moveTable"),
     id,
@@ -92,7 +115,25 @@ export const actionSchema = z.discriminatedUnion("action", [
     reason: text,
     kind: z.enum(["waste", "inventory"]),
   }),
-  z.object({ action: z.literal("supplier"), name: text, contact: text }),
+  z.object({
+    action: z.literal("supplier"),
+    name: text,
+    contact: text,
+    ingredients: z.array(id).max(50).default([]),
+  }),
+  z.object({
+    action: z.literal("supplierIngredient"),
+    supplier: id,
+    ingredient: id,
+    linked: z.boolean().default(true),
+  }),
+  z.object({
+    action: z.literal("ingredient"),
+    name: text,
+    unit: z.enum(["g", "ml", "unit"]),
+    threshold: z.coerce.number().min(0).max(1000000).default(0),
+    cost: z.coerce.number().min(0).max(1000000).default(0),
+  }),
   z.object({
     action: z.literal("purchase"),
     supplier: id,
@@ -136,6 +177,10 @@ export const actionSchema = z.discriminatedUnion("action", [
     price: z.coerce.number().int().min(0),
     enabled: z.boolean(),
     description: z.string().max(500),
+    public_composition: z.string().trim().max(2000).optional(),
+    allergens: z.string().trim().max(500).optional(),
+    seo_title: z.string().trim().max(80).optional(),
+    seo_description: z.string().trim().max(200).optional(),
   }),
   z.object({
     action: z.literal("recipe"),
@@ -159,6 +204,12 @@ export async function perform(
   user: Actor,
   a: z.infer<typeof actionSchema>,
 ) {
+  if (["issuePromo","cancelPromo","customer","loyalty","engagementSettings",
+       "flashPromotion","stopFlashPromotion"].includes(a.action) ||
+      (a.action === "pay" && (a.customer || a.promo)))
+    await requirePaidAddon(db,r,"loyalty");
+  if (["expense","messageCustomer"].includes(a.action))
+    await requirePlan(db, r, 39);
   switch (a.action) {
     case "createProduct":
       return createProduct(db, r, user, a);
@@ -166,8 +217,19 @@ export async function perform(
       return lifecycle(db, r, user, a.id, a.operation);
     case "issuePromo":
       return issuePromo(db, r, user, a);
+    case "engagementSettings":
+      return saveEngagementSettings(db, r, user, a);
+    case "flashPromotion":
+      return createFlashPromotion(db, r, user, a);
+    case "stopFlashPromotion":
+      return stopFlashPromotion(db, r, user, a.id);
     case "cancelPromo":
       return cancelPromo(db, r, user, a.id);
+    case "messageCustomer": {
+      const sent = await messageCustomer(db, r, user, a);
+      await log(db, r, user.id, `Message ${a.channel} au client`, a.id);
+      return sent;
+    }
     case "order":
       if (a.data.restaurant !== r)
         throw new Error("Établissement incompatible.");
@@ -184,6 +246,18 @@ export async function perform(
         [a.id, r],
       );
       if (o.status !== "pending") throw new Error("Demande déjà traitée.");
+      if (
+        (
+          await rows(
+            db,
+            "SELECT order_id FROM shop_orders WHERE order_id=$1 AND payment_method='stripe' AND payment_status<>'paid'",
+            [a.id],
+          )
+        ).length
+      )
+        throw new Error(
+          "Paiement en ligne en attente : commande non confirmable.",
+        );
       if (a.accept) {
         if (o.session_id)
           await one(
@@ -209,9 +283,23 @@ export async function perform(
       return saveTable(db, r, user, a);
     case "moveTable":
       return moveTable(db, r, user, a.id, a.x, a.y);
+    case "rotateTable":
+      return rotateTable(db, r, user, a.id, a.rotation);
     case "tableLifecycle":
       return tableLifecycle(db, r, user, a.id, a.operation);
+    case "saveZone":
+      return saveZone(db, r, user, a);
+    case "moveZone":
+      return moveZone(db, r, user, a.id, a.direction);
+    case "deleteZone":
+      return deleteZone(db, r, user, a.id);
     case "table": {
+      await requireModule(db, r, "floor");
+      observeStaffFloor(
+        "floor.status",
+        user.roles ?? [user.role],
+        can(user.roles ?? user.role, "orders"),
+      );
       requirePermission(user.roles ?? user.role, "orders");
       const t = await one<{ status: string }>(
         db,
@@ -227,6 +315,12 @@ export async function perform(
       break;
     }
     case "reservation": {
+      await requireModule(db, r, "table-booking");
+      observeStaffFloor(
+        "table-booking.manage",
+        user.roles ?? [user.role],
+        can(user.roles ?? user.role, "reservations"),
+      );
       requirePermission(user.roles ?? user.role, "reservations");
       const res = await one<{
         status: string;
@@ -246,8 +340,12 @@ export async function perform(
       };
       if (!transitions[res.status]?.includes(a.status))
         throw new Error("Transition de réservation impossible.");
+      const floor = await moduleEnabled(db, r, "floor");
+      if (a.table && !floor)
+        throw new Error("Activez le plan de salle pour attribuer une table.");
       const table = a.table || res.table_id;
-      if (["confirmed", "arrived"].includes(a.status)) {
+      // Sans plan de salle, la réservation se confirme sans table (lot P1-a3).
+      if (["confirmed", "arrived"].includes(a.status) && (floor || table)) {
         if (!table) throw new Error("Affectez une table.");
         const t = await one<{ capacity: number; status: string }>(
           db,
@@ -272,6 +370,7 @@ export async function perform(
         "UPDATE reservations SET status=$2,table_id=$3 WHERE id=$1",
         [a.id, a.status, table],
       );
+      if (a.status === "arrived") await awardBookingPoints(db, r, a.id);
       break;
     }
     case "stock": {
@@ -307,15 +406,64 @@ export async function perform(
       );
       break;
     }
-    case "supplier":
+    case "supplier": {
       requirePermission(user.roles ?? user.role, "purchases");
+      const supplierId = uuid();
       await db.query("INSERT INTO suppliers VALUES($1,$2,$3,$4,2)", [
-        uuid(),
+        supplierId,
         r,
         a.name,
         a.contact,
       ]);
+      for (const ingredient of a.ingredients) {
+        await one(
+          db,
+          "SELECT id FROM ingredients WHERE id=$1 AND restaurant_id=$2",
+          [ingredient, r],
+        );
+        await db.query(
+          "INSERT INTO supplier_ingredients(supplier_id,ingredient_id,restaurant_id) VALUES($1,$2,$3) ON CONFLICT DO NOTHING",
+          [supplierId, ingredient, r],
+        );
+      }
+      await log(db, r, user.id, "Fournisseur créé", supplierId);
+      return { id: supplierId };
+    }
+    case "supplierIngredient":
+      requirePermission(user.roles ?? user.role, "purchases");
+      await one(
+        db,
+        "SELECT id FROM suppliers WHERE id=$1 AND restaurant_id=$2",
+        [a.supplier, r],
+      );
+      await one(
+        db,
+        "SELECT id FROM ingredients WHERE id=$1 AND restaurant_id=$2",
+        [a.ingredient, r],
+      );
+      await db.query(
+        a.linked
+          ? "INSERT INTO supplier_ingredients(supplier_id,ingredient_id,restaurant_id) VALUES($1,$2,$3) ON CONFLICT DO NOTHING"
+          : "DELETE FROM supplier_ingredients WHERE supplier_id=$1 AND ingredient_id=$2 AND restaurant_id=$3",
+        [a.supplier, a.ingredient, r],
+      );
       break;
+    case "ingredient": {
+      const roles = user.roles ?? user.role;
+      if (
+        !["catalog", "stock", "purchases"].some((p) =>
+          can(roles, p as Permission),
+        )
+      )
+        throw new Error("Accès refusé pour ce profil.");
+      const ingredientId = uuid();
+      await db.query(
+        "INSERT INTO ingredients(id,restaurant_id,name,unit,threshold,cost) VALUES($1,$2,$3,$4,$5,$6)",
+        [ingredientId, r, a.name, a.unit, a.threshold, a.cost],
+      );
+      await log(db, r, user.id, "Ingrédient créé", ingredientId);
+      return { id: ingredientId };
+    }
     case "purchase":
       requirePermission(user.roles ?? user.role, "purchases");
       await one(
@@ -331,6 +479,10 @@ export async function perform(
       await db.query(
         "INSERT INTO purchase_orders(id,restaurant_id,supplier_id,ingredient_id,quantity,due_on) VALUES($1,$2,$3,$4,$5,$6)",
         [uuid(), r, a.supplier, a.ingredient, a.quantity, a.due],
+      );
+      await db.query(
+        "INSERT INTO supplier_ingredients(supplier_id,ingredient_id,restaurant_id) VALUES($1,$2,$3) ON CONFLICT DO NOTHING",
+        [a.supplier, a.ingredient, r],
       );
       break;
     case "receive": {
@@ -421,9 +573,10 @@ export async function perform(
       ]);
       break;
     case "clock": {
+      await requirePaidAddon(db,r,"attendance");
       const latest = await rows<{ event: string }>(
         db,
-        "SELECT event FROM time_entries WHERE profile_id=$1 AND restaurant_id=$2 ORDER BY created_at DESC LIMIT 1",
+        "SELECT event FROM time_entries WHERE profile_id=$1 AND restaurant_id=$2 AND voided_at IS NULL ORDER BY created_at DESC LIMIT 1",
         [user.id, r],
       );
       const prev = latest[0]?.event ?? "end";
@@ -464,6 +617,7 @@ export async function perform(
       break;
     case "loyalty": {
       requirePermission(user.roles ?? user.role, "customers");
+      await requirePaidAddon(db,r,"loyalty");
       const c = await one<{ points: number; consent: boolean }>(
         db,
         "SELECT *,coalesce(app.customer_points(id),points) AS points FROM customers WHERE id=$1 AND restaurant_id=$2 FOR UPDATE",
@@ -484,8 +638,23 @@ export async function perform(
     case "menu":
       requirePermission(user.roles ?? user.role, "catalog");
       await db.query(
-        "UPDATE menu_items SET name=$3,price=$4,enabled=$5,description=$6 WHERE id=$1 AND restaurant_id=$2",
-        [a.id, r, a.name, a.price, a.enabled, a.description],
+        `UPDATE menu_items SET name=$3,price=$4,enabled=$5,description=$6,
+          public_composition=coalesce($7,public_composition),
+          allergens=coalesce($8,allergens),seo_title=coalesce($9,seo_title),
+          seo_description=coalesce($10,seo_description)
+         WHERE id=$1 AND restaurant_id=$2`,
+        [
+          a.id,
+          r,
+          a.name,
+          a.price,
+          a.enabled,
+          a.description,
+          a.public_composition ?? null,
+          a.allergens ?? null,
+          a.seo_title ?? null,
+          a.seo_description ?? null,
+        ],
       );
       break;
     case "recipe":
@@ -527,12 +696,11 @@ export async function perform(
           "INSERT INTO restaurants(id,name,organization_id) SELECT $1,$2,organization_id FROM restaurants WHERE id=$3",
           [rid, a.name, r],
         );
-        // The quota triggers refuse a second structure outside the Premium plan.
-        if (user.role === "OWNER")
-          await db.query("INSERT INTO memberships VALUES($1,$2,'OWNER')", [
-            user.id,
-            rid,
-          ]);
+        await db.query("INSERT INTO memberships VALUES($1,$2,$3)", [
+          user.id,
+          rid,
+          user.role,
+        ]);
         break;
       }
   }

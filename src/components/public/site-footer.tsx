@@ -42,7 +42,7 @@ export function SiteFooter({ restaurant }: { restaurant?: Restaurant }) {
           ))}
         </nav>
       </div>
-      <small>© Dattier OS · Démonstration non publiée</small>
+      <small>© STUDIO OS · Démonstration non publiée</small>
     </footer>
   );
 }

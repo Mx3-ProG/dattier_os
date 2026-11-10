@@ -8,7 +8,7 @@ import { PGlite } from "@electric-sql/pglite";
 import { seed } from "../src/lib/database/seed";
 import { one } from "../src/lib/database/db";
 test("base persistante : fermeture puis réouverture indépendante", async () => {
-  const dir = await mkdtemp(path.join(tmpdir(), "dattier-demo-test-"));
+  const dir = await mkdtemp(path.join(tmpdir(), "atacuisine-demo-test-"));
   let db: PGlite | undefined;
   try {
     db = new PGlite(dir);

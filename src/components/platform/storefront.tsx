@@ -80,13 +80,13 @@ export function Storefront({
         if (active) setError(e.message);
       });
     try {
-      const saved = localStorage.getItem(`dattier-cart:${restaurant}`);
+      const saved = localStorage.getItem(`atacuisine-cart:${restaurant}`);
       if (saved) setCart(JSON.parse(saved));
       const id =
-        sessionStorage.getItem(`dattier-checkout:${restaurant}`) ||
+        sessionStorage.getItem(`atacuisine-checkout:${restaurant}`) ||
         crypto.randomUUID();
       setKey(id);
-      sessionStorage.setItem(`dattier-checkout:${restaurant}`, id);
+      sessionStorage.setItem(`atacuisine-checkout:${restaurant}`, id);
     } catch {
       setKey(crypto.randomUUID());
     }
@@ -115,7 +115,7 @@ export function Storefront({
   function changeCart(next: Line[]) {
     setCart(next);
     try {
-      localStorage.setItem(`dattier-cart:${restaurant}`, JSON.stringify(next));
+      localStorage.setItem(`atacuisine-cart:${restaurant}`, JSON.stringify(next));
     } catch {
       setError("Le panier ne peut pas être conservé sur cet appareil.");
     }
@@ -461,14 +461,14 @@ export function Storefront({
                     });
                     setReceipt(result);
                     sessionStorage.setItem(
-                      `dattier-order:${restaurant}`,
+                      `atacuisine-order:${restaurant}`,
                       result.token,
                     );
                     changeCart([]);
                     const next = crypto.randomUUID();
                     setKey(next);
                     sessionStorage.setItem(
-                      `dattier-checkout:${restaurant}`,
+                      `atacuisine-checkout:${restaurant}`,
                       next,
                     );
                   });
@@ -572,7 +572,7 @@ export function Storefront({
                 onClick={() =>
                   action(async () => {
                     const token = sessionStorage.getItem(
-                      `dattier-order:${restaurant}`,
+                      `atacuisine-order:${restaurant}`,
                     );
                     if (token)
                       setReceipt(await api("receipt", undefined, token));
@@ -603,7 +603,7 @@ export function Storefront({
         <p>
           {catalog?.site.address} · {catalog?.site.phone}
         </p>
-        <Link href="/source">Propulsé par Dattier OS · code source</Link>
+        <Link href="/source">Propulsé par STUDIO OS · code source</Link>
       </footer>
     </main>
   );

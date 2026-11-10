@@ -8,8 +8,16 @@ import {
 import { rows } from "./db";
 export async function seed(db: DB) {
   await db.query(
-    "INSERT INTO restaurants(id,name,address,phone,goal) VALUES ('bernay','Le Dattier Hefsi','29 Rue du Général Leclerc, 27300 Bernay','02 32 46 12 11',150000),('atelier','L’Atelier — établissement fictif','Établissement de démonstration','',90000)",
+    "SELECT app.configure_organization_plan('legacy',39,greatest(2,count(*)::int+2)) FROM restaurants WHERE organization_id='legacy' AND archived_at IS NULL",
   );
+  await db.query(
+    "INSERT INTO restaurants(id,name,address,phone,goal) VALUES ('bernay','Studio Restau','29 Rue du Général Leclerc, 27300 Bernay','02 32 46 12 11',150000),('atelier','L’Atelier — établissement fictif','Établissement de démonstration','',90000)",
+  );
+  // The sample establishments intentionally showcase paid modules without Stripe.
+  await db.query(`INSERT INTO addon_legacy_grants(restaurant_id,addon_id)
+    SELECT r.id,a.id FROM restaurants r CROSS JOIN unnest(ARRAY[
+      'invoices','attendance','client-invoices','payroll','offline-conflicts','connections','qr','loyalty','domain'
+    ]) AS a(id) WHERE r.id IN ('bernay','atelier') ON CONFLICT DO NOTHING`);
   const people = [
     ["slimane", "Slimane", "SUPER_ADMIN"],
     ["nadia", "Nadia", "OWNER"],
@@ -27,12 +35,9 @@ export async function seed(db: DB) {
       name,
       role,
     ]);
-    // The super admin is a platform administrator, not a member of any structure.
-    if (role === "SUPER_ADMIN") {
-      await db.query("INSERT INTO platform_admins VALUES ($1)", [id]);
-      continue;
-    }
-    for (const r of role === "OWNER" ? ["bernay", "atelier"] : ["bernay"])
+    for (const r of role === "OWNER" || role === "SUPER_ADMIN"
+      ? ["bernay", "atelier"]
+      : ["bernay"])
       await db.query("INSERT INTO memberships VALUES ($1,$2,$3)", [
         id,
         r,
@@ -40,22 +45,8 @@ export async function seed(db: DB) {
       ]);
   }
   await db.query(
-    "INSERT INTO organization_memberships VALUES('legacy','nadia','OWNER') ON CONFLICT DO NOTHING",
+    "INSERT INTO organization_memberships VALUES('legacy','nadia','OWNER'),('legacy','slimane','OWNER') ON CONFLICT DO NOTHING",
   );
-  // A second, independent customer on the Essentiel plan: one structure, its own team.
-  await db.query(
-    "INSERT INTO organizations(id,name,plan) VALUES('bistrot-org','Le Bistrot de Hugo — client fictif','essentiel')",
-  );
-  await db.query(
-    "INSERT INTO restaurants(id,name,address,phone,goal,organization_id) VALUES('bistrot','Le Bistrot de Hugo — structure fictive','Structure de démonstration indépendante','',60000,'bistrot-org')",
-  );
-  await db.query(
-    "INSERT INTO profiles(id,name,role) VALUES('hugo','Hugo','OWNER')",
-  );
-  await db.query(
-    "INSERT INTO organization_memberships VALUES('bistrot-org','hugo','OWNER')",
-  );
-  await db.query("INSERT INTO memberships VALUES('hugo','bistrot','OWNER')");
   const ingredients: [string, string, string, number, number, number][] = [
     ["semoule", "Semoule", "g", 40000, 2000, 0.0018],
     ["poulet", "Poulet", "g", 40000, 2500, 0.008],
@@ -75,7 +66,8 @@ export async function seed(db: DB) {
     for (let i = 1; i <= 12; i++) {
       const capacity = i <= 2 ? 2 : i % 3 === 0 ? 6 : 4;
       await db.query(
-        "INSERT INTO dining_tables(id,restaurant_id,number,capacity,zone,shape,pos_x,pos_y) VALUES($1,$2,$3,$4,$5,$6,$7,$8)",
+        // La zone est créée d’après son nom (déclencheur table_zone) ; la terrasse a son propre plan.
+        "INSERT INTO dining_tables(id,restaurant_id,number,capacity,zone,shape,pos_x,pos_y,rotation) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9)",
         [
           `${r}-t${i}`,
           r,
@@ -84,7 +76,9 @@ export async function seed(db: DB) {
           i > 8 ? "Terrasse" : "Salle principale",
           capacity <= 2 ? "round" : capacity >= 6 ? "rect" : "square",
           14 + ((i - 1) % 4) * 24,
-          i > 8 ? 80 : 18 + Math.floor((i - 1) / 4) * 28,
+          i > 8 ? 45 : 26 + Math.floor((i - 1) / 4) * 44,
+          // Deux tables de terrasse posées en biais.
+          i === 10 || i === 11 ? 45 : 0,
         ],
       );
     }

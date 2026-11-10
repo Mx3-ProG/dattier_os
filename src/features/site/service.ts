@@ -5,6 +5,7 @@ import { one, rows, type DB } from "@/lib/database/db";
 import { scope, type Actor } from "@/lib/auth/session";
 import { requirePermission } from "@/lib/permissions";
 import { log } from "@/features/orders/service";
+import { requirePaidAddon } from "@/features/platform/entitlements";
 const sectionSchema = z.object({
   id: z.uuid(),
   type: z.enum(["text", "image", "catalog"]),
@@ -70,6 +71,10 @@ export const siteAction = z.discriminatedUnion("action", [
     action: z.literal("removeDomain"),
     hostname: z.string().max(253),
   }),
+  z.object({
+    action: z.literal("primaryDomain"),
+    hostname: z.string().max(253),
+  }),
 ]);
 export async function publicSite(db: DB, r: string) {
   const row = await one<{
@@ -105,7 +110,7 @@ export async function siteState(db: DB, r: string, user: Actor) {
     ),
     domains: await rows(
       db,
-      "SELECT hostname,verified_at FROM restaurant_domains WHERE restaurant_id=$1",
+      "SELECT hostname,verified_at,is_primary FROM restaurant_domains WHERE restaurant_id=$1 ORDER BY is_primary DESC,hostname",
       [r],
     ),
   };
@@ -119,6 +124,9 @@ export async function sitePerform(
   user = await scope(db, user, r);
   requirePermission(user.roles ?? user.role, "catalog");
   const a = siteAction.parse(raw);
+  // Removing a domain stays possible after the add-on ends.
+  if (["domain", "verifyDomain", "primaryDomain"].includes(a.action))
+    await requirePaidAddon(db, r, "domain");
   if (a.action === "domain") {
     const token = randomBytes(32).toString("hex");
     await db.query(
@@ -127,8 +135,8 @@ export async function sitePerform(
     );
     await log(db, r, user.id, "Domaine proposé", a.hostname);
     return {
-      record: `_dattier.${a.hostname}`,
-      value: `dattier-verification=${token}`,
+      record: `_atacuisine.${a.hostname}`,
+      value: `atacuisine-verification=${token}`,
     };
   }
   if (a.action === "verifyDomain") {
@@ -137,11 +145,11 @@ export async function sitePerform(
       "SELECT verification_hash FROM restaurant_domains WHERE hostname=$1 AND restaurant_id=$2",
       [a.hostname, r],
     );
-    const records = await resolveTxt(`_dattier.${a.hostname}`);
+    const records = await resolveTxt(`_atacuisine.${a.hostname}`);
     const valid = records.some((v) => {
       const txt = v.join("");
       return (
-        txt.startsWith("dattier-verification=") &&
+        txt.startsWith("atacuisine-verification=") &&
         createHash("sha256").update(txt.slice(21)).digest("hex") ===
           d.verification_hash
       );
@@ -161,6 +169,24 @@ export async function sitePerform(
     );
     await log(db, r, user.id, "Domaine retiré", a.hostname);
     return { removed: true };
+  }
+  if (a.action === "primaryDomain") {
+    // Only a verified domain of this restaurant can become the canonical host.
+    await one(
+      db,
+      "SELECT hostname FROM restaurant_domains WHERE hostname=$1 AND restaurant_id=$2 AND verified_at IS NOT NULL",
+      [a.hostname, r],
+    );
+    await db.query(
+      "UPDATE restaurant_domains SET is_primary=false WHERE restaurant_id=$1 AND is_primary",
+      [r],
+    );
+    await db.query(
+      "UPDATE restaurant_domains SET is_primary=true WHERE hostname=$1 AND restaurant_id=$2",
+      [a.hostname, r],
+    );
+    await log(db, r, user.id, "Domaine principal défini", a.hostname);
+    return { primary: a.hostname };
   }
   const current = await one<{ draft: unknown; revision: number }>(
     db,

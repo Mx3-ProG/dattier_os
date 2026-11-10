@@ -1,6 +1,6 @@
-# DATTIER OS — V0 locale
+# Studio OS — V0 locale
 
-Un poste de travail partagé pour Le Dattier Hefsi : salle, cuisine, bar, stocks et direction, avec site public connecté. Toutes les identités, recettes, prix et opérations sont fictifs. Aucune réservation réelle, aucun paiement ni message externe n’est envoyé.
+Un poste de travail partagé pour Studio Restau : salle, cuisine, bar, stocks et direction, avec site public connecté. Toutes les identités, recettes, prix et opérations sont fictifs. Aucune réservation réelle, aucun paiement ni message externe n’est envoyé.
 
 ## Démarrer
 
@@ -12,11 +12,13 @@ cp .env.example .env.local # seulement si .env.local n’existe pas déjà
 npm run dev
 ```
 
-Ouvrir http://127.0.0.1:3000/demo (ou le port affiché par Next.js). La présentation de Dattier OS est sur `/`, le site du restaurant de démonstration sur `/site-demo`, le poste de travail sur `/dashboard`. L’application écoute uniquement en boucle locale par défaut.
+Ouvrir http://127.0.0.1:3000/demo (ou le port affiché par Next.js). La présentation de Studio OS est sur `/`, le site du restaurant de démonstration sur `/site-demo`, le poste de travail sur `/dashboard`. L’application écoute uniquement en boucle locale par défaut.
 
-La première requête initialise le schéma PostgreSQL et le seed, dans une transaction. Les données sont conservées côté serveur dans `.data/dattier-demo`, indépendamment du navigateur. Un seul processus serveur doit ouvrir ce répertoire. Ne pas lancer simultanément `next dev` et `next start` sur la même base.
+La première requête initialise le schéma PostgreSQL et le seed, dans une transaction. Les données sont conservées côté serveur dans `.data/atacuisine-demo`, indépendamment du navigateur. Un seul processus serveur doit ouvrir ce répertoire. Ne pas lancer simultanément `next dev` et `next start` sur la même base.
 
-Variables : `DATTIER_DEMO=true` est indispensable ; `DATTIER_DATA_DIR` sélectionne un répertoire explicitement nommé `demo`. Sur Vercel, le mode local est bloqué même si la variable est activée. Aucun secret distant n’est requis.
+Variables : `ATACUISINE_DEMO=true` est indispensable ; `ATACUISINE_DATA_DIR` sélectionne un répertoire explicitement nommé `demo`. Sur Vercel, le mode local est bloqué même si la variable est activée. Aucun secret distant n’est requis.
+
+La démo donne automatiquement accès aux add-ons payants visibles et vendables, ainsi qu’aux abonnements mensuels. La boutique garde leurs prix TTC et affiche « Essai démo ». Aucune commande ni souscription Stripe n’est créée ; les droits de démo sont ajoutés à la base existante sans la réinitialiser. Le site commercial garde les contrôles de paiement habituels.
 
 ## Profils de démonstration
 
@@ -98,4 +100,4 @@ La migration additive `002_catalog_promotions.sql` est appliquée automatiquemen
 
 Dans Clients & fidélité, créer un code pour un client consentant, définir sa remise, son coût en points (0 pour un cadeau) et sa validité. Partager la fiche privée depuis le code. Au règlement, sélectionner son titulaire et saisir le code : la remise est appliquée à toute l’addition de table et son montant net alimente le CA déclaré. Un seul code par addition, pas de reliquat. La fiche privée n’est pas un compte client authentifié et aucun e-mail/SMS n’est envoyé.
 
-Pour des tests navigateur sans modifier la démo ouverte : compiler, lancer une seconde instance `DATTIER_DATA_DIR=.data/acceptance-demo DATTIER_DEMO=true npm run start -- --port 3100`, puis `E2E_URL=http://127.0.0.1:3100 npm run test:e2e`. Ne pas lancer plusieurs processus sur le même dossier de base.
+Pour des tests navigateur sans modifier la démo ouverte : compiler, lancer une seconde instance `ATACUISINE_DATA_DIR=.data/acceptance-demo ATACUISINE_DEMO=true npm run start -- --port 3100`, puis `E2E_URL=http://127.0.0.1:3100 npm run test:e2e`. Ne pas lancer plusieurs processus sur le même dossier de base.

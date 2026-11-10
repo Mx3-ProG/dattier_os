@@ -9,7 +9,7 @@ import {
   Sparkles,
   Users,
 } from "lucide-react";
-import { FloorMap, type MapTable } from "../floor-map";
+import { FloorMap, ZoneSwitch, type MapTable } from "../floor-map";
 
 type Day = { date: string; status: string; free: number; total: number };
 type Calendar = { month: string; largest: number; group: boolean; days: Day[] };
@@ -25,6 +25,7 @@ type Availability = {
   open: boolean;
   group: boolean;
   durationMinutes: number;
+  zones: string[];
   tables: (MapTable & { unavailable: boolean })[];
   services: { id: string; name: string; slots: Slot[] }[];
 };
@@ -62,13 +63,23 @@ const dayLabels: Record<string, string> = {
 async function getJson<T>(url: string): Promise<T> {
   const r = await fetch(url);
   const d = await r.json();
-  if (!r.ok) throw new Error(d.error || "Connexion au restaurant impossible.");
+  if (!r.ok)
+    throw new Error(
+      d.error?.message || d.error || "Connexion au restaurant impossible.",
+    );
   return d;
 }
 
 export function Booking({
   restaurant = "bernay",
-}: { restaurant?: string } = {}) {
+  apiBase = "/api/v1",
+  demo = true,
+}: {
+  restaurant?: string;
+  apiBase?: string;
+  /** Local demonstration: warn that nothing reaches a real restaurant. */
+  demo?: boolean;
+} = {}) {
   const RESTAURANT = restaurant;
   const [guests, setGuests] = useState(2),
     [month, setMonth] = useState(() => todayParis().slice(0, 7)),
@@ -77,6 +88,7 @@ export function Booking({
     [day, setDay] = useState<Availability | null>(null),
     [time, setTime] = useState<string | null>(null),
     [table, setTable] = useState<string | null>(null),
+    [zone, setZone] = useState<string | null>(null),
     [error, setError] = useState(""),
     [busy, setBusy] = useState(false),
     [reload, setReload] = useState(0),
@@ -98,7 +110,7 @@ export function Booking({
   useEffect(() => {
     let live = true;
     getJson<Calendar>(
-      `/api/v1/calendar?restaurant=${RESTAURANT}&month=${month}&guests=${guests}`,
+      `${apiBase}/calendar?restaurant=${RESTAURANT}&month=${month}&guests=${guests}`,
     )
       .then((c) => {
         if (!live) return;
@@ -116,14 +128,14 @@ export function Booking({
     return () => {
       live = false;
     };
-  }, [month, guests, RESTAURANT]);
+  }, [month, guests, RESTAURANT, apiBase]);
 
   useEffect(() => {
     if (!date) return;
     let live = true;
     const load = () =>
       getJson<Availability>(
-        `/api/v1/availability?restaurant=${RESTAURANT}&date=${date}&guests=${guests}`,
+        `${apiBase}/availability?restaurant=${RESTAURANT}&date=${date}&guests=${guests}`,
       )
         .then((d) => live && setDay(d))
         .catch((e) => live && setError(e.message));
@@ -134,7 +146,7 @@ export function Booking({
       live = false;
       clearInterval(t);
     };
-  }, [date, guests, reload, RESTAURANT]);
+  }, [date, guests, reload, RESTAURANT, apiBase]);
 
   const slot = useMemo(
     () =>
@@ -151,6 +163,10 @@ export function Booking({
   }, [day, date, time, slot, table]);
 
   const chosen = day?.tables.find((t) => t.id === table);
+  // Chaque zone a son canevas : la zone affichée suit la table choisie.
+  const zones = day?.zones ?? [],
+    shownZone =
+      zone && zones.includes(zone) ? zone : (chosen?.zone ?? zones[0] ?? "");
   const firstDay = cal
     ? (new Date(`${cal.month}-01T12:00:00Z`).getUTCDay() + 6) % 7
     : 0;
@@ -178,7 +194,7 @@ export function Booking({
     setBusy(true);
     setError("");
     try {
-      const r = await fetch("/api/v1/reservation", {
+      const r = await fetch(`${apiBase}/reservation`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -192,7 +208,7 @@ export function Booking({
         }),
       });
       const result = await r.json();
-      if (!r.ok) throw new Error(result.error);
+      if (!r.ok) throw new Error(result.error?.message || result.error);
       window.scrollTo({ top: 0, behavior: "smooth" });
       setDone({
         id: result.id,
@@ -228,8 +244,10 @@ export function Booking({
           </p>
           <p className="muted">
             Votre demande est enregistrée : la table est retenue et l’équipe
-            doit encore la confirmer. Démonstration locale : aucun e-mail ni SMS
-            n’a été envoyé.
+            doit encore la confirmer.
+            {demo
+              ? " Démonstration locale : aucun e-mail ni SMS n’a été envoyé."
+              : " Elle vous recontacte avec les coordonnées indiquées."}
           </p>
           <button
             className="btn outline"
@@ -246,7 +264,7 @@ export function Booking({
     );
 
   return (
-    <section className="public-section booking">
+    <section className="public-section booking" id="reserver">
       <header className="booking-head">
         <span className="eyebrow">ON VOUS GARDE UNE PLACE ?</span>
         <h1>
@@ -437,8 +455,25 @@ export function Booking({
               <li className="taken">Réservée</li>
               <li className="small">Trop petite</li>
             </ul>
+            <ZoneSwitch
+              zones={zones}
+              current={shownZone}
+              onChange={setZone}
+              note={
+                slot && !day?.group
+                  ? (z) => {
+                      const n = (day?.tables ?? []).filter(
+                        (t) => t.zone === z && slot.free.includes(t.id),
+                      ).length;
+                      return `${n} libre${n > 1 ? "s" : ""}`;
+                    }
+                  : undefined
+              }
+            />
             <FloorMap
-              tables={day?.tables ?? []}
+              tables={(day?.tables ?? []).filter((t) => t.zone === shownZone)}
+              zone={shownZone}
+              entry={shownZone === zones[0]}
               stateOf={stateOf}
               caption={caption}
               disabled={(t) =>
@@ -454,21 +489,23 @@ export function Booking({
               }
             />
             {slot && !day?.group && (
-              <div className="table-choice">
-                {chosen ? (
-                  <p>
-                    <b>
-                      Table {chosen.number}
-                      {chosen.label ? ` · ${chosen.label}` : ""}
-                    </b>{" "}
-                    · {chosen.capacity} places · {chosen.zone}
-                  </p>
-                ) : (
-                  <p>
-                    Touchez une table verte, ou laissez l’équipe choisir la
-                    meilleure pour vous.
-                  </p>
-                )}
+              <div className="table-choice" data-selected={!!chosen}>
+                <div aria-live="polite">
+                  {chosen ? (
+                    <p>
+                      <b>
+                        Table {chosen.number}
+                        {chosen.label ? ` · ${chosen.label}` : ""}
+                      </b>{" "}
+                      · {chosen.capacity} places · {chosen.zone}
+                    </p>
+                  ) : (
+                    <p>
+                      Touchez une table verte, ou laissez l’équipe choisir la
+                      meilleure pour vous.
+                    </p>
+                  )}
+                </div>
                 {chosen && (
                   <button
                     type="button"
@@ -529,8 +566,9 @@ export function Booking({
                   : "Choisissez une heure"}
             </button>
             <p className="muted">
-              Démonstration locale : aucune réservation réelle auprès du
-              restaurant. Utilisez des coordonnées fictives.
+              {demo
+                ? "Démonstration locale : aucune réservation réelle auprès du restaurant. Utilisez des coordonnées fictives."
+                : "Vos coordonnées servent uniquement à confirmer cette réservation."}
             </p>
           </form>
         </div>

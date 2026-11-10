@@ -2,10 +2,11 @@
 import { useTenantSite } from "./context";
 
 import { TenantLink as Link } from "./context";
+import { consentChangedEvent, type AudienceMode } from "@/features/analytics/consent";
 import { useEffect, useState } from "react";
 import { Settings2, ShieldCheck, X } from "lucide-react";
 
-type Consent = { version: 1; externalMedia: boolean; updatedAt: string };
+type Consent = { version: 1; externalMedia: boolean; audience?: boolean; updatedAt: string };
 
 function readConsent(STORAGE_KEY: string): Consent | null {
   try {
@@ -18,37 +19,45 @@ function readConsent(STORAGE_KEY: string): Consent | null {
   }
 }
 
+/** Un choix antérieur à la mesure d’audience ne vaut pas accord : la question est posée. */
+const chosen = (consent: Consent | null, audience: AudienceMode | null) =>
+  !!consent && (audience !== "consent_required" || typeof consent.audience === "boolean");
+
 export function CookieConsent({
   onChange,
 }: {
   onChange: (externalMedia: boolean) => void;
 }) {
-  const { restaurant } = useTenantSite();
-  const STORAGE_KEY = `dattier-cookie-consent:${restaurant}`;
+  const { restaurant, audience } = useTenantSite();
+  const STORAGE_KEY = `atacuisine-cookie-consent:${restaurant}`;
   const [consent, setConsent] = useState<Consent | null>(null);
   const [ready, setReady] = useState(false);
   const [settings, setSettings] = useState(false);
   const [externalMedia, setExternalMedia] = useState(false);
+  const [audienceAllowed, setAudienceAllowed] = useState(audience === "exemption_declared");
 
   useEffect(() => {
     const saved = readConsent(STORAGE_KEY);
     setConsent(saved);
     setExternalMedia(saved?.externalMedia ?? false);
+    setAudienceAllowed(saved?.audience ?? audience === "exemption_declared");
     onChange(saved?.externalMedia ?? false);
     setReady(true);
     const open = () => {
       const current = readConsent(STORAGE_KEY);
       setExternalMedia(current?.externalMedia ?? false);
+      setAudienceAllowed(current?.audience ?? audience === "exemption_declared");
       setSettings(true);
     };
     window.addEventListener("donuts:cookie-settings", open);
     return () => window.removeEventListener("donuts:cookie-settings", open);
-  }, [onChange, STORAGE_KEY]);
+  }, [onChange, STORAGE_KEY, audience]);
 
-  function save(value: boolean) {
+  function save(value: boolean, audienceValue = value) {
     const next: Consent = {
       version: 1,
       externalMedia: value,
+      ...(audience ? { audience: audienceValue } : {}),
       updatedAt: new Date().toISOString(),
     };
     try {
@@ -58,53 +67,22 @@ export function CookieConsent({
     }
     setConsent(next);
     setExternalMedia(value);
+    setAudienceAllowed(audienceValue);
     onChange(value);
+    window.dispatchEvent(new Event(consentChangedEvent));
     setSettings(false);
   }
 
-  if (!ready) return null;
+  // The banner is part of the server HTML (first paint, not a late LCP element);
+  // a returning visitor's stored choice hides it before display, then React takes over.
+  const hideIfChosen = `try{var v=JSON.parse(localStorage.getItem(${JSON.stringify(STORAGE_KEY).replaceAll("<", "\\u003c")})||"null");if(v&&v.version===1&&typeof v.externalMedia==="boolean"&&(${JSON.stringify(audience)}!=="consent_required"||typeof v.audience==="boolean"))document.currentScript.previousElementSibling.hidden=true}catch(e){}`;
   return (
     <>
-      {!consent && !settings && (
-        <aside
-          className="donut-cookie-banner"
-          role="region"
-          aria-labelledby="cookie-title"
-        >
-          <div>
-            <ShieldCheck aria-hidden="true" />
-            <span>
-              <strong id="cookie-title">
-                Vos choix, sans miettes cachées.
-              </strong>
-              <small>
-                Le panier, vos préférences et la session privée du compte
-                utilisent uniquement le stockage strictement nécessaire. Google
-                Maps ne se charge qu’avec votre accord. Aucun cookie
-                publicitaire n’est installé.
-              </small>
-              <Link href="/cookies">En savoir plus</Link>
-            </span>
-          </div>
-          <div className="donut-cookie-actions">
-            <button
-              className="donut-button outline"
-              onClick={() => save(false)}
-            >
-              Tout refuser
-            </button>
-            <button
-              className="donut-button dark"
-              onClick={() => setSettings(true)}
-            >
-              <Settings2 size={17} /> Personnaliser
-            </button>
-            <button className="donut-button" onClick={() => save(true)}>
-              Tout accepter
-            </button>
-          </div>
-        </aside>
+      {(!ready || (!chosen(consent, audience) && !settings)) && (
+        <Banner save={save} customize={() => setSettings(true)} audience={audience} />
       )}
+      {!ready && <script dangerouslySetInnerHTML={{ __html: hideIfChosen }} />}
+
       {settings && (
         <div className="donut-cookie-overlay" role="presentation">
           <section
@@ -148,9 +126,29 @@ export function CookieConsent({
                 onChange={(event) => setExternalMedia(event.target.checked)}
               />
             </label>
+            {audience && (
+              <label className="donut-cookie-choice">
+                <span>
+                  <strong>Mesure d’audience</strong>
+                  <small>
+                    Statistiques de fréquentation de ce site, propres à cet
+                    établissement : pages vues et zone géographique approximative
+                    (pays, région, ville). Sans cookie, sans profil individuel ;
+                    votre adresse IP n’est pas conservée.
+                    {audience === "exemption_declared" &&
+                      " Cette mesure est active par défaut : décochez pour vous y opposer."}
+                  </small>
+                </span>
+                <input
+                  type="checkbox"
+                  checked={audienceAllowed}
+                  onChange={(event) => setAudienceAllowed(event.target.checked)}
+                />
+              </label>
+            )}
             <button
               className="donut-button"
-              onClick={() => save(externalMedia)}
+              onClick={() => save(externalMedia, audienceAllowed)}
             >
               Enregistrer mes choix
             </button>
@@ -158,6 +156,54 @@ export function CookieConsent({
         </div>
       )}
     </>
+  );
+}
+
+function Banner({
+  save,
+  customize,
+  audience,
+}: {
+  save: (externalMedia: boolean) => void;
+  customize: () => void;
+  audience: AudienceMode | null;
+}) {
+  return (
+    <aside
+      className="donut-cookie-banner"
+      role="region"
+      aria-labelledby="cookie-title"
+      suppressHydrationWarning
+    >
+      <div>
+        <ShieldCheck aria-hidden="true" />
+        <span>
+          <strong id="cookie-title">Vos choix, sans miettes cachées.</strong>
+          <small>
+            Le panier, vos préférences et la session privée du compte utilisent
+            uniquement le stockage strictement nécessaire. Google Maps ne se
+            charge qu’avec votre accord. Aucun cookie publicitaire n’est
+            installé.
+            {audience === "consent_required" &&
+              " Avec votre accord, ce site mesure aussi sa fréquentation (pages vues, zone géographique approximative), sans cookie ni profil individuel."}
+            {audience === "exemption_declared" &&
+              " Ce site mesure sa fréquentation de façon anonyme (pages vues, zone géographique approximative), sans cookie ni profil individuel ; vous pouvez vous y opposer dans « Personnaliser »."}
+          </small>
+          <Link href="/cookies">En savoir plus</Link>
+        </span>
+      </div>
+      <div className="donut-cookie-actions">
+        <button className="donut-button outline" onClick={() => save(false)}>
+          Tout refuser
+        </button>
+        <button className="donut-button dark" onClick={customize}>
+          <Settings2 size={17} /> Personnaliser
+        </button>
+        <button className="donut-button" onClick={() => save(true)}>
+          Tout accepter
+        </button>
+      </div>
+    </aside>
   );
 }
 

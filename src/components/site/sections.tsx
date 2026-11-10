@@ -1,6 +1,6 @@
 "use client";
 /* eslint-disable @next/next/no-img-element */
-import { TenantLink as Link } from "../cms-site/context";
+import { useTenantSite, TenantLink as Link } from "../cms-site/context";
 import { useState, type ReactNode } from "react";
 import { ArrowUpRight, Play } from "lucide-react";
 import type { SectionOf } from "@/features/cms/schema";
@@ -23,7 +23,13 @@ export function SiteLink({
   className: string;
   children?: ReactNode;
 }) {
-  if (!link.label || !link.href) return null;
+  const { shopEnabled } = useTenantSite();
+  if (
+    !link.label ||
+    !link.href ||
+    (!shopEnabled && /^\/(commander|checkout|panier)([?#]|$)/.test(link.href))
+  )
+    return null;
   const external = /^(https:|tel:|mailto:)/.test(link.href);
   return external ? (
     <a
@@ -309,7 +315,7 @@ export function Categories({
       <Heading kicker={p.kicker} title={p.title} ctx={ctx} />
       <div className="donut-categories">
         {categories.map((c) => (
-          <Link key={c} href="/carte">
+          <Link key={c} href={`/carte?categorie=${encodeURIComponent(c)}`}>
             {c}
           </Link>
         ))}

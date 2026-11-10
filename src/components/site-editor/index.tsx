@@ -1,8 +1,13 @@
 "use client";
+import { PresentationFields } from "./presentation-fields";
+import { UtensilsLoader } from "@/components/brand/utensils";
 import { useTenantSite } from "../cms-site/context";
+import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
+  Upload,
   ArrowDown,
+  BookOpen,
   ArrowUp,
   ExternalLink,
   Eye,
@@ -28,8 +33,12 @@ import {
 import { Button } from "../ui/button";
 import { Modal } from "../forms";
 import { Field, ImageField } from "./fields";
+import { SeoIdentityFields } from "./seo-identity";
+import { SiteAddonIdentity } from "./site-addons-panel";
+import { addonSectionAddons, addonNames, emptySiteAddons, isAddonSection, type SiteAddonData } from "@/features/cms/site-addons";
 import {
   registry,
+  addableTypes,
   pageKindLabels,
   pageRoute,
   sectionLabel,
@@ -53,6 +62,11 @@ import {
   plain,
   type PlaceholderContext,
 } from "@/features/cms/text";
+import { SiteHome, TemplatesPanel } from "./templates";
+import { applySiteTemplate } from "@/features/cms/templates";
+import { uploadMedia, mediaSize, mediaAccept } from "./media-upload";
+import { insertDroppedMedia } from "@/features/cms/media-drop";
+import { StudioGuide } from "./guide";
 import type { PreviewMessage } from "../cms-site/store";
 
 type EditorState = {
@@ -66,6 +80,7 @@ type EditorState = {
   settings: CmsSettings;
   defaults: SiteConfig;
   context: PlaceholderContext;
+  siteAddons?: SiteAddonData;
 };
 type Version = {
   id: string;
@@ -119,21 +134,22 @@ const slugify = (s: string) =>
     .replace(/^-+|-+$/g, "")
     .slice(0, 60);
 const newId = (page: string, type: string) =>
-  `${page}-${type.toLowerCase()}-${Math.random().toString(36).slice(2, 7)}`
+  `${page.slice(0, 22)}-${type.toLowerCase()}-${Math.random().toString(36).slice(2, 7)}`
     .replace(/[^a-z0-9-]/g, "")
     .slice(0, 48);
 
 export function SiteEditor({
-  navigate,
+  liveDataHref,
 }: {
-  navigate: (module: string) => void;
+  liveDataHref: (module: string) => string;
 }) {
-  const { request: fetch, base, restaurant } = useTenantSite();
-  const UNSAVED_KEY = `dattier-cms-unsaved:${restaurant}`;
+  const { request: fetch, base, restaurant, demo } = useTenantSite();
+  const UNSAVED_KEY = `atacuisine-cms-unsaved:${restaurant}`;
+  const [view, setView] = useState<"home" | "shop" | "editor">("home");
   const [meta, setMeta] = useState<EditorState | null>(null),
     [config, setConfigState] = useState<SiteConfig | null>(null),
     [saved, setSaved] = useState<SiteConfig | null>(null),
-    [pageKey, setPageKey] = useState("home"),
+    [requestedPage, setPageKey] = useState("home"),
     [selected, setSelected] = useState<string | null>(null),
     [tab, setTab] = useState<Tab>("sections"),
     [device, setDevice] = useState<Device>(() =>
@@ -146,12 +162,20 @@ export function SiteEditor({
     [notice, setNotice] = useState(""),
     [publishing, setPublishing] = useState(false),
     [creating, setCreating] = useState(false),
+    [guideOpen, setGuideOpen] = useState(false),
+    [libraryQuery, setLibraryQuery] = useState(""),
     [panels, setPanels] = useState<"none" | "left" | "right">("none"),
     [depth, setDepth] = useState({ undo: 0, redo: 0 });
   const configRef = useRef<SiteConfig | null>(null),
     past = useRef<SiteConfig[]>([]),
     future = useRef<SiteConfig[]>([]),
     lastEdit = useRef<{ key: string; at: number } | null>(null);
+
+  const pageKey =
+    config && Object.hasOwn(config.pages, requestedPage)
+      ? requestedPage
+      : "home";
+  const activeWrite = useRef(false);
 
   /* ── Loading, undo/redo ─────────────────────────────── */
   const loadMeta = useCallback(async () => {
@@ -161,7 +185,7 @@ export function SiteEditor({
     setMeta(d);
     return d as EditorState;
   }, [fetch]);
-  useEffect(() => {
+  const loadEditor = useCallback(() => {
     loadMeta()
       .then((d) => {
         let start = d.config;
@@ -184,6 +208,7 @@ export function SiteEditor({
       })
       .catch((e) => setError(e.message));
   }, [loadMeta, UNSAVED_KEY]);
+  useEffect(loadEditor, [loadEditor]);
   const commit = useCallback((next: SiteConfig, key?: string) => {
     const prev = configRef.current;
     if (!prev) return;
@@ -266,39 +291,50 @@ export function SiteEditor({
     },
     [fetch],
   );
-  const save = useCallback(async () => {
+  const saveDraft = useCallback(async () => {
     if (!configRef.current || !meta) return null;
+    const snapshot = configRef.current;
+    const { revision } = await post({
+      op: "save",
+      revision: meta.revision,
+      config: snapshot,
+    });
+    setSaved(snapshot);
+    setMeta({
+      ...meta,
+      revision,
+      unpublished: true,
+      draftSavedAt: new Date().toISOString(),
+    });
+    return revision as number;
+  }, [meta, post]);
+  const save = useCallback(async () => {
+    if (activeWrite.current || !dirty) return;
+    activeWrite.current = true;
     setBusy(true);
     setError("");
     try {
-      const snapshot = configRef.current;
-      await post({ op: "save", revision: meta.revision, config: snapshot });
-      setSaved(snapshot);
-      const fresh = await loadMeta();
+      await saveDraft();
       setNotice(
         "Brouillon enregistré. Il n’est pas encore visible sur le site.",
       );
-      return fresh;
     } catch (e) {
       setError((e as Error).message);
-      return null;
     } finally {
+      activeWrite.current = false;
       setBusy(false);
     }
-  }, [meta, loadMeta, post]);
+  }, [dirty, saveDraft]);
   async function publish(summary: string) {
+    if (activeWrite.current || !meta) return;
+    activeWrite.current = true;
     setBusy(true);
     setError("");
     try {
-      let current = meta!;
-      if (dirty) {
-        const fresh = await save();
-        if (!fresh) return;
-        current = fresh;
-      }
+      const revision = dirty ? await saveDraft() : meta.revision;
       const { number } = await post({
         op: "publish",
-        revision: current.revision,
+        revision,
         summary,
       });
       await loadMeta();
@@ -307,6 +343,7 @@ export function SiteEditor({
     } catch (e) {
       setError((e as Error).message);
     } finally {
+      activeWrite.current = false;
       setBusy(false);
     }
   }
@@ -335,6 +372,14 @@ export function SiteEditor({
   const send = useCallback((message: PreviewMessage) => {
     frame.current?.contentWindow?.postMessage(message, location.origin);
   }, []);
+  const previewPage =
+    config?.pages[pageKey]?.kind === "custom" ? pageKey : undefined;
+  const dropHandler = useRef<(files: File[], target: string | null) => void>(
+    () => {},
+  );
+  const mediaLock = useRef(false);
+  const [mediaStatus, setMediaStatus] = useState("");
+  const [mediaBusy, setMediaBusy] = useState(false);
   const selectedRef = useRef(selected);
   useEffect(() => {
     selectedRef.current = selected;
@@ -349,13 +394,20 @@ export function SiteEditor({
       if (event.data?.type === "cms:ready") {
         // A (re)loaded preview first receives the current unsaved state.
         if (configRef.current)
-          send({ type: "cms:config", config: configRef.current });
+          send({
+            type: "cms:config",
+            config: configRef.current,
+            page: previewPage,
+          });
         send({ type: "cms:select", id: selectedRef.current });
         setReady(true);
       }
+      if (event.data?.type === "cms:drop" && Array.isArray(event.data.files)) {
+        dropHandler.current(event.data.files, event.data.id);
+      }
       if (event.data?.type === "cms:pick") {
         const id = event.data.id;
-        if (id in SPECIAL) {
+        if (Object.hasOwn(SPECIAL, id)) {
           setTab("brand");
           setSelected(null);
           setPanels("left");
@@ -367,13 +419,15 @@ export function SiteEditor({
     };
     window.addEventListener("message", onMessage);
     return () => window.removeEventListener("message", onMessage);
-  }, [send]);
+  }, [send, previewPage]);
   useEffect(() => {
-    if (ready && config) send({ type: "cms:config", config });
-  }, [ready, config, send]);
+    if (ready && config)
+      send({ type: "cms:config", config, page: previewPage });
+  }, [ready, config, send, previewPage]);
   useEffect(() => {
     if (ready) send({ type: "cms:select", id: selected });
   }, [ready, selected, send]);
+  const editorLoaded = !!meta;
   useEffect(() => {
     if (!stage.current) return;
     const observer = new ResizeObserver(([entry]) =>
@@ -384,28 +438,46 @@ export function SiteEditor({
     );
     observer.observe(stage.current);
     return () => observer.disconnect();
-  }, [meta]);
+  }, [editorLoaded, view]);
 
   const page = config?.pages[pageKey];
   const isAdmin = meta?.role === "SUPER_ADMIN";
   const section = page?.sections.find((s) => s.id === selected) ?? null;
   const allowed = meta?.settings.allowedTypes ?? [];
   const width = devices[device].width;
-  const scale = Math.min(1, (stageSize.width - 24) / width);
+  const scale = Math.min(1, Math.max(1, stageSize.width - 24) / width);
   const previewSrc = `${base}${pageRoute(pageKey)}?cms=draft`;
+
+  const library =
+    config && page ? addableTypes(config, page.kind, allowed) : [];
+  // Sections d’add-ons non installés : visibles pour faire découvrir l’add-on, pas ajoutables.
+  const lockedAddonSections =
+    page && ["content", "custom"].includes(page.kind)
+      ? (Object.keys(addonSectionAddons) as (keyof typeof addonSectionAddons)[]).filter((t) => !library.includes(t))
+      : [];
+  const matching = library.filter((type) => {
+    const normalize = (value: string) =>
+      value
+        .normalize("NFD")
+        .replace(/\p{Diacritic}/gu, "")
+        .toLowerCase();
+    return normalize(
+      `${registry[type].label} ${registry[type].description}`,
+    ).includes(normalize(libraryQuery.trim()));
+  });
 
   const can = useMemo(() => {
     const free = page && ["content", "custom"].includes(page.kind);
     return {
       reorder: !!free,
-      add: !!free,
+      add: !!free && page.sections.length < 40,
       remove: (s: Section) =>
         !!free && !s.required && (isAdmin || s.lock === 1),
       hide: (s: Section) =>
         !!page &&
         !["protected", "legal"].includes(page.kind) &&
         !s.required &&
-        (isAdmin || s.lock < 3),
+        s.lock < 3,
       edit: (s: Section, field: string) =>
         s.type !== "system" &&
         (isAdmin ||
@@ -414,8 +486,101 @@ export function SiteEditor({
     };
   }, [page, isAdmin]);
 
+  useEffect(() => {
+    dropHandler.current = async (files, target) => {
+      if (mediaLock.current || !configRef.current || !meta) return;
+      if (!files.length || files.length > 10) {
+        setError("Déposez de 1 à 10 fichiers à la fois.");
+        return;
+      }
+      mediaLock.current = true;
+      setMediaBusy(true);
+      setError("");
+      let inserted = 0;
+      if (files.length > 1) target = null;
+      try {
+        for (const file of files) {
+          if (!(file instanceof File)) throw new Error("Fichier invalide.");
+          const id = newId(pageKey, "media");
+          const kind = file.type.startsWith("image/") ? "image" : "video";
+          // Check the destination before uploading; never create an unusable upload knowingly.
+          insertDroppedMedia(
+            structuredClone(configRef.current!),
+            pageKey,
+            target,
+            { kind, url: "" },
+            meta.settings.allowedTypes,
+            meta.role === "SUPER_ADMIN",
+            id,
+          );
+          setMediaStatus(
+            `${inserted + 1}/${files.length} · Envoi et compression de ${file.name}…`,
+          );
+          const media = await uploadMedia(fetch, file);
+          update((c) => {
+            const selectedId = insertDroppedMedia(
+              c,
+              pageKey,
+              target,
+              media,
+              meta.settings.allowedTypes,
+              meta.role === "SUPER_ADMIN",
+              id,
+            );
+            setSelected(selectedId);
+          });
+          inserted++;
+          // A batch forms successive blocks, instead of replacing the same image repeatedly.
+          if (files.length > 1) target = null;
+          setMediaStatus(
+            `${inserted}/${files.length} · ${mediaSize(media.originalSize)} → ${mediaSize(media.size)} · ${mediaSize(media.savedBytes)} économisés`,
+          );
+        }
+        setNotice(
+          `${inserted} média(s) optimisé(s) ajouté(s) au brouillon. Pensez aux textes alternatifs, puis enregistrez.`,
+        );
+      } catch (e) {
+        setError(
+          `${(e as Error).message}${inserted ? ` ${inserted} média(s) déjà ajouté(s) au brouillon.` : ""}`,
+        );
+      } finally {
+        mediaLock.current = false;
+        setMediaBusy(false);
+      }
+    };
+  }, [fetch, meta, pageKey, update]);
+
   if (!meta || !config || !page)
-    return <p className="muted">{error || "Chargement de l’éditeur…"}</p>;
+    return error ? (
+      <section className="site-editor-gate" role="alert">
+        <span>Édition du site</span>
+        <h2>
+          {error.includes("Accès refusé")
+            ? "Votre profil ne permet pas de modifier le site"
+            : "L’éditeur n’a pas pu se charger"}
+        </h2>
+        <p>{error}</p>
+        <div className="actions">
+          <button
+            type="button"
+            onClick={() => {
+              setError("");
+              loadEditor();
+            }}
+          >
+            Réessayer
+          </button>
+          <Link href={`/restaurant/${restaurant}`}>
+            Retour à l’administration
+          </Link>
+          <Link href={`/dashboard?restaurant=${restaurant}`}>
+            Ouvrir le poste de travail
+          </Link>
+        </div>
+      </section>
+    ) : (
+      <UtensilsLoader label="Chargement de l’éditeur" fullscreen={false} />
+    );
 
   const setSections = (mutate: (list: Section[]) => Section[], key?: string) =>
     update((c) => {
@@ -435,7 +600,7 @@ export function SiteEditor({
     });
   const addSection = (type: SectionType) => {
     const create = registry[type].create;
-    if (!create) return;
+    if (!can.add || !library.includes(type) || !create) return;
     const s = {
       id: newId(pageKey, type),
       type,
@@ -477,8 +642,96 @@ export function SiteEditor({
           tone: "confirmed",
         };
 
+  const openTab = (next: Tab) => {
+    setTab(next);
+    setPanels("left");
+  };
+
+  if (view === "home")
+    return (
+      <SiteHome
+        dirty={dirty}
+        shop={() => setView("shop")}
+        edit={() => {
+          setReady(false);
+          setView("editor");
+        }}
+      />
+    );
+
+  if (view === "shop")
+    return (
+      <TemplatesPanel
+        demo={demo}
+        dirty={dirty}
+        back={() => setView("home")}
+        apply={(template, composition) => {
+          commit(applySiteTemplate(config, template, composition));
+          setPageKey("home");
+          setSelected(null);
+          setReady(false);
+          setView("editor");
+          setNotice(
+            `${template.name} appliqué au brouillon. Personnalisez votre site avant de publier.`,
+          );
+        }}
+      />
+    );
+
   return (
-    <div className={`site-editor panels-${panels}`}>
+    <div
+      className={`site-editor panels-${panels}`}
+      onDragOver={(e) => {
+        if (e.dataTransfer.types.includes("Files")) {
+          e.preventDefault();
+          e.dataTransfer.dropEffect = mediaBusy ? "none" : "copy";
+        }
+      }}
+      onDrop={(e) => {
+        if (e.dataTransfer.files.length) {
+          e.preventDefault();
+          dropHandler.current(Array.from(e.dataTransfer.files), selected);
+        }
+      }}
+    >
+      <div className="studio-editor-heading">
+        <div>
+          <span className="shop-eyebrow">VOTRE ATELIER DE CRÉATION</span>
+          <h1>Personnaliser mon site</h1>
+        </div>
+        <Button variant="secondary" onClick={() => setView("shop")}>
+          <Layers size={16} />
+          Boutique de modèles
+        </Button>
+      </div>
+      <details className="studio-media-bar" aria-busy={mediaBusy}>
+        <summary>
+          <Upload size={17} /> Photos et vidéos{" "}
+          <span>Glisser-déposer et compression automatique</span>
+        </summary>
+        <label>
+          <Upload size={17} />
+          <span>
+            {mediaBusy ? "Compression en cours…" : "Importer des médias"}
+          </span>
+          <input
+            type="file"
+            multiple
+            accept={mediaAccept}
+            disabled={mediaBusy}
+            onChange={(e) => {
+              if (e.target.files)
+                dropHandler.current(Array.from(e.target.files), selected);
+              e.target.value = "";
+            }}
+          />
+        </label>
+        <small>
+          Photos : 32 Mo · Vidéos : 100 Mo / 2 min · Seules les versions
+          optimisées sont stockées.
+        </small>
+        {mediaStatus && <p role="status">{mediaStatus}</p>}
+      </details>
       <datalist id="site-internal-links">
         {Object.entries(config.pages)
           .filter(
@@ -495,12 +748,34 @@ export function SiteEditor({
         <option value="#specialites">Produits de la page</option>
       </datalist>
 
+      <div
+        className="site-quick-actions"
+        role="group"
+        aria-label="Créer votre site"
+      >
+        <Button variant="secondary" onClick={() => openTab("pages")}>
+          <FileText size={16} /> Gérer les pages
+        </Button>
+        <Button variant="secondary" onClick={() => openTab("sections")}>
+          <Layers size={16} /> Modifier les sections
+        </Button>
+        <Button variant="secondary" onClick={() => openTab("library")}>
+          <Plus size={16} /> Ajouter une section
+        </Button>
+        <Button variant="ghost" onClick={() => setGuideOpen(true)}>
+          <BookOpen size={16} /> Guide de création
+        </Button>
+      </div>
+      {guideOpen && (
+        <StudioGuide close={() => setGuideOpen(false)} openTab={openTab} />
+      )}
       {/* ── Top bar ── */}
       <header className="site-topbar card">
         <div className="site-topbar-page">
           <button
             className="icon-button site-panel-toggle"
             aria-label="Panneau d’édition"
+            aria-expanded={panels === "left"}
             onClick={() => setPanels(panels === "left" ? "none" : "left")}
           >
             <PanelLeft size={18} />
@@ -555,6 +830,15 @@ export function SiteEditor({
           })}
         </div>
         <div className="site-topbar-actions">
+          {panels !== "none" && (
+            <button
+              type="button"
+              className="btn ghost site-show-preview"
+              onClick={() => setPanels("none")}
+            >
+              <Eye size={16} /> Voir l’aperçu
+            </button>
+          )}
           <button
             className="icon-button"
             aria-label="Annuler"
@@ -575,13 +859,16 @@ export function SiteEditor({
           </button>
           <a
             className="btn ghost"
-            href={previewSrc}
+            href={saved?.pages[pageKey] ? previewSrc : undefined}
+            aria-disabled={!saved?.pages[pageKey]}
             target="_blank"
             rel="noreferrer"
             title={
-              dirty
-                ? "Aperçu du dernier brouillon enregistré"
-                : "Aperçu du brouillon"
+              !saved?.pages[pageKey]
+                ? "Enregistrez cette page pour l’ouvrir dans un autre onglet"
+                : dirty
+                  ? "Aperçu du dernier brouillon enregistré"
+                  : "Aperçu du brouillon"
             }
           >
             <ExternalLink size={16} /> Prévisualiser
@@ -602,6 +889,7 @@ export function SiteEditor({
           <button
             className="icon-button site-panel-toggle"
             aria-label="Propriétés"
+            aria-expanded={panels === "right"}
             onClick={() => setPanels(panels === "right" ? "none" : "right")}
           >
             <SlidersHorizontal size={18} />
@@ -671,15 +959,22 @@ export function SiteEditor({
                       className={`${selected === s.id ? "selected" : ""} ${s.visible ? "" : "is-hidden"}`}
                       draggable={can.reorder}
                       onDragStart={(e) =>
-                        e.dataTransfer.setData("text/plain", String(i))
+                        e.dataTransfer.setData(
+                          "application/x-atacuisine-section",
+                          s.id,
+                        )
                       }
                       onDragOver={(e) => can.reorder && e.preventDefault()}
                       onDrop={(e) => {
                         e.preventDefault();
-                        const from = Number(
-                          e.dataTransfer.getData("text/plain"),
+                        const id = e.dataTransfer.getData(
+                          "application/x-atacuisine-section",
                         );
-                        if (Number.isInteger(from) && from !== i) move(from, i);
+                        const from = page.sections.findIndex(
+                          (item) => item.id === id,
+                        );
+                        if (can.reorder && from >= 0 && from !== i)
+                          move(from, i);
                       }}
                     >
                       {can.reorder && (
@@ -758,7 +1053,7 @@ export function SiteEditor({
                             onClick={() => {
                               if (
                                 confirm(
-                                  `Supprimer la section « ${sectionLabel(s)} » ? Vous pourrez annuler tant que vous n’avez pas enregistré.`,
+                                  `Supprimer la section « ${sectionLabel(s)} » ? Utilisez Annuler pour la récupérer.`,
                                 )
                               ) {
                                 setSections((list) =>
@@ -789,25 +1084,75 @@ export function SiteEditor({
                   <p className="muted">
                     La section est ajoutée après la section sélectionnée.
                   </p>
-                  {(Object.keys(registry) as SectionType[])
-                    .filter((t) => registry[t].addable && allowed.includes(t))
-                    .map((t) => (
-                      <button key={t} onClick={() => addSection(t)}>
-                        <b>{registry[t].label}</b>
-                        <small>{registry[t].description}</small>
-                        <Plus size={16} />
-                      </button>
-                    ))}
+                  <label className="site-field">
+                    Rechercher un bloc
+                    <input
+                      type="search"
+                      value={libraryQuery}
+                      onChange={(e) => setLibraryQuery(e.target.value)}
+                      placeholder="Texte, bannière, catégories…"
+                    />
+                  </label>
+                  {!matching.length && (
+                    <p className="muted">
+                      {library.length
+                        ? "Aucun bloc ne correspond à cette recherche."
+                        : "Aucun bloc n’est autorisé dans les réglages du site."}
+                    </p>
+                  )}
+                  {matching.map((t) => (
+                    <button key={t} onClick={() => addSection(t)}>
+                      <b>
+                        {registry[t].label}
+                        {isAddonSection(t) && <span className="site-addon-badge">Add-on</span>}
+                      </b>
+                      <small>{registry[t].description}</small>
+                      <Plus size={16} />
+                    </button>
+                  ))}
+                  {lockedAddonSections.length > 0 && (
+                    <div className="site-library-locked" aria-label="Sections d’add-ons à installer">
+                      <p className="muted">Avec un add-on de la boutique :</p>
+                      {lockedAddonSections.map((t) => (
+                        <Link key={t} href={`/dashboard?restaurant=${encodeURIComponent(restaurant)}&module=addons`} className="site-library-locked-item">
+                          <b>{registry[t].label}<span className="site-addon-badge">Add-on</span></b>
+                          <small>Installez « {addonNames[addonSectionAddons[t]]} » pour ajouter cette section.</small>
+                        </Link>
+                      ))}
+                    </div>
+                  )}
                 </div>
               ) : (
                 <p className="muted">
-                  Aucune section ne peut être ajoutée sur cette page (
-                  {pageKindLabels[page.kind].toLowerCase()}).
+                  {can.reorder
+                    ? "Cette page contient déjà 40 sections. Supprimez-en une pour ajouter un bloc."
+                    : `La structure de cette page est fixe (${pageKindLabels[page.kind].toLowerCase()}).`}
                 </p>
               ))}
 
             {tab === "pages" && (
               <div className="site-pages">
+                <Button variant="secondary" onClick={() => setCreating(true)}>
+                  <Plus size={16} /> Créer une page
+                </Button>
+                {page.kind === "custom" && (
+                  <label className="site-field">
+                    Titre de la page sélectionnée
+                    <input
+                      maxLength={80}
+                      value={page.title}
+                      onChange={(e) =>
+                        update((c) => {
+                          c.pages[pageKey].title = e.target.value;
+                        }, `page.${pageKey}.title`)
+                      }
+                    />
+                    <small>
+                      Adresse : {pageRoute(pageKey)} ·{" "}
+                      {page.visible ? "Visible après publication" : "Masquée"}
+                    </small>
+                  </label>
+                )}
                 {pageGroups.map((g) =>
                   g.pages.length ? (
                     <section key={g.kind}>
@@ -821,7 +1166,7 @@ export function SiteEditor({
                             onClick={() => {
                               setPageKey(key);
                               setSelected(null);
-                              setReady(false);
+                              if (key !== pageKey) setReady(false);
                               setTab("sections");
                             }}
                           >
@@ -878,9 +1223,6 @@ export function SiteEditor({
                     </section>
                   ) : null,
                 )}
-                <Button variant="secondary" onClick={() => setCreating(true)}>
-                  <Plus size={16} /> Créer une page
-                </Button>
               </div>
             )}
 
@@ -889,6 +1231,8 @@ export function SiteEditor({
                 config={config}
                 update={update}
                 context={meta.context}
+                siteAddons={meta.siteAddons ?? emptySiteAddons}
+                storeHref={`/dashboard?restaurant=${encodeURIComponent(restaurant)}&module=addons`}
               />
             )}
             {tab === "theme" && (
@@ -911,6 +1255,9 @@ export function SiteEditor({
                 pageKey={pageKey}
                 dirty={dirty}
                 restore={async (v) => {
+                  if (activeWrite.current) return;
+                  activeWrite.current = true;
+                  setError("");
                   setBusy(true);
                   try {
                     await post({ op: "restore", id: v.id });
@@ -921,13 +1268,14 @@ export function SiteEditor({
                     past.current = [];
                     future.current = [];
                     setDepth({ undo: 0, redo: 0 });
-                    setReady(false);
+                    setSelected(null);
                     setNotice(
                       `Version ${v.number} restaurée et publiée (l’historique est conservé).`,
                     );
                   } catch (e) {
                     setError((e as Error).message);
                   } finally {
+                    activeWrite.current = false;
                     setBusy(false);
                   }
                 }}
@@ -960,7 +1308,7 @@ export function SiteEditor({
             <iframe
               key={pageKey}
               ref={frame}
-              src={previewSrc}
+              src={previewPage ? `${base}/?cms=draft` : previewSrc}
               title={`Aperçu : ${page.title}`}
               style={{
                 width,
@@ -995,8 +1343,11 @@ export function SiteEditor({
                 )
               }
               update={update}
-              navigate={navigate}
-              close={() => setSelected(null)}
+              liveDataHref={liveDataHref}
+              close={() => {
+                setSelected(null);
+                setPanels("left");
+              }}
             />
           ) : (
             <div className="site-empty-props">
@@ -1014,7 +1365,10 @@ export function SiteEditor({
         <PublishDialog
           busy={busy}
           dirty={dirty}
-          close={() => setPublishing(false)}
+          error={error}
+          close={() => {
+            if (!busy) setPublishing(false);
+          }}
           publish={(summary) => void publish(summary)}
         />
       )}
@@ -1022,7 +1376,7 @@ export function SiteEditor({
         <CreatePageDialog
           config={config}
           close={() => setCreating(false)}
-          create={async (title, slug, description) => {
+          create={(title, slug, description) => {
             update((c) => {
               c.pages[slug] = {
                 kind: "custom",
@@ -1030,35 +1384,35 @@ export function SiteEditor({
                 slug,
                 visible: false,
                 seo: { title: "", description, ogImage: "" },
-                sections: [
-                  {
-                    id: `${slug}-text`.slice(0, 48),
-                    type: "textBlock",
-                    lock: 1,
-                    visible: true,
-                    required: false,
-                    props: {
-                      kicker: "",
-                      title,
-                      body:
-                        description || "Présentez ici le contenu de la page.",
-                      align: "left",
-                    },
-                  },
-                ],
+                sections: allowed.includes("textBlock")
+                  ? [
+                      {
+                        id: newId(slug, "textBlock"),
+                        type: "textBlock",
+                        lock: 1,
+                        visible: true,
+                        required: false,
+                        props: {
+                          kicker: "",
+                          title,
+                          body:
+                            description ||
+                            "Présentez ici le contenu de la page.",
+                          align: "left",
+                        },
+                      },
+                    ]
+                  : [],
               };
             });
             setCreating(false);
-            // The preview reads the saved draft: save so the new page can be shown.
-            const fresh = await save();
-            if (fresh) {
-              setPageKey(slug);
-              setSelected(null);
-              setTab("sections");
-              setNotice(
-                `Page « ${title} » créée (masquée). Rendez-la visible puis publiez quand elle est prête.`,
-              );
-            }
+            setPageKey(slug);
+            setSelected(null);
+            setReady(false);
+            openTab("sections");
+            setNotice(
+              `Page « ${title} » créée. Dans Pages, rendez-la visible avant de publier.`,
+            );
           }}
         />
       )}
@@ -1079,7 +1433,7 @@ function SectionProperties({
   setProp,
   setMeta,
   update,
-  navigate,
+  liveDataHref,
   close,
 }: {
   section: Section;
@@ -1090,7 +1444,7 @@ function SectionProperties({
   setProp: (field: string, value: unknown) => void;
   setMeta: (patch: Partial<Section>) => void;
   update: Update;
-  navigate: (module: string) => void;
+  liveDataHref: (module: string) => string;
   close: () => void;
 }) {
   const def = section.type === "system" ? null : registry[section.type];
@@ -1125,12 +1479,13 @@ function SectionProperties({
       {def?.liveData && (
         <p className="site-live-note">
           {def.liveData.label} : informations à jour du CRM.{" "}
-          <button
-            className="text-button"
-            onClick={() => navigate(def.liveData!.module)}
+          <a
+            href={liveDataHref(def.liveData.module)}
+            target="_blank"
+            rel="noreferrer"
           >
-            Les modifier dans le CRM →
-          </button>
+            Ouvrir les réglages (nouvel onglet) ↗
+          </a>
         </p>
       )}
       {section.type === "legal" && (
@@ -1145,7 +1500,7 @@ function SectionProperties({
           onChange={(v) => setProp(f.key, v)}
         />
       ))}
-      {isAdmin && (
+      {isAdmin && section.type !== "system" && (
         <fieldset className="site-group">
           <legend>Super-administrateur</legend>
           <label className="site-field">
@@ -1155,7 +1510,6 @@ function SectionProperties({
               onChange={(e) =>
                 setMeta({ lock: Number(e.target.value) as 1 | 2 | 3 })
               }
-              disabled={section.type === "system"}
             >
               <option value={1}>1 · Libre</option>
               <option value={2}>2 · Partiellement verrouillé</option>
@@ -1166,7 +1520,6 @@ function SectionProperties({
             <input
               type="checkbox"
               checked={section.required}
-              disabled={section.type === "system"}
               onChange={(e) => setMeta({ required: e.target.checked })}
             />
             Section obligatoire (non supprimable)
@@ -1223,10 +1576,14 @@ function BrandPanel({
   config,
   update,
   context,
+  siteAddons,
+  storeHref,
 }: {
   config: SiteConfig;
   update: Update;
   context: PlaceholderContext;
+  siteAddons: SiteAddonData;
+  storeHref: string;
 }) {
   const b = config.branding;
   const text = (
@@ -1254,6 +1611,7 @@ function BrandPanel({
   );
   return (
     <div className="site-form">
+      <SiteAddonIdentity config={config} update={update} addons={siteAddons} storeHref={storeHref} />
       <h4>Établissement</h4>
       {text(
         "Nom public",
@@ -1408,6 +1766,14 @@ function ThemePanel({
   const checks = contrastChecks(t);
   return (
     <div className="site-form">
+      <PresentationFields
+        value={t.presentation}
+        change={(value) =>
+          update((c) => {
+            c.theme.presentation = value;
+          })
+        }
+      />
       <h4>Couleurs</h4>
       {colorLabels.map(([key, label]) => (
         <label className="site-color" key={key}>
@@ -1555,7 +1921,7 @@ function ThemePanel({
         onClick={() =>
           update((c) => {
             const colors = c.theme.colors;
-            c.theme = { ...structuredClone(defaults.theme), colors };
+            c.theme = { ...structuredClone(defaults.theme), colors, presentation: c.theme.presentation };
           })
         }
       >
@@ -1732,6 +2098,7 @@ function SeoPanel({
           })
         }
       />
+      <SeoIdentityFields config={config} update={update} />
     </div>
   );
 }
@@ -1889,11 +2256,13 @@ function AdminPanel({
 function PublishDialog({
   busy,
   dirty,
+  error,
   close,
   publish,
 }: {
   busy: boolean;
   dirty: boolean;
+  error: string;
   close: () => void;
   publish: (summary: string) => void;
 }) {
@@ -1904,6 +2273,11 @@ function PublishDialog({
       description="Les visiteurs verront ces modifications immédiatement. Une nouvelle version sera ajoutée à l’historique."
       close={close}
     >
+      {error && (
+        <p role="alert" className="error">
+          {error}
+        </p>
+      )}
       {dirty && (
         <p className="muted">
           Vos dernières modifications seront d’abord enregistrées.
@@ -1938,7 +2312,7 @@ function CreatePageDialog({
 }: {
   config: SiteConfig;
   close: () => void;
-  create: (title: string, slug: string, description: string) => Promise<void>;
+  create: (title: string, slug: string, description: string) => void;
 }) {
   const [title, setTitle] = useState(""),
     [slug, setSlug] = useState(""),
