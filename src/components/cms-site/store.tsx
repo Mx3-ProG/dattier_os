@@ -1,4 +1,6 @@
 "use client";
+import { OfferServicesSection, OfferProductsSection } from "@/components/site/offer-sections";
+import { emptyOffers, type PublicOffers } from "@/features/offers/model";
 import { PublicAppearance, PublicModeSwitch } from "./public-appearance";
 import { SiteDecoration } from "./site-decoration";
 import { SiteBackgroundMotion } from "./site-background";
@@ -137,6 +139,7 @@ export function DonutStore({
   detailProduct,
   estimationEnabled = false,
   siteAddons = emptySiteAddons,
+  offers = emptyOffers,
 }: {
   route: string;
   config: SiteConfig;
@@ -152,6 +155,8 @@ export function DonutStore({
   estimationEnabled?: boolean;
   /** Add-ons installés visibles sur le site, et leurs données publiques. */
   siteAddons?: SiteAddonData;
+  /** Services et produits publiés depuis Gestion. */
+  offers?: PublicOffers;
 }) {
   const nextRouter = useRouter();
   const {
@@ -542,6 +547,10 @@ export function DonutStore({
         return <DeliverySection key={section.id} props={section.props} ctx={ctx} attrs={attrs} data={siteAddons} />;
       case "bundles":
         return <BundlesSection key={section.id} props={section.props} ctx={ctx} attrs={attrs} data={siteAddons} />;
+      case "offerServices":
+        return <OfferServicesSection key={section.id} props={section.props} ctx={ctx} attrs={attrs} offers={offers} />;
+      case "offerProducts":
+        return <OfferProductsSection key={section.id} props={section.props} ctx={ctx} attrs={attrs} offers={offers} />;
       case "services":
         return <ServicesSection key={section.id} props={section.props} ctx={ctx} attrs={attrs} data={siteAddons} />;
       case "hero": {

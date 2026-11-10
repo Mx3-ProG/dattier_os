@@ -32,6 +32,8 @@ import { SiteDecoration } from "@/components/cms-site/site-decoration";
 import { SiteBackgroundPreview } from "@/components/cms-site/site-background";
 import { isSiteBackground } from "@/features/cms/site-backgrounds";
 import { isNotFoundDesign, isSiteDecoration } from "@/features/cms/site-addons";
+import { ModuleDisplayControl } from "./module-display";
+import { displayModuleForAddon } from "@/features/modules/display";
 import "./addon-store.css";
 import "@/components/analytics/earth-tracker.css";
 
@@ -268,6 +270,7 @@ function ProductCard({
           {installed ? "Désinstaller" : "Réinstaller sans paiement"}
         </Button>
       )}
+      {installed && <ModuleDisplayControl module={displayModuleForAddon(product.id, product.kind)} label={product.name} />}
       {installed && isAnalytics && (action === "activate" || action === "active") && onOpenModule && (
         <Button onClick={() => onOpenModule("audience")}>Ouvrir {product.name}</Button>
       )}

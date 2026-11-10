@@ -43,6 +43,7 @@ import { menuNavigation } from "@/features/catalog/navigation";
 import { settingsNavigation } from "@/features/platform/navigation";
 import { siteNavigation } from "@/features/cms/navigation";
 import { tradeNavigation } from "@/features/trade/navigation";
+import { servicesNavigation, productsNavigation } from "@/features/offers/navigation";
 
 /** Restaurant composition: preserve historic order; features own their contributions. */
 export const workspaceNavigation = createNavigation([
@@ -59,6 +60,8 @@ export const workspaceNavigation = createNavigation([
   kitchenNavigation,
   barNavigation,
   tableBookingNavigation,
+  servicesNavigation,
+  productsNavigation,
   stocksNavigation,
   recipesNavigation,
   suppliersNavigation,

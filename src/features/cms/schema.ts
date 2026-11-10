@@ -219,6 +219,9 @@ export const sectionProps = {
   delivery: z.object({ kicker: text(80), title: text(160), lead: text(400), checker: z.boolean() }),
   bundles: z.object({ kicker: text(80), title: text(160), lead: text(400) }),
   services: z.object({ kicker: text(80), title: text(160), lead: text(400), buttonLabel: text(60), buttonLink: text(300) }),
+  /* Services et Produits créés dans Gestion : seuls ceux marqués « Sur le site » apparaissent. */
+  offerServices: z.object({ kicker: text(80), title: text(160), lead: text(400), category: text(80), limit: z.number().int().min(0).max(100), buttonLabel: text(60), buttonLink: text(300) }),
+  offerProducts: z.object({ kicker: text(80), title: text(160), lead: text(400), category: text(80), limit: z.number().int().min(0).max(100), buttonLabel: text(60), buttonLink: text(300) }),
   /** Additional text on a legal page. The mandatory legal text stays in code. */
   legal: z.object({ extra: z.array(text(2000)).max(10) }),
   /** Functional blocks rendered by existing code. Never editable from the CMS. */

@@ -83,6 +83,8 @@ export const moduleManifest = [
   { id: "table-booking", label: "Réservations", family: "operations", offer: "included", requires: [], enhancedBy: ["floor"], navigation: ["reservations"], industries: [], legacy: { kind: "module", module: "table-booking" } },
   { id: "catalog", label: "Carte et catalogue", family: "configuration", offer: "included", requires: [], enhancedBy: [], navigation: ["menu"], industries: [], legacy: { ...always, ...food } },
   { id: "stock", label: "Stock simple", family: "gestion", offer: "included", requires: ["catalog"], enhancedBy: ["recipes", "deliveries"], navigation: ["stocks"], industries: [], legacy: { ...always, ...food } },
+  { id: "services", label: "Services", family: "gestion", offer: "included", requires: [], enhancedBy: ["website"], navigation: ["services"], industries: [], legacy: always },
+  { id: "products", label: "Produits", family: "gestion", offer: "included", requires: [], enhancedBy: ["website", "stock"], navigation: ["products"], industries: [], legacy: always },
   { id: "trade-tools", label: "Outils métier", family: "gestion", offer: "included", requires: [], enhancedBy: [], navigation: ["trade-tools"], industries: [], legacy: { kind: "license-kind", productKind: "business" } },
   { id: "team", label: "Équipe", family: "equipe", offer: "included", requires: [], enhancedBy: [], navigation: ["team"], industries: [], legacy: always },
   { id: "finance", label: "Finance et rapports", family: "finance", offer: "included", requires: [], enhancedBy: [], navigation: ["finance"], industries: [], legacy: plan },

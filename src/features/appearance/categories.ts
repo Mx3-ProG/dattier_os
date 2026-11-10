@@ -26,6 +26,8 @@ export function moduleCategory(module: string): ActivityCategory {
       "suppliers",
       "deliveries",
       "trade-tools",
+      "services",
+      "products",
     ].includes(module)
   )
     return "management";

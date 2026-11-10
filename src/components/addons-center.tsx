@@ -19,6 +19,19 @@ import {
 } from "@/features/addons/store-catalog";
 
 import { Button } from "./ui/button";
+import { ModuleDisplayContext, ModuleDisplayControl } from "./addons/module-display";
+import {
+  displayModuleForAddon,
+  type DisplayableModule,
+  type ModuleDisplay,
+} from "@/features/modules/display";
+import { manifestFor } from "@/core/modules/manifest";
+
+/** Modules compris sans fiche d’add-on : leur affichage se règle aussi ici. */
+const includedDisplayModules = [
+  "orders", "catalog", "stock", "kitchen", "bar", "recipes", "suppliers", "deliveries",
+  "accounting", "expenses", "services", "products",
+] as const satisfies readonly DisplayableModule[];
 
 // Le catalogue et ses animations ne sont téléchargés qu’à l’ouverture de cette page.
 const AddonStore = dynamic(() =>
@@ -30,6 +43,8 @@ export function AddonsCenter({
   restaurant,
   accountId,
   accessibleModules,
+  moduleDisplay,
+  industry,
   navigate,
   onModulesChanged,
 }: {
@@ -37,6 +52,8 @@ export function AddonsCenter({
   restaurant: string;
   accountId: string;
   accessibleModules: readonly string[];
+  moduleDisplay: readonly ModuleDisplay[];
+  industry?: string;
   navigate: (module: string) => void;
   onModulesChanged: () => Promise<void>;
 }) {
@@ -272,6 +289,33 @@ export function AddonsCenter({
     } catch (cause) { setError((cause as Error).message); }
     finally { setBusy(false); }
   }
+  async function setDisplay(module: DisplayableModule, shown: boolean | null) {
+    setBusy(true); setError(""); setNotice("");
+    try {
+      const response = await fetch(`/api/restaurants/${encodeURIComponent(restaurant)}/modules/display`, {
+        method: "POST", headers: { "content-type": "application/json" },
+        body: JSON.stringify({ module, shown }),
+      });
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error?.message || "Modification impossible");
+      await onModulesChanged();
+      const label = manifestFor(module).label;
+      setNotice(shown === null
+        ? `${label} : affichage par défaut rétabli.`
+        : shown
+          ? `${label} est affiché dans votre tableau de bord.`
+          : `${label} est masqué du tableau de bord. Il reste installé et ses données sont conservées.`);
+    } catch (cause) { setError((cause as Error).message); }
+    finally { setBusy(false); }
+  }
+  const displayValue = {
+    display: moduleDisplay,
+    accessible: accessibleModules,
+    industry,
+    canManage: !!state?.admin,
+    busy,
+    setDisplay,
+  };
   const [filters, setFilters] = useState(defaultStoreFilters);
   const [now, setNow] = useState(() => Date.now());
   useEffect(() => {
@@ -317,6 +361,7 @@ export function AddonsCenter({
     await onModulesChanged();
   };
   return (
+    <ModuleDisplayContext.Provider value={displayValue}>
     <section aria-label="Gestion des add-ons">
       {error && <p role="alert">{error}</p>}
       {notice && <p role="status">{notice}</p>}
@@ -438,6 +483,9 @@ export function AddonsCenter({
                     <Button variant="secondary" disabled={busy} onClick={() => void setInstallation(addon.id, !installed)}>
                       {installed ? "Désinstaller" : "Réinstaller sans paiement"}
                     </Button>
+                  )}
+                  {(addon.included || addon.active) && installed && (
+                    <ModuleDisplayControl module={displayModuleForAddon(addon.id)} label={addon.name} />
                   )}
                   {state?.admin && installed &&
                     modulesState &&
@@ -713,6 +761,24 @@ export function AddonsCenter({
           onLicensesChanged={handleStoreChange}
         />
       )}
+      {view === "owned" && (
+        <section aria-label="Modules inclus" style={{ marginBlock: 24 }}>
+          <h2>Modules inclus</h2>
+          <p>
+            Choisissez les modules visibles dans votre tableau de bord, y compris ceux prévus pour
+            un autre métier. Masquer un module ne supprime aucune donnée.
+          </p>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 240px), 1fr))", gap: 16, marginBlock: 16 }}>
+            {includedDisplayModules.map((module) => (
+              <article className="card" key={module} aria-label={manifestFor(module).label} style={{ borderRadius: 16, padding: 20 }}>
+                <h3>{manifestFor(module).label}</h3>
+                <ModuleDisplayControl module={module} label={manifestFor(module).label} />
+              </article>
+            ))}
+          </div>
+        </section>
+      )}
     </section>
+    </ModuleDisplayContext.Provider>
   );
 }

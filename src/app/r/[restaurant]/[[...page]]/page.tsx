@@ -10,6 +10,7 @@ import { actor } from "@/lib/auth/session";
 import { website } from "@/features/cms/service";
 import { plain } from "@/features/cms/text";
 import { commerce } from "@/features/commerce/service";
+import { publicOffers } from "@/features/offers/service";
 import { seoFacts, platformUrl } from "@/features/seo/server";
 import { siteUrls, pageUrl, absoluteMedia } from "@/features/seo/urls";
 import { buildJsonLd, serializeJsonLd } from "@/features/seo/jsonld";
@@ -102,6 +103,7 @@ const loadSite = cache(
           return {
             product,
             siteAddons: await cms.siteAddons(db),
+            offers: await publicOffers(db, restaurant),
             redirect: null,
             shopEnabled: plan >= 39 && shopInstalled,
             estimationEnabled,
@@ -254,6 +256,7 @@ export default async function Page(props: Props) {
         updatedAt={data.publishedAt}
         estimationEnabled={data.estimationEnabled}
         siteAddons={data.siteAddons}
+        offers={data.offers}
       />
     </TenantSiteProvider>
   );

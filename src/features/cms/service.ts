@@ -8,7 +8,7 @@ import { requirePermission } from "@/lib/permissions";
 import { log } from "@/features/orders/service";
 import { commerce } from "@/features/commerce/service";
 import { defaultConfig } from "./defaults";
-import { siteConfigSchema, SCHEMA_VERSION, type SiteConfig } from "./schema";
+import { siteConfigSchema, SCHEMA_VERSION, type SiteConfig, type SectionType } from "./schema";
 import {
   checkInvariants,
   defaultCmsSettings,
@@ -23,6 +23,7 @@ import type { PlaceholderContext } from "./text";
 import { cmsMedia } from "./media";
 import { isAddonSection, addonSectionAddons, parseSiteAddons, type SiteAddonData } from "./site-addons";
 
+const offerSectionTypes: readonly SectionType[] = ["offerServices", "offerProducts"];
 export type SiteScope = { user: Actor; role: Role };
 export function website(SHOP: string) {
   const { listMedia } = cmsMedia(SHOP);
@@ -39,7 +40,9 @@ export function website(SHOP: string) {
     return {
       ...settings,
       allowedTypes: [
-        ...settings.allowedTypes.filter((type) => !isAddonSection(type)),
+        ...settings.allowedTypes.filter((type) => !isAddonSection(type) && !offerSectionTypes.includes(type)),
+        // Services et Produits sont compris dans Studio : toujours proposés, même aux sites existants.
+        ...offerSectionTypes,
         ...(Object.keys(addonSectionAddons) as (keyof typeof addonSectionAddons)[]).filter((type) =>
           addons.installed.includes(addonSectionAddons[type]),
         ),

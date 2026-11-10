@@ -11,6 +11,7 @@ import { can } from "./permissions";
 import { canArrange } from "@/features/floor/access";
 import { moduleEnabled } from "@/features/modules/access";
 import { availableModules } from "@/features/modules/availability";
+import { readModuleDisplay } from "@/features/modules/service";
 import { tableQuota } from "@/features/floor/service";
 import type { Snapshot, MenuItem, Restaurant, Order, Item } from "./types";
 import {
@@ -87,6 +88,8 @@ export async function snapshot(
     activeModules,
     // Décision commerciale unique (app.module_available) : la navigation ne lit plus que ce champ.
     modules: await availableModules(db, r),
+    // Choix d’affichage du tableau de bord : présentation seulement, jamais une autorisation.
+    moduleDisplay: await readModuleDisplay(db, r),
     uninstalledAddons: (await rows<{ addon_id: string }>(db,
       "SELECT addon_id FROM addon_installations WHERE restaurant_id=$1 AND NOT installed", [r],
     )).map((row) => row.addon_id),

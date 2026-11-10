@@ -1,6 +1,7 @@
 "use client";
 import { workspaceNavigation } from "@/features/navigation/catalog";
 import { restaurantOnlyNavigation } from "@/features/onboarding/catalog";
+import { dashboardEntries } from "@/features/modules/display";
 import { currentNavigation } from "@/core/navigation/registry";
 import { moduleCategory } from "@/features/appearance/categories";
 import { CategoryBadge } from "./appearance/category-badge";
@@ -83,6 +84,7 @@ const EstimationCenter = dynamic(() => import("./estimation/center").then((m) =>
 const ProspectScannerCenter = dynamic(() => import("./pilotage-addons/center").then((m) => m.ProspectScannerCenter));
 const PipelineCrmCenter = dynamic(() => import("./pilotage-addons/center").then((m) => m.PipelineCrmCenter));
 const CustomerHealthCenter = dynamic(() => import("./pilotage-addons/center").then((m) => m.CustomerHealthCenter));
+const OffersCenter = dynamic(() => import("./offers/offers-center").then((m) => m.OffersCenter));
 const TradeCenter = dynamic(() => import("./trade/trade-center").then((m) => m.TradeCenter));
 const FinanceCenter = dynamic(() =>
   import("./finance-center").then((m) => m.FinanceCenter),
@@ -233,7 +235,7 @@ export function Workspace() {
   }
   const allowed = data
     ? decorateNavigation(
-        workspaceNavigation.resolve({
+        dashboardEntries(workspaceNavigation.resolve({
           plan: data.plan,
           roles: data.user.roles ?? data.user.role,
           addons: data.addons,
@@ -241,9 +243,7 @@ export function Workspace() {
           uninstalledAddons: data.uninstalledAddons,
           activeModules: data.activeModules,
           modules: data.modules,
-        }).filter((entry) => data.restaurant.industry === undefined ||
-          data.restaurant.industry === "restaurant" ||
-          !restaurantOnlyNavigation.has(entry.id)).map((entry) =>
+        }), data.restaurant.industry, restaurantOnlyNavigation, data.moduleDisplay).map((entry) =>
             entry.id === "trade-tools" && data.restaurant.industry !== "restaurant"
               ? { ...entry, name: "Mon métier" } : entry),
       )
@@ -484,6 +484,8 @@ export function Workspace() {
               restaurant={restaurant}
               accountId={data.user.id}
               accessibleModules={allowed.map((entry) => entry.id)}
+              moduleDisplay={data.moduleDisplay ?? []}
+              industry={data.restaurant.industry}
               navigate={navigate}
               onModulesChanged={load}
             />
@@ -513,6 +515,14 @@ export function Workspace() {
             <PipelineCrmCenter key={restaurant} restaurant={restaurant} />
           ) : current?.id === "customer-health" ? (
             <CustomerHealthCenter key={restaurant} restaurant={restaurant} />
+          ) : current?.id === "services" || current?.id === "products" ? (
+            <OffersCenter
+              key={`${current.id}-${restaurant}`}
+              restaurant={restaurant}
+              kind={current.id}
+              onOpenSite={allowed.some((entry) => entry.id === "site") ? () => navigate("site") : undefined}
+              onOpenStock={allowed.some((entry) => entry.id === "stocks") ? () => navigate("stocks") : undefined}
+            />
           ) : current?.id === "trade-tools" ? (
             <TradeCenter key={restaurant} restaurant={restaurant} act={act} onOpenStore={() => navigate("addons")} />
           ) : current?.id === "finance" ? (

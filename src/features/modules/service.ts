@@ -7,6 +7,7 @@ import {
   resolveModuleRuntime,
   type ModuleRuntimeState,
 } from "@/core/modules/runtime";
+import { isDisplayableModule, type ModuleDisplay } from "./display";
 
 const moduleIds = new Set(moduleRegistry.list().map((module) => module.id));
 type Count = { count: number };
@@ -161,4 +162,33 @@ export async function requestModuleSetting(
     revision: rows[0].revision,
     applied: false as const,
   };
+}
+
+export const moduleDisplaySchema = z
+  .object({
+    module: z.string().refine(isDisplayableModule, "Module inconnu."),
+    // null : retour au comportement par défaut.
+    shown: z.boolean().nullable(),
+  })
+  .strict();
+
+/** Afficher, masquer ou rétablir un module dans le tableau de bord (super admin seulement, vérifié en SQL). */
+export async function setModuleDisplay(
+  db: DB,
+  user: Actor,
+  restaurant: string,
+  raw: unknown,
+) {
+  const value = moduleDisplaySchema.parse(raw);
+  await scope(db, user, restaurant);
+  await db.query("SELECT app.module_display_set($1,$2,$3)", [restaurant, value.module, value.shown]);
+  return { display: await readModuleDisplay(db, restaurant) };
+}
+
+export async function readModuleDisplay(db: DB, restaurant: string): Promise<ModuleDisplay[]> {
+  const { rows } = await db.query<ModuleDisplay>(
+    "SELECT module_id,shown FROM module_display WHERE restaurant_id=$1 ORDER BY module_id",
+    [restaurant],
+  );
+  return rows;
 }

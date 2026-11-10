@@ -28,10 +28,17 @@ const arranged = [
   { id: "pipeline-crm", name: "Pipeline CRM", group: "PILOTAGE", icon: "ClipboardList", permission: "analytics" as Permission },
   { id: "customer-health", name: "Customer Health", group: "PILOTAGE", icon: "Heart", permission: "customers" as Permission },
   // Les outils métier se placent à la fin du groupe Gestion, après Livraisons.
+  // Services et Produits ouvrent le groupe Gestion, avant les stocks.
   ...legacy.filter((entry) => entry.id !== "addons" && entry.group !== "PILOTAGE").flatMap((entry) =>
     entry.id === "deliveries"
       ? [entry, { id: "trade-tools", name: "Outils métier", group: "GESTION", icon: "ClipboardCheck", permission: null }]
-      : [entry],
+      : entry.id === "stocks"
+        ? [
+            { id: "services", name: "Services", group: "GESTION", icon: "CalendarDays", permission: "catalog" as Permission },
+            { id: "products", name: "Produits", group: "GESTION", icon: "Package", permission: "catalog" as Permission },
+            entry,
+          ]
+        : [entry],
   ),
   legacy.find((entry) => entry.id === "addons")!,
 ];
