@@ -109,7 +109,7 @@ async function route(
       );
     // Collecteur d’audience : l’établissement est résolu côté serveur à partir de ce domaine.
     if (pathname === "/api/analytics/collect")
-      return NextResponse.next(forwarded(req, null));
+      return NextResponse.next(forwarded(req, null, security));
     const tenantApi = pathname.match(
       /^\/api\/(?:store|cms|ops-security|restaurants)\/([^/]+)/,
     );
