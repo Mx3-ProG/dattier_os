@@ -19,6 +19,8 @@ import { can, roleLabels, roles, type Permission } from "@/lib/permissions";
 import { chapterRoles, chapters, glossary } from "@/features/guide/content";
 import { chapterIcons } from "./tutorial/icons";
 import { GuideToc } from "./guide-toc";
+import { LegalLinks } from "./legal/legal-page";
+import { PlatformCookieConsent } from "./legal/platform-cookie-consent";
 import { packs, welcomeCredits, eur } from "@/features/assistant/pricing";
 
 const matrix: [Permission, string][] = [
@@ -575,9 +577,11 @@ export function GuidePage({ demo }: { demo: boolean }) {
           {demo && <Link href="/demo">Démonstration</Link>}
           {demo && <Link href="/site-demo">Exemple de site restaurant</Link>}
           <Link href="/platform">Espace client</Link>
+          <LegalLinks />
         </nav>
-        <small>© STUDIO OS · Logiciel libre sous licence AGPL-3.0</small>
+        <small>© Wayne-web SAS · STUDIO OS, logiciel libre sous licence AGPL-3.0</small>
       </footer>
+      <PlatformCookieConsent />
     </div>
   );
 }

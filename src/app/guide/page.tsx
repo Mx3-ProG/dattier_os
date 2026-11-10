@@ -3,6 +3,7 @@ import { demoEnabled } from "@/lib/database/db";
 import { GuidePage } from "@/components/guide-page";
 import "../landing.css";
 import "./guide.css";
+import "../legal.css";
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = {
   title: "Guide d’utilisation · STUDIO OS",

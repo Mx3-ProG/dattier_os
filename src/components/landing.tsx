@@ -1,6 +1,8 @@
 import { plans, additionalRestaurantPrice } from "@/features/platform/pricing";
 import { addonCatalog, addonMonthlyCents } from "@/features/addons/catalog";
 import Link from "next/link";
+import { LegalLinks } from "@/components/legal/legal-page";
+import { PlatformCookieConsent } from "@/components/legal/platform-cookie-consent";
 import {
   ArrowUpRight,
   BookOpen,
@@ -799,9 +801,11 @@ export function Landing({
           <a href="#contact">Contact et questions</a>
           <Link href="/platform">Espace client</Link>
           <Link href="/source">Code source et licence</Link>
+          <LegalLinks />
         </nav>
-        <small>© STUDIO OS · Logiciel libre sous licence AGPL-3.0</small>
+        <small>© Wayne-web SAS · STUDIO OS, logiciel libre sous licence AGPL-3.0</small>
       </footer>
+      <PlatformCookieConsent />
     </div>
   );
 }

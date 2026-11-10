@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { demoEnabled } from "@/lib/database/db";
 import { Landing } from "@/components/landing";
 import "./landing.css";
+import "./legal.css";
 export const dynamic = "force-dynamic";
 export function generateMetadata(): Metadata {
   return {

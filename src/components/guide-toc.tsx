@@ -3,8 +3,10 @@ import { useEffect, useState } from "react";
 /** Sommaire du guide : suit la section lue pendant le défilement. */
 export function GuideToc({
   items,
+  label = "Sommaire du guide",
 }: {
   items: { id: string; label: string }[];
+  label?: string;
 }) {
   const [active, setActive] = useState(items[0]?.id);
   useEffect(() => {
@@ -24,7 +26,7 @@ export function GuideToc({
     return () => observer.disconnect();
   }, [items]);
   return (
-    <nav className="guide-toc" aria-label="Sommaire du guide">
+    <nav className="guide-toc" aria-label={label}>
       <span>Sommaire</span>
       <ol>
         {items.map((i) => (
