@@ -6,6 +6,7 @@ import { seed } from "./seed";
 import type { Database, DB } from "./types";
 export type { DB } from "./types";
 import { DemoDatabase } from "./demo";
+import { closeOnShutdown } from "./demo-shutdown";
 import { grantDemoAddons } from "./demo-addons";
 import { PostgresDatabase } from "./postgres";
 export async function rows<T>(
@@ -92,6 +93,9 @@ export async function getDb(): Promise<Database> {
       throw error;
     });
   const db = await globalDb.atacuisineDb;
+  // Sans fermeture propre, la base peut ne plus redémarrer (voir demo-shutdown.ts).
+  // Enregistré ici, une fois par processus, y compris dans un serveur déjà lancé.
+  closeOnShutdown(() => db.close());
   await migrate(db);
   if (globalDb.demoAddonGrantsVersion !== 1) {
     await db.transaction(grantDemoAddons);

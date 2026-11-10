@@ -25,7 +25,7 @@ async function readAddonState(restaurant: string) {
     );
     return {
       ...state,
-      demo: demoEnabled(),
+      demo: Boolean(demoEnabled()),
       ready: addonCheckoutReady(),
       readyAddons: monthlyAddonIds.filter(addonCheckoutReady),
       subscriptions: await rows(

@@ -79,6 +79,7 @@ const migrations: [number, string][] = [
   [94, "094_pilotage_data.sql"],
   [100, "100_booking_without_floor.sql"],
   [101, "101_demo_addon_source.sql"],
+  [102, "102_demo_crm_contacts_repair.sql"],
 ];
 /** Applies every additive migration not yet recorded, inside the caller's transaction. */
 export async function applyMigrations(tx: DB) {

@@ -398,3 +398,22 @@ Les libellés visibles (« établissement », « commerce ») se traitent à par
   - `addon-installations`, `module-registry` et `module-runtime` sont mis à jour selon la nouvelle règle.
 - **Reste à faire pour un commerce non restaurant :** les commandes, le catalogue et le stock sont encore réservés au secteur restauration (`restaurantOnly`), et un article a toujours un poste cuisine ou bar (`menu_items.station`). Ces deux points relèvent de P1-a4 (stock simple et catalogue neutre).
 
+
+### Incident du 10 novembre 2026 — base de démonstration et fermeture propre
+
+- **Cause :** l'arrêt du serveur `next dev` a laissé la base PGlite de démonstration sans point de contrôle valide (« could not locate a valid checkpoint record »). PGlite n'écrit ce point qu'à `close()`. De son côté, Next ne ferme pas la base et tue son processus enfant 100 ms après le signal.
+- **Rétablissement :**
+  - restauration de la sauvegarde `before-075` (00:04), puis migrations rejouées ;
+  - les changements de démonstration faits entre 00:05 et 05:21 sont perdus ;
+  - la base endommagée est conservée dans `.data/atacuisine-demo-broken-2026-11-10-0521`.
+- **Correctif ([`src/lib/database/demo-shutdown.ts`](../../src/lib/database/demo-shutdown.ts)) :**
+  - fermeture de PGlite à la réception de SIGINT, SIGTERM ou SIGHUP ;
+  - tout `process.exit` (celui de Next) attend la fin de la fermeture, dans la limite de 4 s ;
+  - l'enregistrement se fait depuis `getDb()`, une seule fois par processus ;
+  - `npm run dev` passe `NEXT_EXIT_TIMEOUT_MS=5000`.
+- **Vérification :**
+  - `tests/demo-shutdown.test.ts` envoie un vrai SIGTERM à un processus qui imite la sortie immédiate de Next, puis rouvre la base. Il vérifie aussi l'ordre fermeture → sortie.
+  - En conditions réelles, l'arrêt du serveur depuis l'app donne « database system was shut down … shutdown true », alors que l'incident affichait « interrupted ».
+- **Limites :**
+  - un SIGKILL ou une coupure brutale ne peuvent pas être protégés ;
+  - la contre-épreuve sans correctif n'a pas reproduit la corruption sur une charge courte : le test prouve la fermeture, pas l'inévitabilité de la panne.
