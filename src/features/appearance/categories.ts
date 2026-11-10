@@ -55,6 +55,7 @@ const actionLabels: Record<string, string> = {
   clock: "Pointage de l’équipe",
   shift: "Planning mis à jour",
   deleteShift: "Créneau retiré du planning",
+  addMember: "Personne ajoutée à l’équipe",
   purchase: "Achat enregistré",
   receive: "Livraison réceptionnée",
   supplier: "Fournisseur mis à jour",

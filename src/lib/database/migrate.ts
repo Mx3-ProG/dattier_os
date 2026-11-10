@@ -81,6 +81,8 @@ const migrations: [number, string][] = [
   [101, "101_demo_addon_source.sql"],
   [102, "102_demo_crm_contacts_repair.sql"],
   [110, "110_plan_subscriptions.sql"],
+  [130, "130_repair_text_encoding.sql"],
+  [131, "131_team_direct_member.sql"],
   [150, "150_module_display.sql"],
   [151, "151_services_products.sql"],
 ];

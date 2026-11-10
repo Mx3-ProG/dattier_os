@@ -45,6 +45,7 @@ const actionModules: Record<string, ModuleId> = {
   reservation: "reservations",
   shift: "team",
   deleteShift: "team",
+  addMember: "team",
   clock: "team",
   expense: "payments",
   customer: "customers",
