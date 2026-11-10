@@ -12,7 +12,7 @@ Migration PostgreSQL versionnée : `database/migrations/001_core.sql`. Migration
 - reservations → tables avec capacité et créneaux contrôlés côté service (`src/features/reservations/service.ts`) : une demande, confirmée ou en cours retient sa table pendant la durée du repas ; la table est verrouillée (`FOR UPDATE`) pendant une demande publique.
 - suppliers → purchase_orders → receipts → stock_lots.
 - profiles → shifts / time_entries ; customers → loyalty_transactions.
-- notifications → notification_reads ; toutes les actions critiques → audit_logs.
+- notifications → notification_reads ; notifications → domain_events ; notification_preferences par profil/établissement/type (migrations 161 et 162, voir `NOTIFICATIONS.md`) ; toutes les actions critiques → audit_logs.
 
 Les prix de vente et règlements sont des entiers en centimes. Les coûts d’achat sont des euros par unité de référence. Le coût matière unitaire est figé sur la ligne commandée. Aucun taux de TVA n’est inventé : les écarts prix/coût sont des estimations, pas des marges HT officielles.
 

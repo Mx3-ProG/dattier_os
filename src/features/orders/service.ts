@@ -8,6 +8,8 @@ import { one, rows, type DB } from "@/lib/database/db";
 import type { Actor } from "@/lib/auth/session";
 import { requirePermission } from "@/lib/permissions";
 import { moduleAvailable } from "@/features/modules/availability";
+import { emit } from "@/features/events/service";
+import { money } from "@/lib/domain";
 export const orderSchema = z.object({
   restaurant: z.string(),
   table: z.string().optional(),
@@ -43,12 +45,12 @@ export async function log(
   ]);
   await mirrorAudit(db, r, actor, action, object);
 }
+/** Information générale visible par toute l’équipe (rubrique « Général »). */
 export async function notify(db: DB, r: string, message: string) {
-  await db.query("INSERT INTO notifications VALUES($1,$2,$3,now())", [
-    uuid(),
-    r,
-    message,
-  ]);
+  await db.query(
+    "INSERT INTO notifications(id,restaurant_id,message) VALUES($1,$2,$3)",
+    [uuid(), r, message],
+  );
 }
 export async function movement(
   db: DB,
@@ -214,6 +216,7 @@ export async function createOrder(
     id,
     fingerprint,
   ]);
+  const lines: Record<string, string[]> = {};
   for (const item of input.items) {
     const menu = await one<{ name: string; price: number; station: string }>(
       db,
@@ -240,6 +243,7 @@ export async function createOrder(
         cost.cost,
       ],
     );
+    (lines[menu.station] ??= []).push(`${item.quantity} × ${menu.name}`);
     if (input.channel === "staff")
       await reserve(
         db,
@@ -260,12 +264,43 @@ export async function createOrder(
       : "Demande de commande à confirmer",
     id,
   );
-  await notify(
-    db,
-    input.restaurant,
-    `Nouvelle ${input.channel === "staff" ? "commande" : "demande à confirmer"} · ${id.slice(0, 6)}`,
-  );
+  const label = await orderLabel(db, id);
+  if (input.channel === "staff")
+    for (const [station, names] of Object.entries(lines))
+      await emit(db, input.restaurant, {
+        type: "order.created",
+        module: station === "bar" ? "bar" : "kitchen",
+        actor: user?.id ?? null,
+        objectId: id,
+        summary: `Nouvelle commande · ${label} · ${names.join(", ")}`,
+        data: { channel: input.channel, station },
+        notification: { permissions: [station === "bar" ? "bar" : "kitchen"] },
+      });
+  else
+    await emit(db, input.restaurant, {
+      type: "order.pending",
+      module: "orders",
+      objectId: id,
+      summary: `Demande à confirmer · ${label} · ${Object.values(lines).flat().join(", ")}`,
+      data: { channel: input.channel },
+    });
   return id;
+}
+/** Libellé lisible d’une commande : table, à emporter ou QR. */
+export async function orderLabel(db: DB, orderId: string) {
+  const o = await one<{
+    channel: string;
+    customer_name: string;
+    table_number: number | null;
+  }>(
+    db,
+    "SELECT o.channel,o.customer_name,t.number AS table_number FROM orders o LEFT JOIN table_sessions s ON s.id=o.session_id LEFT JOIN dining_tables t ON t.id=s.table_id WHERE o.id=$1",
+    [orderId],
+  );
+  const where = o.table_number
+    ? `Table ${o.table_number}`
+    : `À emporter${o.customer_name ? ` · ${o.customer_name}` : ""}`;
+  return o.channel === "qr" ? `${where} (QR)` : where;
 }
 /**
  * Une commande boutique peut être réglée avant d’être servie : elle reste
@@ -289,13 +324,15 @@ export async function changeItem(
     station: string;
     order_id: string;
     order_status: string;
+    name: string;
+    quantity: number;
   }>(
     db,
     "SELECT i.*,o.status AS order_status FROM order_items i JOIN orders o ON o.id=i.order_id WHERE i.id=$1 AND o.restaurant_id=$2 AND o.status IN ('active','paid') FOR UPDATE OF i",
     [id, r],
   );
   requirePermission(
-    user.role,
+    user.roles ?? user.role,
     target === "served" || target === "cancelled"
       ? "orders"
       : item.station === "bar"
@@ -400,12 +437,21 @@ export async function changeItem(
   await db.query("UPDATE order_items SET status=$2 WHERE id=$1", [id, target]);
   await completeSettledOrder(db, item.order_id);
   await log(db, r, user.id, `Préparation : ${target}`, id);
-  if (target === "ready")
-    await notify(
-      db,
-      r,
-      `${item.station === "bar" ? "Boisson" : "Plat"} prêt · commande ${item.order_id.slice(0, 6)}`,
-    );
+  const station = item.station === "bar" ? "bar" : "kitchen";
+  const verb: Record<string, string> = {
+    preparing: "En préparation",
+    ready: "Prêt à servir",
+    served: "Servi",
+    cancelled: "Annulé",
+  };
+  await emit(db, r, {
+    type: target === "ready" ? "order.ready" : `order.item_${target}`,
+    module: ["served", "cancelled"].includes(target) ? "orders" : station,
+    actor: user.id,
+    objectId: item.order_id,
+    summary: `${verb[target] ?? target} · ${await orderLabel(db, item.order_id)} · ${item.quantity} × ${item.name}`,
+    data: { item: id, station: item.station, status: target },
+  });
 }
 export async function pay(
   db: DB,
@@ -496,4 +542,20 @@ export async function pay(
     `Règlement déclaré : ${net / 100} EUR · ${method} · remise ${(reward?.discount ?? 0) / 100} EUR`,
     orderId,
   );
+  const methods: Record<string, string> = {
+    card: "carte",
+    cash: "espèces",
+    other: "autre moyen",
+  };
+  await emit(db, r, {
+    type: total ? "order.paid" : "order.closed",
+    module: "orders",
+    actor: user.id,
+    objectId: orderId,
+    summary: total
+      ? `Encaissement déclaré · ${await orderLabel(db, orderId)} · ${money(net)} · ${methods[method] ?? method}${reward ? ` · remise ${money(reward.discount)}` : ""}`
+      : `Commande clôturée sans montant · ${await orderLabel(db, orderId)}`,
+    permissions: ["payments", "finance"],
+    data: { amount: net, method, discount: reward?.discount ?? 0 },
+  });
 }

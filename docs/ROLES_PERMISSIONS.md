@@ -26,7 +26,7 @@ Chaque structure (établissement) appartient à une seule organisation cliente. 
 
 Démo : Nadia (Studio Restau + L’Atelier), Hugo (client indépendant, Le Bistrot de Hugo).
 
-Tous les profils peuvent consulter les notifications de leur établissement et pointer leur propre service. Les confirmations de réservation ne sont pas publiques. Le public ne peut demander qu’une réservation ou une commande à confirmer. Les profils publics de `/demo` ne sont disponibles que lorsque la démo locale est activée.
+Chaque profil ne voit que les notifications correspondant à ses permissions effectives (union de ses rôles dans l’établissement) ou qui lui sont adressées, et l’historique des rubriques de son métier (voir `NOTIFICATIONS.md`) ; il peut pointer son propre service. Les confirmations de réservation ne sont pas publiques. Le public ne peut demander qu’une réservation ou une commande à confirmer. Les profils publics de `/demo` ne sont disponibles que lorsque la démo locale est activée.
 
 Les jetons ne contiennent aucun rôle choisi par le navigateur ; le serveur relit le profil et son affectation. La définition du seed attribue explicitement SUPER_ADMIN à l’identifiant `slimane` : aucune règle sur le prénom ou l’adresse électronique n’existe en production, dont l’authentification reste à implémenter.
 

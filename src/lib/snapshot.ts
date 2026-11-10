@@ -8,6 +8,10 @@ import { registerPresence } from "@/features/ops-security/presence";
 import { type DB, rows, one, demoEnabled } from "./database/db";
 import { type Actor, scope } from "./auth/session";
 import { can } from "./permissions";
+import {
+  listNotifications,
+  preferences,
+} from "@/features/notifications/service";
 import { canArrange } from "@/features/floor/access";
 import { moduleEnabled } from "@/features/modules/access";
 import { availableModules } from "@/features/modules/availability";
@@ -167,11 +171,11 @@ export async function snapshot(
             [r],
           )
         : [],
-    notifications: await rows(
-      db,
-      "SELECT n.*,EXISTS(SELECT 1 FROM notification_reads nr WHERE nr.notification_id=n.id AND nr.profile_id=$2) AS read FROM notifications n WHERE restaurant_id=$1 ORDER BY created_at DESC LIMIT 40",
-      [r, user.id],
-    ),
+    ...(await listNotifications(db, r, user).then((n) => ({
+      notifications: n.items,
+      unreadNotifications: n.unread,
+    }))),
+    notificationPreferences: await preferences(db, r, user),
     audit: allowed("audit")
       ? await rows(
           db,

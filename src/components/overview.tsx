@@ -375,9 +375,9 @@ export function Overview({
             <h2>Dernières nouvelles</h2>
             <button
               className="text-button"
-              onClick={() => navigate("activity")}
+              onClick={() => navigate("notifications")}
             >
-              Journal d’activité →
+              Toutes les notifications →
             </button>
           </div>
           <div className="three-grid">

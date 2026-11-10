@@ -65,6 +65,7 @@ export const PUBLIC_TABLES = new Set([
 /** Le canal public peut écrire ces journaux et files, jamais les relire. */
 export const PUBLIC_INSERT_ONLY_TABLES = new Set([
   "notifications",
+  "domain_events",
   "restaurant_events",
   "audit_logs",
   "ops_security_events",
