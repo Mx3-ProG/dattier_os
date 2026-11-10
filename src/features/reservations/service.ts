@@ -1,7 +1,8 @@
 import { randomUUID as uuid } from "node:crypto";
 import { z } from "zod";
 import { rows, one, type DB } from "@/lib/database/db";
-import { log, notify } from "@/features/orders/service";
+import { log } from "@/features/orders/service";
+import { emit } from "@/features/events/service";
 import { moduleEnabled, requireModule } from "@/features/modules/access";
 
 /**
@@ -316,11 +317,12 @@ export async function requestReservation(
         )
       ).number
     : null;
-  await notify(
-    db,
-    a.restaurant,
-    `Nouvelle demande de réservation · ${a.guests} pers. · ${local.time}${number ? ` · table ${number}` : ""}`,
-  );
+  await emit(db, a.restaurant, {
+    type: "reservation.requested",
+    module: "reservations",
+    objectId: id,
+    summary: `Nouvelle demande de réservation · ${a.guests} pers. · ${local.time}${number ? ` · table ${number}` : ""}`,
+  });
   await log(db, a.restaurant, null, "Demande de réservation publique", id);
   return id;
 }

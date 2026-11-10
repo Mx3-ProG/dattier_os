@@ -38,10 +38,19 @@ import { rows, one, type DB } from "./database/db";
 import type { Actor } from "./auth/session";
 import {
   can,
+  hasRole,
   requirePermission,
   teamRoles,
   type Permission,
 } from "./permissions";
+import { dateTime, money } from "./domain";
+import { emit } from "@/features/events/service";
+import { describeAction } from "@/features/events/history";
+import {
+  markRead,
+  notificationActionSchemas,
+  setPreference,
+} from "@/features/notifications/service";
 import {
   changeItem,
   createOrder,
@@ -199,7 +208,7 @@ export const actionSchema = z.discriminatedUnion("action", [
     ingredient: id,
     quantity: qty,
   }),
-  z.object({ action: z.literal("read") }),
+  ...notificationActionSchemas,
   z.object({
     action: z.literal("restaurant"),
     name: text,
@@ -209,7 +218,22 @@ export const actionSchema = z.discriminatedUnion("action", [
   }),
   z.object({ action: z.literal("addRestaurant"), name: text }),
 ]);
+/**
+ * Exécute une action du poste de travail. Son entrée d’historique est calculée
+ * avant (les libellés lisent l’état antérieur) et n’est émise qu’en cas de succès.
+ */
 export async function perform(
+  db: DB,
+  r: string,
+  user: Actor,
+  a: z.infer<typeof actionSchema>,
+) {
+  const history = await describeAction(db, r, user, a);
+  const result = await run(db, r, user, a);
+  if (history) await emit(db, r, { actor: user.id, ...history });
+  return result;
+}
+async function run(
   db: DB,
   r: string,
   user: Actor,
@@ -388,14 +412,22 @@ export async function perform(
       requirePermission(user.roles ?? user.role, "stock");
       if (
         a.kind === "inventory" &&
-        !["OWNER", "SUPER_ADMIN", "MANAGER", "STOCK_MANAGER"].includes(
-          user.role,
-        )
+        !hasRole(user.roles ?? user.role, [
+          "OWNER",
+          "SUPER_ADMIN",
+          "MANAGER",
+          "STOCK_MANAGER",
+        ])
       )
         throw new Error("Correction d’inventaire non autorisée.");
-      const lot = await one<{ quantity: number; reserved: number }>(
+      const lot = await one<{
+        quantity: number;
+        reserved: number;
+        name: string;
+        unit: string;
+      }>(
         db,
-        "SELECT l.quantity::float,l.reserved::float FROM stock_lots l JOIN ingredients i ON i.id=l.ingredient_id WHERE l.id=$1 AND i.restaurant_id=$2 FOR UPDATE",
+        "SELECT l.quantity::float,l.reserved::float,i.name,i.unit FROM stock_lots l JOIN ingredients i ON i.id=l.ingredient_id WHERE l.id=$1 AND i.restaurant_id=$2 FOR UPDATE",
         [a.id, r],
       );
       const next = a.kind === "waste" ? lot.quantity - a.quantity : a.quantity;
@@ -415,6 +447,25 @@ export async function perform(
         user.id,
         a.id,
       );
+      const delta = Math.round((next - lot.quantity) * 100) / 100;
+      await emit(db, r, {
+        type:
+          a.kind === "waste"
+            ? "stock.waste"
+            : delta
+              ? "stock.inventory_gap"
+              : "stock.counted",
+        module: "stocks",
+        actor: user.id,
+        objectId: a.id,
+        summary:
+          a.kind === "waste"
+            ? `Perte déclarée : ${a.quantity} ${lot.unit} de ${lot.name} · ${a.reason}`
+            : delta
+              ? `Écart d’inventaire sur ${lot.name} : ${delta > 0 ? "+" : ""}${delta} ${lot.unit} (${lot.quantity} → ${next}) · ${a.reason}`
+              : `Inventaire confirmé sans écart : ${lot.name} · ${next} ${lot.unit}`,
+        data: { before: lot.quantity, after: next },
+      });
       break;
     }
     case "supplier": {
@@ -545,7 +596,14 @@ export async function perform(
         user.id,
         a.id,
       );
-      await notify(db, r, "Livraison réceptionnée · stocks actualisés");
+      await emit(db, r, {
+        type: "purchase.received",
+        module: "deliveries",
+        actor: user.id,
+        objectId: a.id,
+        summary: "Livraison réceptionnée · stocks actualisés",
+        data: { quantity: a.quantity, lot },
+      });
       break;
     }
     case "shift": {
@@ -566,14 +624,23 @@ export async function perform(
         ).length
       )
         throw new Error("Créneau en conflit.");
+      const shift = uuid();
       await db.query("INSERT INTO shifts VALUES($1,$2,$3,$4,$5)", [
-        uuid(),
+        shift,
         r,
         a.profile,
         a.start,
         a.end,
       ]);
-      await notify(db, r, "Planning mis à jour");
+      await emit(db, r, {
+        type: "team.shift",
+        module: "team",
+        actor: user.id,
+        objectId: shift,
+        summary: `Nouveau créneau : ${dateTime(a.start)} → ${dateTime(a.end)}`,
+        permissions: ["team"],
+        notification: { recipient: a.profile },
+      });
       break;
     }
     case "addMember": {
@@ -589,13 +656,25 @@ export async function perform(
       await notify(db, r, `${a.name} a rejoint l’équipe`);
       break;
     }
-    case "deleteShift":
+    case "deleteShift": {
       requirePermission(user.roles ?? user.role, "team");
-      await db.query("DELETE FROM shifts WHERE id=$1 AND restaurant_id=$2", [
-        a.id,
-        r,
-      ]);
+      const removed = await rows<{ profile_id: string; starts_at: string }>(
+        db,
+        "DELETE FROM shifts WHERE id=$1 AND restaurant_id=$2 RETURNING profile_id,starts_at",
+        [a.id, r],
+      );
+      if (removed[0])
+        await emit(db, r, {
+          type: "team.shift",
+          module: "team",
+          actor: user.id,
+          objectId: a.id,
+          summary: `Créneau du ${dateTime(removed[0].starts_at)} supprimé`,
+          permissions: ["team"],
+          notification: { recipient: removed[0].profile_id },
+        });
       break;
+    }
     case "clock": {
       await requirePaidAddon(db,r,"attendance");
       const latest = await rows<{ event: string }>(
@@ -623,15 +702,35 @@ export async function perform(
       ]);
       break;
     }
-    case "expense":
+    case "expense": {
       requirePermission(user.roles ?? user.role, "finance");
+      const usual = await one<{ average: number | null; count: number }>(
+        db,
+        "SELECT avg(amount)::float AS average,count(*)::int AS count FROM expenses WHERE restaurant_id=$1 AND created_at>now()-interval '90 days'",
+        [r],
+      );
+      const expense = uuid();
       await db.query("INSERT INTO expenses VALUES($1,$2,$3,$4,now())", [
-        uuid(),
+        expense,
         r,
         a.label,
         a.amount,
       ]);
+      const unusual =
+        usual.count >= 3 && a.amount > 3 * (usual.average ?? Infinity);
+      await emit(db, r, {
+        type: unusual ? "finance.unusual_expense" : "expense.created",
+        module: "expenses",
+        actor: user.id,
+        objectId: expense,
+        summary: unusual
+          ? `Dépense inhabituelle : ${a.label} · ${money(a.amount)} (moyenne ${money(Math.round(usual.average!))})`
+          : `Dépense ajoutée : ${a.label} · ${money(a.amount)}`,
+        permissions: ["finance"],
+        data: { amount: a.amount },
+      });
       break;
+    }
     case "customer":
       requirePermission(user.roles ?? user.role, "customers");
       await db.query(
@@ -699,10 +798,10 @@ export async function perform(
       );
       break;
     case "read":
-      await db.query(
-        "INSERT INTO notification_reads SELECT id,$2 FROM notifications WHERE restaurant_id=$1 ON CONFLICT DO NOTHING",
-        [r, user.id],
-      );
+      await markRead(db, r, user, a.id);
+      break;
+    case "notificationPreference":
+      await setPreference(db, r, user, a.type, a.muted);
       break;
     case "restaurant":
       requirePermission(user.roles ?? user.role, "settings");
@@ -712,7 +811,7 @@ export async function perform(
       );
       break;
     case "addRestaurant":
-      if (!["OWNER", "SUPER_ADMIN"].includes(user.role))
+      if (!hasRole(user.roles ?? user.role, ["OWNER", "SUPER_ADMIN"]))
         throw new Error("Accès refusé.");
       {
         const rid = uuid();
@@ -723,7 +822,10 @@ export async function perform(
         await db.query("INSERT INTO memberships VALUES($1,$2,$3)", [
           user.id,
           rid,
-          user.role,
+          // Le créateur garde son rôle de direction, même s’il en cumule d’autres.
+          (user.roles ?? [user.role]).includes("SUPER_ADMIN")
+            ? "SUPER_ADMIN"
+            : "OWNER",
         ]);
         break;
       }

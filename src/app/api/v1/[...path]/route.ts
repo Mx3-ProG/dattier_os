@@ -35,6 +35,9 @@ import {
 } from "@/features/reservations/service";
 import { seed } from "@/lib/database/seed";
 import { requireRestaurantIndustry } from "@/features/onboarding/access";
+import { hasRole } from "@/lib/permissions";
+import { runSweep } from "@/features/notifications/service";
+import { listHistory } from "@/features/events/history";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 /** Le tenant par défaut n'existe qu'en démonstration ; ailleurs il doit être demandé. */
@@ -114,7 +117,23 @@ async function handleGet(req: NextRequest) {
       });
     }
     const user = await actor();
-    const r = tenant(req.nextUrl.searchParams.get("restaurant"));
+    const q = req.nextUrl.searchParams;
+    const r = tenant(q.get("restaurant"));
+    if (endpoint === "history")
+      return NextResponse.json(
+        await db.transaction(async (tx) =>
+          listHistory(tx, r, await scope(tx, user, r), {
+            category: q.get("category") || undefined,
+            before: q.get("before") || undefined,
+            days: Number(q.get("days")) || undefined,
+            query: q.get("q")?.slice(0, 100) || undefined,
+          }),
+        ),
+        { headers: { "Cache-Control": "no-store" } },
+      );
+    // Alertes calculées (stocks, retards…) : seulement pour un établissement autorisé.
+    await db.transaction((tx) => scope(tx, user, r));
+    await runSweep(db, r);
     return NextResponse.json(
       await db.transaction((tx) => snapshot(tx, user, r)),
       { headers: { "Cache-Control": "no-store" } },
@@ -163,7 +182,7 @@ async function handlePost(req: NextRequest) {
     if (endpoint === "reset") {
       if (!demoEnabled()) throw new Error("Réinitialisation non autorisée.");
       if (
-        !["OWNER", "SUPER_ADMIN"].includes(user.role) ||
+        !hasRole(user.roles ?? user.role, ["OWNER", "SUPER_ADMIN"]) ||
         body.confirm !== "RESET DEMO"
       )
         throw new Error("Confirmation de réinitialisation requise.");
@@ -179,6 +198,7 @@ async function handlePost(req: NextRequest) {
       await requireRestaurantIndustry(tx,restaurant);
       return perform(tx, restaurant, await scope(tx, user, restaurant), data);
     });
+    await runSweep(db, restaurant, 0);
     return NextResponse.json({ ok: true, result });
   } catch (e) {
     return fail(e);

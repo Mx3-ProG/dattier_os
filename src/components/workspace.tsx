@@ -41,7 +41,6 @@ import {
   Calculator,
   Bell,
   Menu,
-  X,
   ChevronDown,
   ArrowUpRight,
   Leaf,
@@ -58,6 +57,8 @@ import {
   TenantLoader,
 } from "./loading-screens/tenant-loader";
 import { Management } from "./management";
+import { NotificationsPage } from "./notifications";
+import { HistoryPage } from "./history";
 import dynamic from "next/dynamic";
 const Overview = dynamic(() => import("./overview").then((m) => m.Overview), {
   loading: () => <p>Chargement du tableau de bord…</p>,
@@ -89,7 +90,6 @@ const TradeCenter = dynamic(() => import("./trade/trade-center").then((m) => m.T
 const FinanceCenter = dynamic(() =>
   import("./finance-center").then((m) => m.FinanceCenter),
 );
-import { dateTime } from "@/lib/domain";
 import { Tutorial } from "./tutorial/tour";
 import { CuisineIa } from "./assistant/cuisine-ia";
 import { QrPortfolio } from "./qr/qr-portfolio";
@@ -127,6 +127,10 @@ const decorateNavigation = (
   entries: ReturnType<typeof workspaceNavigation.list>,
 ) => entries.map((entry) => ({ ...entry, icon: navigationIcons[entry.icon] }));
 const modules = decorateNavigation(workspaceNavigation.list());
+const centerPages = {
+  notifications: "Notifications",
+  history: "Historique",
+} as const;
 type ModuleGroup = (typeof modules)[number]["group"];
 // Barre d’onglets façon app mobile (tablette et téléphone) : cinq entrées
 // maximum, chacune regroupant une ou plusieurs familles du menu latéral.
@@ -159,7 +163,6 @@ export function Workspace() {
     [module, setModule] = useState(""),
     [error, setError] = useState(""),
     [mobile, setMobile] = useState(false),
-    [notifications, setNotifications] = useState(false),
     [guide, setGuide] = useState(false),
     [dockSheet, setDockSheet] = useState(""),
     [updated, setUpdated] = useState("");
@@ -169,7 +172,11 @@ export function Workspace() {
     const r = query.get("restaurant");
     const requestedModule = query.get("module");
     if (r) setRestaurant(r);
-    if (requestedModule && modules.some((item) => item.id === requestedModule))
+    if (
+      requestedModule &&
+      (requestedModule in centerPages ||
+        modules.some((item) => item.id === requestedModule))
+    )
       setModule(requestedModule);
   }, []);
   const load = useCallback(async () => {
@@ -248,7 +255,17 @@ export function Workspace() {
               ? { ...entry, name: "Mon métier" } : entry),
       )
     : [];
-  const current = currentNavigation(allowed, module, data?.user.role);
+  // Notifications et historique : pages de l’espace, ouvertes par la cloche.
+  const center = Object.hasOwn(centerPages, module)
+    ? (module as keyof typeof centerPages)
+    : null;
+  const current = currentNavigation(
+    allowed,
+    center ? "" : module,
+    data?.user.role,
+  );
+  const activeId = center ?? current?.id;
+  const title = center ? centerPages[center] : current?.name;
   const navigate = (s: string) => {
     if (["site", "security"].includes(s)) {
       router.push(`/restaurant/${restaurant}/${s}`);
@@ -319,7 +336,7 @@ export function Workspace() {
                 <span className="nav-group">{m.group}</span>
               )}
               <button
-                className={current?.id === m.id ? "active" : ""}
+                className={activeId === m.id ? "active" : ""}
                 data-tour={`nav-${m.id}`}
                 data-activity-category={moduleCategory(m.id)}
                 onClick={() => navigate(m.id)}
@@ -378,7 +395,7 @@ export function Workspace() {
               <Menu />
             </button>
             <span className="breadcrumb">
-              Mon établissement <span>/</span> <b>{current?.name}</b>
+              Mon établissement <span>/</span> <b>{title}</b>
             </span>
           </div>
           <div className="topbar-actions">
@@ -403,11 +420,18 @@ export function Workspace() {
             <button
               className="icon-button notification-button"
               data-tour="notifications"
-              aria-label="Notifications"
-              onClick={() => setNotifications(!notifications)}
+              aria-label={`Notifications${data.unreadNotifications ? ` (${data.unreadNotifications} non lues)` : ""}`}
+              aria-current={center === "notifications" ? "page" : undefined}
+              onClick={() => navigate("notifications")}
             >
               <Bell size={20} />
-              {data.notifications.some((n) => !n.read) && <i />}
+              {data.unreadNotifications > 0 && (
+                <i>
+                  {data.unreadNotifications > 99
+                    ? "99+"
+                    : data.unreadNotifications}
+                </i>
+              )}
             </button>
             <Link href="/demo" className="avatar small">
               {data.user.name.slice(0, 1)}
@@ -429,40 +453,11 @@ export function Workspace() {
             <Link href="/platform">Mes restaurants</Link>
           </div>
         )}
-        {notifications && (
-          <section className="notification-panel card">
-            <div className="section-heading">
-              <h2>Notifications</h2>
-              <button
-                aria-label="Fermer les notifications"
-                className="icon-button"
-                onClick={() => setNotifications(false)}
-              >
-                <X />
-              </button>
-            </div>
-            <button
-              className="text-button"
-              onClick={() => act({ action: "read" })}
-            >
-              Tout marquer comme lu
-            </button>
-            {data.notifications.map((n) => (
-              <div
-                className={`notification ${n.read ? "read" : ""}`}
-                key={n.id}
-              >
-                <b>{n.message}</b>
-                <small>{dateTime(n.created_at)}</small>
-              </div>
-            ))}
-          </section>
-        )}
         <main
           className="content"
-          data-activity-category={moduleCategory(current?.id || "overview")}
+          data-activity-category={moduleCategory(center ? "overview" : current?.id || "overview")}
         >
-          <CategoryBadge category={moduleCategory(current?.id || "overview")} />
+          <CategoryBadge category={moduleCategory(center ? "overview" : current?.id || "overview")} />
           {error && (
             <div className="error" role="alert">
               {error}
@@ -471,13 +466,22 @@ export function Workspace() {
               </button>
             </div>
           )}
-          {current?.id !== "overview" && (
+          {(center || current?.id !== "overview") && (
             <div className="page-heading">
               <span className="eyebrow">{data.restaurant.name}</span>
-              <h1>{current?.name}</h1>
+              <h1>{title}</h1>
             </div>
           )}
-          {current?.id === "addons" ? (
+          {center === "notifications" ? (
+            <NotificationsPage
+              data={data}
+              act={act}
+              allowed={allowed.map((m) => m.id)}
+              navigate={navigate}
+            />
+          ) : center === "history" ? (
+            <HistoryPage key={restaurant} data={data} />
+          ) : current?.id === "addons" ? (
             <AddonsCenter
               key={restaurant}
               plan={data.plan}
@@ -582,7 +586,7 @@ export function Workspace() {
                         <span className="nav-group">{m.group}</span>
                       )}
                     <button
-                      className={current?.id === m.id ? "active" : ""}
+                      className={activeId === m.id ? "active" : ""}
                       onClick={() => navigate(m.id)}
                     >
                       <m.icon size={18} />
@@ -595,7 +599,7 @@ export function Workspace() {
           )}
           <nav className="workspace-dock" aria-label="Navigation rapide">
             {dock.map((tab) => {
-              const active = tab.items.some((m) => m.id === current?.id);
+              const active = tab.items.some((m) => m.id === activeId);
               return (
                 <button
                   key={tab.id}

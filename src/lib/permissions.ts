@@ -97,6 +97,19 @@ export const can = (role: Role | readonly Role[], permission: Permission) =>
   (Array.isArray(role) ? role : [role]).some((r) =>
     grants[r as Role]?.includes(permission),
   );
+/** Vrai si l’un des rôles du profil dans l’établissement fait partie de `accepted`. */
+export const hasRole = (
+  role: Role | readonly Role[],
+  accepted: readonly Role[],
+) => (Array.isArray(role) ? role : [role]).some((r) => accepted.includes(r));
+/** Permissions effectives d’un profil : l’union de celles de ses rôles dans l’établissement. */
+export const permissionsOf = (role: Role | readonly Role[]): Permission[] => [
+  ...new Set(
+    (Array.isArray(role) ? role : [role]).flatMap(
+      (r) => grants[r as Role] ?? [],
+    ),
+  ),
+];
 export function requirePermission(
   role: Role | readonly Role[],
   permission: Permission,
