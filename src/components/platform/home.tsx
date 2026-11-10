@@ -15,6 +15,7 @@ import "./access.css";
 type Overview = {
   user: { id: string; name: string };
   platformAdmin?: boolean;
+  billingReady?: boolean;
   organizations: {
     id: string;
     name: string;
@@ -38,6 +39,10 @@ type Overview = {
     creator_email?: string;
     creator_job_title?: string;
     creator_work_phone?: string;
+    billing_status?: string;
+    billing_period_end?: string | null;
+    billing_cancelling?: boolean;
+    billing_customer?: boolean;
   }[];
   restaurants: {
     id: string;
@@ -59,7 +64,8 @@ export function PlatformHome() {
     [industry, setIndustry] = useState<Industry>("restaurant"),
     [trade, setTrade] = useState("Restaurant"),
     [tradeDetail, setTradeDetail] = useState(""),
-    [token, setToken] = useState("");
+    [token, setToken] = useState(""),
+    [notice, setNotice] = useState("");
   const load = useCallback(async () => {
     const r = await fetch("/api/platform");
     if (r.status === 401) {
@@ -76,7 +82,33 @@ export function PlatformHome() {
     void load().catch((e) => setError(e.message));
     const query = new URLSearchParams(location.search);
     setToken(query.get("invitation") || "");
+    const outcome = query.get("abonnement");
+    if (outcome)
+      setNotice(
+        outcome === "ok"
+          ? "Merci ! Votre abonnement Studio est actif."
+          : outcome === "annule"
+            ? "Paiement annulé : aucun montant n’a été prélevé."
+            : "Paiement reçu, activation en cours. Actualisez la page dans quelques instants.",
+      );
   }, [load]);
+  async function billing(action: "checkout" | "portal", organization: string) {
+    setBusy(true);
+    setError("");
+    try {
+      const r = await fetch("/api/platform/billing", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action, organization }),
+      });
+      const d = await r.json();
+      if (!r.ok || !d.url) throw new Error(d.error?.message || "Paiement indisponible pour le moment.");
+      window.location.assign(d.url);
+    } catch (e) {
+      setError((e as Error).message);
+      setBusy(false);
+    }
+  }
   async function submit(body: unknown) {
     setBusy(true);
     setError("");
@@ -138,6 +170,7 @@ export function PlatformHome() {
             </p>
           </div>
         )}
+        {notice && <p role="status" className="notice">{notice}</p>}
         {error && data && (
           <p role="alert" className="error">
             {error}
@@ -224,7 +257,28 @@ export function PlatformHome() {
                       <p>Découverte de Studio OS : {discoveryLabels[o.discovery_source as keyof typeof discoveryLabels] || o.discovery_source}{o.discovery_detail ? " · " + o.discovery_detail : ""}</p>
                       {o.onboarding_answers?.mainChallenge && <p>Priorité déclarée : {o.onboarding_answers.mainChallenge}</p>}
                     </div>}
-                    {(trialActive || o.paid_plan > 0) && o.role === "OWNER" && (
+                    {o.billing_status && ["active", "trialing", "past_due"].includes(o.billing_status) && (
+                      <p>
+                        {o.billing_status === "past_due"
+                          ? "Paiement en échec : mettez à jour votre moyen de paiement."
+                          : o.billing_cancelling
+                            ? `Renouvellement arrêté · accès jusqu’au ${o.billing_period_end ? new Date(o.billing_period_end).toLocaleDateString("fr-FR", { dateStyle: "long", timeZone: "Europe/Paris" }) : "terme de la période"}`
+                            : o.billing_status === "trialing"
+                              ? "Abonnement enregistré · premier prélèvement à la fin de l’essai"
+                              : `Abonnement mensuel actif${o.billing_period_end ? ` · prochain renouvellement le ${new Date(o.billing_period_end).toLocaleDateString("fr-FR", { dateStyle: "long", timeZone: "Europe/Paris" })}` : ""}`}
+                      </p>
+                    )}
+                    {data.billingReady && o.role === "OWNER" && !o.paid_plan && !["active", "trialing", "past_due"].includes(o.billing_status || "") && (
+                      <button type="button" className="access-primary" disabled={busy} onClick={() => void billing("checkout", o.id)}>
+                        S’abonner · 39 € TTC / mois
+                      </button>
+                    )}
+                    {data.billingReady && o.role === "OWNER" && o.billing_customer && (
+                      <button type="button" disabled={busy} onClick={() => void billing("portal", o.id)}>
+                        Gérer mon abonnement
+                      </button>
+                    )}
+                    {(trialActive || o.paid_plan > 0) && o.role === "OWNER" && !o.billing_cancelling && !(o.billing_customer && ["active", "trialing", "past_due"].includes(o.billing_status || "")) && (
                       <button type="button" disabled={busy} onClick={() => {
                         if (window.confirm("Résilier maintenant ? L’accès à cet espace sera fermé immédiatement."))
                           void submit({ action: "cancelSubscription", organization: o.id });

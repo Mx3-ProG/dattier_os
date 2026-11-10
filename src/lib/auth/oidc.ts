@@ -135,33 +135,43 @@ export async function finishLogin(code: string, state: string) {
     identity.payload.email_verified !== true
   )
     throw new Error("Identité ou e-mail non vérifié.");
-  const id =
-    "oidc:" +
-    createHash("sha256")
-      .update(`${m.issuer}\0${identity.payload.sub}`)
-      .digest("hex");
-  const name = String(
+  await establishIdentity(
+    m.issuer,
+    String(identity.payload.sub),
+    String(
       identity.payload.name ||
         identity.payload.preferred_username ||
         "Utilisateur",
-    ).slice(0, 100),
-    email = String(identity.payload.email || "")
-      .toLowerCase()
-      .slice(0, 150);
+    ),
+    String(identity.payload.email || ""),
+  );
+  return String(payload.returnTo || "/platform");
+}
+/** Opens the signed app session for a verified identity (OIDC or Supabase). */
+export async function establishIdentity(
+  issuer: string,
+  sub: string,
+  rawName: string,
+  rawEmail: string,
+) {
+  const id =
+    "oidc:" + createHash("sha256").update(`${issuer}\0${sub}`).digest("hex");
+  const name = rawName.slice(0, 100) || "Utilisateur",
+    email = rawEmail.toLowerCase().slice(0, 150);
   await withDatabaseContext({ userId: id }, async () => {
     await (
       await getDb()
     ).query("SELECT app.ensure_profile($1,$2,$3)", [id, name, email]);
   });
-  jar.set(
+  (await cookies()).set(
     cookieName,
     await signed({ sub: id, name, email, issuedAtMs: Date.now() }, "12h"),
-    {
-      ...cookieOptions,
-      maxAge: 43200,
-    },
+    { ...cookieOptions, maxAge: 43200 },
   );
-  return String(payload.returnTo || "/platform");
+  return id;
+}
+export function oidcConfigured() {
+  return !!process.env.OIDC_ISSUER;
 }
 export async function oidcActor() {
   const token = (await cookies()).get(cookieName)?.value;

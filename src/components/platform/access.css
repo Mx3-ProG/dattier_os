@@ -379,3 +379,16 @@
   .platform-home-dock-context { display: none; }
   .platform-home-action { flex: 1 1 auto; padding-inline: 9px; font-size: max(var(--appearance-min-text, 0px), calc((10px) * var(--appearance-text-scale, 1))); }
 }
+.access-link {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  font-weight: 700;
+  text-decoration: underline;
+  cursor: pointer;
+}
+.access-link:disabled { opacity: .6; cursor: wait; }
+.access-error { color: #a1271b; font-weight: 650; }
+.access-fine { font-size: .9em; opacity: .8; }

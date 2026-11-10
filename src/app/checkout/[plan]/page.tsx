@@ -63,7 +63,7 @@ export default async function Page({ params }: { params: Promise<{ plan: string 
             <>
               <span className="access-label">Connecté en tant que {user.name}</span>
               <h2>Créer votre espace professionnel</h2>
-              <p>Votre essai démarre à la création de l’espace et dure 3 jours. Après l’essai, l’abonnement payant est activé manuellement. Aucun prélèvement automatique ne démarre à la fin de l’essai. Vous pouvez arrêter l’essai ou résilier depuis votre espace à tout moment.</p>
+              <p>Votre essai démarre à la création de l’espace et dure 3 jours, sans carte bancaire. Vous pourrez ensuite vous abonner en ligne depuis votre espace (39 € TTC par mois, paiement sécurisé par Stripe, sans engagement). Aucun prélèvement sans votre accord.</p>
               <SubscriptionForm plan={offer.price} userName={user.name} userEmail={user.email} />
             </>
           ) : (
