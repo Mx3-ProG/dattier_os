@@ -213,7 +213,7 @@ const core: Chapter[] = [
         title: "Aménager la salle",
         body: "Créez vos zones, chacune avec son propre plan. Ajoutez, glissez, tournez ou archivez des tables, choisissez leur forme et leur capacité, et décidez si elles sont proposées à la réservation en ligne. Le plan vu par vos clients se met à jour aussitôt, tables tournées comprises.",
         fallback:
-          "Le propriétaire décide, membre par membre, qui peut modifier le plan de salle (Administration › Équipe). Votre profil n’a pas ce droit pour l’instant.",
+          "Le propriétaire décide, membre par membre, qui peut modifier le plan de salle (Administration › Équipe et accès). Votre profil n’a pas ce droit pour l’instant.",
       },
       {
         module: "dining",
@@ -247,16 +247,16 @@ const core: Chapter[] = [
         {
           title: "Qui peut modifier le plan",
           points: [
-            "Le propriétaire et l’administrateur de l’organisation peuvent toujours modifier le plan.",
-            "Les profils Manager, Salle et Bar le peuvent par défaut ; le propriétaire retire ou rend ce droit membre par membre dans Administration › Équipe (« Peut modifier le plan de salle »).",
+            "Les profils Propriétaire et Super Admin de l’établissement peuvent toujours modifier le plan.",
+            "Les profils Manager, Salle et Bar le peuvent par défaut ; le propriétaire retire ou rend ce droit membre par membre dans Administration › Équipe et accès (« Peut modifier le plan de salle »).",
             "Le droit est vérifié par le serveur : un membre sans droit ne peut ni ajouter, ni déplacer, ni tourner une table, ni gérer les zones, même en appelant l’API directement. Il continue le service normalement.",
           ],
         },
         {
-          title: "Nombre de tables selon l’offre",
+          title: "Nombre de tables",
           points: [
-            "Offre Essentiel : 50 tables actives au maximum, toutes zones confondues. Les tables archivées ne comptent pas.",
-            "Offre Premium : pas de plafond de tables par structure.",
+            "Avec l’abonnement Studio : pas de plafond de tables par établissement.",
+            "Sans abonnement actif : 50 tables actives au maximum, toutes zones confondues. Les tables archivées ne comptent pas.",
           ],
         },
         {
