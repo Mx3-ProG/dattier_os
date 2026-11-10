@@ -18,6 +18,8 @@ La première requête initialise le schéma PostgreSQL et le seed, dans une tran
 
 Variables : `ATACUISINE_DEMO=true` est indispensable ; `ATACUISINE_DATA_DIR` sélectionne un répertoire explicitement nommé `demo`. Sur Vercel, le mode local est bloqué même si la variable est activée. Aucun secret distant n’est requis.
 
+La démo donne automatiquement accès aux add-ons payants visibles et vendables, ainsi qu’aux abonnements mensuels. La boutique garde leurs prix TTC et affiche « Essai démo ». Aucune commande ni souscription Stripe n’est créée ; les droits de démo sont ajoutés à la base existante sans la réinitialiser. Le site commercial garde les contrôles de paiement habituels.
+
 ## Profils de démonstration
 
 | Profil fictif | Rôle                                             |

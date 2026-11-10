@@ -66,6 +66,12 @@ un sous-domaine distinct. Elle utilise les profils fictifs et une base locale
 partagée par les visiteurs. Les modifications disparaissent quand le conteneur
 est recréé.
 
+Dans cette instance, les add-ons payants visibles dans la boutique et les
+abonnements mensuels sont ouverts à l’essai, avec leur prix TTC toujours affiché.
+Aucun achat ni abonnement Stripe n’est créé. Cette ouverture s’applique seulement
+à l’instance de démonstration ; les établissements du site commercial conservent
+leurs droits payants habituels.
+
 ```sh
 DEMO_APP_URL=https://demo.example.com \
 ATACUISINE_PURCHASE_URL=https://app.example.com/#offres \
