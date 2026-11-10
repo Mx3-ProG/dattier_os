@@ -4,7 +4,7 @@ Source centrale : `src/lib/permissions.ts`. Les contrôles sont exécutés côt�
 
 | Rôle | Accès |
 | --- | --- |
-| SUPER_ADMIN | Toutes les fonctions locales, distinct du propriétaire |
+| SUPER_ADMIN | Administrateur de la plateforme (table `platform_admins`) : vue sur toutes les structures, seul à pouvoir réinitialiser la démo et à lever les verrous du Studio. N’est membre d’aucune structure. |
 | OWNER | Opérations, finances, configuration et établissements autorisés |
 | MANAGER | Opérations, carte/recettes, équipe, achats, clients et codes promo, audit ; pas de coûts ni finances |
 | WAITER | Tables, commandes, service, déclarations de règlement, réservations |
@@ -15,6 +15,16 @@ Source centrale : `src/lib/permissions.ts`. Les contrôles sont exécutés côt�
 | ACCOUNTANT | Rapports financiers et dépenses |
 
 La permission `floor` donne accès au plan de salle. Le propriétaire peut gérer le droit d’aménagement de chaque membre. Le forfait Exploitation permet 50 tables actives par établissement.
+
+## Isolation des structures (SaaS)
+
+Chaque structure (établissement) appartient à une seule organisation cliente. Un propriétaire, son équipe et son site ne voient et ne modifient que les structures de leur organisation : contrôle applicatif (`scope`) et RLS PostgreSQL (`app.has_restaurant`).
+
+- Nombre de structures : places de l’abonnement Studio de l’organisation (`app.configure_organization_plan`, déclencheur `check_restaurant_seat`). Les offres Essentiel / Premium envisagées le 3 novembre 2026 ont été remplacées par la formule unique Studio (9 novembre 2026).
+- L’équipe plateforme n’a pas de vue transverse permanente : elle accède à une structure par une autorisation de support limitée dans le temps et journalisée (`support_grants`).
+- `SUPER_ADMIN` reste un rôle d’établissement (super admin de la structure, gestion des add-ons).
+
+Démo : Nadia (Studio Restau + L’Atelier), Hugo (client indépendant, Le Bistrot de Hugo).
 
 Tous les profils peuvent consulter les notifications de leur établissement et pointer leur propre service. Les confirmations de réservation ne sont pas publiques. Le public ne peut demander qu’une réservation ou une commande à confirmer. Les profils publics de `/demo` ne sont disponibles que lorsque la démo locale est activée.
 
