@@ -37,7 +37,8 @@ export type NavigationIcon =
   | "Globe"
   | "Earth"
   | "Calculator"
-  | "ShieldCheck";
+  | "ShieldCheck"
+  | "Mail";
 /** Presentation contract only. Server services remain the authorization boundary. */
 export type NavigationContribution = {
   id: string;

@@ -1,4 +1,5 @@
 import { observeStaffFloor } from "@/features/floor/capabilities";
+import { emitReservationEmail } from "@/features/reservations/emails";
 import { moduleEnabled, requireModule } from "@/features/modules/access";
 import { requirePlan, requirePaidAddon } from "@/features/platform/entitlements";
 import {
@@ -339,6 +340,9 @@ export async function perform(
         guests: number;
         starts_at: string;
         ends_at: string;
+        name: string;
+        contact: string;
+        customer_id: string | null;
       }>(
         db,
         "SELECT * FROM reservations WHERE id=$1 AND restaurant_id=$2 FOR UPDATE",
@@ -382,6 +386,10 @@ export async function perform(
         [a.id, a.status, table],
       );
       if (a.status === "arrived") await awardBookingPoints(db, r, a.id);
+      if (a.status !== res.status && ["confirmed", "declined", "cancelled"].includes(a.status))
+        await emitReservationEmail(db, r,
+          a.status === "confirmed" ? "reservation.confirmed" : "reservation.cancelled",
+          { ...res, id: a.id });
       break;
     }
     case "stock": {

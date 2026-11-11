@@ -15,7 +15,7 @@ export const displayableModules = [
   "orders", "table-booking", "catalog", "stock", "trade-tools", "website", "floor", "kitchen", "bar",
   "recipes", "suppliers", "deliveries", "attendance", "payroll", "accounting", "expenses",
   "client-invoices", "invoices", "loyalty", "qr", "analytics", "estimation", "prospect-scanner",
-  "pipeline-crm", "customer-health", "services", "products",
+  "pipeline-crm", "customer-health", "services", "products", "email-automation",
 ] as const satisfies readonly ModuleId[];
 export type DisplayableModule = (typeof displayableModules)[number];
 export const isDisplayableModule = (value: unknown): value is DisplayableModule =>
@@ -41,6 +41,7 @@ const addonModules: Record<string, DisplayableModule> = {
   "prospect-scanner": "prospect-scanner",
   "pipeline-crm": "pipeline-crm",
   "customer-health": "customer-health",
+  "email-automation": "email-automation",
   "earth-tracker-3d": "analytics",
   "estimation-studio": "estimation",
 };

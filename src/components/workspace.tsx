@@ -46,6 +46,7 @@ import {
   ArrowUpRight,
   Leaf,
   ShieldCheck,
+  Mail,
   GraduationCap,
   QrCode,
 } from "lucide-react";
@@ -84,6 +85,7 @@ const EstimationCenter = dynamic(() => import("./estimation/center").then((m) =>
 const ProspectScannerCenter = dynamic(() => import("./pilotage-addons/center").then((m) => m.ProspectScannerCenter));
 const PipelineCrmCenter = dynamic(() => import("./pilotage-addons/center").then((m) => m.PipelineCrmCenter));
 const CustomerHealthCenter = dynamic(() => import("./pilotage-addons/center").then((m) => m.CustomerHealthCenter));
+const EmailCenter = dynamic(() => import("./email/email-center").then((m) => m.EmailCenter));
 const OffersCenter = dynamic(() => import("./offers/offers-center").then((m) => m.OffersCenter));
 const TradeCenter = dynamic(() => import("./trade/trade-center").then((m) => m.TradeCenter));
 const FinanceCenter = dynamic(() =>
@@ -122,6 +124,7 @@ const navigationIcons = {
   Earth,
   Calculator,
   ShieldCheck,
+  Mail,
 };
 const decorateNavigation = (
   entries: ReturnType<typeof workspaceNavigation.list>,
@@ -515,6 +518,8 @@ export function Workspace() {
             <PipelineCrmCenter key={restaurant} restaurant={restaurant} />
           ) : current?.id === "customer-health" ? (
             <CustomerHealthCenter key={restaurant} restaurant={restaurant} />
+          ) : current?.id === "emails" ? (
+            <EmailCenter key={restaurant} restaurant={restaurant} onOpenStore={() => navigate("addons")} />
           ) : current?.id === "services" || current?.id === "products" ? (
             <OffersCenter
               key={`${current.id}-${restaurant}`}

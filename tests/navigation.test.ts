@@ -30,7 +30,9 @@ const arranged = [
   // Les outils métier se placent à la fin du groupe Gestion, après Livraisons.
   // Services et Produits ouvrent le groupe Gestion, avant les stocks.
   ...legacy.filter((entry) => entry.id !== "addons" && entry.group !== "PILOTAGE").flatMap((entry) =>
-    entry.id === "deliveries"
+    entry.id === "customers"
+      ? [entry, { id: "emails", name: "Emails", group: "RELATION CLIENT", icon: "Mail", permission: "customers" as Permission }]
+      : entry.id === "deliveries"
       ? [entry, { id: "trade-tools", name: "Outils métier", group: "GESTION", icon: "ClipboardCheck", permission: null }]
       : entry.id === "stocks"
         ? [
@@ -62,7 +64,7 @@ test("navigation requires each independent paid add-on as well as the member rol
     ["CHEF", "ACCOUNTANT"],
     ["WAITER", "MANAGER"],
   ];
-  const paid: Record<string,string> = { qr:"qr", attendance:"attendance", hr:"attendance", billing:"client-invoices", invoices:"invoices", payroll:"payroll", customers:"loyalty", "prospect-scanner":"prospect-scanner", "pipeline-crm":"pipeline-crm", "customer-health":"customer-health" };
+  const paid: Record<string,string> = { qr:"qr", attendance:"attendance", hr:"attendance", billing:"client-invoices", invoices:"invoices", payroll:"payroll", customers:"loyalty", "prospect-scanner":"prospect-scanner", "pipeline-crm":"pipeline-crm", "customer-health":"customer-health", emails:"email-automation" };
   for (const profile of profiles)
     for (const plan of [-1, 0, 39])
       for (const addons of [[], ["invoices"], ["bank"], ["invoices", "bank"]]) {

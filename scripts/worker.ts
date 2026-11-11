@@ -12,6 +12,7 @@ import {
 import { runSeoAudit } from "../src/features/seo/audit";
 import { transcodeMedia } from "../src/features/cms/media-jobs";
 import { claimFor, TENANT_CAP } from "../src/features/platform/worker-groups";
+import { emailEngine } from "../src/features/email";
 import {
   expireUnpaid,
   handleEvent,
@@ -92,6 +93,20 @@ async function execute(job: Job) {
               String(job.payload.trigger || "automatique").slice(0, 60),
             );
           });
+        } else if (job.kind === "email_send") {
+          // Rôle applicatif, contexte de l'établissement : la livraison passe par
+          // app.email_claim, atomique, donc sans double envoi avec le serveur web.
+          const results = await emailEngine.deliver(
+            (fn) =>
+              db.transaction(async (tx) => {
+                await tx.exec("SET LOCAL ROLE atacuisine_app");
+                return fn(tx);
+              }),
+            job.restaurant_id,
+            { only: String(job.payload.message) },
+          );
+          const failed = results.find((result) => result.status === "error");
+          if (failed) throw new Error(failed.error || "Envoi de l’email impossible.");
         } else if (job.kind === "media_transcode") {
           await transcodeMedia(
             (fn) =>
