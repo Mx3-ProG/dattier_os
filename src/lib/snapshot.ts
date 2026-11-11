@@ -45,7 +45,7 @@ export async function snapshot(
   const paidAddons=(await rows<{addon:string}>(db,
     `SELECT addon FROM unnest(ARRAY['invoices','attendance','client-invoices','payroll',
       'offline-conflicts','connections','qr','loyalty','domain',
-      'prospect-scanner','pipeline-crm','customer-health']) AS addon
+      'prospect-scanner','pipeline-crm','customer-health','click-collect-premium']) AS addon
      WHERE app.addon_installed($1,addon)`,[r])).map(row=>row.addon);
   const allowed = (p: Parameters<typeof can>[1]) =>
     (p === "customers" ? paidAddons.includes("loyalty") :

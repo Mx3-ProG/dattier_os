@@ -1,5 +1,5 @@
 export const addonMonthlyCents = 900;
-export const monthlyAddonIds = ["invoices","attendance","client-invoices","payroll","offline-conflicts","connections","qr","loyalty","domain","prospect-scanner","pipeline-crm","customer-health"] as const;
+export const monthlyAddonIds = ["invoices","attendance","client-invoices","payroll","offline-conflicts","connections","qr","loyalty","domain","prospect-scanner","pipeline-crm","customer-health","click-collect-premium"] as const;
 export type MonthlyAddonId = (typeof monthlyAddonIds)[number];
 export const pilotageAddonPrices = {
   "prospect-scanner": 6900,
@@ -59,6 +59,13 @@ export const addonCatalog = [
     name: "Boutique en ligne",
     description: "Recevez des commandes avec panier et créneaux de retrait.",
     includedFrom: 39,
+    usage: false,
+  },
+  {
+    id: "click-collect-premium",
+    name: "Click & Collect Premium",
+    description: "Mode borne façon fast-food, pause et rush des commandes, écran de retrait.",
+    includedFrom: null,
     usage: false,
   },
 ] as const;
@@ -192,6 +199,18 @@ export const addonDetails: Record<
   qr: { target: "qr", action: "Ouvrir les QR codes", features: ["Créer et consulter les QR codes."], example: "Créer un QR code pour une table." },
   "prospect-scanner": { target: "prospect-scanner", action: "Ouvrir le scanner", features: ["Chercher des entreprises par activité, ville et rayon.", "Consulter les sources et les signaux du score.", "Qualifier les prospects puis les transférer au CRM."], example: "Repérer des entreprises proches d’un nouveau point de vente." },
   "pipeline-crm": { target: "pipeline-crm", action: "Ouvrir le pipeline", features: ["Suivre les entreprises et les opportunités.", "Déplacer chaque affaire dans ses étapes de vente.", "Planifier les relances et conserver les activités."], example: "Passer une proposition commerciale en négociation et programmer un rappel." },
+  "click-collect-premium": {
+    target: "orders",
+    action: "Voir les commandes",
+    features: [
+      "Proposer une borne de commande plein écran sur votre site et sur tablette.",
+      "Choisir le créneau de retrait en un geste, avec « Dès que possible ».",
+      "Mettre les commandes en pause ou allonger le temps de préparation pendant un rush.",
+      "Afficher les numéros en préparation et prêts sur un écran de retrait.",
+    ],
+    example:
+      "Poser une tablette au comptoir pour prendre les commandes pendant le coup de feu du midi.",
+  },
   "customer-health": { target: "customer-health", action: "Ouvrir Customer Health", features: ["Voir l’activité et la valeur vie de chaque client.", "Comparer les périodes et repérer les clients inactifs.", "Visualiser les tendances sans inventer de données manquantes."], example: "Repérer les clients fidèles dont les achats ralentissent." },
 };
 /** UI shortcut only: both ownership and current workspace visibility are required. */

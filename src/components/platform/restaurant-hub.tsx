@@ -6,6 +6,7 @@ import { useState, useEffect, useCallback, useMemo } from "react";
 import { useSearchParams } from "next/navigation";
 import "./platform.css";
 import { ShopSettings } from "./shop-settings";
+import { ClickCollectPanel } from "./click-collect-panel";
 import { LoyaltyPanel } from "./loyalty-panel";
 import type { Settings } from "@/features/commerce/schema";
 import { can, roleLabels, type Role } from "@/lib/permissions";
@@ -448,6 +449,15 @@ export function RestaurantHub({
           )}
           {tab === "shop" && (
             <>
+              {data.shopEnabled === true && (
+                <ClickCollectPanel
+                  restaurant={restaurant}
+                  premium={data.premium === true}
+                  flow={(data.flow ?? null) as Parameters<typeof ClickCollectPanel>[0]["flow"]}
+                  busy={busy}
+                  perform={(body) => void perform(body)}
+                />
+              )}
               <section>
                 <h2>Commandes boutique</h2>
                 {(data.orders as ShopOrder[]).map((o) => (

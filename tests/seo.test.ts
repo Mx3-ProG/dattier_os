@@ -78,6 +78,8 @@ function tenant(
       interval: 15,
       capacity: 10,
       hours: [{ day: 1, open: "12:00", close: "14:30" }],
+      pausedUntil: null,
+      rushMinutes: 0,
       categories: ["Plats"],
       address: extra.address,
       phone: extra.phone,

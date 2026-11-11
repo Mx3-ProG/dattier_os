@@ -28,6 +28,7 @@ Prix récurrents mensuels en EUR, taxes incluses explicitement sélectionnées.
 | Scanner de prospects | 69 EUR | Créé et confirmé dans le catalogue |
 | Pipeline CRM | 69 EUR | Créé et confirmé dans le catalogue |
 | Customer Health | 89 EUR | Créé et confirmé dans le catalogue |
+| Click & Collect Premium | 9 EUR | **À créer** (ajouté le 11 novembre 2026, `STUDIO_ADDON_CLICK_COLLECT_PREMIUM_PRICE_ID`) |
 
 Les montants proviennent de `src/features/addons/billing-config.ts`.
 Avant de poursuivre, relire le catalogue pour éviter les doublons.

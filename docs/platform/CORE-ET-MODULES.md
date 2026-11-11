@@ -283,6 +283,7 @@ Les libellés visibles (« établissement », « commerce ») se traitent à par
 | Add-ons | Remarque |
 |---|---|
 | **Boutique en ligne** | **Payante, au mois.** Elle s'ajoute au module Site et en dépend (panier, créneaux, commande en ligne) |
+| **Click & Collect Premium** | **9 € TTC par mois** (décision du 11 novembre 2026). La boutique reste comprise dans Studio ; le Premium s'y ajoute et en dépend : borne de commande `/borne` (site et tablette), pause et mode rush, écran de retrait `/restaurant/<id>/retrait`. Migration 185 |
 | Salle (plan de salle) | Permet d'affecter une table aux commandes et aux réservations |
 | Cuisine, Bar | Écrans de préparation et statuts par poste (en attente → en préparation → prête → servie) |
 | Recettes | Fiches recettes ; décrément des ingrédients par recette |
