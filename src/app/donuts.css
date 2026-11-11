@@ -2494,3 +2494,15 @@
   text-transform: uppercase;
   color: var(--public-muted, #77625d);
 }
+
+/* Click & Collect Premium : accès à la borne depuis la page Commander. */
+.donut-kiosk-entry {
+  position: relative; display: grid; gap: 6px; max-width: 900px; margin: 0 auto 18px;
+  padding: 22px 64px 22px 24px; border-radius: 16px; text-align: left; text-decoration: none;
+  background: var(--public-accent, var(--site-ink, #26201f)); color: var(--public-on-accent, #fff);
+  box-shadow: 0 15px 40px #0000001f; transition: transform 0.2s ease;
+}
+.donut-kiosk-entry:hover { transform: translateY(-3px); }
+.donut-kiosk-entry strong { font: 800 23px Georgia, serif; }
+.donut-kiosk-entry small { opacity: 0.85; line-height: 1.5; }
+.donut-kiosk-entry svg { position: absolute; right: 22px; top: 50%; transform: translateY(-50%); }

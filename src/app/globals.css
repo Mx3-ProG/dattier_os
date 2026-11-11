@@ -2846,3 +2846,18 @@ body:has(.admin-action-dock) .demo-purchase-link {
     grid-template-columns: 1fr;
   }
 }
+
+/* Click & Collect Premium : panneau de l'onglet Boutique (spécificité > styles .platform). */
+.cc-panel { border: 1px solid var(--line); border-radius: var(--radius); background: var(--paper); padding: 18px 20px; }
+.cc-panel h2 { display: flex; align-items: center; gap: 8px; margin-top: 0; }
+.cc-teaser { background: linear-gradient(135deg, var(--paper), var(--sand)); }
+.cc-status { margin-bottom: 14px; }
+.cc-status strong { display: inline-flex; align-items: center; gap: 8px; padding: 6px 12px; border-radius: 999px; }
+.cc-open { background: color-mix(in srgb, var(--green) 14%, transparent); color: var(--green); }
+.cc-paused { background: #fff1d6; color: #7a4b00; }
+.cc-row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 10px 0; }
+.cc-row > span { display: inline-flex; align-items: center; gap: 4px; min-width: 70px; font-weight: 700; }
+.cc-panel .cc-row button { padding: 8px 14px; border-radius: 999px; border: 1px solid var(--line); background: var(--paper); color: var(--ink); cursor: pointer; }
+.cc-panel .cc-row button:hover:not(:disabled) { border-color: var(--green); }
+.cc-panel .cc-row button[aria-pressed="true"] { background: var(--green); border-color: var(--green); color: #fff; }
+.cc-panel .cc-links a, .cc-panel a.cc-link { display: inline-flex; align-items: center; gap: 6px; padding: 8px 14px; border-radius: 999px; background: var(--green); color: #fff; text-decoration: none; font-weight: 600; }

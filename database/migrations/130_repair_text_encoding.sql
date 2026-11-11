@@ -203,6 +203,11 @@ BEGIN
   END LOOP;
 
   RAISE NOTICE 'Encodage repare : % valeur(s), % fonction(s)', total, funcs;
+  -- SET LOCAL dure jusqu'à la fin de la transaction : sans ce retour, les migrations
+  -- suivantes et le seed de démo s'exécutent sans triggers (réglages boutique absents).
+  IF replica THEN
+    SET LOCAL session_replication_role = origin;
+  END IF;
 END
 $repair$;
 

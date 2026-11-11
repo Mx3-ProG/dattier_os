@@ -8,8 +8,10 @@ import { getDb, demoEnabled, type DB } from "@/lib/database/db";
 import { withDatabaseContext } from "@/lib/database/context";
 import { log } from "@/features/orders/service";
 import { appOrigin } from "@/lib/auth/oidc";
+// Une action sans valeur de retour répond { ok: true } : `NextResponse.json(undefined)`
+// lève une erreur, et l'action déjà validée s'affichait comme un échec.
 export const json = (value: unknown, status = 200) =>
-  NextResponse.json(value, {
+  NextResponse.json(value === undefined ? { ok: true } : value, {
     status,
     headers: {
       "Cache-Control": "private, no-store",

@@ -27,6 +27,14 @@ import {
 } from "./engagement";
 import { bestFlash } from "./engagement-rules";
 import {
+  effectiveFlow,
+  flowActionSchema,
+  premiumActive,
+  requirePremium,
+  boardStage,
+  type BoardOrder,
+} from "./premium";
+import {
   checkoutSchema,
   reviewSubmissionSchema,
   settingsSchema,
@@ -50,9 +58,14 @@ export function commerce(SHOP: string) {
       ).config,
     );
   }
+  async function flow(db: DB, now = Date.now()) {
+    return effectiveFlow(await settings(db), await premiumActive(db, SHOP), now);
+  }
   async function slots(db: DB, now = new Date()) {
     const s = await settings(db);
     if (!s.open) return [];
+    const current = effectiveFlow(s, await premiumActive(db, SHOP), now.getTime());
+    if (current.paused) return [];
     const bookings = await rows<{ slot: string; count: number }>(
       db,
       "SELECT o.desired_at::text AS slot,count(*)::int AS count FROM orders o JOIN shop_orders c ON c.order_id=o.id WHERE o.restaurant_id=$1 AND o.status<>'cancelled' AND o.desired_at>=$2 GROUP BY o.desired_at",
@@ -71,7 +84,7 @@ export function commerce(SHOP: string) {
     });
     for (
       let t =
-        Math.ceil((now.getTime() + s.prepMinutes * 60000) / 60000) * 60000;
+        Math.ceil((now.getTime() + current.prepMinutes * 60000) / 60000) * 60000;
       t < now.getTime() + 3 * 86400000;
       t += 60000
     ) {
@@ -110,6 +123,8 @@ export function commerce(SHOP: string) {
             config.categories.indexOf(b.category),
         ),
       slots: await slots(db),
+      premium: await premiumActive(db, SHOP),
+      flow: await flow(db),
       reviews: await rows<PublicReview>(
         db,
         `SELECT pr.id,pr.menu_id,m.name AS menu_name,c.name AS customer_name,pr.rating,pr.body,pr.admin_reply,pr.created_at,pr.verified_purchase
@@ -684,7 +699,10 @@ export function commerce(SHOP: string) {
   }
   async function updateSettings(db: DB, user: Actor, raw: unknown) {
     requirePermission(user.roles ?? user.role, "catalog");
-    const a = settingsSchema.parse(raw);
+    const parsed = settingsSchema.parse(raw);
+    // La pause et le rush ne se modifient que par l'action Premium dédiée.
+    const stored = await settings(db);
+    const a = { ...parsed, pausedUntil: stored.pausedUntil, rushMinutes: stored.rushMinutes };
     const active = await rows<{ category: string }>(
       db,
       "SELECT DISTINCT category FROM menu_items WHERE restaurant_id=$1 AND archived_at IS NULL",
@@ -699,6 +717,70 @@ export function commerce(SHOP: string) {
       [SHOP, JSON.stringify(a)],
     );
     await log(db, SHOP, user.id, "Paramètres boutique modifiés");
+  }
+  /** Click & Collect Premium : pause des commandes et temps de préparation en rush. */
+  async function updateFlow(db: DB, user: Actor, raw: unknown) {
+    requirePermission(user.roles ?? user.role, "orders");
+    await requirePremium(db, SHOP);
+    const a = flowActionSchema.parse(raw);
+    await db.query(
+      "SELECT restaurant_id FROM shop_settings WHERE restaurant_id=$1 FOR UPDATE",
+      [SHOP],
+    );
+    const s = await settings(db);
+    const next =
+      a.kind === "pause"
+        ? {
+            ...s,
+            pausedUntil: a.minutes
+              ? new Date(Date.now() + a.minutes * 60_000).toISOString()
+              : null,
+          }
+        : { ...s, rushMinutes: a.minutes };
+    await db.query(
+      "UPDATE shop_settings SET config=$2 WHERE restaurant_id=$1",
+      [SHOP, JSON.stringify(settingsSchema.parse(next))],
+    );
+    await log(
+      db,
+      SHOP,
+      user.id,
+      a.kind === "pause"
+        ? a.minutes
+          ? `Commandes en ligne en pause (${a.minutes} min)`
+          : "Commandes en ligne reprises"
+        : a.minutes
+          ? `Mode rush : +${a.minutes} min de préparation`
+          : "Mode rush désactivé",
+    );
+    return flow(db);
+  }
+  /** Écran de retrait : numéros en préparation et prêts, sans nom ni contenu. */
+  async function pickupBoard(db: DB, user: Actor) {
+    requirePermission(user.roles ?? user.role, "orders");
+    await requirePremium(db, SHOP);
+    const list = await rows<{
+      number: number;
+      status: string;
+      consumption: string;
+      items: string[];
+    }>(
+      db,
+      `SELECT c.number::int AS number,o.status,c.consumption,
+        coalesce(array_agg(i.status) FILTER (WHERE i.id IS NOT NULL),'{}') AS items
+       FROM shop_orders c JOIN orders o ON o.id=c.order_id
+       LEFT JOIN order_items i ON i.order_id=o.id
+       WHERE o.restaurant_id=$1 AND o.created_at>now()-interval '18 hours'
+       GROUP BY o.id,c.number,o.status,c.consumption
+       ORDER BY c.number`,
+      [SHOP],
+    );
+    const board: BoardOrder[] = [];
+    for (const order of list) {
+      const stage = boardStage(order.items, order.status);
+      if (stage) board.push({ number: order.number, stage, consumption: order.consumption });
+    }
+    return { board, flow: await flow(db) };
   }
 
   return {
@@ -717,5 +799,8 @@ export function commerce(SHOP: string) {
     transition,
     updateDetails,
     updateSettings,
+    flow,
+    updateFlow,
+    pickupBoard,
   };
 }

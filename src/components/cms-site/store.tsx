@@ -93,6 +93,8 @@ type Data = {
   slots: string[];
   stripe: boolean;
   reviews: PublicReview[];
+  /** Click & Collect Premium actif : la borne de commande est proposée. */
+  premium?: boolean;
 };
 const slotLabel = (s: string) =>
   new Date(s).toLocaleString("fr-FR", {
@@ -1199,6 +1201,15 @@ export function DonutStore({
             Choisissez votre point de départ. Vous pourrez tout modifier avant
             de valider le panier.
           </p>
+          {data?.premium && (
+            <Link className="donut-kiosk-entry" href="/borne">
+              <strong>Commande express</strong>
+              <small>
+                Sur place ou à emporter, en quelques touches, comme en borne.
+              </small>
+              <ArrowRight />
+            </Link>
+          )}
           <div className="donut-order-paths">
             <button
               className={purchaseIntent === "solo" ? "selected" : ""}
@@ -1569,7 +1580,7 @@ export function DonutStore({
           )}
           {shopEnabled && (
             <>
-              <Link className="donut-button compact" href="/commander">
+              <Link className="donut-button compact" href={data?.premium ? "/borne" : "/commander"}>
                 {header.orderLabel} <ArrowUpRight size={17} />
               </Link>
               <button
@@ -1674,7 +1685,7 @@ export function DonutStore({
               <span>{r(footer.tagline)}</span>
             </Link>
             {shopEnabled && (
-              <Link href="/commander">
+              <Link href={data?.premium ? "/borne" : "/commander"}>
                 {footer.cta} <ArrowUpRight />
               </Link>
             )}

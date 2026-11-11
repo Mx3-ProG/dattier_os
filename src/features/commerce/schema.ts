@@ -50,6 +50,10 @@ export const settingsSchema = z
     logo: z.string().max(300),
     googleBusinessUrl: publicUrlSchema.default(""),
     googleReviewUrl: publicUrlSchema.default(""),
+    /** Click & Collect Premium : pause des commandes en ligne jusqu'à cette date. */
+    pausedUntil: z.string().datetime().nullable().default(null),
+    /** Click & Collect Premium : minutes ajoutées au temps de préparation (rush). */
+    rushMinutes: z.number().int().min(0).max(60).default(0),
   })
   .superRefine((s, c) => {
     if (s.hours.some((h) => h.close <= h.open))

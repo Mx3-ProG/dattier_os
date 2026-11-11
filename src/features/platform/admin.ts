@@ -7,6 +7,7 @@ import { rows, one, type DB } from "@/lib/database/db";
 import { scope, type Actor } from "@/lib/auth/session";
 import { requirePermission } from "@/lib/permissions";
 import { commerce } from "@/features/commerce/service";
+import { premiumActive } from "@/features/commerce/premium";
 import { siteState, sitePerform } from "@/features/site/service";
 import { platformPerform } from "./service";
 import { log } from "@/features/orders/service";
@@ -25,12 +26,19 @@ export async function adminState(
   if (["site", "seo", "loyalty"].includes(module)) await requireCommercialCapability(db, r, module === "loyalty" ? "loyalty" : "website");
   if (module === "site") return siteState(db, r, user);
   if (module === "seo") return seoState(db, r, user);
+  if (module === "pickup") {
+    await requireRestaurantIndustry(db, r);
+    return commerce(r).pickupBoard(db, user);
+  }
   if (module === "shop") {
     requirePermission(user.roles ?? user.role, "orders");
     const plan = await restaurantPlan(db, r);
     const shopEnabled = plan >= 39;
+    const premium = shopEnabled && (await premiumActive(db, r));
     return {
       shopEnabled,
+      premium,
+      flow: premium ? await commerce(r).flow(db) : null,
       settings: shopEnabled ? await commerce(r).settings(db) : null,
       orders: await commerce(r).staffOrders(db, user),
       reviews:
@@ -210,6 +218,7 @@ export async function adminPerform(
             "settle",
             "transition",
             "moderate",
+            "flow",
           ]),
           data: z.unknown(),
         })
@@ -220,6 +229,7 @@ export async function adminPerform(
     if (input.action === "moderate") await requirePlan(db, r, 39);
     if (input.action === "settings")
       return shop.updateSettings(db, user, input.data);
+    if (input.action === "flow") return shop.updateFlow(db, user, input.data);
     if (input.action === "product")
       return shop.updateDetails(db, user, input.data);
     if (input.action === "moderate") {

@@ -96,6 +96,7 @@ export const moduleManifest = [
 
   // --- Add-ons mensuels -----------------------------------------------------------
   { id: "online-orders", label: "Boutique en ligne", family: "site", offer: "addon-monthly", requires: ["website", "catalog"], enhancedBy: ["stock"], navigation: [], industries: [], legacy: addon("online-orders") },
+  { id: "click-collect-premium", label: "Click & Collect Premium", family: "site", offer: "addon-monthly", requires: ["online-orders"], enhancedBy: [], navigation: [], industries: [], legacy: addon("click-collect-premium") },
   { id: "domain", label: "Domaine personnalisé", family: "site", offer: "addon-monthly", requires: ["website"], enhancedBy: [], navigation: [], industries: [], legacy: addon("domain") },
   { id: "floor", label: "Plan de salle", family: "operations", offer: "addon-monthly", requires: [], enhancedBy: [], navigation: ["dining"], industries: ["restaurant"], legacy: { kind: "module", module: "floor" } },
   { id: "kitchen", label: "Cuisine", family: "operations", offer: "addon-monthly", requires: ["orders"], enhancedBy: [], navigation: ["kitchen"], industries: ["restaurant"], legacy: { ...always, ...food } },
