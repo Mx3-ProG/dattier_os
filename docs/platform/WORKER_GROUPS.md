@@ -9,7 +9,7 @@ Il s'agit de services Docker Compose sur un seul hôte. Il n'y a ni cluster ni r
 | Service | Groupe | Jobs | Concurrence | CPU / mémoire par défaut | Connexions |
 |---|---|---|---|---|---|
 | `worker-critical` | `critical` | `stripe_event`, `stripe_payout`, `payout_schedule`, `online_order_timeout` | 4 | 1 / 512 Mo | 6 |
-| `worker-maintenance` | `maintenance` | `security_scan`, `security_archive`, `seo_audit`, tout type sans groupe, purge | 2 | 1 / 512 Mo | 4 |
+| `worker-maintenance` | `maintenance` | `security_scan`, `security_archive`, `seo_audit`, `email_send`, tout type sans groupe, purge | 2 | 1 / 512 Mo | 4 |
 | `worker-media` | `media` | `media_transcode` | 1 | 2 / 2 Go | 3 |
 
 Ces valeurs sont un point de départ, sans mesure de charge en conditions réelles. CPU et mémoire se règlent avec `WORKER_<GROUPE>_CPUS` et `WORKER_<GROUPE>_MEMORY`, la concurrence avec `WORKER_CONCURRENCY`, définie dans `src/features/platform/worker-groups.ts`.

@@ -116,6 +116,7 @@ export const moduleManifest = [
   { id: "prospect-scanner", label: "Scanner de prospects", family: "pilotage", offer: "addon-monthly", requires: [], enhancedBy: ["pipeline-crm"], navigation: ["prospect-scanner"], industries: [], legacy: addon("prospect-scanner") },
   { id: "pipeline-crm", label: "Pipeline CRM", family: "pilotage", offer: "addon-monthly", requires: [], enhancedBy: ["prospect-scanner"], navigation: ["pipeline-crm"], industries: [], legacy: addon("pipeline-crm") },
   { id: "customer-health", label: "Customer Health", family: "pilotage", offer: "addon-monthly", requires: [], enhancedBy: ["pipeline-crm"], navigation: ["customer-health"], industries: [], legacy: addon("customer-health") },
+  { id: "email-automation", label: "Emails automatiques", family: "relation-client", offer: "addon-monthly", requires: [], enhancedBy: ["table-booking", "loyalty"], navigation: ["emails"], industries: [], legacy: addon("email-automation") },
   { id: "offline-conflicts", label: "Conflits hors ligne", family: "exploitation", offer: "addon-monthly", requires: [], enhancedBy: [], navigation: [], industries: [], legacy: addon("offline-conflicts") },
   { id: "connections", label: "Connexions", family: "exploitation", offer: "addon-monthly", requires: [], enhancedBy: [], navigation: [], industries: [], legacy: addon("connections") },
 

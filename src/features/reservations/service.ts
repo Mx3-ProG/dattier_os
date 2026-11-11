@@ -1,4 +1,5 @@
 import { randomUUID as uuid } from "node:crypto";
+import { emitReservationEmail } from "./emails";
 import { z } from "zod";
 import { rows, one, type DB } from "@/lib/database/db";
 import { log, notify } from "@/features/orders/service";
@@ -322,5 +323,8 @@ export async function requestReservation(
     `Nouvelle demande de réservation · ${a.guests} pers. · ${local.time}${number ? ` · table ${number}` : ""}`,
   );
   await log(db, a.restaurant, null, "Demande de réservation publique", id);
+  await emitReservationEmail(db, a.restaurant, "reservation.requested", {
+    id, name: a.name, contact: a.contact, guests: a.guests, starts_at: new Date(start),
+  });
   return id;
 }

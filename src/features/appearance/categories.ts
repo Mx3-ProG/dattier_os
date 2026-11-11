@@ -33,7 +33,7 @@ export function moduleCategory(module: string): ActivityCategory {
     return "management";
   if (["team", "attendance"].includes(module)) return "team";
   if (["finance", "expenses", "payments"].includes(module)) return "finance";
-  if (["customers", "loyalty", "shop"].includes(module)) return "customers";
+  if (["customers", "loyalty", "shop", "emails"].includes(module)) return "customers";
   if (
     [
       "settings",
