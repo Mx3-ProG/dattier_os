@@ -3,6 +3,7 @@ import { UtensilsLoader } from "@/components/brand/utensils";
 import { type Plan } from "@/features/platform/pricing";
 import type { Promotion } from "@/features/platform/promotion";
 import { referralPricing, type PaidPlan } from "@/features/platform/referrals";
+import { BillingAccount } from "./billing-account";
 import { AccountWorkspace } from "./account-workspace";
 import { ReferralPanel } from "./referral-panel";
 import Link from "next/link";
@@ -228,6 +229,7 @@ export function PlatformHome() {
                 );
               })}
             </div>
+            <section id="abonnements"><h2>Abonnements et achats</h2>{data.organizations.filter(o=>o.role==="OWNER").map(o=><BillingAccount key={o.id} organization={o.id} name={o.name} onChanged={load} />)}</section>
             {data.organizations.map((o) => {
               const paying = o.paying_referrals ?? 0;
               const price = referralPricing(o.paid_plan, o.seats, paying);

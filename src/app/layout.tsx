@@ -1,3 +1,4 @@
+import { TrialReminder } from "@/components/platform/trial-reminder";
 import { PublicModeProvider } from "@/components/cms-site/public-appearance";
 import Link from "next/link";
 import { ServiceWorkerUpdate } from "@/components/service-worker-update";
@@ -54,6 +55,7 @@ export default async function Layout({
           <AppearanceApplication initial={initial} publicSite={!!site}>
             <ServiceWorkerUpdate />
             {children}
+            {!site && <TrialReminder />}
             {demoEnabled() && (
               <Link
                 className="demo-purchase-link"

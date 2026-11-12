@@ -17,7 +17,7 @@ export const blackFriday = {
   trialDays: 7,
 } as const;
 
-export const standardTrialDays = 3;
+export const standardTrialDays = 7;
 
 export type Promotion = typeof blackFriday & { price: number; lastDay: string };
 

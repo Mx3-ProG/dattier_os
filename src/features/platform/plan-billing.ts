@@ -10,35 +10,33 @@ import { Pool } from "pg";
 import { authenticated } from "./http";
 import { basePlan } from "./pricing";
 import { activePromotion } from "./promotion";
+import { subscriptionTrial } from "./billing-rules";
 import { appOrigin } from "@/lib/auth/oidc";
 import { one, type DB } from "@/lib/database/db";
+import { assertSameMode, resolveMonthlyPrice, saasAutomaticTax, saasReady, saasStripe, saasWebhookSecret } from "@/features/billing/stripe-saas";
 
 const grantingStatuses = new Set(["active", "trialing", "past_due"]);
 const planAmountCents = basePlan * 100;
 
-const secretKey = () => process.env.STUDIO_PLAN_STRIPE_SECRET_KEY ?? "";
-export const planPriceId = () => process.env.STUDIO_PLAN_PRICE_ID ?? "";
+/** Monthly Studio price: env override, else the "Exploitation" product of the catalog. */
+export const planPriceId = () =>
+  resolveMonthlyPrice({
+    env: "STUDIO_PLAN_PRICE_ID",
+    names: ["Exploitation", "Studio", "STUDIO OS", "Abonnement Studio"],
+    product: process.env.STUDIO_PLAN_PRODUCT_ID || "prod_VZZaLSq8yVya1u",
+    cents: planAmountCents,
+  });
 
 /** True when visitors can be sent to the monthly subscription checkout. */
-export function planBillingReady() {
-  return (
-    /^(sk|rk)_(live|test)_/.test(secretKey()) &&
-    /^price_/.test(planPriceId()) &&
-    !!process.env.STUDIO_BILLING_DATABASE_URL
-  );
-}
-
-let client: Stripe | undefined;
-export function planStripe() {
-  if (!planBillingReady()) throw new Error("Abonnement en ligne non configuré.");
-  client ??= new Stripe(secretKey(), { maxNetworkRetries: 2, timeout: 20_000 });
-  return client;
-}
+export const planBillingReady = saasReady;
+export const planStripe = saasStripe;
 
 export function planWebhookEvent(raw: string, signature: string) {
-  const secret = process.env.STUDIO_PLAN_STRIPE_WEBHOOK_SECRET;
+  const secret = saasWebhookSecret();
   if (!secret || !planBillingReady()) throw new Error("Notifications d’abonnement non configurées.");
-  return Stripe.webhooks.constructEvent(raw, signature, secret);
+  const event = Stripe.webhooks.constructEvent(raw, signature, secret);
+  assertSameMode(event);
+  return event;
 }
 
 type BillingContext = {
@@ -55,11 +53,13 @@ export const billingContext = (db: DB, organization: string) =>
   one<BillingContext>(db, "SELECT * FROM app.plan_billing_context($1)", [organization]);
 
 async function assertPlanPrice(stripe: Stripe) {
-  const price = await stripe.prices.retrieve(planPriceId());
+  const price = await stripe.prices.retrieve(await planPriceId());
+  assertSameMode(price);
   if (
     !price.active ||
     price.currency !== "eur" ||
     price.unit_amount !== planAmountCents ||
+    price.tax_behavior === "exclusive" ||
     price.recurring?.interval !== "month" ||
     price.recurring.interval_count !== 1
   )
@@ -67,43 +67,35 @@ async function assertPlanPrice(stripe: Stripe) {
   return price;
 }
 
-/**
- * Pendant l'offre en cours, le code promo créé dans Stripe est pré-appliqué.
- * Introuvable, expiré ou en erreur : le client peut toujours le saisir lui-même.
- */
-async function promotionDiscount(stripe: Stripe) {
-  const promotion = activePromotion();
-  if (!promotion) return null;
-  try {
-    const { data } = await stripe.promotionCodes.list({ code: promotion.code, active: true, limit: 1 });
-    return data[0]?.id ?? null;
-  } catch {
-    return null;
-  }
-}
-
 /** Opens a Stripe Checkout page for the organization owner. */
 export async function planCheckout(organization: string) {
   const stripe = planStripe();
   const price = await assertPlanPrice(stripe);
-  const { context, email } = await authenticated(undefined, async (db, user) => ({
+  const { context, email, previousSession } = await authenticated(undefined, async (db, user) => ({
     context: await billingContext(db, organization),
     email: user.email,
+    previousSession: (await one<{id:string|null}>(db,"SELECT app.plan_checkout_session($1) AS id",[organization])).id,
   }));
   if (!context.owner) throw new Error("Abonnement réservé au propriétaire de l’organisation.");
   if (grantingStatuses.has(context.status))
     throw new Error("Cette organisation a déjà un abonnement en cours.");
-  // Keep the remaining free days when Stripe allows it (trial end ≥ 48 h ahead).
-  // During a promotion the first discounted month is charged right away instead,
-  // so the customer locks the offer before the code expires.
-  const trialEnd = context.trial_ends_at && !context.paid_plan && !activePromotion()
-    ? Math.floor(Date.parse(context.trial_ends_at) / 1000)
-    : 0;
-  const keepTrial = trialEnd > Math.floor(Date.now() / 1000) + 49 * 3600;
+  if(previousSession) {
+    const previous=await stripe.checkout.sessions.retrieve(previousSession);
+    assertSameMode(previous);
+    if(previous.status==="open" && previous.url) return {url:previous.url};
+    if(previous.status==="complete" && !["canceled","unpaid","incomplete_expired"].includes(context.status)) {
+      await reconcilePlanSession(previousSession);
+      throw new Error("Une souscription a déjà été effectuée. Actualisez votre espace.");
+    }
+  }
   const origin = appOrigin();
   const metadata = { studio_plan_org: organization };
-  const automaticTax = process.env.STUDIO_PLAN_AUTOMATIC_TAX === "true";
-  const promotion = await promotionDiscount(stripe);
+  const automaticTax = saasAutomaticTax();
+  let promotion: string | undefined;
+  const offer = activePromotion();
+  if (offer) {
+    try { promotion = (await stripe.promotionCodes.list({code:offer.code,active:true,limit:1})).data[0]?.id; } catch { /* Checkout still accepts a manually entered code. */ }
+  }
   const session = await stripe.checkout.sessions.create({
     mode: "subscription",
     line_items: [{ price: price.id, quantity: 1 }],
@@ -112,15 +104,16 @@ export async function planCheckout(organization: string) {
       : email ? { customer_email: email } : {}),
     client_reference_id: organization,
     metadata,
-    subscription_data: { metadata, ...(keepTrial ? { trial_end: trialEnd } : {}) },
-    // Stripe refuse `discounts` et `allow_promotion_codes` ensemble.
-    ...(promotion ? { discounts: [{ promotion_code: promotion }] } : { allow_promotion_codes: true }),
+    subscription_data: { metadata, ...subscriptionTrial(context) },
+    allowed_payment_method_types: ["card"],
+    // The card is always registered, even when the first charge waits for the trial end.
+    payment_method_collection: "always",
+    ...(promotion ? {discounts:[{promotion_code:promotion}]} : {allow_promotion_codes:true}),
     ...(automaticTax ? { automatic_tax: { enabled: true } } : {}),
     locale: "fr",
     success_url: `${origin}/abonnement/retour?session_id={CHECKOUT_SESSION_ID}`,
     cancel_url: `${origin}/platform?abonnement=annule`,
-    expires_at: Math.floor(Date.now() / 1000) + 3600,
-  });
+  }, {idempotencyKey:`studio-plan:${organization}:${previousSession||"first"}`});
   await authenticated(undefined, (db) =>
     db.query("SELECT app.plan_record_session($1,$2,$3)", [
       organization,
@@ -142,6 +135,9 @@ export async function planPortal(organization: string) {
     customer: context.stripe_customer,
     return_url: `${appOrigin()}/platform`,
     locale: "fr",
+    ...(process.env.STUDIO_STRIPE_PORTAL_CONFIGURATION
+      ? { configuration: process.env.STUDIO_STRIPE_PORTAL_CONFIGURATION }
+      : {}),
   });
   return { url: portal.url };
 }
@@ -163,9 +159,11 @@ async function withBillingDb<T>(fn: (query: Pool["query"]) => Promise<T>) {
     max: 1,
     connectionTimeoutMillis: 5000,
   });
+  const client = await pool.connect();
   try {
-    return await fn(pool.query.bind(pool) as Pool["query"]);
+    return await fn(client.query.bind(client) as Pool["query"]);
   } finally {
+    client.release();
     await pool.end();
   }
 }
@@ -177,20 +175,26 @@ export async function reconcilePlanSubscription(subscriptionId: string) {
   const organization = sub.metadata?.studio_plan_org;
   if (!organization) return null; // Not a Studio plan subscription.
   const item = sub.items.data[0];
-  if (sub.items.data.length !== 1 || item.price.id !== planPriceId())
+  assertSameMode(sub);
+  if (sub.items.data.length !== 1 || item.price.id !== (await planPriceId()))
     throw new Error("Abonnement incompatible avec le forfait Studio.");
   const customer = typeof sub.customer === "string" ? sub.customer : sub.customer.id;
-  await withBillingDb((query) =>
-    query("SELECT app.plan_reconcile($1,$2,$3,$4,$5,$6,$7)", [
-      organization,
-      customer,
-      sub.id,
-      sub.status,
-      item.current_period_end ? new Date(item.current_period_end * 1000) : null,
-      Boolean(sub.cancel_at_period_end || sub.cancel_at),
-      sub.livemode,
-    ]),
-  );
+  await withBillingDb(async (query) => {
+    await query("BEGIN");
+    try {
+      await query("SELECT app.plan_reconcile($1,$2,$3,$4,$5,$6,$7)", [
+        organization, customer, sub.id, sub.status,
+        item.current_period_end ? new Date(item.current_period_end * 1000) : null,
+        Boolean(sub.cancel_at_period_end || sub.cancel_at), sub.livemode,
+      ]);
+      await query("SELECT app.plan_reconcile_details($1,$2,$3,$4,$5)", [
+        organization, sub.id, item.quantity ?? 1,
+        sub.trial_start ? new Date(sub.trial_start * 1000) : null,
+        sub.trial_end ? new Date(sub.trial_end * 1000) : null,
+      ]);
+      await query("COMMIT");
+    } catch (error) { await query("ROLLBACK"); throw error; }
+  });
   return { organization, status: sub.status };
 }
 

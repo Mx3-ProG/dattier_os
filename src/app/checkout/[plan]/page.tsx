@@ -40,7 +40,8 @@ export default async function Page({ params }: { params: Promise<{ plan: string 
   const promo = activePromotion();
   const days = trialDays();
   // Pendant l'offre, le paiement Stripe s'ouvre dès la création de l'espace.
-  const payNow = Boolean(promo && planBillingReady());
+  const cardRequired = !demoEnabled();
+
   const login = `/connexion?returnTo=${encodeURIComponent(`/checkout/${offer.price}`)}`;
   return (
     <main className="access-shell">
@@ -61,7 +62,7 @@ export default async function Page({ params }: { params: Promise<{ plan: string 
               <p className="access-referral" role="status">
                 <Gift size={18} aria-hidden />
                 <span>
-                  Black Friday : code <strong>{promo.code}</strong> déjà appliqué au paiement. Offre valable
+                  Black Friday : code <strong>{promo.code}</strong> à saisir sur Stripe. Offre valable
                   jusqu’au {promo.lastDay} minuit, puis {offer.price} € TTC / mois. Sans engagement, résiliable à tout moment.
                 </span>
               </p>
@@ -69,7 +70,7 @@ export default async function Page({ params }: { params: Promise<{ plan: string 
           ) : (
             <>
               <p className="access-price"><strong>{offer.price} €</strong> TTC / mois</p>
-              <p>{days} jours d’essai gratuits dès la création de votre espace. Aucun paiement initial. Sans engagement.</p>
+              <p>{days} jours d’essai gratuits après confirmation de votre carte. Aucun paiement initial. Sans engagement.</p>
             </>
           )}
           <p>{offer.description}</p>
@@ -86,12 +87,8 @@ export default async function Page({ params }: { params: Promise<{ plan: string 
             <>
               <span className="access-label">Connecté en tant que {user.name}</span>
               <h2>Créer votre espace professionnel</h2>
-              {payNow && promo ? (
-                <p>Créez votre espace en quelques questions, puis réglez <strong>{promo.price} €</strong> sur la page de paiement sécurisée Stripe : le code {promo.code} y est déjà appliqué. Vous bloquez ainsi le tarif de {promo.price} € TTC / mois pendant {promo.months} mois, sans engagement.</p>
-              ) : (
-                <p>Votre essai démarre à la création de l’espace et dure {days} jours, sans carte bancaire. Vous pourrez ensuite vous abonner en ligne depuis votre espace (39 € TTC par mois, paiement sécurisé par Stripe, sans engagement). Aucun prélèvement sans votre accord.</p>
-              )}
-              <SubscriptionForm plan={offer.price} userName={user.name} userEmail={user.email} payNow={payNow ? promo : null} />
+              <p>Enregistrez votre carte sur Stripe : 0 € aujourd’hui, sept jours gratuits après confirmation, puis {offer.price} € TTC par mois hors réduction. Vous pouvez résilier avant le premier prélèvement.</p>
+              {cardRequired && !planBillingReady() ? <p>Le paiement est momentanément indisponible.</p> : <SubscriptionForm plan={offer.price} userName={user.name} userEmail={user.email} cardRequired={cardRequired} />}
             </>
           ) : (
             <>

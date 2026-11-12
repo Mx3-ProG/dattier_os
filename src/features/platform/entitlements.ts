@@ -1,11 +1,16 @@
+import { saasReady } from "@/features/billing/stripe-saas";
 import { compareLegacyThreshold, compareLegacyCapability, legacyMinimum, type Capability } from "@/core/modules/entitlements";
-import type { DB } from "@/lib/database/db";
+import { demoEnabled, type DB } from "@/lib/database/db";
 import type { Plan } from "./pricing";
 
 export async function restaurantPlan(
   db: DB,
   restaurant: string,
 ): Promise<Plan> {
+  if (!demoEnabled() && saasReady()) {
+    const card = await db.query<{required:boolean}>("SELECT app.restaurant_card_required($1) AS required",[restaurant]);
+    if(card.rows[0]?.required) return 0;
+  }
   const result = await db.query<{ plan: Plan | null }>(
     "SELECT app.restaurant_plan($1) AS plan",
     [restaurant],

@@ -87,6 +87,8 @@ const migrations: [number, string][] = [
   [151, "151_services_products.sql"],
   [160, "160_denied_access_journal.sql"],
   [170, "170_black_friday_trial.sql"],
+  [112, "112_trial_card_required.sql"],
+  [171, "171_platform_billing.sql"],
 ];
 /** Applies every additive migration not yet recorded, inside the caller's transaction. */
 export async function applyMigrations(tx: DB) {

@@ -768,3 +768,14 @@ body:has(.restaurant-workspace) > .demo-purchase-link { display: none; }
 .account-home-content .add-restaurant-panel { scroll-margin-top: 95px; }
 body:has(.account-workspace) > .demo-purchase-link { display: none; }
 @media(max-width:700px) { .account-page-heading { flex-direction: column; align-items: flex-start; } .account-overview { align-items: flex-start; flex-direction: column; gap: 12px; } .account-home-content .account-restaurants { grid-template-columns: minmax(0,1fr); } .account-home-content .organization-summary { align-items: flex-start; flex-direction: column; gap: 5px; } }
+
+.billing-account { border:1px solid var(--border); border-radius:18px; padding:clamp(16px,3vw,28px); margin:20px 0; overflow-wrap:anywhere; }
+.billing-account h4 { margin-top:28px; }
+.billing-metrics { display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,200px),1fr)); gap:16px; margin:20px 0; }
+.billing-metrics small,.billing-metrics strong { display:block; }
+.billing-metrics strong { margin-top:6px; }
+.billing-list { list-style:none; padding:0; }
+.billing-list li { display:flex; flex-direction:column; gap:8px; padding:16px 0; border-bottom:1px solid var(--border); }
+.billing-account label { display:flex; flex-direction:column; gap:8px; max-width:100%; }
+.billing-account select,.billing-account input { max-width:100%; min-width:0; }
+.billing-account .actions { display:flex; flex-wrap:wrap; gap:12px; align-items:center; margin:12px 0; }
