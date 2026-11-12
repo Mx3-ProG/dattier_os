@@ -1122,16 +1122,8 @@ body:has(.landing) > .demo-purchase-link {
     padding: 10px 16px;
     font-size: max(var(--appearance-min-text, 0px), calc((13px) * var(--appearance-text-scale, 1)));
   }
-  .bf-bar {
-    padding: 8px 16px;
-  }
-  .bf-bar-deadline,
-  .bf-bar-timer,
-  .bf-bar-tag {
+  .bf-bar-deadline {
     display: none;
-  }
-  .bf-bar-cta {
-    padding: 5px 12px;
   }
 }
 .landing-plan-quota s {
