@@ -1,3 +1,4 @@
+import { saasLive } from "@/features/billing/stripe-saas";
 /** Minimal Stripe contract so cancellation can be tested without credentials or network. */
 type Subscription = {
   id: string;
@@ -44,7 +45,7 @@ function verify(
   if (
     !price ||
     subscription.id !== order.stripe_subscription ||
-    subscription.livemode ||
+    subscription.livemode !== saasLive() ||
     subscription.metadata.addon_order !== order.id ||
     subscription.items.data.length !== 1 ||
     item.price.id !== price ||

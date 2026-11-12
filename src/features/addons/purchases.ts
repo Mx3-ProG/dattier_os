@@ -1,6 +1,7 @@
 import { Pool } from "pg";
 import type Stripe from "stripe";
 import { addonBillingReady, addonStripe } from "./billing-config";
+import { saasLive } from "@/features/billing/stripe-saas";
 
 /**
  * Réconciliation des achats uniques. Chaque notification relit l’état Stripe
@@ -8,7 +9,7 @@ import { addonBillingReady, addonStripe } from "./billing-config";
  * Règles commerciales appliquées : voir docs/platform/studio-os/BOUTIQUE-ADDONS.md.
  */
 export const purchaseCheckoutReady = () =>
-  addonBillingReady() && !!process.env.STUDIO_BILLING_DATABASE_URL;
+  addonBillingReady() && !!process.env.STUDIO_BILLING_STRIPE_SECRET_KEY && !!process.env.STUDIO_BILLING_DATABASE_URL;
 
 export type PurchaseFacts = {
   livemode: boolean;
@@ -36,7 +37,7 @@ export type PurchaseOutcome = {
 };
 /** Fonction pure : un état Stripe incohérent avec la commande bloque toute attribution. */
 export function derivePurchaseOutcome(order: PurchaseOrder, facts: PurchaseFacts): PurchaseOutcome {
-  if (facts.livemode || facts.orderReference !== order.id || facts.mode !== "payment")
+  if (facts.livemode !== saasLive() || facts.orderReference !== order.id || facts.mode !== "payment")
     throw new Error("Session incompatible.");
   if (facts.sessionStatus === "expired") return { status: "expired", refunded: 0 };
   if (facts.sessionStatus !== "complete" || facts.paymentStatus !== "paid")

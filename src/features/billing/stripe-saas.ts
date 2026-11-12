@@ -77,7 +77,7 @@ export async function resolveMonthlyPrice(rule: PriceRule) {
   })) {
     const product = price.product as Stripe.Product | Stripe.DeletedProduct;
     if (!product || ("deleted" in product && product.deleted)) continue;
-    const named = "name" in product && names.includes(product.name.trim().toLowerCase());
+    const named = "name" in product && names.includes(product.name.trim().replace(/^AttaQuisine OS\s*[—-]\s*/i, "").toLowerCase());
     if (
       (named || product.id === rule.product) &&
       ("active" in product ? product.active : true) &&

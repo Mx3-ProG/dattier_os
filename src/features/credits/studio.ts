@@ -1,12 +1,13 @@
 import { randomUUID } from "node:crypto";
 import { Pool } from "pg";
 import { addonBillingReady, addonStripe } from "@/features/addons/billing-config";
+import { saasAutomaticTax, saasLive } from "@/features/billing/stripe-saas";
 import { authenticated } from "@/features/platform/http";
 import { scope } from "@/lib/auth/session";
 import { one, rows } from "@/lib/database/db";
 
 export const studioCreditPacks = [500, 1000, 2500] as const;
-export const studioCreditsReady = () => addonBillingReady() && !!process.env.STUDIO_BILLING_DATABASE_URL;
+export const studioCreditsReady = () => addonBillingReady() && !!process.env.STUDIO_BILLING_STRIPE_SECRET_KEY && !!process.env.STUDIO_BILLING_DATABASE_URL;
 type CreditOrder = {id:string;pack_cents:number;status:string;stripe_session:string|null;stripe_payment_intent:string|null};
 
 export async function studioCreditState(restaurant:string) {
@@ -37,7 +38,7 @@ export async function reconcileStudioCredit(orderId:string){
     if(!order?.stripe_session) return;
     const stripe=addonStripe();
     const session=await stripe.checkout.sessions.retrieve(order.stripe_session,{expand:["payment_intent.latest_charge"]});
-    if(session.livemode || session.metadata?.studio_credit_order!==order.id || session.mode!=="payment" || session.amount_subtotal!==order.pack_cents || session.currency!=="eur")
+    if(session.livemode!==saasLive() || session.metadata?.studio_credit_order!==order.id || session.mode!=="payment" || session.amount_subtotal!==order.pack_cents || session.currency!=="eur")
       throw new Error("Recharge Stripe incompatible.");
     if(session.status!=="expired" && (session.status!=="complete" || session.payment_status!=="paid")) return;
     const intent=session.payment_intent;
@@ -61,7 +62,7 @@ export async function reconcileStudioCreditByIntent(intentId:string){
 }
 
 export async function studioCreditCheckout(restaurant:string,pack:number){
-  if(!studioCreditsReady()) throw new Error("Recharge Stripe de test non configurée.");
+  if(!studioCreditsReady()) throw new Error("Recharge en ligne non configurée.");
   if(!studioCreditPacks.some((allowed)=>allowed===pack)) throw new Error("Pack de crédits invalide.");
   const stripe=addonStripe();
   const order=await authenticated(restaurant,async(db,user)=>{
@@ -79,7 +80,7 @@ export async function studioCreditCheckout(restaurant:string,pack:number){
   const returnUrl=`${origin}/dashboard?restaurant=${encodeURIComponent(restaurant)}&module=addons`;
   const session=await stripe.checkout.sessions.create({
     mode:"payment",line_items:[{quantity:1,price_data:{currency:"eur",unit_amount:pack,tax_behavior:"inclusive",product_data:{name:`${pack} crédits Studio · test`}}}],
-    automatic_tax:{enabled:true},success_url:returnUrl,cancel_url:returnUrl,
+    ...(saasAutomaticTax()?{automatic_tax:{enabled:true}}:{}),locale:"fr",success_url:returnUrl,cancel_url:returnUrl,
     metadata:{studio_credit_order:order.id},payment_intent_data:{metadata:{studio_credit_order:order.id}},
     expires_at:Math.floor(Date.now()/1000)+1800,
   },{idempotencyKey:`studio-credit:${order.id}`});

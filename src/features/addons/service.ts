@@ -5,16 +5,24 @@ import { addonStripe, addonBillingReady } from "./billing-config";
 import { authenticated } from "@/features/platform/http";
 import { one, rows } from "@/lib/database/db";
 import { scope } from "@/lib/auth/session";
-import { addonPriceCents, monthlyAddonIds, type MonthlyAddonId } from "./catalog";
+import { addonCatalog, addonPriceCents, monthlyAddonIds, type MonthlyAddonId } from "./catalog";
+import { resolveMonthlyPrice, saasAutomaticTax, saasLive } from "@/features/billing/stripe-saas";
 import { demoEnabled } from "@/lib/database/db";
 export { monthlyAddonIds, type MonthlyAddonId } from "./catalog";
+const addonEnv = (addon: MonthlyAddonId) =>
+  `STUDIO_ADDON_${addon.replaceAll("-", "_").toUpperCase()}_PRICE_ID`;
+/** Stripe price of a monthly add-on: env override, else found by product name. */
 export const addonPriceId = (addon: MonthlyAddonId) =>
-  process.env[`STUDIO_ADDON_${addon.replaceAll("-", "_").toUpperCase()}_PRICE_ID`] ?? "";
+  resolveMonthlyPrice({
+    env: addonEnv(addon),
+    names: [addonCatalog.find((item) => item.id === addon)?.name ?? addon],
+    cents: addonPriceCents(addon),
+  });
 
 export const addonCheckoutReady = (addon: MonthlyAddonId = "invoices") =>
+  monthlyAddonIds.includes(addon) &&
   addonBillingReady() &&
-  !!process.env.STUDIO_BILLING_DATABASE_URL &&
-  !!addonPriceId(addon);
+  !!process.env.STUDIO_BILLING_DATABASE_URL;
 async function readAddonState(restaurant: string) {
   return authenticated(restaurant, async (db, user) => {
     await scope(db, user, restaurant);
@@ -63,21 +71,19 @@ export async function addonState(restaurant: string) {
 }
 export async function addonCheckout(restaurant: string, addon: MonthlyAddonId = "invoices") {
   if (!monthlyAddonIds.includes(addon) || !addonCheckoutReady(addon))
-    throw new Error("La boutique Stripe de test n’est pas configurée.");
+    throw new Error("Le paiement en ligne des add-ons n’est pas encore configuré.");
   const stripe = addonStripe();
-  const price = await stripe.prices.retrieve(
-    addonPriceId(addon),
-  );
+  const price = await stripe.prices.retrieve(await addonPriceId(addon));
   if (
     !price.active ||
-    price.livemode ||
+    price.livemode !== saasLive() ||
     price.unit_amount !== addonPriceCents(addon) ||
     price.currency !== "eur" ||
     price.recurring?.interval !== "month" ||
     price.recurring.interval_count !== 1 ||
-    price.tax_behavior !== "inclusive"
+    price.tax_behavior === "exclusive"
   )
-    throw new Error(`Le tarif doit être de ${addonPriceCents(addon) / 100} € TTC par mois en mode test.`);
+    throw new Error(`Le tarif doit être de ${addonPriceCents(addon) / 100} € TTC par mois.`);
   const id = await authenticated(restaurant, async (db, user) => {
     await scope(db, user, restaurant);
     const state = await one<{ plan: number; admin: boolean }>(
@@ -114,7 +120,9 @@ export async function addonCheckout(restaurant: string, addon: MonthlyAddonId = 
     {
       mode: "subscription",
       line_items: [{ price: price.id, quantity: 1 }],
-      automatic_tax: { enabled: true },
+      ...(saasAutomaticTax() ? { automatic_tax: { enabled: true } } : {}),
+      payment_method_collection: "always",
+      locale: "fr",
       success_url: returnUrl,
       cancel_url: returnUrl,
       metadata: { addon_order: id, addon_id: addon },
@@ -155,7 +163,7 @@ export async function reconcileAddon(orderId: string) {
     const session = await stripe.checkout.sessions.retrieve(
       order.stripe_session,
     );
-    if (session.livemode || session.metadata?.addon_order !== orderId)
+    if (session.livemode !== saasLive() || session.metadata?.addon_order !== orderId)
       throw new Error("Session incompatible.");
     if (session.status === "expired") {
       await client.query(
@@ -170,10 +178,10 @@ export async function reconcileAddon(orderId: string) {
       );
       const item = sub.items.data[0];
       if (
-        sub.livemode ||
+        sub.livemode !== saasLive() ||
         sub.metadata.addon_order !== orderId ||
         sub.items.data.length !== 1 ||
-        item.price.id !== addonPriceId(order.addon as MonthlyAddonId) ||
+        item.price.id !== (await addonPriceId(order.addon as MonthlyAddonId)) ||
         (sub.metadata.addon_id && sub.metadata.addon_id !== order.addon) ||
         item.quantity !== 1
       )
@@ -187,7 +195,7 @@ export async function reconcileAddon(orderId: string) {
         session.payment_status === "paid" &&
         sub.status === "active" &&
         invoice?.status === "paid" &&
-        !invoice.livemode;
+        invoice.livemode === saasLive();
       const until = new Date(item.current_period_end * 1000);
       await client.query("SELECT app.addon_reconcile($1,$2,$3,$4,$5)", [
         orderId,
@@ -234,7 +242,7 @@ export async function cancelAddon(restaurant: string, addon: MonthlyAddonId = "i
   await stopAddonRenewal(
     addonStripe().subscriptions,
     subscription,
-    addonPriceId(addon),
+    await addonPriceId(addon),
   );
   try {
     await reconcileAddon(subscription.id);
