@@ -363,3 +363,508 @@ export function Hours({
     </section>
   );
 }
+
+
+export function Newsletter({
+  props: p,
+  ctx,
+  attrs,
+}: Common & { props: SectionOf<"newsletter">["props"] }) {
+  return (
+    <section className="donut-section site-newsletter" {...attrs}>
+      <Heading kicker={p.kicker} title={p.title} ctx={ctx} />
+      {p.text && <p>{rich(p.text, ctx)}</p>}
+      <form
+        className="site-newsletter-form"
+        onSubmit={(e) => e.preventDefault()}
+      >
+        <input
+          type="email"
+          placeholder={p.placeholder}
+          aria-label={p.placeholder}
+        />
+        <button type="submit" className="donut-button">
+          {p.buttonLabel} <ArrowUpRight size={16} />
+        </button>
+      </form>
+    </section>
+  );
+}
+
+export function Team({
+  props: p,
+  ctx,
+  attrs,
+}: Common & { props: SectionOf<"team">["props"] }) {
+  return (
+    <section className="donut-section site-team" {...attrs}>
+      <Heading kicker={p.kicker} title={p.title} ctx={ctx} />
+      {p.intro && <p>{rich(p.intro, ctx)}</p>}
+      <div className="site-team-grid">
+        {p.members.map((m, i) => (
+          <article key={`${m.name}-${i}`} className="site-team-card">
+            <img
+              src={m.image.src}
+              alt={m.image.alt}
+              loading="lazy"
+              decoding="async"
+            />
+            <h3>{rich(m.name, ctx)}</h3>
+            <p className="site-team-role">{rich(m.role, ctx)}</p>
+            {m.bio && <p>{rich(m.bio, ctx)}</p>}
+          </article>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+export function Stats({
+  props: p,
+  ctx,
+  attrs,
+}: Common & { props: SectionOf<"stats">["props"] }) {
+  return (
+    <section className="donut-section site-stats" {...attrs}>
+      <Heading kicker={p.kicker} title={p.title} ctx={ctx} />
+      <div className="site-stats-grid">
+        {p.items.map((it, i) => (
+          <div key={`${it.value}-${i}`} className="site-stat">
+            <strong>{rich(it.value, ctx)}</strong>
+            <span>{rich(it.label, ctx)}</span>
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+
+export function Partners({
+  props: p,
+  ctx,
+  attrs,
+}: Common & { props: SectionOf<"partners">["props"] }) {
+  return (
+    <section className="donut-section site-partners" {...attrs}>
+      <Heading kicker={p.kicker} title={p.title} ctx={ctx} />
+      <div className="site-partners-row">
+        {p.logos.map((l, i) => (
+          <a
+            key={`${l.name}-${i}`}
+            href={l.link.href || undefined}
+            target={l.link.href.startsWith("https:") ? "_blank" : undefined}
+            rel={l.link.href.startsWith("https:") ? "noreferrer" : undefined}
+            className="site-partner"
+          >
+            <img src={l.image.src} alt={l.image.alt || l.name} loading="lazy" />
+          </a>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+export function Timeline({
+  props: p,
+  ctx,
+  attrs,
+}: Common & { props: SectionOf<"timeline">["props"] }) {
+  return (
+    <section className="donut-section site-timeline" {...attrs}>
+      <Heading kicker={p.kicker} title={p.title} ctx={ctx} />
+      {p.intro && <p>{rich(p.intro, ctx)}</p>}
+      <ol className="site-timeline-list">
+        {p.steps.map((st, i) => (
+          <li key={`${st.title}-${i}`} className="site-timeline-step">
+            <span className="site-timeline-num">{i + 1}</span>
+            <div>
+              <h3>{rich(st.title, ctx)}</h3>
+              {st.text && <p>{rich(st.text, ctx)}</p>}
+              {st.image?.src && (
+                <img
+                  src={st.image.src}
+                  alt={st.image.alt}
+                  loading="lazy"
+                  decoding="async"
+                />
+              )}
+            </div>
+          </li>
+        ))}
+      </ol>
+    </section>
+  );
+}
+
+export function Testimonials({
+  props: p,
+  ctx,
+  attrs,
+}: Common & { props: SectionOf<"testimonials">["props"] }) {
+  return (
+    <section className="donut-section site-testimonials" {...attrs}>
+      <Heading kicker={p.kicker} title={p.title} ctx={ctx} />
+      <div className="site-testimonials-grid">
+        {p.items.map((it, i) => (
+          <blockquote key={`${it.author}-${i}`} className="site-testimonial">
+            <div className="site-testimonial-rating" aria-label={`${it.rating} sur 5`}>
+              {"★".repeat(it.rating)}
+            </div>
+            <p>“{rich(it.quote, ctx)}”</p>
+            <footer>
+              {it.image?.src && (
+                <img
+                  src={it.image.src}
+                  alt={it.image.alt || it.author}
+                  loading="lazy"
+                  decoding="async"
+                />
+              )}
+              <div>
+                <strong>{rich(it.author, ctx)}</strong>
+                {it.role && <span>{rich(it.role, ctx)}</span>}
+              </div>
+            </footer>
+          </blockquote>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+
+export function Pricing({
+  props: p,
+  ctx,
+  attrs,
+}: Common & { props: SectionOf<"pricing">["props"] }) {
+  return (
+    <section className="donut-section site-pricing" {...attrs}>
+      <Heading kicker={p.kicker} title={p.title} ctx={ctx} />
+      {p.intro && <p>{rich(p.intro, ctx)}</p>}
+      <div className="site-pricing-grid">
+        {p.plans.map((pl, i) => (
+          <article
+            key={`${pl.name}-${i}`}
+            className={`site-plan ${pl.highlight ? "is-highlight" : ""}`}
+          >
+            <h3>{rich(pl.name, ctx)}</h3>
+            <div className="site-plan-price">
+              <strong>{rich(pl.price, ctx)}</strong>
+              {pl.period && <span>{rich(pl.period, ctx)}</span>}
+            </div>
+            <ul>
+              {pl.features.map((f, j) => (
+                <li key={j}>{rich(f, ctx)}</li>
+              ))}
+            </ul>
+            <SiteLink link={pl.cta} className="donut-button">
+              <ArrowUpRight size={16} />
+            </SiteLink>
+          </article>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+export function Urgency({
+  props: p,
+  ctx,
+  attrs,
+}: Common & { props: SectionOf<"urgency">["props"] }) {
+  return (
+    <section className="donut-section site-urgency" {...attrs}>
+      <Heading kicker={p.kicker} title={p.title} ctx={ctx} />
+      {p.text && <p>{rich(p.text, ctx)}</p>}
+      <div className="site-urgency-meta">
+        {p.stock > 0 && (
+          <span className="site-urgency-stock">
+            {p.stock} {p.stockLabel}
+          </span>
+        )}
+        {p.endDate && <span className="site-urgency-date">{rich(p.endDate, ctx)}</span>}
+      </div>
+      <SiteLink link={p.cta} className="donut-button">
+        <ArrowUpRight size={16} />
+      </SiteLink>
+    </section>
+  );
+}
+
+export function Hook({
+  props: p,
+  ctx,
+  attrs,
+}: Common & { props: SectionOf<"hook">["props"] }) {
+  return (
+    <aside className={`site-hook tone-${p.tone}`} {...attrs}>
+      <span>{rich(p.text, ctx)}</span>
+      <SiteLink link={p.link} className="donut-text-link">
+        <ArrowUpRight size={16} />
+      </SiteLink>
+    </aside>
+  );
+}
+
+export function ReviewForm({
+  props: p,
+  ctx,
+  attrs,
+}: Common & { props: SectionOf<"reviewForm">["props"] }) {
+  return (
+    <section className="donut-section site-review-form" {...attrs}>
+      <Heading kicker={p.kicker} title={p.title} ctx={ctx} />
+      {p.text && <p>{rich(p.text, ctx)}</p>}
+      <form className="site-review-form-fields" onSubmit={(e) => e.preventDefault()}>
+        <input type="text" placeholder="Votre nom" aria-label="Votre nom" />
+        <select aria-label="Note">
+          {[5, 4, 3, 2, 1].map((n) => (
+            <option key={n} value={n}>
+              {n} / 5
+            </option>
+          ))}
+        </select>
+        <textarea rows={4} placeholder="Votre avis" aria-label="Votre avis" />
+        <button type="submit" className="donut-button">
+          {p.buttonLabel} <ArrowUpRight size={16} />
+        </button>
+      </form>
+    </section>
+  );
+}
+
+
+export function BlogList({
+  props: p,
+  ctx,
+  attrs,
+}: Common & { props: SectionOf<"blogList">["props"] }) {
+  return (
+    <section className="donut-section site-blog-list" {...attrs}>
+      <Heading kicker={p.kicker} title={p.title} ctx={ctx} />
+      {p.intro && <p>{rich(p.intro, ctx)}</p>}
+      <div className="site-blog-grid">
+        {p.articles.map((a, i) => (
+          <article key={`${a.title}-${i}`} className="site-blog-card">
+            {a.image?.src && (
+              <img
+                src={a.image.src}
+                alt={a.image.alt || a.title}
+                loading="lazy"
+                decoding="async"
+              />
+            )}
+            <div>
+              {a.date && <time>{rich(a.date, ctx)}</time>}
+              <h3>{rich(a.title, ctx)}</h3>
+              {a.excerpt && <p>{rich(a.excerpt, ctx)}</p>}
+              {a.href && (
+                <SiteLink link={{ label: "Lire la suite", href: a.href }} className="donut-text-link">
+                  <ArrowUpRight size={16} />
+                </SiteLink>
+              )}
+            </div>
+          </article>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+export function Article({
+  props: p,
+  ctx,
+  attrs,
+}: Common & { props: SectionOf<"article">["props"] }) {
+  return (
+    <article className="donut-section site-article" {...attrs}>
+      <Heading kicker={p.kicker} title={p.title} ctx={ctx} />
+      {p.image?.src && (
+        <img
+          src={p.image.src}
+          alt={p.image.alt}
+          loading="lazy"
+          decoding="async"
+          className="site-article-image"
+        />
+      )}
+      <div className="site-article-meta">
+        {p.author && <span>{rich(p.author, ctx)}</span>}
+        {p.date && <time>{rich(p.date, ctx)}</time>}
+      </div>
+      {paragraphs(p.body, ctx)}
+    </article>
+  );
+}
+
+
+export function Comparison({
+  props: p,
+  ctx,
+  attrs,
+}: Common & { props: SectionOf<"comparison">["props"] }) {
+  return (
+    <section className="donut-section site-comparison" {...attrs}>
+      <Heading kicker={p.kicker} title={p.title} ctx={ctx} />
+      {p.intro && <p>{rich(p.intro, ctx)}</p>}
+      <div className="site-comparison-wrap">
+        <table className="site-comparison-table">
+          <thead>
+            <tr>
+              <th></th>
+              {p.columns.map((c, i) => (
+                <th key={i}>{rich(c, ctx)}</th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {p.rows.map((r, i) => (
+              <tr key={i}>
+                <th>{rich(r.label, ctx)}</th>
+                {r.values.map((v, j) => (
+                  <td key={j}>{rich(v, ctx)}</td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </section>
+  );
+}
+
+export function ReviewAdvanced({
+  props: p,
+  ctx,
+  attrs,
+}: Common & { props: SectionOf<"reviewAdvanced">["props"] }) {
+  return (
+    <section className="donut-section site-review-advanced" {...attrs}>
+      <Heading kicker={p.kicker} title={p.title} ctx={ctx} />
+      {p.text && <p>{rich(p.text, ctx)}</p>}
+      <form className="site-review-advanced-form" onSubmit={(e) => e.preventDefault()}>
+        <input type="text" placeholder="Votre nom" aria-label="Votre nom" />
+        {p.allowRating && (
+          <select aria-label="Note">
+            {[5, 4, 3, 2, 1].map((n) => (
+              <option key={n} value={n}>
+                {n} / 5
+              </option>
+            ))}
+          </select>
+        )}
+        <textarea rows={4} placeholder="Votre avis" aria-label="Votre avis" />
+        {p.allowPhoto && (
+          <input type="file" accept="image/*" aria-label="Photo (optionnel)" />
+        )}
+        <button type="submit" className="donut-button">
+          {p.buttonLabel} <ArrowUpRight size={16} />
+        </button>
+      </form>
+    </section>
+  );
+}
+
+export function FaqAdvanced({
+  props: p,
+  ctx,
+  attrs,
+}: Common & { props: SectionOf<"faqAdvanced">["props"] }) {
+  return (
+    <section className="donut-section site-faq-advanced" {...attrs}>
+      <Heading kicker={p.kicker} title={p.title} ctx={ctx} />
+      {p.intro && <p>{rich(p.intro, ctx)}</p>}
+      {p.categories.map((cat, i) => (
+        <div key={`${cat.name}-${i}`} className="site-faq-category">
+          <h3>{rich(cat.name, ctx)}</h3>
+          <div>
+            {cat.items.map((item, j) => (
+              <details key={j}>
+                <summary>{rich(item.question, ctx)}</summary>
+                {paragraphs(item.answer, ctx)}
+              </details>
+            ))}
+          </div>
+        </div>
+      ))}
+    </section>
+  );
+}
+
+
+export function Wheel({
+  props: p,
+  ctx,
+  attrs,
+}: Common & { props: SectionOf<"wheel">["props"] }) {
+  const [spinning, setSpinning] = useState(false);
+  const [rotation, setRotation] = useState(0);
+  const [result, setResult] = useState<string | null>(null);
+  const spin = () => {
+    if (spinning || !p.prizes.length) return;
+    setSpinning(true);
+    setResult(null);
+    const idx = Math.floor(Math.random() * p.prizes.length);
+    const slice = 360 / p.prizes.length;
+    const target = 360 * 6 + (360 - idx * slice - slice / 2);
+    setRotation((r) => r + target);
+    window.setTimeout(() => {
+      setSpinning(false);
+      setResult(p.prizes[idx].label);
+    }, 4200);
+  };
+  const gradient = p.prizes
+    .map((pr, i) => {
+      const slice = 100 / p.prizes.length;
+      const start = i * slice;
+      const end = (i + 1) * slice;
+      return `${pr.color} ${start}% ${end}%`;
+    })
+    .join(", ");
+  return (
+    <section className="donut-section site-wheel" {...attrs}>
+      <Heading kicker={p.kicker} title={p.title} ctx={ctx} />
+      {p.text && <p>{rich(p.text, ctx)}</p>}
+      <div className="site-wheel-stage">
+        <div
+          className="site-wheel-disk"
+          style={{
+            background: `conic-gradient(${gradient})`,
+            transform: `rotate(${rotation}deg)`,
+            transition: spinning ? "transform 4s cubic-bezier(.17,.67,.12,.99)" : "none",
+          }}
+        >
+          {p.prizes.map((pr, i) => {
+            const slice = 360 / p.prizes.length;
+            const angle = i * slice + slice / 2;
+            return (
+              <span
+                key={i}
+                className="site-wheel-label"
+                style={{ transform: `rotate(${angle}deg) translate(0, -42%)` }}
+              >
+                {pr.label}
+              </span>
+            );
+          })}
+        </div>
+        <div className="site-wheel-pointer" aria-hidden="true" />
+      </div>
+      <button
+        type="button"
+        className="donut-button"
+        onClick={spin}
+        disabled={spinning}
+      >
+        {spinning ? "…" : p.buttonLabel}
+      </button>
+      {result && (
+        <p className="site-wheel-result">
+          {rich(p.resultText.replace("{prize}", result), ctx)}
+        </p>
+      )}
+    </section>
+  );
+}

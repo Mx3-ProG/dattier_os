@@ -35,7 +35,76 @@
 .donut-site[data-template="escale"] .donut-hero { gap: 24px; padding: 24px; }
 .donut-site[data-template="escale"] .donut-hero-art { margin: 24px; border-radius: 12px; transform: rotate(3deg); box-shadow: 12px 12px 0 var(--pink); }
 .donut-site[data-template="escale"] .donut-hero-copy { padding-inline: 30px; }
-.donut-site[data-template="escale"] .donut-button { border-radius: 14px; }
+ .donut-site[data-template="escale"] .donut-button { border-radius: 14px; }
+.donut-site[data-template="pizzeria"] .donut-hero { grid-template-columns: 1.1fr 1fr; background: linear-gradient(135deg, #fff7ed 0%, #fde68a33 100%); }
+.donut-site[data-template="pizzeria"] .donut-hero-art { border-radius: 50%; margin: 24px; box-shadow: 0 12px 40px #b91c1c22; }
+.donut-site[data-template="pizzeria"] .donut-hero h1 { font-family: "DM Serif Display", serif; }
+.donut-site[data-template="pizzeria"] .donut-button { border-radius: 999px; }
+.donut-site[data-template="sushi"] .donut-hero { grid-template-columns: 1fr 1.2fr; background: #fafafa; }
+.donut-site[data-template="sushi"] .donut-hero-art { border-radius: 0; margin: 0; box-shadow: inset 0 0 0 1px #11182722; }
+.donut-site[data-template="sushi"] .donut-hero h1 { letter-spacing: .02em; font-weight: 300; }
+.donut-site[data-template="sushi"] .donut-button { border-radius: 2px; }
+.donut-site[data-template="coiffeur"] .donut-hero { grid-template-columns: 1fr; text-align: center; }
+.donut-site[data-template="coiffeur"] .donut-hero-copy { padding: 48px 24px 24px; }
+.donut-site[data-template="coiffeur"] :is(.donut-kicker,.donut-hero-actions) { justify-content: center; }
+.donut-site[data-template="coiffeur"] .donut-hero-art { min-height: 340px; width: min(420px, 90%); margin: 0 auto 40px; border-radius: 210px 210px 0 0; }
+.donut-site[data-template="coiffeur"] .donut-button { border-radius: 12px; }
+.donut-site[data-template="loft"] .donut-hero { grid-template-columns: 1.3fr 1fr; padding: 40px; gap: 32px; }
+.donut-site[data-template="loft"] .donut-hero-art { margin: 0; min-height: 520px; border-radius: 0; }
+.donut-site[data-template="loft"] .donut-hero h1 { font-size: clamp(44px,6vw,88px); font-weight: 600; }
+.donut-site[data-template="loft"] .donut-hero-copy { padding: 24px; }
+ .donut-site[data-template="loft"] .donut-button { border-radius: 0; }
+.donut-site[data-template="chantier"] .donut-hero { grid-template-columns: 1.1fr 1fr; background: linear-gradient(180deg, #fef3c7 0%, #fde68a44 100%); }
+.donut-site[data-template="chantier"] .donut-hero-art { border-radius: 8px; margin: 24px; box-shadow: 6px 6px 0 #92400e33; }
+.donut-site[data-template="chantier"] .donut-hero h1 { text-transform: uppercase; letter-spacing: .04em; }
+.donut-site[data-template="chantier"] .donut-button { border-radius: 4px; box-shadow: 4px 4px 0 #78350f; }
+.donut-site[data-template="racing"] .donut-hero { grid-template-columns: 1.2fr 1fr; background: #0a0a0a; color: #fafafa; }
+.donut-site[data-template="racing"] .donut-hero-art { border-radius: 0; margin: 0; border: 2px solid #dc2626; }
+.donut-site[data-template="racing"] .donut-hero h1 { text-transform: uppercase; font-style: italic; letter-spacing: -.02em; }
+.donut-site[data-template="racing"] .donut-button { border-radius: 0; background: #dc2626; }
+.donut-site[data-template="manuscrit"] .donut-hero { grid-template-columns: 1fr; text-align: center; }
+.donut-site[data-template="manuscrit"] .donut-hero-copy { padding: 60px 24px 24px; max-width: 720px; margin-inline: auto; }
+.donut-site[data-template="manuscrit"] .donut-hero h1 { font-family: Georgia, serif; font-weight: 400; font-style: italic; }
+.donut-site[data-template="manuscrit"] .donut-hero-art { min-height: 280px; width: min(480px, 90%); margin: 0 auto 40px; border-radius: 0; }
+.donut-site[data-template="manuscrit"] .donut-button { border-radius: 0; }
+.donut-site[data-template="assurance"] .donut-hero { grid-template-columns: 1fr 1.1fr; background: linear-gradient(120deg, #f1f5f9 0%, #dbeafe 100%); }
+.donut-site[data-template="assurance"] .donut-hero-art { border-radius: 12px; margin: 24px; }
+.donut-site[data-template="assurance"] .donut-hero h1 { font-weight: 600; }
+ .donut-site[data-template="assurance"] .donut-button { border-radius: 8px; }
+.donut-site[data-template="patisserie"] .donut-hero { grid-template-columns: 1fr 1.1fr; background: linear-gradient(135deg, #fff1f2 0%, #fecdd344 100%); }
+.donut-site[data-template="patisserie"] .donut-hero-art { border-radius: 50% 50% 12px 12px; margin: 24px; box-shadow: 0 12px 40px #be185d22; }
+.donut-site[data-template="patisserie"] .donut-hero h1 { font-family: "DM Serif Display", serif; }
+.donut-site[data-template="patisserie"] .donut-button { border-radius: 999px; }
+.donut-site[data-template="streetfood"] .donut-hero { grid-template-columns: 1.2fr 1fr; background: #0c0a09; color: #fafaf9; }
+.donut-site[data-template="streetfood"] .donut-hero-art { border-radius: 16px; margin: 0; border: 2px solid #f97316; }
+.donut-site[data-template="streetfood"] .donut-hero h1 { text-transform: uppercase; font-weight: 900; letter-spacing: -.02em; }
+.donut-site[data-template="streetfood"] .donut-button { border-radius: 999px; background: #f97316; color: #0c0a09; }
+.donut-site[data-template="compta"] .donut-hero { grid-template-columns: 1.1fr 1fr; background: linear-gradient(120deg, #f0fdfa 0%, #ccfbf1 100%); }
+.donut-site[data-template="compta"] .donut-hero-art { border-radius: 8px; margin: 24px; }
+.donut-site[data-template="compta"] .donut-hero h1 { font-weight: 600; }
+.donut-site[data-template="compta"] .donut-button { border-radius: 4px; }
+.donut-site[data-template="ecole"] .donut-hero { grid-template-columns: 1fr 1.1fr; background: linear-gradient(120deg, #faf5ff 0%, #e9d5ff 100%); }
+.donut-site[data-template="ecole"] .donut-hero-art { border-radius: 12px; margin: 24px; }
+.donut-site[data-template="ecole"] .donut-hero h1 { font-weight: 700; }
+ .donut-site[data-template="ecole"] .donut-button { border-radius: 12px; }
+.donut-site[data-template="gastronomique"] .donut-hero { grid-template-columns: 1fr 1.3fr; padding: 40px; gap: 24px; }
+.donut-site[data-template="gastronomique"] .donut-hero-art { margin: 0; min-height: 620px; border-radius: 0; }
+.donut-site[data-template="gastronomique"] .donut-hero h1 { font-size: clamp(44px,6vw,84px); font-weight: 600; }
+.donut-site[data-template="gastronomique"] .donut-hero-copy { padding: 36px; }
+.donut-site[data-template="gastronomique"] .donut-button { border-radius: 0; }
+.donut-site[data-template="baravin"] .donut-hero { grid-template-columns: 1.1fr 1fr; background: #1c1917; color: #fafaf9; }
+.donut-site[data-template="baravin"] .donut-hero-art { border-radius: 0; margin: 0; border: 1px solid #7f1d1d; }
+.donut-site[data-template="baravin"] .donut-hero h1 { font-family: "DM Serif Display", serif; }
+.donut-site[data-template="baravin"] .donut-button { border-radius: 0; background: #7f1d1d; }
+.donut-site[data-template="brunch"] .donut-hero { grid-template-columns: 1fr; text-align: center; }
+.donut-site[data-template="brunch"] .donut-hero-copy { padding: 48px 24px 24px; }
+.donut-site[data-template="brunch"] :is(.donut-kicker,.donut-hero-actions) { justify-content: center; }
+.donut-site[data-template="brunch"] .donut-hero-art { min-height: 340px; width: min(520px, 90%); margin: 0 auto 40px; border-radius: 260px 260px 0 0; }
+.donut-site[data-template="brunch"] .donut-button { border-radius: 999px; }
+.donut-site[data-template="burger"] .donut-hero { grid-template-columns: 1.25fr 1fr; background: #fef2f2; }
+.donut-site[data-template="burger"] .donut-hero h1 { text-transform: uppercase; font-size: clamp(48px, 7vw, 110px); }
+.donut-site[data-template="burger"] .donut-hero-art { border-radius: 0; margin: 0; }
+.donut-site[data-template="burger"] .donut-button { border-radius: 0; box-shadow: 4px 4px 0 #18181b; }
 .donut-site[data-action-bar="true"] { padding-bottom: 96px; }
 .template-action-bar { position: fixed; bottom: max(18px, env(safe-area-inset-bottom)); left: 50%; transform: translateX(-50%); z-index: 45; display: flex; align-items: center; justify-content: space-between; gap: 24px; width: min(480px, calc(100% - 32px)); padding: 12px 18px; background: var(--cream); border: 1px solid var(--pink); border-radius: 14px; box-shadow: 0 10px 40px #0002; font-size: 14px; }
 .template-surprise { text-align: center; padding: 24px; }
@@ -52,6 +121,21 @@
   .donut-site[data-template] .donut-hero-art { order: 0; min-height: 320px; margin: 16px 24px 36px; width: auto; }
   .donut-site[data-template="pause"] .donut-hero-art { border-radius: 120px; }
   .donut-site[data-template="escale"] .donut-hero-art { transform: rotate(1deg); }
+  .donut-site[data-template="pizzeria"] .donut-hero-art { border-radius: 24px; }
+  .donut-site[data-template="coiffeur"] .donut-hero-art { border-radius: 120px 120px 0 0; }
+  .donut-site[data-template="loft"] .donut-hero-art { min-height: 280px; }
+  .donut-site[data-template="chantier"] .donut-hero-art { border-radius: 4px; }
+  .donut-site[data-template="racing"] .donut-hero-art { min-height: 280px; }
+  .donut-site[data-template="manuscrit"] .donut-hero-art { border-radius: 0; }
+  .donut-site[data-template="assurance"] .donut-hero-art { min-height: 280px; }
+  .donut-site[data-template="patisserie"] .donut-hero-art { border-radius: 24px; }
+  .donut-site[data-template="streetfood"] .donut-hero-art { min-height: 280px; }
+  .donut-site[data-template="compta"] .donut-hero-art { min-height: 280px; }
+  .donut-site[data-template="ecole"] .donut-hero-art { min-height: 280px; }
+  .donut-site[data-template="gastronomique"] .donut-hero-art { min-height: 320px; }
+  .donut-site[data-template="baravin"] .donut-hero-art { min-height: 280px; }
+  .donut-site[data-template="brunch"] .donut-hero-art { border-radius: 120px 120px 0 0; }
+  .donut-site[data-template="burger"] .donut-hero-art { min-height: 320px; }
   .donut-site[data-template] .donut-hero h1 { font-size: clamp(42px, 10vw, 72px); }
   .template-action-bar { gap: 12px; padding: 10px 12px; font-size: 12px; }
 }
@@ -69,7 +153,40 @@
 .donut-site[data-template="riviera"] .donut-about { border-radius: 80px 80px 0 0; }
 .donut-site[data-template="atelier"] .donut-section-title { display: block; max-width: 900px; }
 .donut-site[data-template="atelier"] .donut-product-image { border-radius: 0; }
-.donut-site[data-template="escale"] .donut-about-art { transform: rotate(-2deg); border: 1px solid var(--pink); }
+ .donut-site[data-template="escale"] .donut-about-art { transform: rotate(-2deg); border: 1px solid var(--pink); }
+.donut-site[data-template="pizzeria"] .donut-section-title { border-bottom: 2px solid #b91c1c; padding-bottom: 12px; }
+.donut-site[data-template="pizzeria"] .donut-product-image { border-radius: 50%; }
+.donut-site[data-template="sushi"] .donut-section { padding-block: 80px; }
+.donut-site[data-template="sushi"] .donut-section-title h2 { letter-spacing: .15em; text-transform: uppercase; font-weight: 300; }
+.donut-site[data-template="coiffeur"] .donut-section-title { text-align: center; flex-direction: column; align-items: center; }
+.donut-site[data-template="coiffeur"] .donut-product-image { border-radius: 16px 16px 0 0; }
+.donut-site[data-template="loft"] .donut-section-title { display: block; max-width: 820px; }
+.donut-site[data-template="loft"] .donut-product-image { border-radius: 0; }
+ .donut-site[data-template="loft"] .donut-about { grid-template-columns: .8fr 1fr; gap: 6vw; }
+.donut-site[data-template="chantier"] .donut-section-title { border-left: 4px solid #92400e; padding-left: 12px; }
+.donut-site[data-template="chantier"] .donut-product-image { border-radius: 4px; }
+.donut-site[data-template="racing"] .donut-section { background: #111; color: #fafafa; }
+.donut-site[data-template="racing"] .donut-section-title h2 { text-transform: uppercase; font-style: italic; }
+.donut-site[data-template="manuscrit"] .donut-section-title { text-align: center; flex-direction: column; align-items: center; }
+.donut-site[data-template="manuscrit"] .donut-about { grid-template-columns: 1fr; gap: 24px; }
+.donut-site[data-template="assurance"] .donut-section-title { border-bottom: 1px solid #1e40af44; padding-bottom: 12px; }
+ .donut-site[data-template="assurance"] .donut-product-image { border-radius: 8px; }
+.donut-site[data-template="patisserie"] .donut-section-title { border-bottom: 2px solid #be185d; padding-bottom: 12px; }
+.donut-site[data-template="patisserie"] .donut-product-image { border-radius: 50% 50% 0 0; }
+.donut-site[data-template="streetfood"] .donut-section { background: #111; color: #fafaf9; }
+.donut-site[data-template="streetfood"] .donut-section-title h2 { text-transform: uppercase; font-weight: 900; }
+.donut-site[data-template="compta"] .donut-section-title { border-left: 4px solid #0f766e; padding-left: 12px; }
+.donut-site[data-template="compta"] .donut-product-image { border-radius: 4px; }
+.donut-site[data-template="ecole"] .donut-section-title { text-align: center; flex-direction: column; align-items: center; }
+ .donut-site[data-template="ecole"] .donut-product-image { border-radius: 12px; }
+.donut-site[data-template="gastronomique"] .donut-section { padding-block: 100px; }
+.donut-site[data-template="gastronomique"] .donut-about { grid-template-columns: .7fr 1fr; gap: 8vw; }
+.donut-site[data-template="baravin"] .donut-section { background: #151312; color: #fafaf9; }
+.donut-site[data-template="baravin"] .donut-section-title h2 { font-family: "DM Serif Display", serif; }
+.donut-site[data-template="brunch"] .donut-section-title { text-align: center; flex-direction: column; align-items: center; }
+.donut-site[data-template="brunch"] .donut-product-image { border-radius: 50%; }
+.donut-site[data-template="burger"] .donut-catalog { background: #fef2f2; }
+.donut-site[data-template="burger"] .donut-section-title h2 { text-transform: uppercase; }
 .donut-site[data-motion="false"] :is(.donut-marquee-track,.donut-sticker,.donut-floating-label) { animation: none; }
 .donut-site[data-motion="false"] .donut-marquee-copy + .donut-marquee-copy { display: none; }
 @media (min-width: 900px) {
@@ -82,3 +199,89 @@
 }
 .donut-site[data-template] .donut-marquee { transform: none; width: 100%; margin-inline: 0; }
 body:has(.donut-site.is-cms-preview) > .demo-purchase-link { display: none; }
+
+/* ── Compositions enrichies (refonte) ── */
+.donut-site[data-template="bistrot"] { --site-gap: 28px; }
+.donut-site[data-template="bistrot"] .donut-section { padding-block: 64px; }
+.donut-site[data-template="bistrot"] .donut-section-title h2 { font-size: clamp(28px,4vw,44px); }
+.donut-site[data-template="bistrot"] .donut-marquee { background: #7c3028; color: #fff8ef; padding-block: 14px; }
+.donut-site[data-template="jardin"] { --site-gap: 40px; }
+.donut-site[data-template="jardin"] .donut-section { padding-block: 72px; }
+.donut-site[data-template="jardin"] .donut-about { gap: 6vw; }
+.donut-site[data-template="jardin"] .donut-marquee { font-style: italic; }
+.donut-site[data-template="comptoir"] .donut-section { padding-block: 48px; }
+.donut-site[data-template="comptoir"] .donut-section-title h2 { letter-spacing: .08em; }
+.donut-site[data-template="comptoir"] .donut-marquee { background: #993d13; color: #fff8e8; padding-block: 12px; text-transform: uppercase; }
+.donut-site[data-template="pause"] .donut-section { padding-block: 56px; }
+.donut-site[data-template="pause"] .donut-marquee { justify-content: center; }
+.donut-site[data-template="signature"] .donut-section { padding-block: 110px; }
+.donut-site[data-template="signature"] .donut-section-title h2 { font-size: clamp(32px,4.5vw,52px); }
+.donut-site[data-template="signature"] .donut-marquee { letter-spacing: .25em; }
+.donut-site[data-template="riviera"] .donut-section { padding-block: 70px; }
+.donut-site[data-template="riviera"] .donut-marquee { background: repeating-linear-gradient(90deg,#215475 0 40px,#1e4a6b 40px 80px); color: #f4f9fc; }
+.donut-site[data-template="atelier"] .donut-section { padding-block: 80px; }
+.donut-site[data-template="atelier"] .donut-section-title { max-width: 1000px; }
+.donut-site[data-template="atelier"] .donut-marquee { border-top: 1px solid #43413e; border-bottom: 1px solid #43413e; }
+.donut-site[data-template="escale"] .donut-section { padding-block: 60px; }
+.donut-site[data-template="escale"] .donut-marquee { transform: rotate(-1deg); }
+
+
+
+/* Bistrot — univers brasserie */
+.donut-site[data-template="bistrot"] .donut-hero {
+  background: linear-gradient(180deg, #fff8ef 0%, #f5e6d3 100%);
+  border: 2px solid #7c3028;
+  box-shadow: inset 0 0 0 6px #fff8ef, 0 0 0 2px #7c3028;
+}
+.donut-site[data-template="bistrot"] .donut-hero-copy {
+  padding: 48px 32px;
+}
+.donut-site[data-template="bistrot"] .donut-hero h1 {
+  font-family: "DM Serif Display", Georgia, serif;
+  font-style: italic;
+  letter-spacing: -0.01em;
+}
+.donut-site[data-template="bistrot"] .donut-hero-art {
+  border-radius: 0;
+  border: 4px double #7c3028;
+  margin: 24px;
+  background: #f0e0bd;
+}
+.donut-site[data-template="bistrot"] .donut-kicker {
+  letter-spacing: 0.35em;
+  text-transform: uppercase;
+  border-bottom: 1px solid #7c3028;
+  padding-bottom: 8px;
+  display: inline-block;
+}
+.donut-site[data-template="bistrot"] .donut-button {
+  border-radius: 0;
+  background: #7c3028;
+  border: 2px solid #7c3028;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-size: 13px;
+}
+.donut-site[data-template="bistrot"] .donut-section {
+  background: #fff8ef;
+  border-bottom: 1px dashed #7c302844;
+}
+.donut-site[data-template="bistrot"] .donut-section-title h2 {
+  font-family: "DM Serif Display", Georgia, serif;
+  border-bottom: 2px solid #7c3028;
+  padding-bottom: 12px;
+  display: inline-block;
+}
+.donut-site[data-template="bistrot"] .donut-marquee {
+  background: #7c3028;
+  color: #fff8ef;
+  padding-block: 16px;
+  font-family: "DM Serif Display", Georgia, serif;
+  letter-spacing: 0.2em;
+}
+.donut-site[data-template="bistrot"] .donut-about {
+  background: #f5e6d3;
+  border: 1px solid #7c302833;
+  border-radius: 0;
+  padding: 32px;
+}

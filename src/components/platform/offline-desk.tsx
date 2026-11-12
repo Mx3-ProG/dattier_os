@@ -149,7 +149,7 @@ export function OfflineDesk() {
   return (
     <main className="platform">
       <header>
-        <Link href="/platform">← Mes restaurants</Link>
+        <Link href="/platform">← Mes établissements</Link>
         <h1>Poste de service hors ligne</h1>
         <p role="status">
           {online ? "Connexion disponible" : "Hors ligne"} · Les tickets restent
@@ -162,7 +162,7 @@ export function OfflineDesk() {
         </p>
       )}
       {!restaurant ? (
-        <p>Ouvrez le poste depuis votre restaurant.</p>
+        <p>Ouvrez le poste depuis votre établissement.</p>
       ) : !state || state.closed ? (
         <section>
           <h2>Préparer cet appareil</h2>

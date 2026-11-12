@@ -3,7 +3,7 @@ import { isLoadingRenderer, loadingScreenKind } from "./loading-screens";
 import { analyticsKind, isAnalyticsRenderer } from "@/features/analytics/modules";
 import { withBusinessErrors } from "./store-service";
 import { authenticated } from "@/features/platform/http";
-import { rows, type DB } from "@/lib/database/db";
+import { rows, type DB } from "@/infrastructure/database/db";
 
 const slug = z.string().regex(/^[a-z0-9][a-z0-9-]{0,63}$/);
 const categorySchema = z

@@ -1,7 +1,7 @@
 // Processus enfant de tests/demo-shutdown.test.ts : ouvre une base PGlite, écrit, puis
 // imite Next.js qui appelle process.exit dès SIGTERM.
 import { PGlite } from "@electric-sql/pglite";
-import { closeOnShutdown } from "../../src/lib/database/demo-shutdown";
+import { closeOnShutdown } from "../../src/infrastructure/database/demo-shutdown";
 
 const [dir, mode] = process.argv.slice(2);
 const db = new PGlite(dir);

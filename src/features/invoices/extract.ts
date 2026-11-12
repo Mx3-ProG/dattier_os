@@ -4,8 +4,8 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { z } from "zod";
 import { llmModel } from "@/features/assistant/llm";
-import { providerCostEur, type TokenUsage } from "@/features/assistant/pricing";
-import { categories, type Category, type InvoiceDraft } from "./checks";
+import { providerCostEur, type TokenUsage } from "@/domain/assistant/pricing";
+import { categories, type Category, type InvoiceDraft } from "@/domain/invoices/checks";
 
 const nullable = (type: string) => ({ type: [type, "null"] });
 const schema = {

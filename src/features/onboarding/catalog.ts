@@ -16,12 +16,18 @@ export const trades: Record<Industry, readonly string[]> = {
   other: ["Autre activité"],
 };
 
+/**
+ * Modules gratuits installés au choix du métier : les opérations (« ops-* ») et
+ * les outils métier. Ils apparaissent dans OPÉRATIONS et se désactivent depuis
+ * la boutique d'add-ons ; un changement de métier remplace ceux de l'ancien.
+ */
 export const freeTradeTools: Record<Industry, readonly string[]> = {
-  restaurant: ["kitchen-display", "recipe-cost", "menu-allergens", "service-pacing", "waste-tracker"],
+  restaurant: ["ops-orders", "ops-kitchen", "ops-bar", "kitchen-display", "recipe-cost", "menu-allergens", "service-pacing", "waste-tracker"],
   beauty: ["appointment-booking", "chair-occupancy", "client-style", "salon-stock"],
-  retail: ["product-variants", "abandoned-cart", "shipping-rules", "product-bundles"],
+  retail: ["ops-orders", "product-variants", "abandoned-cart", "shipping-rules", "product-bundles"],
   construction: ["site-planning", "site-report", "quote-builder", "equipment-log"],
-  services: [], other: [],
+  services: ["appointment-booking", "quote-builder"],
+  other: ["ops-orders", "appointment-booking", "quote-builder"],
 };
 
 export const discoverySources = ["salesperson", "social", "youtube", "search", "referral", "other"] as const;
@@ -31,10 +37,6 @@ export const discoveryLabels: Record<(typeof discoverySources)[number], string> 
 };
 
 export const workflowChoices = ["sales", "appointments", "projects", "stock", "customers"] as const;
-export const restaurantOnlyNavigation = new Set([
-  "dining","orders","kitchen","bar","reservations","stocks","recipes",
-  "suppliers","deliveries","menu","qr",
-]);
 export const workflowLabels: Record<(typeof workflowChoices)[number], string> = {
   sales: "Ventes et commandes", appointments: "Rendez-vous", projects: "Chantiers ou projets",
   stock: "Stocks et achats", customers: "Suivi des clients",
@@ -48,6 +50,7 @@ export function relevantCapabilities(industry: Industry, workflows: readonly str
   if (industry === "construction") included.push("Chantiers, rapports, devis et matériel");
   if (industry === "services" || industry === "other") included.push("Organisation, équipe et suivi de l’activité");
   const optional = ["Factures clients", "Présences et absences"];
+  if (industry !== "restaurant") optional.push("Commandes, catalogue, stocks, cuisine et plan de salle");
   if (workflows.includes("customers")) optional.push("Fidélité clients");
   if (workflows.includes("stock")) optional.push("Factures fournisseurs");
   return { included, optional };

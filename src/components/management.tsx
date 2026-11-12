@@ -10,12 +10,13 @@ import { Customers } from "./customers";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useState } from "react";
-import type { Snapshot } from "@/lib/types";
-import { money, dateTime } from "@/lib/domain";
-import { roleLabels } from "@/lib/permissions";
+import type { Snapshot } from "@/shared/types";
+import { money, dateTime } from "@/domain/shared/units";
+import { roleLabels } from "@/core/permissions";
 import { Button } from "./ui/button";
 import { Form, Modal, Badge, type Act, type Field } from "./forms";
 import { QrButton } from "./qr/qr-portfolio";
+import { adaptText } from "@/core/tenant/vocabulary";
 type Editor = {
   title: string;
   fields: Field[];
@@ -32,6 +33,7 @@ export function Management({
   data: Snapshot;
   act: Act;
 }) {
+  const t = (text: string) => adaptText(text, data.restaurant.industry);
   const router = useRouter();
   const [activityFilter, setActivityFilter] = useState("all");
   const [editor, setEditor] = useState<Editor | null>(null),
@@ -49,7 +51,7 @@ export function Management({
     body = (
       <>
         <div className="section-heading">
-          <h2>Des stocks maîtrisés, un service serein.</h2>
+          <h2>{t("Des stocks maîtrisés, un service serein.")}</h2>
           <span className="pill">Lots expirés exclus du disponible</span>
         </div>
         <div className="card table-scroll">
@@ -321,7 +323,7 @@ export function Management({
                                 // Sans plan de salle actif, la réservation se gère sans table.
                                 ...(data.activeModules?.floor === false ? [] : [{
                                   name: "table",
-                                  label: "Table",
+                                  label: t("Table"),
                                   value: r.table_id || "",
                                   options: [
                                     { value: "", label: "Non affectée" },
@@ -365,7 +367,7 @@ export function Management({
         <div className="section-heading">
           <h2>
             {module === "suppliers"
-              ? "Nos partenaires de cuisine"
+              ? t("Nos partenaires de cuisine")
               : "Approvisionnements & réceptions"}
           </h2>
           <div className="actions">
@@ -644,7 +646,7 @@ export function Management({
   if (module === "activity")
     body = (
       <>
-        <h2>Le fil du restaurant</h2>
+        <h2>{t("Le fil du restaurant")}</h2>
         <div
           className="activity-filters"
           role="group"

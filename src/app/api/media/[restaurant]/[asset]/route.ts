@@ -1,8 +1,8 @@
 import { requirePlan } from "@/features/platform/entitlements";
 import { withRequestContext } from "@/features/ops-security/context";
 import { NextRequest, NextResponse } from "next/server";
-import { withDatabaseContext } from "@/lib/database/context";
-import { getDb } from "@/lib/database/db";
+import { withDatabaseContext } from "@/infrastructure/database/context";
+import { getDb } from "@/infrastructure/database/db";
 import { openAsset, resolveAsset } from "@/features/site/media";
 async function routeGET(
   _: NextRequest,

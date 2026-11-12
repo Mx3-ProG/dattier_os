@@ -7,7 +7,7 @@ import {
   roles,
   type Permission,
   type Role,
-} from "@/lib/permissions";
+} from "@/core/permissions";
 import * as onboarding from "./onboarding";
 
 export type TourStep = {
@@ -102,7 +102,7 @@ const core: Chapter[] = [
       {
         target: '[data-tour="profile"]',
         title: "Votre profil et l’administration",
-        body: "Votre nom et votre rôle. Un clic ouvre l’administration du restaurant : équipe et invitations, boutique, fidélité, domaines, achats et journal.",
+        body: "Votre nom et votre rôle. Un clic ouvre l’administration de l’établissement : équipe et invitations, boutique, fidélité, domaines, achats et journal.",
       },
       {
         target: '[data-tour="guide-button"]',
@@ -180,7 +180,7 @@ const core: Chapter[] = [
             "Le rythme des ventes : graphique des ventes dans le temps.",
             "Objectif du jour : jauge de progression vers l’objectif fixé dans Établissements.",
             "À la une du service et les favoris de la maison : commandes en cours et produits les plus vendus.",
-            "Dernières nouvelles : notifications récentes du restaurant.",
+            "Dernières nouvelles : notifications récentes de l’établissement.",
           ],
         },
       ],
@@ -745,7 +745,7 @@ const core: Chapter[] = [
         },
         {
           title: "Bon à savoir",
-          text: "Les commandes fournisseurs sont enregistrées dans STUDIO OS ; aucun bon n’est envoyé automatiquement au fournisseur. L’administration du restaurant propose aussi des commandes multilignes et des campagnes d’inventaire.",
+          text: "Les commandes fournisseurs sont enregistrées dans STUDIO OS ; aucun bon n’est envoyé automatiquement au fournisseur. L’administration de l’établissement propose aussi des commandes multilignes et des campagnes d’inventaire.",
         },
       ],
     },
@@ -832,7 +832,7 @@ const core: Chapter[] = [
         module: "team",
         target: ".three-grid",
         title: "L’équipe",
-        body: "Les membres de l’établissement et leur rôle. Les invitations et les accès se gèrent dans l’administration du restaurant.",
+        body: "Les membres de l’établissement et leur rôle. Les invitations et les accès se gèrent dans l’administration de l’établissement.",
       },
       {
         module: "attendance",
@@ -858,7 +858,7 @@ const core: Chapter[] = [
         },
         {
           title: "Inviter un collaborateur",
-          text: "Dans l’administration du restaurant (onglet Équipe), invitez un collaborateur par e-mail et attribuez-lui un ou plusieurs rôles.",
+          text: "Dans l’administration de l’établissement (onglet Équipe), invitez un collaborateur par e-mail et attribuez-lui un ou plusieurs rôles.",
         },
       ],
     },
@@ -931,7 +931,7 @@ const core: Chapter[] = [
       {
         target: '[data-tour="nav-site"]',
         title: "Le studio du site",
-        body: "« Mon site web » ouvre l’éditeur : sections et pages, histoire du restaurant, identité, polices, référencement. Prévisualisez sur ordinateur, tablette ou mobile, publiez, et restaurez une version précédente si besoin.",
+        body: "« Mon site web » ouvre l’éditeur : sections et pages, histoire de l’établissement, identité, polices, référencement. Prévisualisez sur ordinateur, tablette ou mobile, publiez, et restaurez une version précédente si besoin.",
       },
       {
         target: '[data-tour="public-link"]',
@@ -950,7 +950,7 @@ const core: Chapter[] = [
       {
         target: '[data-tour="profile"]',
         title: "Côté équipe",
-        body: "Les commandes du site apparaissent dans Commandes. Le paiement au comptoir se confirme dans l’administration du restaurant, onglet « Boutique et avis », qui règle aussi les horaires, les créneaux et le temps de préparation.",
+        body: "Les commandes du site apparaissent dans Commandes. Le paiement au comptoir se confirme dans l’administration de l’établissement, onglet « Boutique et avis », qui règle aussi les horaires, les créneaux et le temps de préparation.",
       },
     ],
     guide: {
@@ -1023,11 +1023,11 @@ const core: Chapter[] = [
       {
         target: '[data-tour="nav-security"]',
         title: "La sécurité opérationnelle",
-        body: "Le centre de sécurité suit les incidents, les corrections et les archives quotidiennes, limité au restaurant courant.",
+        body: "Le centre de sécurité suit les incidents, les corrections et les archives quotidiennes, limité à l’établissement courant.",
       },
       {
         target: '[data-tour="profile"]',
-        title: "L’administration du restaurant",
+        title: "L’administration de l’établissement",
         body: "Équipe et accès, boutique et avis, fidélité, site, domaine personnalisé, stocks et achats multilignes, conflits hors ligne et connexions. C’est le centre de contrôle du propriétaire.",
       },
       {
@@ -1049,7 +1049,7 @@ const core: Chapter[] = [
           ],
         },
         {
-          title: "Administration du restaurant",
+          title: "Administration de l’établissement",
           points: [
             "Équipe : inviter un collaborateur, attribuer les rôles, accès temporaires du support.",
             "Boutique et avis : réglages de commande, commandes boutique, modération des avis.",
@@ -1139,7 +1139,7 @@ export const glossary: { term: string; definition: string }[] = [
   {
     term: "Établissement (structure)",
     definition:
-      "Un restaurant, avec sa carte, ses tables, ses stocks, son équipe et son site. Ses données sont cloisonnées.",
+      "Une boutique, un salon, un atelier ou un restaurant, avec son catalogue, ses stocks, son équipe et son site. Ses données sont cloisonnées.",
   },
   {
     term: "Session de table",

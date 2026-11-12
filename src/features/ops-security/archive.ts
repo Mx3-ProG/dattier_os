@@ -1,10 +1,10 @@
 import { createHash, randomUUID } from "node:crypto";
 import { chmod, mkdir, readFile, unlink, writeFile } from "./archive-storage";
-import { databaseContext } from "@/lib/database/context";
-import { demoEnabled } from "@/lib/database/db";
+import { databaseContext } from "@/infrastructure/database/context";
+import { demoEnabled } from "@/infrastructure/database/db";
 import path from "node:path";
-import type { Database as PGlite } from "@/lib/database/types";
-import { one, rows, type DB } from "@/lib/database/db";
+import type { Database as PGlite } from "@/infrastructure/database/types";
+import { one, rows, type DB } from "@/infrastructure/database/db";
 import { record } from "./events";
 import { level } from "./model";
 

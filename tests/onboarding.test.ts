@@ -2,13 +2,13 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import { PGlite } from "@electric-sql/pglite";
-import { migrate } from "../src/lib/database/migrate";
+import { migrate } from "../src/infrastructure/database/migrate";
 import { platformPerform, saveOnboardingDraft } from "../src/features/platform/service";
 import { customerImport, parseCustomerCsv } from "../src/features/onboarding/customer-import";
 import { industries, trades, freeTradeTools } from "../src/features/onboarding/catalog";
 import { requireRestaurantIndustry } from "../src/features/onboarding/access";
 import { onboardingInput } from "./support/onboarding";
-import type { DB } from "../src/lib/database/db";
+import type { DB } from "../src/infrastructure/database/db";
 
 test("parcours métier : brouillon, création unique, licences et droits", async () => {
   const db=new PGlite();
@@ -37,7 +37,9 @@ test("parcours métier : brouillon, création unique, licences et droits", async
       const actual=(await db.query<{product_id:string}>("SELECT product_id FROM addon_licenses WHERE restaurant_id=$1 AND status='active' AND source='free'",[created.restaurant])).rows.map((r)=>r.product_id);
       assert.deepEqual(actual.sort(),[...freeTradeTools[industry]].sort());
       if (industry!=="restaurant") {
-        assert.equal((await db.query<{ok:boolean}>("SELECT app.module_enabled($1,'floor') AS ok",[created.restaurant])).rows[0].ok,false);
+        // Cuisine et commandes : modules gratuits installés selon le métier, activables par tous.
+        assert.equal((await db.query<{ok:boolean}>("SELECT app.module_available($1,'kitchen') AS ok",[created.restaurant])).rows[0].ok,false);
+        assert.equal((await db.query<{ok:boolean}>("SELECT app.module_available($1,'orders') AS ok",[created.restaurant])).rows[0].ok,freeTradeTools[industry].includes("ops-orders"));
         await assert.rejects(asUser(id,created.restaurant,(tx)=>requireRestaurantIndustry(tx,created.restaurant)),/restauration/);
       }
       if (industry==="construction") {

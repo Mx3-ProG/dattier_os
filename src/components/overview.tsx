@@ -1,6 +1,12 @@
 "use client";
-import { pilotageWidgets } from "@/features/pilotage/catalog";
+import {
+  availablePilotageWidgets,
+  defaultHiddenPilotageWidgets,
+  type PilotageSource,
+  type PilotageWidgetId,
+} from "@/features/pilotage/catalog";
 import { usePilotagePreferences } from "@/features/pilotage/use-preferences";
+import { useMemo } from "react";
 import { activityPresentation } from "@/features/appearance/categories";
 import { CategoryBadge } from "./appearance/category-badge";
 import {
@@ -19,13 +25,25 @@ import {
   Wallet,
   Clock,
   ArrowRight,
+  CalendarDays,
+  Package,
+  HardHat,
+  FileText,
+  ClipboardCheck,
+  Wrench,
+  Heart,
+  UserCheck,
+  Mail,
 } from "lucide-react";
-import type { Snapshot } from "@/lib/types";
-import { money, dateTime } from "@/lib/domain";
+import type { Snapshot } from "@/shared/types";
+import { money, dateTime } from "@/domain/shared/units";
 import { FinanceDashboard } from "./finance-dashboard";
 import { Badge } from "./forms";
 import { Button } from "./ui/button";
 import { QrOverviewCard } from "./qr/qr-portfolio";
+import { adaptText, businessTerms } from "@/core/tenant/vocabulary";
+const parisDay = (value: string) =>
+  new Date(value).toLocaleDateString("sv-SE", { timeZone: "Europe/Paris" });
 export function Overview({
   data,
   navigate,
@@ -33,8 +51,42 @@ export function Overview({
   data: Snapshot;
   navigate: (s: string) => void;
 }) {
+  const industry = data.restaurant.industry;
+  const trade = data.tradePilotage ?? {};
+  // Données réellement présentes dans cet établissement : chaque bloc en dépend.
+  const sources = useMemo(() => {
+    const modules = new Set(data.modules ?? []);
+    const set = new Set<PilotageSource>(["payments", "activity", "qr"]);
+    // Blocs de commandes : seulement si le module Commandes est activé pour ce métier.
+    if (modules.has("orders")) set.add("orders");
+    if (data.activeModules?.floor && data.tables.length) set.add("floor");
+    if (modules.has("kitchen") || modules.has("bar")) set.add("kitchen");
+    if (data.ingredients.length) set.add("stock");
+    if (data.activeModules?.["table-booking"]) set.add("reservations");
+    if (data.customers.length) set.add("customers");
+    if (data.shifts.length) set.add("team");
+    const tools = data.tradePilotage ?? {};
+    if (tools.agenda) set.add("agenda");
+    if (tools.sites) set.add("sites");
+    if (tools.quotes) set.add("quotes");
+    if (tools.reports) set.add("reports");
+    if (tools.equipment) set.add("equipment");
+    if (tools.salonStock) set.add("salon-stock");
+    if (tools.followups) set.add("followups");
+    return set;
+  }, [data]);
+  const offered = useMemo(() => availablePilotageWidgets(sources), [sources]);
+  const defaults = useMemo(
+    () => defaultHiddenPilotageWidgets(industry, sources),
+    [industry, sources],
+  );
   const { visible, toggle, reset, error, ready, busy, dirty, save, reload } =
-    usePilotagePreferences(data.restaurant.id, data.user.id);
+    usePilotagePreferences(data.restaurant.id, data.user.id, defaults);
+  const shown = (id: PilotageWidgetId) =>
+    offered.some((widget) => widget.id === id) && visible(id);
+  const restaurantTrade = !industry || industry === "restaurant";
+  const t = (text: string) => adaptText(text, industry);
+  const welcome = businessTerms(industry).welcome;
   const today = new Intl.DateTimeFormat("en-CA", {
     timeZone: "Europe/Paris",
   }).format(new Date());
@@ -55,16 +107,16 @@ export function Overview({
     <>
       <div className="welcome">
         <div>
-          <div className="eyebrow">LE GOÛT DU TRAVAIL BIEN FAIT</div>
+          <div className="eyebrow">{welcome.eyebrow}</div>
           <h1>
             Bonjour {data.user.name}
             <span className="serif">,</span>
             <br />
-            votre restaurant prend vie.
+            {welcome.title}
           </h1>
-          <p>Un regard sur l’essentiel, du premier couvert au dernier thé.</p>
-          <Button onClick={() => navigate("dining")}>
-            Voir le service <ArrowUpRight size={17} />
+          <p>{welcome.lead}</p>
+          <Button onClick={() => navigate(restaurantTrade ? "dining" : "operations")}>
+            {restaurantTrade ? "Voir le service" : "Voir l’activité"} <ArrowUpRight size={17} />
           </Button>
         </div>
         <div className="welcome-art" aria-hidden="true">
@@ -75,7 +127,7 @@ export function Overview({
           </div>
           <i className="leaf one" />
           <i className="leaf two" />
-          <span className="art-caption">L’ESPRIT STUDIO OS</span>
+          <span className="art-caption">{welcome.caption}</span>
         </div>
       </div>
       <details className="card" style={{ marginBottom: 20, padding: 16 }}>
@@ -101,7 +153,7 @@ export function Overview({
               margin: "12px 0",
             }}
           >
-            {pilotageWidgets.map((widget) => (
+            {offered.map((widget) => (
               <label
                 key={widget.id}
                 style={{ display: "flex", alignItems: "center", gap: 8 }}
@@ -111,13 +163,13 @@ export function Overview({
                   checked={visible(widget.id)}
                   onChange={() => toggle(widget.id)}
                 />
-                {widget.label}
+                {t(widget.label)}
               </label>
             ))}
           </div>
         </fieldset>
         <Button variant="secondary" disabled={!ready || busy} onClick={reset}>
-          Tout réafficher
+          Revenir aux blocs conseillés
         </Button>
         <Button disabled={!ready || busy || !dirty} onClick={save}>
           {busy ? "Enregistrement…" : "Enregistrer dans mon compte"}
@@ -136,7 +188,7 @@ export function Overview({
         </p>
         {error && <p role="alert">{error}</p>}
       </details>
-      {!pilotageWidgets.some((widget) => visible(widget.id)) && (
+      {!offered.some((widget) => visible(widget.id)) && (
         <p className="note">
           Tous les blocs sont masqués. Utilisez « Personnaliser mon pilotage »
           pour les réafficher.
@@ -161,10 +213,19 @@ export function Overview({
             icon: UtensilsCrossed,
           },
           {
+            id: "preparing" as const,
+            title: "Commandes en préparation",
+            value: active.filter((o) =>
+              o.items.some((i) => i.status === "waiting" || i.status === "preparing"),
+            ).length,
+            detail: "Lancées, pas encore prêtes",
+            icon: Clock,
+          },
+          {
             id: "tables" as const,
-            title: "Tables occupées",
+            title: t("Tables occupées"),
             value: `${occupied} / ${data.tables.filter((t) => !t.archived_at).length}`,
-            detail: "Un service qui se partage",
+            detail: restaurantTrade ? "Un service qui se partage" : "Un espace qui se partage",
             icon: Users,
           },
           {
@@ -176,8 +237,91 @@ export function Overview({
             detail: "À servir sans attendre",
             icon: Clock,
           },
+          {
+            id: "stock" as const,
+            title: "Stocks à surveiller",
+            value: data.ingredients.filter((i) => i.available <= i.threshold).length,
+            detail: "Sous le seuil d’alerte",
+            icon: Package,
+          },
+          {
+            id: "reservations" as const,
+            title: "Réservations du jour",
+            value: data.reservations.filter(
+              (r) => parisDay(r.starts_at) === today && ["requested", "confirmed", "arrived"].includes(r.status),
+            ).length,
+            detail: "Demandes et confirmées",
+            icon: CalendarDays,
+          },
+          {
+            id: "customers" as const,
+            title: "Clients fidèles",
+            value: data.customers.length,
+            detail: "Dans votre fichier clients",
+            icon: Heart,
+          },
+          {
+            id: "team" as const,
+            title: "Équipe planifiée aujourd’hui",
+            value: new Set(
+              data.shifts
+                .filter((shift) => parisDay(shift.starts_at) === today)
+                .map((shift) => shift.profile_id),
+            ).size,
+            detail: "Selon le planning",
+            icon: UserCheck,
+          },
+          {
+            id: "appointments" as const,
+            title: "Rendez-vous aujourd’hui",
+            value: trade.agenda?.today ?? 0,
+            detail: "Hors annulés et absents",
+            icon: CalendarDays,
+          },
+          {
+            id: "salon-stock" as const,
+            title: "Produits sous le seuil",
+            value: trade.salonStock?.low ?? 0,
+            detail: "À recommander",
+            icon: Package,
+          },
+          {
+            id: "sites" as const,
+            title: "Chantiers en cours",
+            value: trade.sites?.active ?? 0,
+            detail: "D’après le planning",
+            icon: HardHat,
+          },
+          {
+            id: "quotes" as const,
+            title: "Devis en attente",
+            value: trade.quotes?.pending ?? 0,
+            detail: "Envoyés, sans réponse",
+            icon: FileText,
+          },
+          {
+            id: "reserves" as const,
+            title: "Réserves à lever",
+            value: trade.reports?.reservesOpen ?? 0,
+            detail: "Chantiers concernés",
+            icon: ClipboardCheck,
+          },
+          {
+            id: "equipment" as const,
+            title: "Matériel à entretenir",
+            value: trade.equipment?.due ?? 0,
+            detail: "Dans les 7 jours",
+            icon: Wrench,
+          },
+          {
+            id: "followups" as const,
+            title: "Relances paniers",
+            value: trade.followups?.week ?? 0,
+            detail: "Sur les 7 derniers jours",
+            icon: Mail,
+          },
         ]
-          .filter((m) => visible(m.id))
+          .filter((m) => shown(m.id))
           .map((m) => (
             <article className="metric card" key={m.title}>
               <div>
@@ -190,7 +334,7 @@ export function Overview({
           ))}
       </div>
       <div className="dashboard-grid">
-        {visible("sales") && (
+        {shown("sales") && (
           <section className="card chart-card">
             <div className="section-heading">
               <div>
@@ -262,7 +406,7 @@ export function Overview({
             </div>
           </section>
         )}
-        {visible("goal") && (
+        {shown("goal") && (
           <section className="card target-card">
             <span className="eyebrow">CHAQUE SERVICE COMPTE</span>
             <h2>Objectif du jour</h2>
@@ -289,10 +433,10 @@ export function Overview({
             <p className="muted">Objectif modifiable dans les paramètres.</p>
           </section>
         )}
-        {visible("service") && (
+        {shown("service") && (
           <section className="card">
             <div className="section-heading">
-              <h2>À la une du service</h2>
+              <h2>{restaurantTrade ? "À la une du service" : "À la une de l’activité"}</h2>
               <button
                 className="text-button"
                 onClick={() => navigate("orders")}
@@ -309,7 +453,7 @@ export function Overview({
                   <div>
                     <b>
                       {o.table_number
-                        ? `Table ${o.table_number}`
+                        ? t(`Table ${o.table_number}`)
                         : "À emporter"}
                     </b>
                     <small>
@@ -322,26 +466,27 @@ export function Overview({
             ) : (
               <div className="quiet-state">
                 <UtensilsCrossed />
-                <h3>Prêt pour les premières tablées.</h3>
+                <h3>{restaurantTrade ? "Prêt pour les premières tablées." : "Prêt pour vos premiers clients."}</h3>
                 <p>
-                  Ouvrez une table depuis le plan de salle pour commencer le
-                  service.
+                  {restaurantTrade
+                    ? "Ouvrez une table depuis le plan de salle pour commencer le service."
+                    : "Enregistrez une commande ou ouvrez un poste depuis le plan de l’espace pour commencer."}
                 </p>
                 <button
                   className="text-button"
-                  onClick={() => navigate("dining")}
+                  onClick={() => navigate(restaurantTrade ? "dining" : "operations")}
                 >
-                  Ouvrir la salle →
+                  {restaurantTrade ? "Ouvrir la salle →" : "Ouvrir mes opérations →"}
                 </button>
               </div>
             )}
           </section>
         )}
-        {visible("favorites") && (
+        {shown("favorites") && (
           <section className="card">
             <div className="section-heading">
-              <h2>Les favoris de la maison</h2>
-              <span className="eyebrow">QUANTITÉS SERVIES</span>
+              <h2>{restaurantTrade ? "Les favoris de la maison" : "Les meilleures ventes"}</h2>
+              <span className="eyebrow">{restaurantTrade ? "QUANTITÉS SERVIES" : "QUANTITÉS VENDUES"}</span>
             </div>
             {best.map(([name, count], i) => (
               <div className="best-row" key={name}>
@@ -362,14 +507,46 @@ export function Overview({
             <p className="muted">Calculé à partir des commandes réglées.</p>
           </section>
         )}
-        {visible("qr") && (
+        {shown("agenda") && (
+          <section className="card">
+            <div className="section-heading">
+              <h2>Prochains rendez-vous</h2>
+              <button
+                className="text-button"
+                onClick={() => navigate("tool-appointment-booking")}
+              >
+                Agenda <ArrowRight size={14} />
+              </button>
+            </div>
+            {trade.agenda?.upcoming.length ? (
+              trade.agenda.upcoming.map((appointment) => (
+                <div className="compact-row" key={appointment.start + appointment.client}>
+                  <span className="mini-icon">
+                    <CalendarDays size={18} />
+                  </span>
+                  <div>
+                    <b>{appointment.client}</b>
+                    <small>
+                      {dateTime(appointment.start)}
+                      {appointment.service ? ` · ${appointment.service}` : ""}
+                    </small>
+                  </div>
+                  <span className="pill">{appointment.status}</span>
+                </div>
+              ))
+            ) : (
+              <p className="muted">Aucun rendez-vous à venir.</p>
+            )}
+          </section>
+        )}
+        {shown("qr") && (
           <QrOverviewCard
             restaurant={data.restaurant.id}
             onOpen={() => navigate("qr")}
           />
         )}
       </div>
-      {visible("news") && (
+      {shown("news") && (
         <>
           <div className="section-heading">
             <h2>Dernières nouvelles</h2>

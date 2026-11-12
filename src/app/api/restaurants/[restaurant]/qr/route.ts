@@ -7,8 +7,8 @@ import {
   json,
   readBody,
 } from "@/features/platform/http";
-import { scope } from "@/lib/auth/session";
-import { rows } from "@/lib/database/db";
+import { scope } from "@/infrastructure/auth/session";
+import { rows } from "@/infrastructure/database/db";
 import { qrAction, qrActionSchema, qrPortfolio } from "@/features/qr/service";
 import { requirePaidAddon } from "@/features/platform/entitlements";
 

@@ -2,9 +2,9 @@
    confirmé, incomplet, estimé ou indisponible. Aucun chiffre n’est complété par
    supposition, et chiffre d’affaires, encaissements et trésorerie restent séparés. */
 import { z } from "zod";
-import { one, rows, type DB } from "@/lib/database/db";
-import { scope, type Actor } from "@/lib/auth/session";
-import { requirePermission } from "@/lib/permissions";
+import { one, rows, type DB } from "@/infrastructure/database/db";
+import { scope, type Actor } from "@/infrastructure/auth/session";
+import { requirePermission } from "@/core/permissions";
 import { requireCommercialCapability } from "@/features/platform/entitlements";
 import { bankTreasury } from "@/features/bank/service";
 import { staffCost } from "@/features/hr/service";

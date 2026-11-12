@@ -1,8 +1,8 @@
 import { spawn } from "node:child_process";
 import type { Client } from "pg";
 import { commerce } from "../../src/features/commerce/service";
-import { seed } from "../../src/lib/database/seed";
-import type { DB } from "../../src/lib/database/types";
+import { seed } from "../../src/infrastructure/database/seed";
+import type { DB } from "../../src/infrastructure/database/types";
 import { SESSION_SECRET, WEBHOOK_SECRET } from "./http";
 
 /** Données réelles de démonstration pour les parcours publics, posées une seule fois. */

@@ -2,8 +2,8 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import { PGlite } from "@electric-sql/pglite";
-import { migrate } from "../src/lib/database/migrate";
-import { seed } from "../src/lib/database/seed";
+import { migrate } from "../src/infrastructure/database/migrate";
+import { seed } from "../src/infrastructure/database/seed";
 import { allergenList, tradeCategories, tradeTools, type TradeTool } from "../src/features/trade/definitions";
 import {
   builtinSegment,
@@ -15,7 +15,7 @@ import {
   quoteTotals,
   shippingQuote,
 } from "../src/features/trade/model";
-import { parisTime, tradePerformOn, tradeStateOn, type Scoped } from "../src/features/trade/service";
+import { parisTime, tradePerformOn, tradePilotage, tradeStateOn, type Scoped } from "../src/features/trade/service";
 
 async function database() {
   const db = new PGlite();
@@ -315,6 +315,28 @@ test("migration descendante : outils métier et fiches retirés, boutique intact
     assert.equal((await db.query("SELECT to_regclass('public.trade_records') AS t")).rows[0] && (await db.query<{ t: string | null }>("SELECT to_regclass('public.trade_records') AS t")).rows[0].t, null);
     assert.equal((await db.query("SELECT * FROM addon_products WHERE kind='business'")).rows.length, 0);
     assert.ok((await db.query("SELECT * FROM addon_products WHERE kind='loading_screen'")).rows.length >= 10);
+  } finally {
+    await db.close();
+  }
+});
+
+test("vue d’ensemble : chaque outil métier installé alimente ses blocs, les autres restent absents", async () => {
+  const db = await database();
+  try {
+    await as(db, "nadia", "bernay");
+    assert.deepEqual(await tradePilotage(db, "bernay", owner), {});
+    await install(db, "bernay", "site-planning", "quote-builder", "equipment-log");
+    await create(db, "bernay", "site-planning", "site", { name: "Maison Durand", status: "En cours", start: "2020-01-01", end: "2099-01-31" });
+    await create(db, "bernay", "site-planning", "site", { name: "Ancien", status: "Terminé", start: "2020-01-01", end: "2099-01-31" });
+    await create(db, "bernay", "quote-builder", "quote", { number: "D-1", title: "Toiture", client: "M. Durand", status: "Envoyé", lines: [{ label: "Tuiles", quantity: 1, unit: "u", unitPrice: 1000, vat: 20 }] });
+    await create(db, "bernay", "equipment-log", "equipment", { name: "Bétonnière", kind: "Engin", status: "Disponible", nextService: "2020-01-01" });
+    const summary = await tradePilotage(db, "bernay", owner);
+    assert.deepEqual(summary.sites, { active: 1 });
+    assert.deepEqual(summary.quotes, { pending: 1 });
+    assert.deepEqual(summary.equipment, { due: 1 });
+    assert.equal(summary.agenda, undefined);
+    // Un profil sans la permission d’un outil ne voit pas son bloc.
+    assert.equal((await tradePilotage(db, "bernay", waiter)).quotes, undefined);
   } finally {
     await db.close();
   }

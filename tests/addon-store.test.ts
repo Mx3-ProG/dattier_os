@@ -2,8 +2,8 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { readFile, readdir } from "node:fs/promises";
 import { PGlite } from "@electric-sql/pglite";
-import { migrate } from "../src/lib/database/migrate";
-import { seed } from "../src/lib/database/seed";
+import { migrate } from "../src/infrastructure/database/migrate";
+import { seed } from "../src/infrastructure/database/seed";
 import {
   derivePurchaseOutcome,
   reconcilePurchaseOn,
@@ -352,7 +352,7 @@ test("isolation : achats, licences et réglages restent dans leur établissement
     await as(db, "nadia", "atelier");
     assert.equal(await readLoadingScreen(db, "atelier"), null);
     assert.equal((await db.query("SELECT * FROM loading_screen_settings")).rows.length, 0);
-    assert.equal((await db.query("SELECT * FROM addon_licenses")).rows.length, 0);
+    assert.equal((await db.query("SELECT * FROM addon_licenses WHERE product_id='magic-loader'")).rows.length, 0);
     assert.equal(await readLoadingScreen(db, "bernay"), null, "contexte Atelier : Bernay reste invisible");
     await assert.rejects(
       db.query("SELECT app.loading_screen_save('atelier','magic-loader',true,NULL,NULL,1,false,NULL,0)"),

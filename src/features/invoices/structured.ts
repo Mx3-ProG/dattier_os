@@ -12,7 +12,7 @@ import {
   PDFStream,
   PDFString,
 } from "pdf-lib";
-import { emptyDraft, type InvoiceDraft } from "./checks";
+import { emptyDraft, type InvoiceDraft } from "@/domain/invoices/checks";
 
 const parser = new XMLParser({
   ignoreAttributes: true,

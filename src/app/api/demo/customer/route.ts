@@ -1,8 +1,8 @@
 import { withRequestContext } from "@/features/ops-security/context";
 import { createHash } from "node:crypto";
 import { NextRequest } from "next/server";
-import { getDb, demoEnabled, one } from "@/lib/database/db";
-import { login } from "@/lib/auth/session";
+import { getDb, demoEnabled, one } from "@/infrastructure/database/db";
+import { login } from "@/infrastructure/auth/session";
 import { customerForActor } from "@/features/commerce/account";
 import { seedDemoEngagement } from "@/features/commerce/engagement-demo";
 import {

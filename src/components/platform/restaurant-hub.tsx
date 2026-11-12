@@ -8,10 +8,11 @@ import "./platform.css";
 import { ShopSettings } from "./shop-settings";
 import { LoyaltyPanel } from "./loyalty-panel";
 import type { Settings } from "@/features/commerce/schema";
-import { can, roleLabels, type Role } from "@/lib/permissions";
+import { can, roleLabels, type Role } from "@/core/permissions";
 import { availableRestaurantModules, type RestaurantModuleId } from "@/features/platform/admin-navigation";
 import { industries, industryLabels, trades, type Industry } from "@/features/onboarding/catalog";
 import { RestaurantAdminShell } from "./restaurant-admin-shell";
+import { adaptText } from "@/core/tenant/vocabulary";
 type Member = { id: string; name: string; email: string; role: string };
 type ShopOrder = {
   order_id: string;
@@ -50,8 +51,8 @@ export function RestaurantHub({
   const searchParams = useSearchParams();
   const [refreshVersion, setRefreshVersion] = useState(0);
   const accessibleTabs = useMemo(
-    () => availableRestaurantModules(userRoles, plan, addons, activity.industry),
-    [plan, userRoles, addons, activity.industry],
+    () => availableRestaurantModules(userRoles, plan, addons),
+    [plan, userRoles, addons],
   );
   const requestedTab = searchParams.get("module");
   const initialTab = accessibleTabs.some((module) => module.id === requestedTab)
@@ -217,7 +218,7 @@ export function RestaurantHub({
         <>
           {tab === "team" && (
             <>
-              {userRoles.includes("OWNER") && <section>
+              {(userRoles.includes("OWNER") || userRoles.includes("SUPER_ADMIN")) && <section>
                 <h2>Activité de l’établissement</h2>
                 <form onSubmit={(event)=>{
                   event.preventDefault();
@@ -255,8 +256,7 @@ export function RestaurantHub({
                   </label>
                   <fieldset className="admin-role-options">
                     <legend>Rôles dans cet établissement</legend>
-                    {(activity.industry === "restaurant" ? roleOptions :
-                      ["OWNER","MANAGER","WAITER","STOCK_MANAGER","PURCHASING","ACCOUNTANT"]).map((role) => (
+                    {roleOptions.map((role) => (
                       <label className="inline" key={role}>
                         <input
                           type="checkbox"
@@ -269,7 +269,7 @@ export function RestaurantHub({
                             )
                           }
                         />
-                        {role === "WAITER" && activity.industry !== "restaurant" ? "Collaborateur" : roleLabels[role as Role]}
+                        {role === "WAITER" && activity.industry !== "restaurant" ? "Accueil et vente" : adaptText(roleLabels[role as Role], activity.industry)}
                       </label>
                     ))}
                   </fieldset>
@@ -1109,3 +1109,6 @@ function ConflictDecision({
     </article>
   );
 }
+
+// Alias neutre pour la vision multi-métiers (compatibilité conservée).
+export { RestaurantHub as BusinessHub };

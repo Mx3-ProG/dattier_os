@@ -1,7 +1,7 @@
 /* Lecture des quantités, prix, dates et horaires dans une phrase normalisée
    (voir text.ts › normalize). Tout est pensé pour la parole : « trois kilos »,
    « demain », « de 18 h à 23 h 30 », « 19 euros 50 ». */
-import { numberWords } from "./text";
+import { numberWords } from "@/domain/assistant/text";
 
 export type BaseUnit = "g" | "ml" | "unit";
 

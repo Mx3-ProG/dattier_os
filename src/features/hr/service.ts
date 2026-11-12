@@ -3,9 +3,9 @@
    Ne produit ni bulletin ni déclaration sociale. */
 import { randomUUID } from "node:crypto";
 import { z } from "zod";
-import { scope, type Actor } from "@/lib/auth/session";
-import { one, rows, type DB } from "@/lib/database/db";
-import { can, requirePermission } from "@/lib/permissions";
+import { scope, type Actor } from "@/infrastructure/auth/session";
+import { one, rows, type DB } from "@/infrastructure/database/db";
+import { can, requirePermission } from "@/core/permissions";
 import { requirePaidAddon } from "@/features/platform/entitlements";
 import { log } from "@/features/orders/service";
 import {

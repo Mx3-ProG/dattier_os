@@ -2,14 +2,14 @@ import { before, after, test } from "node:test";
 import assert from "node:assert/strict";
 import { PGlite } from "@electric-sql/pglite";
 import { readFile } from "node:fs/promises";
-import { migrate } from "../src/lib/database/migrate";
-import { seed } from "../src/lib/database/seed";
+import { migrate } from "../src/infrastructure/database/migrate";
+import { seed } from "../src/infrastructure/database/seed";
 import {
   readPilotage,
   savePilotage,
   pilotageSaveSchema,
 } from "../src/features/pilotage/service";
-import type { Actor } from "../src/lib/auth/session";
+import type { Actor } from "../src/infrastructure/auth/session";
 const nadia: Actor = { id: "nadia", name: "Nadia", role: "OWNER" };
 const leila: Actor = { id: "leila", name: "Leïla", role: "ACCOUNTANT" };
 let db: PGlite;

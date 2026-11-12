@@ -1,10 +1,11 @@
 import { NextRequest } from "next/server";
+import Stripe from "stripe";
 import { recordFailure } from "@/features/ops-security/http";
 import { withRequestContext } from "@/features/ops-security/context";
-import { withDatabaseContext } from "@/lib/database/context";
-import { getDb, one } from "@/lib/database/db";
+import { withDatabaseContext } from "@/infrastructure/database/context";
+import { getDb, one } from "@/infrastructure/database/db";
 import { json } from "@/features/platform/http";
-import { constructEvent } from "@/features/payments/config";
+import { getPaymentProvider } from "@/features/payments/provider";
 import {
   isHandled,
   minimalEvent,
@@ -19,10 +20,10 @@ async function routePOST(req: NextRequest) {
   try {
     const raw = await req.text();
     if (raw.length > 1_000_000) return json({ error: "Trop volumineux." }, 413);
-    const event = constructEvent(
+    const event = getPaymentProvider().constructEvent(
       raw,
       req.headers.get("stripe-signature") || "",
-    );
+    ) as Stripe.Event;
     if (!isHandled(event.type)) return json({ received: true });
     const minimal = minimalEvent(event);
     const db = await getDb();

@@ -1,6 +1,6 @@
 /* eslint-disable @next/next/no-img-element */
-import type { ProductPageFields } from "@/lib/product-pages";
-import { money } from "@/lib/domain";
+import type { ProductPageFields } from "@/domain/shared/product-pages";
+import { money } from "@/domain/shared/units";
 
 export function ProductDetails({
   product,

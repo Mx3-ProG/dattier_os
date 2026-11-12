@@ -173,7 +173,7 @@ export function PasswordAuth({
           ? "Inscrivez-vous avec votre adresse e-mail pour ouvrir votre espace."
           : mode === "forgot"
             ? "Recevez un lien pour choisir un nouveau mot de passe."
-            : "Connectez-vous pour retrouver votre espace STUDIO OS."}
+            : "Connectez-vous pour retrouver votre espace STUDIO S."}
       </p>
       <form className="access-form" onSubmit={submit} noValidate>
         {mode === "register" && (

@@ -33,8 +33,20 @@ function cache(key: string, hidden: PilotageWidgetId[]) {
   window.dispatchEvent(new Event(eventName));
 }
 const serverSnapshot = () => null;
-export function usePilotagePreferences(restaurant: string, user: string) {
+/**
+ * `defaults` : blocs masqués d'office pour ce métier, tant que la personne
+ * n'a rien choisi (ni sur cet appareil ni dans son compte).
+ */
+export function usePilotagePreferences(
+  restaurant: string,
+  user: string,
+  defaults: readonly PilotageWidgetId[] = [],
+) {
   const key = pilotagePreferenceKey(restaurant, user);
+  const defaultsRef = useRef(defaults);
+  useEffect(() => {
+    defaultsRef.current = defaults;
+  });
   const [remote, setRemote] = useState<{
     key: string;
     data: PilotagePreferences;
@@ -69,7 +81,8 @@ export function usePilotagePreferences(restaurant: string, user: string) {
           throw new Error("Votre compte a été modifié. Rechargez la page.");
         if (current !== generation.current) return;
         // Preserve the previous local choices until their first explicit account save.
-        if (body.revision > 0 || refresh.key === key) cache(key, body.hidden);
+        if (body.revision > 0) cache(key, body.hidden);
+        else if (refresh.key === key) cache(key, [...defaultsRef.current]);
         setRemote({ key, data: body });
         setError("");
         setBusy(false);
@@ -86,7 +99,7 @@ export function usePilotagePreferences(restaurant: string, user: string) {
       generation.current = current + 1;
     };
   }, [endpoint, key, user, restaurant, refresh]);
-  const hidden = hiddenPilotageWidgets(raw);
+  const hidden = raw === null ? [...defaults] : hiddenPilotageWidgets(raw);
   const ready = remote?.key === key;
   const dirty =
     ready &&
@@ -134,7 +147,7 @@ export function usePilotagePreferences(restaurant: string, user: string) {
         );
     },
     reset: () => {
-      if (ready && !busy) cache(key, []);
+      if (ready && !busy) cache(key, [...defaults]);
     },
     reload: () => {
       setRemote(null);

@@ -1,22 +1,11 @@
 import { randomUUID, createHash } from "node:crypto";
 import {
-  S3Client,
   PutObjectCommand,
   GetObjectCommand,
 } from "@aws-sdk/client-s3";
-import { rows, one, type DB } from "@/lib/database/db";
+import { rows, one, type DB } from "@/infrastructure/database/db";
+import { s3Client } from "@/infrastructure/storage/s3";
 import { enqueue } from "./jobs";
-function storage() {
-  if (!process.env.S3_BUCKET)
-    throw new Error("Stockage des archives non configuré.");
-  return new S3Client({
-    endpoint: process.env.S3_ENDPOINT,
-    region: process.env.S3_REGION || "eu-west-3",
-    forcePathStyle: process.env.S3_PATH_STYLE === "true",
-    requestChecksumCalculation: "WHEN_REQUIRED",
-    responseChecksumValidation: "WHEN_REQUIRED",
-  });
-}
 async function incident(db: DB, r: string, rule: string, message: string) {
   await db.query(
     "INSERT INTO security_incidents(id,restaurant_id,rule,message) VALUES($1,$2,$3,$4) ON CONFLICT(restaurant_id,rule) DO UPDATE SET status=CASE WHEN security_incidents.status IN ('resolved','archived') THEN 'open' ELSE security_incidents.status END,message=excluded.message,updated_at=now()",
@@ -29,7 +18,7 @@ export async function archiveSecurity(db: DB, r: string, day: string) {
     day >= new Date().toISOString().slice(0, 10)
   )
     throw new Error("Journée d’archive invalide.");
-  const s3 = storage(),
+  const s3 = s3Client(),
     key = `${encodeURIComponent(r)}/security/${day}.json`;
   const records = await rows(
     db,

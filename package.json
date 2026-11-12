@@ -20,7 +20,9 @@
     "setup:env": "node --import tsx scripts/setup-env.ts",
     "test:postgres": "node --import tsx scripts/verify-postgres.ts",
     "test:isolation": "node --import tsx scripts/verify-tenant-isolation.ts",
-    "test:load": "node --import tsx scripts/load-platform.ts"
+    "test:load": "node --import tsx scripts/load-platform.ts",
+    "layers:check": "node --import tsx scripts/check-layers.ts",
+    "template:new": "node --import tsx scripts/new-template.ts"
   },
   "keywords": [],
   "author": "",

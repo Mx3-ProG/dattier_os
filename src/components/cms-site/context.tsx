@@ -8,6 +8,8 @@ import {
   type ComponentProps,
   type ReactNode,
 } from "react";
+import type { Industry } from "@/core/tenant/business";
+import { adaptText } from "@/core/tenant/vocabulary";
 const Context = createContext<{
   restaurant: string;
   demo: boolean;
@@ -15,6 +17,7 @@ const Context = createContext<{
   preview: boolean;
   shopEnabled: boolean;
   audience: AudienceMode | null;
+  industry?: Industry;
 }>({
   restaurant: "",
   demo: false,
@@ -30,6 +33,7 @@ export function TenantSiteProvider({
   preview = false,
   shopEnabled = true,
   audience = null,
+  industry,
   children,
 }: {
   restaurant: string;
@@ -38,11 +42,13 @@ export function TenantSiteProvider({
   preview?: boolean;
   shopEnabled?: boolean;
   audience?: AudienceMode | null;
+  /** Famille d'activité : adapte le vocabulaire du site (carte, table, restaurant…). */
+  industry?: Industry;
   children: ReactNode;
 }) {
   const value = useMemo(
-    () => ({ restaurant, demo, platformOrigin, preview, shopEnabled, audience }),
-    [restaurant, demo, platformOrigin, preview, shopEnabled, audience],
+    () => ({ restaurant, demo, platformOrigin, preview, shopEnabled, audience, industry }),
+    [restaurant, demo, platformOrigin, preview, shopEnabled, audience, industry],
   );
   return <Context.Provider value={value}>{children}</Context.Provider>;
 }
@@ -120,7 +126,9 @@ export function useTenantSite() {
       if (!response.ok) throw new Error(result.error);
       return result;
     }
-    return { ...context, base, href, request, shopPost };
+    /** Texte écrit pour la restauration, dans le vocabulaire du métier. */
+    const text = (value: string) => adaptText(value, context.industry);
+    return { ...context, base, href, request, shopPost, text };
   }, [context]);
 }
 export function TenantLink({

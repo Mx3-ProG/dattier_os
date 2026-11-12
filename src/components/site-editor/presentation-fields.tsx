@@ -1,5 +1,6 @@
 import type { Presentation } from "@/features/cms/schema";
 import { siteTemplates } from "@/features/cms/templates";
+import { useTenantSite } from "../cms-site/context";
 
 export function PresentationFields({
   value,
@@ -8,6 +9,7 @@ export function PresentationFields({
   value?: Presentation;
   change: (value: Presentation) => void;
 }) {
+  const t = useTenantSite().text;
   if (!value)
     return (
       <p>
@@ -70,7 +72,7 @@ export function PresentationFields({
             >
               <option value="none">Masquée</option>
               <option value="order">Commander</option>
-              <option value="reserve">Réserver une table</option>
+              <option value="reserve">{t("Réserver une table")}</option>
             </select>
           </label>
           <small>

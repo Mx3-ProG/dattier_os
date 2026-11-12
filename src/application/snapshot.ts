@@ -5,30 +5,21 @@ import {
   recentMessages,
 } from "@/features/messaging/service";
 import { registerPresence } from "@/features/ops-security/presence";
-import { type DB, rows, one, demoEnabled } from "./database/db";
-import { type Actor, scope } from "./auth/session";
-import { can } from "./permissions";
+import { type DB, rows, one, demoEnabled } from "../infrastructure/database/db";
+import { type Actor, scope } from "../infrastructure/auth/session";
+import { can } from "@/core/permissions";
 import { canArrange } from "@/features/floor/access";
 import { moduleEnabled } from "@/features/modules/access";
 import { availableModules } from "@/features/modules/availability";
 import { tableQuota } from "@/features/floor/service";
-import type { Snapshot, MenuItem, Restaurant, Order, Item } from "./types";
+import type { Snapshot, Restaurant, Order, Item } from "../shared/types";
 import {
   adminFlashPromotions,
   engagementSettings,
 } from "@/features/commerce/engagement";
-export async function menu(
-  db: DB,
-  r: string,
-  financial = false,
-  includeArchived = false,
-) {
-  return rows<MenuItem>(
-    db,
-    `SELECT m.*,coalesce((SELECT min(floor(coalesce((SELECT sum(l.quantity-l.reserved) FROM stock_lots l WHERE l.ingredient_id=ri.ingredient_id AND l.expires_on>=CURRENT_DATE),0)/ri.quantity)) FROM recipe_ingredients ri WHERE ri.menu_id=m.id),0)::int AS portions ${financial ? ",(SELECT sum(ri.quantity*i.cost)::float FROM recipe_ingredients ri JOIN ingredients i ON i.id=ri.ingredient_id WHERE ri.menu_id=m.id) AS cost" : ""} FROM menu_items m WHERE m.restaurant_id=$1 ${includeArchived ? "" : "AND m.archived_at IS NULL"} ORDER BY m.category,m.name`,
-    [r],
-  );
-}
+import { menu, trialStatus } from "./snapshot/queries";
+import { tradePilotage } from "@/features/trade/service";
+
 export async function snapshot(
   db: DB,
   user: Actor,
@@ -95,13 +86,16 @@ export async function snapshot(
     licenses: (
       await rows<{ product_id: string; kind: string }>(
         db,
-        "SELECT l.product_id,p.kind FROM addon_licenses l JOIN addon_products p ON p.id=l.product_id WHERE l.restaurant_id=$1 AND p.kind IN ('analytics','estimation','business') AND app.addon_installed($1,l.product_id)",
+        "SELECT l.product_id,p.kind FROM addon_licenses l JOIN addon_products p ON p.id=l.product_id WHERE l.restaurant_id=$1 AND p.kind IN ('analytics','estimation','business','operations') AND app.addon_installed($1,l.product_id)",
         [r],
       )
     ).flatMap((license) =>
       // Les outils métier partagent une seule entrée de menu : « Outils métier ».
       license.kind === "business" ? [license.product_id, "trade-tools"] : [license.product_id],
     ).filter((id, index, all) => all.indexOf(id) === index),
+    trial: await trialStatus(db, r),
+    // Chiffres des outils métier pour la vue d'ensemble (outils installés et permis).
+    tradePilotage: await tradePilotage(db, r, user),
     demo: demoEnabled(),
     categories: (
       await rows<{ category: string }>(
@@ -273,3 +267,5 @@ export async function snapshot(
       : [],
   };
 }
+
+export { menu } from "./snapshot/queries";

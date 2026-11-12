@@ -1,11 +1,11 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowLeft, LayoutDashboard, LogIn } from "lucide-react";
-import { UtensilsMark } from "@/components/brand/utensils";
-import { actor } from "@/lib/auth/session";
+import { Store } from "lucide-react";
+import { actor } from "@/infrastructure/auth/session";
 
 export const metadata: Metadata = {
-  title: "Page introuvable · STUDIO OS",
+  title: "Page introuvable · STUDIO S",
   robots: { index: false, follow: false },
 };
 
@@ -25,19 +25,19 @@ export default async function NotFound() {
     <main className="dattier-404">
       <div className="dattier-404-card">
         <Link href="/" className="dattier-404-brand">
-          <UtensilsMark size={18} /> STUDIO OS
+          <Store size={18} /> STUDIO S
         </Link>
         <div className="dattier-404-code" aria-hidden>
           4
           <span className="dattier-404-plate">
-            <UtensilsMark />
+            <Store />
           </span>
           4
         </div>
-        <h1>Cette table n’existe pas</h1>
+        <h1>Cette page n’existe pas</h1>
         <p>
-          La page que vous cherchez a été débarrassée, déplacée ou n’a jamais
-          été dressée. Revenez en salle, on vous attend.
+          La page que vous cherchez a été retirée, déplacée ou n’a jamais
+          existé. Revenez à l’accueil, on vous attend.
         </p>
         <div className="dattier-404-actions">
           {connected ? (

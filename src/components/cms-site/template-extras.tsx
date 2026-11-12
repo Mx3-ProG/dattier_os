@@ -1,7 +1,7 @@
 "use client";
 import { useState } from "react";
 import type { Presentation } from "@/features/cms/schema";
-import { TenantLink as Link } from "./context";
+import { TenantLink as Link, useTenantSite } from "./context";
 
 export function TemplateExtras({
   presentation: p,
@@ -13,6 +13,7 @@ export function TemplateExtras({
   cartVisible: boolean;
 }) {
   const [surprise, setSurprise] = useState(false);
+  const t = useTenantSite().text;
   if (!p) return null;
   return (
     <>
@@ -42,6 +43,22 @@ export function TemplateExtras({
                   jardin: "La gourmandise prend racine ici.",
                   comptoir: "Les bonnes choses se partagent.",
                   pause: "Il est toujours l’heure d’une pause.",
+                  pizzeria: "La dolce vita commence ici.",
+                  sushi: "Chaque bouchée est un voyage.",
+                  coiffeur: "Votre meilleure version, aujourd’hui.",
+                  loft: "L’espace qui vous ressemble.",
+                  chantier: "Des fondations solides pour vos projets.",
+                  racing: "La performance est une attitude.",
+                  manuscrit: "Chaque mot a son importance.",
+                  assurance: "La confiance se construit chaque jour.",
+                  patisserie: "Le bonheur est dans le four.",
+                  streetfood: "La street food, c’est la fête.",
+                  compta: "Les chiffres parlent d’eux-mêmes.",
+                  ecole: "Apprendre, c’est grandir.",
+                  gastronomique: "Chaque plat est une œuvre.",
+                  baravin: "Le bon vin se partage.",
+                  brunch: "Le matin qui fait du bien.",
+                  burger: "Une vraie faim, un vrai burger.",
                 }[p.layout]
               }
             </p>
@@ -50,7 +67,7 @@ export function TemplateExtras({
       )}
       {p.stickyAction !== "none" && !cartVisible && (
         <nav className="template-action-bar" aria-label="Accès rapide">
-          <Link href="/carte">Voir la carte</Link>
+          <Link href="/carte">{t("Voir la carte")}</Link>
           <Link
             className="donut-button compact"
             href={
@@ -62,7 +79,7 @@ export function TemplateExtras({
             }
           >
             {p.stickyAction === "reserve"
-              ? "Réserver une table"
+              ? t("Réserver une table")
               : shopEnabled
                 ? "Commander"
                 : "Nous contacter"}{" "}

@@ -1,6 +1,6 @@
 import { withRequestContext } from "@/features/ops-security/context";
 import { NextResponse } from "next/server";
-import { getDb } from "@/lib/database/db";
+import { getDb } from "@/infrastructure/database/db";
 export const dynamic = "force-dynamic";
 async function routeGET() {
   try {

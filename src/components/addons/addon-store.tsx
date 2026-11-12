@@ -154,11 +154,13 @@ function ProductCard({
   const isNotFound = product.kind === "not_found";
   const isDecoration = product.kind === "site_decoration";
   const isBackground = product.kind === "site_background";
+  // Commandes, cuisine, bar : modules d'opérations gratuits, ouverts dans le poste.
+  const isOperation = product.kind === "operations";
   const trade = isTrade ? tradeTool(product.id) : undefined;
   const license = state.licenses.find((entry) => entry.product_id === product.id);
   const owned = isOwned(license);
   const installed = owned && isInstalled(state, product.id);
-  const activeId = isEstimation || isTrade || isNotFound || isDecoration || isBackground ? product.id : isAnalytics
+  const activeId = isEstimation || isTrade || isOperation || isNotFound || isDecoration || isBackground ? product.id : isAnalytics
     ? state.analyticsCollecting
       ? product.id
       : null
@@ -227,9 +229,9 @@ function ProductCard({
           <dd>{product.compatibility.map((entry) => compatibilityLabels[entry] ?? entry).join(", ")}</dd>
         </div>
         <div>
-          <dt>{trade || isNotFound || isDecoration || isBackground ? "Destination" : isEstimation ? "Destination" : isAnalytics ? "Comprend" : "Personnalisation"}</dt>
+          <dt>{trade || isOperation || isNotFound || isDecoration || isBackground ? "Destination" : isEstimation ? "Destination" : isAnalytics ? "Comprend" : "Personnalisation"}</dt>
           <dd>
-            {isNotFound ? "Mon site web · Identité · Page 404" : isDecoration ? "Mon site web · Identité · Décoration" : isBackground ? "Mon site web · Identité · Fond du site" : trade ? "Gestion · Outils métier" : isEstimation ? "Pilotage · Estimation et page publique"
+            {isNotFound ? "Mon site web · Identité · Page 404" : isDecoration ? "Mon site web · Identité · Décoration" : isBackground ? "Mon site web · Identité · Fond du site" : trade || isOperation ? "Opérations" : isEstimation ? "Pilotage · Estimation et page publique"
               : isAnalytics
               ? "Globe 3D et carte 2D, classements par zone, activité quasi réelle, consentement et conservation configurables"
               : definition?.colorable
@@ -272,16 +274,21 @@ function ProductCard({
         <Button onClick={() => onOpenModule("audience")}>Ouvrir {product.name}</Button>
       )}
       {installed && isEstimation && onOpenModule && <Button onClick={() => onOpenModule("estimation")}>Configurer l’estimation</Button>}
-      {installed && isTrade && onOpenModule && <Button onClick={() => onOpenModule("trade-tools")}>Ouvrir l’outil</Button>}
+      {installed && isTrade && onOpenModule && <Button onClick={() => onOpenModule(`tool-${product.id}`)}>Ouvrir l’outil</Button>}
+      {installed && isOperation && onOpenModule && (
+        <Button onClick={() => onOpenModule(({ "ops-orders": "orders", "ops-kitchen": "kitchen", "ops-bar": "bar" } as Record<string, string>)[product.id] ?? "overview")}>
+          Ouvrir {product.name}
+        </Button>
+      )}
       {installed && isNotFound && onOpenModule && <Button onClick={() => onOpenModule("site")}>Choisir dans mon site</Button>}
       {installed && isDecoration && onOpenModule && <Button onClick={() => onOpenModule("site")}>Choisir dans mon site</Button>}
       {installed && isBackground && onOpenModule && <Button onClick={() => onOpenModule("site")}>Choisir dans mon site</Button>}
-      {installed && !isAnalytics && !isEstimation && !isTrade && !isNotFound && !isDecoration && !isBackground && action === "activate" && (
+      {installed && !isAnalytics && !isEstimation && !isTrade && !isOperation && !isNotFound && !isDecoration && !isBackground && action === "activate" && (
         <Button variant="secondary" disabled={busy || !state.canCustomize} onClick={() => onActivate(product)}>
           Activer
         </Button>
       )}
-      {installed && !isAnalytics && !isEstimation && !isTrade && !isNotFound && !isDecoration && !isBackground && action === "active" && <Button disabled>Écran actif</Button>}
+      {installed && !isAnalytics && !isEstimation && !isTrade && !isOperation && !isNotFound && !isDecoration && !isBackground && action === "active" && <Button disabled>Écran actif</Button>}
     </article>
   );
 }

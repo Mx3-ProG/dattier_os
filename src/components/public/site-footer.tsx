@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { MapPin, Phone } from "lucide-react";
-import type { Restaurant } from "@/lib/types";
+import type { Restaurant } from "@/shared/types";
 import { Brand } from "./site-header";
 import { fullNav, legalNav, secondaryNav } from "./navigation";
 

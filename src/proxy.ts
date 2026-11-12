@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getDb, productionEnabled } from "@/lib/database/db";
+import { getDb, productionEnabled } from "@/infrastructure/database/db";
 import { SITE_HEADER } from "@/features/seo/locale";
 /** Request headers forwarded to the app: the site header is always set by us, never by the client. */
 function forwarded(req: NextRequest, restaurant: string | null) {

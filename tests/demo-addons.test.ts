@@ -2,9 +2,9 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import { PGlite } from "@electric-sql/pglite";
-import { migrate } from "../src/lib/database/migrate";
-import { seed } from "../src/lib/database/seed";
-import { grantDemoAddons } from "../src/lib/database/demo-addons";
+import { migrate } from "../src/infrastructure/database/migrate";
+import { seed } from "../src/infrastructure/database/seed";
+import { grantDemoAddons } from "../src/infrastructure/database/demo-addons";
 import { monthlyAddonIds } from "../src/features/addons/catalog";
 
 test("la démo donne accès à chaque add-on payant visible sans simuler un achat", async () => {

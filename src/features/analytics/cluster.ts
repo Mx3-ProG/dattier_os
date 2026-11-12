@@ -91,6 +91,7 @@ export function clusterPoints(points: readonly GlobePoint[], cellDegrees: number
     found.z += z * point.weight;
     Object.assign(found, vectorToLatLng(found.x, found.y, found.z));
   }
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   return clusters.map(({ x: _x, y: _y, z: _z, ...cluster }) =>
     cluster.members > 1
       ? { ...cluster, label: `${cluster.label} et ${cluster.members - 1} zone${cluster.members > 2 ? "s" : ""} proche${cluster.members > 2 ? "s" : ""}` }

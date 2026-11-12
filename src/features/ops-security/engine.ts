@@ -1,7 +1,7 @@
 import { randomUUID } from "node:crypto";
-import type { Database as PGlite } from "@/lib/database/types";
-import { one, rows, type DB } from "@/lib/database/db";
-import { databaseContext } from "@/lib/database/context";
+import type { Database as PGlite } from "@/infrastructure/database/types";
+import { one, rows, type DB } from "@/infrastructure/database/db";
+import { databaseContext } from "@/infrastructure/database/context";
 import { notify } from "@/features/orders/service";
 import {
   archiveDay,

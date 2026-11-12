@@ -1,6 +1,6 @@
 "use client";
 import { useState } from "react";
-import { calculateEstimation, cents, type PublicEstimationItem } from "@/features/estimation/model";
+import { calculateEstimation, cents, type PublicEstimationItem } from "@/domain/estimation/model";
 import "./estimation.css";
 
 export function EstimationCalculator({

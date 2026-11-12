@@ -71,6 +71,9 @@ export function AccountWorkspace({
             <Building2 size={18} />
             Mes établissements
           </Link>
+          <Link className="restaurant-nav-link" href="/platform#abonnements" onClick={()=>setMobile(false)}>
+            <Package size={18}/> Abonnements et achats
+          </Link>
           {first && (
             <Link
               className="restaurant-nav-link"

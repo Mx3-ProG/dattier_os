@@ -1,9 +1,7 @@
-import { requirePlan } from "@/features/platform/entitlements";
 import { createHash, randomBytes } from "node:crypto";
 import { cookies } from "next/headers";
 import { getDb, demoEnabled, one, rows, type DB } from "../database/db";
-import type { Role } from "../permissions";
-import { bindActor } from "@/features/ops-security/context";
+import type { Role } from "@/core/permissions";
 import { appOrigin, oidcActor } from "./oidc";
 export type Actor = {
   id: string;
@@ -14,6 +12,17 @@ export type Actor = {
   authIssuedAt?: number;
 };
 const hash = (s: string) => createHash("sha256").update(s).digest("hex");
+
+async function requirePlan(db: DB, restaurant: string, minimum: number) {
+  const mod = await import("@/features/platform/entitlements");
+  return mod.requirePlan(db, restaurant, minimum as 39);
+}
+
+async function bindActor(userId: string, tokenHash: string) {
+  const mod = await import("@/features/ops-security/context");
+  return mod.bindActor(userId, tokenHash);
+}
+
 export async function login(id: string) {
   if (!demoEnabled()) throw new Error("Connexion de démonstration désactivée.");
   const db = await getDb();
@@ -37,7 +46,7 @@ export async function login(id: string) {
 export async function actor(): Promise<Actor> {
   if (!demoEnabled()) {
     const user = await oidcActor();
-    bindActor(user.id, hash(`${user.id}:${user.authIssuedAt}`));
+    await bindActor(user.id, hash(`${user.id}:${user.authIssuedAt}`));
     return user;
   }
   const token = (await cookies()).get("atacuisine_session")?.value;
@@ -47,7 +56,7 @@ export async function actor(): Promise<Actor> {
     "SELECT p.*,(extract(epoch FROM (s.expires_at-interval '12 hours'))*1000)::float AS auth_issued_at FROM profiles p JOIN sessions s ON s.profile_id=p.id WHERE s.token=$1 AND s.expires_at>now()",
     [hash(token)],
   );
-  bindActor(user.id, hash(token));
+  await bindActor(user.id, hash(token));
   return { ...user, authIssuedAt: user.auth_issued_at };
 }
 export async function scope(db: DB, user: Actor, r: string) {

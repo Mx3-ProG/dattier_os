@@ -1,0 +1,10 @@
+# Never upload local-only folders to Vercel (worktrees, demo DB, builds, tests).
+.claude/
+.data/
+node_modules/
+.next/
+test-results/
+playwright-report/
+backups/
+.env*
+*.tsbuildinfo

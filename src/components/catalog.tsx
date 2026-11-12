@@ -1,10 +1,11 @@
 "use client";
 import { useState } from "react";
 import { Plus, Archive, Trash2, RotateCcw, Zap } from "lucide-react";
-import type { Snapshot } from "@/lib/types";
-import { money } from "@/lib/domain";
+import type { Snapshot } from "@/shared/types";
+import { money } from "@/domain/shared/units";
 import { Button } from "./ui/button";
 import { Form, Modal, type Act, type Field } from "./forms";
+import { adaptText } from "@/core/tenant/vocabulary";
 const defaultFields: Field[] = [
   { name: "name", label: "Nom du produit" },
   {
@@ -37,6 +38,7 @@ const defaultFields: Field[] = [
   },
 ];
 export function Catalog({ data, act }: { data: Snapshot; act: Act }) {
+  const t = (text: string) => adaptText(text, data.restaurant.industry);
   const [mode, setMode] = useState("active"),
     [query, setQuery] = useState(""),
     [create, setCreate] = useState(false),
@@ -50,7 +52,12 @@ export function Catalog({ data, act }: { data: Snapshot; act: Act }) {
           ...field,
           options: data.categories.map((value) => ({ value, label: value })),
         }
-      : field,
+      : field.name === "station"
+        ? {
+            ...field,
+            options: field.options?.map((option) => ({ ...option, label: t(option.label) })),
+          }
+        : field,
   );
   const product = data.menu.find((m) => m.id === edit);
   const [flashFor, setFlashFor] = useState<string | null>(null);
@@ -84,10 +91,9 @@ export function Catalog({ data, act }: { data: Snapshot; act: Act }) {
     <>
       <div className="section-heading">
         <div>
-          <h2>Une carte, partout à jour.</h2>
+          <h2>{t("Une carte, partout à jour.")}</h2>
           <p>
-            Créez un produit avec sa recette pour le rendre immédiatement
-            commandable.
+            {t("Créez un produit avec sa recette pour le rendre immédiatement commandable.")}
           </p>
         </div>
         <Button
@@ -179,7 +185,7 @@ export function Catalog({ data, act }: { data: Snapshot; act: Act }) {
           .map((m) => (
             <article className="card recipe-card" key={m.id}>
               <span className="eyebrow">
-                {m.category} · {m.station === "bar" ? "Bar" : "Cuisine"}
+                {m.category} · {t(m.station === "bar" ? "Bar" : "Cuisine")}
               </span>
               <h3>{m.name}</h3>
               <div className="between">
@@ -430,7 +436,7 @@ export function Catalog({ data, act }: { data: Snapshot; act: Act }) {
               },
               {
                 name: "public_composition",
-                label: "Composition exacte du plat servi",
+                label: t("Composition exacte du plat servi"),
                 value: product.public_composition,
                 type: "textarea",
                 maxLength: 2000,

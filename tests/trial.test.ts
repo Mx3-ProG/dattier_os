@@ -2,9 +2,9 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import { PGlite } from "@electric-sql/pglite";
-import { migrate } from "../src/lib/database/migrate";
+import { migrate } from "../src/infrastructure/database/migrate";
 import { platformPerform } from "../src/features/platform/service";
-import type { DB } from "../src/lib/database/db";
+import type { DB } from "../src/infrastructure/database/db";
 import { onboardingInput } from "./support/onboarding";
 
 test("three-day trial grants access, expires, and cannot be restarted", async () => {
@@ -27,7 +27,7 @@ test("three-day trial grants access, expires, and cannot be restarted", async ()
     const { organization, restaurant } = created as { organization: string; restaurant: string };
     assert.equal((await asOwner(async (tx) => (await tx.query<{ plan: number }>("SELECT app.restaurant_plan($1) AS plan", [restaurant])).rows[0].plan)), 39);
     const dates = (await db.query<{ days: number }>("SELECT extract(epoch FROM trial_ends_at-trial_started_at)/86400 AS days FROM app.organization_plans WHERE organization_id=$1", [organization])).rows[0];
-    assert.equal(Number(dates.days), 3);
+    assert.equal(Number(dates.days), 7);
     await assert.rejects(asOwner((tx) => platformPerform(tx, { id: "trial-owner", name: "Owner", role: "OWNER" }, {
       action: "onboard", organization: "Encore", restaurant: "Autre boutique", ...onboardingInput(),
     })), /Essai déjà utilisé/);

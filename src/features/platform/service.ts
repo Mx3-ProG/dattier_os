@@ -1,8 +1,8 @@
 import { randomUUID, randomBytes, createHash } from "node:crypto";
 import { z } from "zod";
-import { rows, one, type DB } from "@/lib/database/db";
-import { scope, type Actor } from "@/lib/auth/session";
-import { roles } from "@/lib/permissions";
+import { rows, one, type DB } from "@/infrastructure/database/db";
+import { scope, type Actor } from "@/infrastructure/auth/session";
+import { roles } from "@/core/permissions";
 import { log } from "@/features/orders/service";
 import { planBillingReady } from "./plan-billing";
 import { setLayoutAccess } from "@/features/floor/service";
@@ -143,6 +143,13 @@ export async function assertAdmin(db: DB, user: Actor, r: string) {
     throw new Error("Administration non autorisée.");
   return u;
 }
+/** Métier de l'établissement : propriétaire ou super-administrateur (la RLS exige aussi l'administration de l'organisation). */
+async function assertActivityAdmin(db: DB, user: Actor, r: string) {
+  const u = await scope(db, user, r);
+  if (!(u.roles || [u.role]).some((role) => role === "OWNER" || role === "SUPER_ADMIN"))
+    throw new Error("Administration non autorisée.");
+  return u;
+}
 export async function platformPerform(db: DB, user: Actor, raw: unknown) {
   const a = platformAction.parse(raw);
   if (a.action === "onboard") {
@@ -217,14 +224,8 @@ export async function platformPerform(db: DB, user: Actor, raw: unknown) {
     return { restaurant: r };
   }
   if (a.action === "activity") {
-    await assertAdmin(db,user,a.restaurant);
+    await assertActivityAdmin(db,user,a.restaurant);
     const previous=await one<{industry:Industry}>(db,"SELECT industry FROM restaurants WHERE id=$1",[a.restaurant]);
-    if (previous.industry === "restaurant" && a.activity.industry !== "restaurant") {
-      const pending=await one<{active:boolean}>(db,
-        "SELECT EXISTS(SELECT 1 FROM orders WHERE restaurant_id=$1 AND status IN ('pending','active')) OR EXISTS(SELECT 1 FROM reservations WHERE restaurant_id=$1 AND status IN ('requested','confirmed','arrived') AND ends_at>now()) OR EXISTS(SELECT 1 FROM table_sessions s JOIN dining_tables t ON t.id=s.table_id WHERE t.restaurant_id=$1 AND s.closed_at IS NULL) AS active",
-        [a.restaurant]);
-      if (pending.active) throw new Error("Terminez les commandes, réservations et services de table en cours avant de changer de métier.");
-    }
     await saveActivity(db,a.restaurant,a.activity);
     await installFreeTradeTools(db,a.restaurant,a.activity.industry,previous.industry);
     return { updated: true };

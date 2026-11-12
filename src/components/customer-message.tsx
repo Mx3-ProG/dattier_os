@@ -1,8 +1,8 @@
 "use client";
 import { useState } from "react";
 import { Mail, MessageSquare } from "lucide-react";
-import type { Customer, Promo, Snapshot } from "@/lib/types";
-import { money } from "@/lib/domain";
+import type { Customer, Promo, Snapshot } from "@/shared/types";
+import { money } from "@/domain/shared/units";
 import {
   asEmail,
   asPhone,

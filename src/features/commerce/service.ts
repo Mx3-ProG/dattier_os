@@ -3,8 +3,8 @@ import { z } from "zod";
 import { processPayment } from "@/features/finance/books";
 import { enqueue } from "@/features/platform/jobs";
 import { minimumOnlineAmount, onlineReady } from "@/features/payments/config";
-import { one, rows, type DB } from "@/lib/database/db";
-import { menu } from "@/lib/snapshot";
+import { one, rows, type DB } from "@/infrastructure/database/db";
+import { menu } from "@/application/snapshot";
 import {
   createOrder,
   reserve,
@@ -13,8 +13,8 @@ import {
   completeSettledOrder,
   notify,
 } from "@/features/orders/service";
-import { requirePermission } from "@/lib/permissions";
-import type { Actor } from "@/lib/auth/session";
+import { requirePermission } from "@/core/permissions";
+import type { Actor } from "@/infrastructure/auth/session";
 import {
   recordCheckoutPromo,
   redeemCheckoutPromo,

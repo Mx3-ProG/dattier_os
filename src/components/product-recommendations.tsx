@@ -1,7 +1,7 @@
 /* eslint-disable @next/next/no-img-element */
 import Link from "next/link";
 import { ArrowUpRight } from "lucide-react";
-import { money } from "@/lib/domain";
+import { money } from "@/domain/shared/units";
 
 type Item = {
   id: string;

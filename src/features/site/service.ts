@@ -1,9 +1,9 @@
 import { randomUUID, randomBytes, createHash } from "node:crypto";
 import { resolveTxt } from "node:dns/promises";
 import { z } from "zod";
-import { one, rows, type DB } from "@/lib/database/db";
-import { scope, type Actor } from "@/lib/auth/session";
-import { requirePermission } from "@/lib/permissions";
+import { one, rows, type DB } from "@/infrastructure/database/db";
+import { scope, type Actor } from "@/infrastructure/auth/session";
+import { requirePermission } from "@/core/permissions";
 import { log } from "@/features/orders/service";
 import { requirePaidAddon } from "@/features/platform/entitlements";
 const sectionSchema = z.object({

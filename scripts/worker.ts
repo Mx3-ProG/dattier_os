@@ -1,10 +1,10 @@
 import { tick as operationsTick } from "../src/features/ops-security/engine";
-import { nestedDatabase } from "../src/lib/database/nested";
+import { nestedDatabase } from "../src/infrastructure/database/nested";
 import { randomUUID } from "node:crypto";
 import { writeFile } from "node:fs/promises";
-import { PostgresDatabase } from "../src/lib/database/postgres";
-import { withDatabaseContext } from "../src/lib/database/context";
-import { assertLeastPrivilege, rows } from "../src/lib/database/db";
+import { PostgresDatabase } from "../src/infrastructure/database/postgres";
+import { withDatabaseContext } from "../src/infrastructure/database/context";
+import { assertLeastPrivilege, rows } from "../src/infrastructure/database/db";
 import {
   archiveSecurity,
   scanSecurity,

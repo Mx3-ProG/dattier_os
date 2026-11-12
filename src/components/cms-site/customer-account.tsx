@@ -15,7 +15,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import type { ShopOrder } from "@/features/commerce/schema";
-import { money } from "@/lib/domain";
+import { money } from "@/domain/shared/units";
 import { CustomerAuth } from "./customer-auth";
 import { Modal } from "../forms";
 import { AccountHero, FlashStrip, Missions, QuickActions } from "./account/home";

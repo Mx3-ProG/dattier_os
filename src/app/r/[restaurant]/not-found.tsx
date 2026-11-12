@@ -6,8 +6,8 @@ import { effectiveNotFound, emptySiteAddons, notFoundDefaults } from "@/features
 import { SITE_HEADER } from "@/features/seo/locale";
 import { seoFacts, platformUrl } from "@/features/seo/server";
 import { siteUrls } from "@/features/seo/urls";
-import { withDatabaseContext } from "@/lib/database/context";
-import { demoEnabled, getDb } from "@/lib/database/db";
+import { withDatabaseContext } from "@/infrastructure/database/context";
+import { demoEnabled, getDb } from "@/infrastructure/database/db";
 
 export const metadata: Metadata = { title: "Page introuvable", robots: { index: false, follow: false } };
 

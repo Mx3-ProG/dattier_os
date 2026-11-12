@@ -1,9 +1,9 @@
 import type { MetadataRoute } from "next";
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "STUDIO OS",
-    short_name: "STUDIO OS",
-    description: "Gestion des restaurants et poste de service hors ligne",
+    name: "STUDIO S",
+    short_name: "STUDIO S",
+    description: "Gestion des commerces : clients, ventes, stocks et équipe",
     start_url: "/platform",
     display: "standalone",
     background_color: "#f7f5ef",

@@ -10,10 +10,11 @@ import {
   RotateCw,
   Trash2,
 } from "lucide-react";
-import type { Snapshot, Table, Zone } from "@/lib/types";
+import type { Snapshot, Table, Zone } from "@/shared/types";
 import { Button } from "./ui/button";
 import { Badge, Form, Modal, statusLabels, type Act } from "./forms";
 import { FloorMap, normalizeAngle } from "./floor-map";
+import { adaptText } from "@/core/tenant/vocabulary";
 
 const shapes = [
   { value: "square", label: "Carrée" },
@@ -28,6 +29,7 @@ const statuses = [
 
 /** Aménagement : zones, tables (ajout, déplacement, rotation, archivage, suppression). */
 export function FloorEditor({ data, act }: { data: Snapshot; act: Act }) {
+  const t = (text: string) => adaptText(text, data.restaurant.industry);
   const [editing, setEditing] = useState<Table | "new" | null>(null),
     [zoneEdit, setZoneEdit] = useState<Zone | "new" | null>(null),
     [zoneId, setZoneId] = useState<string | null>(null),
@@ -86,7 +88,7 @@ export function FloorEditor({ data, act }: { data: Snapshot; act: Act }) {
     if (
       confirm(
         n
-          ? `Supprimer la zone « ${z.name} » ? Ses ${n} table(s) sans historique seront supprimées ; une table avec historique doit d’abord être déplacée ou archivée.`
+          ? t(`Supprimer la zone « ${z.name} » ? Ses ${n} tables sans historique seront supprimées ; une table avec historique doit d’abord être déplacée ou archivée.`)
           : `Supprimer la zone « ${z.name} » ?`,
       )
     )
@@ -98,34 +100,32 @@ export function FloorEditor({ data, act }: { data: Snapshot; act: Act }) {
     <>
       <div className="section-heading">
         <div>
-          <h2>Aménager la salle</h2>
+          <h2>{t("Aménager la salle")}</h2>
           <p>
-            Créez vos zones, glissez et tournez les tables pour reproduire
-            l’établissement. Ce plan est celui que voient les clients au moment
-            de réserver.
+            {t("Créez vos zones, glissez et tournez les tables pour reproduire l’établissement. Ce plan est celui que voient les clients au moment de réserver.")}
           </p>
         </div>
         <Button
           onClick={() => setEditing("new")}
           disabled={full || !zone}
-          title={full ? "Plafond de tables de l’offre atteint" : undefined}
+          title={full ? t("Plafond de tables de l’offre atteint") : undefined}
         >
-          <Plus size={16} /> Ajouter une table
+          <Plus size={16} /> {t("Ajouter une table")}
         </Button>
       </div>
       <p className={`floor-quota${full ? " full" : ""}`} role="status">
         {quota === null ? (
           <>
-            <b>{count}</b> tables actives · sans plafond de tables
+            <b>{count}</b> {t("tables actives · sans plafond de tables")}
           </>
         ) : (
           <>
             <b>
               {count} / {quota}
             </b>{" "}
-            tables actives, toutes zones confondues
+            {t("tables actives, toutes zones confondues")}
             {full &&
-              " : plafond atteint. Archivez une table ou choisissez un forfait supérieur pour en ajouter."}
+              t(" : plafond atteint. Archivez une table ou choisissez un forfait supérieur pour en ajouter.")}
           </>
         )}
       </p>
@@ -219,14 +219,12 @@ export function FloorEditor({ data, act }: { data: Snapshot; act: Act }) {
         onRotate={rotate}
         hint={
           zone && !shown.length
-            ? "Zone vide : ajoutez une table ou déplacez-en une ici"
+            ? t("Zone vide : ajoutez une table ou déplacez-en une ici")
             : null
         }
       />
       <p className="muted floor-help">
-        Glissez une table pour la placer. Tirez la poignée ronde pour la tourner
-        par pas de 15° (Maj pour un réglage au degré près), ou touche R / Maj+R
-        au clavier.
+        {t("Glissez une table pour la placer. Tirez la poignée ronde pour la tourner par pas de 15° (Maj pour un réglage au degré près), ou touche R / Maj+R au clavier.")}
       </p>
       <div className="card table-scroll floor-tables">
         <table>
@@ -268,14 +266,14 @@ export function FloorEditor({ data, act }: { data: Snapshot; act: Act }) {
                       <>
                         <Button
                           variant="secondary"
-                          aria-label={`Modifier la table ${t.number}`}
+                          aria-label={adaptText(`Modifier la table ${t.number}`, data.restaurant.industry)}
                           onClick={() => setEditing(t)}
                         >
                           <Pencil size={14} /> Modifier
                         </Button>
                         <Button
                           variant="ghost"
-                          aria-label={`Tourner la table ${t.number} de 15°`}
+                          aria-label={adaptText(`Tourner la table ${t.number} de 15°`, data.restaurant.industry)}
                           onClick={() =>
                             rotate(t, normalizeAngle(t.rotation + 15))
                           }
@@ -284,7 +282,7 @@ export function FloorEditor({ data, act }: { data: Snapshot; act: Act }) {
                         </Button>
                         <Button
                           variant="ghost"
-                          aria-label={`Archiver la table ${t.number}`}
+                          aria-label={adaptText(`Archiver la table ${t.number}`, data.restaurant.industry)}
                           onClick={() =>
                             run(
                               act({
@@ -301,7 +299,7 @@ export function FloorEditor({ data, act }: { data: Snapshot; act: Act }) {
                     ) : (
                       <Button
                         variant="secondary"
-                        aria-label={`Restaurer la table ${t.number}`}
+                        aria-label={adaptText(`Restaurer la table ${t.number}`, data.restaurant.industry)}
                         disabled={full}
                         onClick={() =>
                           run(
@@ -318,11 +316,11 @@ export function FloorEditor({ data, act }: { data: Snapshot; act: Act }) {
                     )}
                     <Button
                       variant="danger"
-                      aria-label={`Supprimer la table ${t.number}`}
+                      aria-label={adaptText(`Supprimer la table ${t.number}`, data.restaurant.industry)}
                       onClick={() => {
                         if (
                           confirm(
-                            `Supprimer définitivement la table ${t.number} ? Une table avec historique doit être archivée.`,
+                            adaptText(`Supprimer définitivement la table ${t.number} ? Une table avec historique doit être archivée.`, data.restaurant.industry),
                           )
                         )
                           void run(
@@ -381,18 +379,17 @@ export function FloorEditor({ data, act }: { data: Snapshot; act: Act }) {
       {editing && (
         <Modal
           title={
-            current ? `Modifier la table ${current.number}` : "Nouvelle table"
+            current ? t(`Modifier la table ${current.number}`) : t("Nouvelle table")
           }
           close={() => setEditing(null)}
         >
           {current?.status === "occupied" && (
             <p className="muted">
-              Table en service : son état repassera « À nettoyer » à la clôture
-              de l’addition.
+              {t("Table en service : son état repassera « À nettoyer » à la clôture de l’addition.")}
             </p>
           )}
           <Form
-            label={current ? "Enregistrer la table" : "Ajouter au plan"}
+            label={current ? t("Enregistrer la table") : "Ajouter au plan"}
             fields={[
               {
                 name: "number",

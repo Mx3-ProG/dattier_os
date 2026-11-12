@@ -1,8 +1,8 @@
 import { randomUUID } from "node:crypto";
 import { z } from "zod";
-import { rows, one, type DB } from "@/lib/database/db";
-import { scope, type Actor } from "@/lib/auth/session";
-import { requirePermission, can } from "@/lib/permissions";
+import { rows, one, type DB } from "@/infrastructure/database/db";
+import { scope, type Actor } from "@/infrastructure/auth/session";
+import { requirePermission, can } from "@/core/permissions";
 import { movement, log } from "@/features/orders/service";
 const id = z.string().min(1).max(150),
   qty = z.number().positive().max(1000000),

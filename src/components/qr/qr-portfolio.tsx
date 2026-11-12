@@ -130,7 +130,7 @@ export function QrPortfolio({
         <label className="qr-search">
           <Search size={16} />
           <input
-            placeholder="Table, plat, fournisseur…"
+            placeholder="Table, produit, fournisseur…"
             aria-label="Rechercher un QR code"
             value={query}
             onChange={(e) => setQuery(e.target.value)}

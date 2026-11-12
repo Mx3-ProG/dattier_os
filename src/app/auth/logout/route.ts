@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { logout, appOrigin } from "@/lib/auth/oidc";
-import { demoEnabled } from "@/lib/database/db";
+import { logout, appOrigin } from "@/infrastructure/auth/oidc";
+import { demoEnabled } from "@/infrastructure/database/db";
 export async function POST(req: NextRequest) {
   const origin = req.headers.get("origin");
   const local = demoEnabled() && origin &&

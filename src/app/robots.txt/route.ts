@@ -1,4 +1,4 @@
-import { demoEnabled } from "@/lib/database/db";
+import { demoEnabled } from "@/infrastructure/database/db";
 import { platformRobots } from "@/features/seo/robots";
 export const dynamic = "force-dynamic";
 // Platform host only: on a restaurant domain the proxy rewrites /robots.txt to /r/{id}/robots.txt.

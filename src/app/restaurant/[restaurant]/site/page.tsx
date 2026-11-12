@@ -1,5 +1,5 @@
 import { WebsiteStudio } from "@/components/site-editor/entry";
-import { demoEnabled } from "@/lib/database/db";
+import { demoEnabled } from "@/infrastructure/database/db";
 import { restaurantAdminContext } from "@/features/platform/admin-context";
 import { notFound } from "next/navigation";
 import "@/app/site-editor.css";

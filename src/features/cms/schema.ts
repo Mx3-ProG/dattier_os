@@ -52,6 +52,22 @@ export const presentationSchema = z.object({
     "riviera",
     "atelier",
     "escale",
+    "pizzeria",
+    "sushi",
+    "coiffeur",
+    "loft",
+    "chantier",
+    "racing",
+    "manuscrit",
+    "assurance",
+    "patisserie",
+    "streetfood",
+    "compta",
+    "ecole",
+    "gastronomique",
+    "baravin",
+    "brunch",
+    "burger",
   ]),
   stickyHeader: z.boolean(),
   stickyAction: z.enum(["none", "order", "reserve"]),
@@ -230,6 +246,182 @@ export const sectionProps = {
       "reviewForm",
       "reservationForm",
     ]),
+  }),
+  newsletter: z.object({
+    kicker: text(80),
+    title: text(160),
+    text: text(400),
+    placeholder: text(80),
+    buttonLabel: text(60),
+  }),
+  team: z.object({
+    kicker: text(80),
+    title: text(160),
+    intro: text(600),
+    members: z
+      .array(
+        z.object({
+          name: text(80),
+          role: text(80),
+          bio: text(400),
+          image: imageSchema,
+        }),
+      )
+      .max(12),
+  }),
+  stats: z.object({
+    kicker: text(80),
+    title: text(160),
+    items: z
+      .array(z.object({ value: text(40), label: text(80) }))
+      .min(1)
+      .max(6),
+  }),
+  partners: z.object({
+    kicker: text(80),
+    title: text(160),
+    logos: z
+      .array(z.object({ name: text(80), image: imageSchema, link: linkSchema }))
+      .max(20),
+  }),
+  timeline: z.object({
+    kicker: text(80),
+    title: text(160),
+    intro: text(600),
+    steps: z
+      .array(
+        z.object({
+          title: text(120),
+          text: text(400),
+          image: optionalImage,
+        }),
+      )
+      .min(1)
+      .max(8),
+  }),
+  testimonials: z.object({
+    kicker: text(80),
+    title: text(160),
+    items: z
+      .array(
+        z.object({
+          quote: text(600),
+          author: text(80),
+          role: text(80),
+          image: optionalImage,
+          rating: z.number().int().min(1).max(5),
+        }),
+      )
+      .min(1)
+      .max(12),
+  }),
+  pricing: z.object({
+    kicker: text(80),
+    title: text(160),
+    intro: text(600),
+    plans: z
+      .array(
+        z.object({
+          name: text(80),
+          price: text(40),
+          period: text(40),
+          features: z.array(text(120)).max(12),
+          cta: linkSchema,
+          highlight: z.boolean(),
+        }),
+      )
+      .min(1)
+      .max(6),
+  }),
+  urgency: z.object({
+    kicker: text(80),
+    title: text(160),
+    text: text(400),
+    endDate: text(40),
+    stock: z.number().int().min(0).max(10000),
+    stockLabel: text(80),
+    cta: linkSchema,
+  }),
+  hook: z.object({
+    text: text(200),
+    link: linkSchema,
+    tone: z.enum(["pink", "dark", "light"]),
+  }),
+  reviewForm: z.object({
+    kicker: text(80),
+    title: text(160),
+    text: text(400),
+    buttonLabel: text(60),
+  }),
+  blogList: z.object({
+    kicker: text(80),
+    title: text(160),
+    intro: text(600),
+    articles: z
+      .array(
+        z.object({
+          title: text(160),
+          excerpt: text(400),
+          image: optionalImage,
+          date: text(40),
+          href: text(300),
+        }),
+      )
+      .max(20),
+  }),
+  article: z.object({
+    kicker: text(80),
+    title: text(160),
+    image: optionalImage,
+    author: text(80),
+    date: text(40),
+    body: text(10000),
+  }),
+  comparison: z.object({
+    kicker: text(80),
+    title: text(160),
+    intro: text(600),
+    columns: z.array(text(80)).min(2).max(5),
+    rows: z
+      .array(
+        z.object({
+          label: text(120),
+          values: z.array(text(120)).min(2).max(5),
+        }),
+      )
+      .max(20),
+  }),
+  reviewAdvanced: z.object({
+    kicker: text(80),
+    title: text(160),
+    text: text(400),
+    allowPhoto: z.boolean(),
+    allowRating: z.boolean(),
+    buttonLabel: text(60),
+  }),
+  faqAdvanced: z.object({
+    kicker: text(80),
+    title: text(160),
+    intro: text(400),
+    categories: z
+      .array(
+        z.object({
+          name: text(80),
+          items: z.array(z.object({ question: text(200), answer: text(2000) })).max(20),
+        }),
+      )
+      .max(8),
+  }),
+  wheel: z.object({
+    kicker: text(80),
+    title: text(160),
+    text: text(400),
+    prizes: z
+      .array(z.object({ label: text(80), color: text(20) }))
+      .min(2)
+      .max(12),
+    buttonLabel: text(60),
+    resultText: text(200),
   }),
 } as const;
 export type SectionType = keyof typeof sectionProps;

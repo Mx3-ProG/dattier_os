@@ -1,5 +1,5 @@
 "use client";
-import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent } from "react";
+import { useCallback, useEffect, useRef, useState, type FormEvent } from "react";
 import { Button } from "@/components/ui/button";
 import { tradeTool, type TradeEntity, type TradeField, type TradeTool } from "@/features/trade/definitions";
 import { quoteTotals, shippingQuote, vatRates, type QuoteLine } from "@/features/trade/model";
@@ -552,7 +552,7 @@ function QuotePrint({ record, onClose }: { record: RowLike; onClose: () => void 
 }
 type RowLike = { data: Record<string, unknown> };
 
-function ToolView({ tool, restaurant, act }: { tool: TradeTool; restaurant: string; act?: Act }) {
+export function ToolView({ tool, restaurant, act }: { tool: TradeTool; restaurant: string; act?: Act }) {
   const [state, setState] = useState<ToolState | null>(null);
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
@@ -591,8 +591,7 @@ function ToolView({ tool, restaurant, act }: { tool: TradeTool; restaurant: stri
   return (
     <section className="trade-tool" aria-label={tool.name}>
       <header className="trade-tool-head">
-        <span className="eyebrow">{tool.industry}</span>
-        <h2>{tool.name}</h2>
+        {/* Le titre de l'écran porte déjà le nom de l'outil (entrée OPÉRATIONS). */}
         <p>{tool.description}</p>
       </header>
       {error && <p role="alert">{error}</p>}
@@ -616,49 +615,3 @@ function ToolView({ tool, restaurant, act }: { tool: TradeTool; restaurant: stri
   );
 }
 
-/** Espace « Outils métier » : les outils installés de l’établissement, un onglet chacun. */
-export function TradeCenter({ restaurant, act, initialTool, onOpenStore }: { restaurant: string; act?: Act; initialTool?: string; onOpenStore?: () => void }) {
-  const [tools, setTools] = useState<{ id: string; name: string; industry: string; tagline: string }[] | null>(null);
-  const [error, setError] = useState("");
-  const [selected, setSelected] = useState(initialTool ?? "");
-  useEffect(() => {
-    request<{ tools: { id: string; name: string; industry: string; tagline: string }[] }>(api(restaurant))
-      .then(({ tools: list }) => {
-        setTools(list);
-        setSelected((current) => (list.some((tool) => tool.id === current) ? current : list[0]?.id ?? ""));
-      })
-      .catch((reason: Error) => setError(reason.message));
-  }, [restaurant]);
-  const groups = useMemo(() => {
-    const map = new Map<string, NonNullable<typeof tools>>();
-    for (const tool of tools ?? []) map.set(tool.industry, [...(map.get(tool.industry) ?? []), tool]);
-    return [...map.entries()];
-  }, [tools]);
-  const current = tradeTool(selected);
-  if (error) return <p role="alert">{error}</p>;
-  if (!tools) return <p role="status">Chargement de vos outils métier…</p>;
-  if (tools.length === 0)
-    return (
-      <div className="card trade-empty-state">
-        <p>Aucun outil métier accessible avec votre profil dans cet établissement.</p>
-        {onOpenStore && <Button onClick={onOpenStore}>Découvrir les outils métier</Button>}
-      </div>
-    );
-  return (
-    <div className="trade-center">
-      <nav className="trade-tabs" aria-label="Outils métier installés">
-        {groups.map(([industry, list]) => (
-          <div key={industry} className="trade-tab-group">
-            <small>{industry}</small>
-            {list.map((tool) => (
-              <button key={tool.id} title={tool.tagline} aria-pressed={tool.id === selected} className={tool.id === selected ? "is-active" : undefined} onClick={() => setSelected(tool.id)}>
-                {tool.name}
-              </button>
-            ))}
-          </div>
-        ))}
-      </nav>
-      {current && <ToolView key={`${restaurant}-${current.id}`} tool={current} restaurant={restaurant} act={act} />}
-    </div>
-  );
-}

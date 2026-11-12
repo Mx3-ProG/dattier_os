@@ -5,13 +5,14 @@
 import { randomBytes, randomUUID } from "node:crypto";
 import type Stripe from "stripe";
 import { z } from "zod";
-import { appOrigin } from "@/lib/auth/oidc";
-import { scope, type Actor } from "@/lib/auth/session";
-import { requirePermission } from "@/lib/permissions";
-import { one, rows, type DB } from "@/lib/database/db";
+import { appOrigin } from "@/infrastructure/auth/oidc";
+import { scope, type Actor } from "@/infrastructure/auth/session";
+import { requirePermission } from "@/core/permissions";
+import { one, rows, type DB } from "@/infrastructure/database/db";
 import { requireCommercialCapability } from "@/features/platform/entitlements";
 import { enqueue } from "@/features/platform/jobs";
 import { log, notify } from "@/features/orders/service";
+import { getPaymentProvider } from "@/features/payments/provider";
 import { commerce } from "@/features/commerce/service";
 import { ensureDefaults } from "@/features/finance/service";
 import {
@@ -20,9 +21,9 @@ import {
   liveKey,
   onlineReady,
   splitAmount,
-  stripe,
   stripeEnabled,
   stripeFeeBp,
+  paymentsSandbox,
 } from "./config";
 
 /** Exécute une transaction : chaque appelant fixe son contexte et son rôle. */
@@ -77,18 +78,9 @@ const schedulePayout = (db: DB, r: string, now = new Date()) => {
 
 /** Relit l’état du compte chez Stripe : seul un compte actif reçoit des fonds. */
 async function refreshAccount(run: Run, r: string, accountId: string) {
-  const account = await stripe().v2.core.accounts.retrieve(accountId, {
-    include: ["configuration.recipient"],
-  });
-  const capability =
-    account.configuration?.recipient?.capabilities?.stripe_balance
-      ?.stripe_transfers?.status;
-  const status =
-    capability === "active"
-      ? "active"
-      : capability === "restricted"
-        ? "restricted"
-        : "pending";
+  const status = (await getPaymentProvider().retrieveAccount(accountId)).status ?? "pending";
+  const normalized =
+    status === "active" ? "active" : status === "restricted" ? "restricted" : "pending";
   await run(async (tx) => {
     const previous = await one<{ status: string }>(
       tx,
@@ -102,7 +94,7 @@ async function refreshAccount(run: Run, r: string, accountId: string) {
     if (status === "active" && previous.status !== "active")
       await schedulePayout(tx, r);
   });
-  return status;
+  return normalized;
 }
 
 export async function paymentsState(run: Run, r: string, user: Actor) {
@@ -135,7 +127,7 @@ export async function paymentsState(run: Run, r: string, user: Actor) {
     );
     const key = process.env.STRIPE_SECRET_KEY ?? "";
     return {
-      enabled: stripeEnabled(),
+      enabled: stripeEnabled() || paymentsSandbox(),
       live: liveKey(key),
       status,
       rates: {
@@ -200,7 +192,7 @@ export async function paymentAction(
       if (!id) {
         // Le plan comptable doit exister avant la première vente en ligne.
         await run((tx) => ensureDefaults(tx, r));
-        const created = await stripe().v2.core.accounts.create(
+        const created = await getPaymentProvider().createAccount(
           {
             display_name: name,
             dashboard: "express",
@@ -219,7 +211,7 @@ export async function paymentAction(
               },
             },
           },
-          { idempotencyKey: `connect-account-${r}` },
+          `connect-account-${r}`,
         );
         id = created.id;
         await run(async (tx) => {
@@ -231,23 +223,12 @@ export async function paymentAction(
         });
       }
       const back = `${appOrigin()}/dashboard?restaurant=${encodeURIComponent(r)}&module=payouts`;
-      const link = await stripe().v2.core.accountLinks.create({
-        account: id,
-        use_case: {
-          type: "account_onboarding",
-          account_onboarding: {
-            refresh_url: back,
-            return_url: back,
-          },
-        },
-      });
+      const link = await getPaymentProvider().createAccountLink(id, back, back);
       return { url: link.url };
     }
     case "dashboard": {
       if (!account) throw new Error("Aucun compte de versement.");
-      const link = await stripe().accounts.createLoginLink(
-        account.stripe_account_id,
-      );
+      const link = await getPaymentProvider().createLoginLink(account.stripe_account_id);
       return { url: link.url };
     }
     case "request": {
@@ -284,10 +265,7 @@ export async function paymentAction(
         !["paid", "released", "manual_review"].includes(payment.status)
       )
         throw new Error("Ce paiement ne peut pas être remboursé.");
-      await stripe().refunds.create(
-        { payment_intent: payment.payment_intent_id },
-        { idempotencyKey: `refund-${payment.id}` },
-      );
+      await getPaymentProvider().refund(payment.payment_intent_id!, `refund-${payment.id}`);
       await run((tx) =>
         log(tx, r, user.id, "Remboursement demandé", payment.id),
       );
@@ -326,7 +304,7 @@ export async function startCheckout(run: Run, r: string, raw: unknown) {
   if (order.stripe_url) return { url: order.stripe_url };
   const back = `${appOrigin()}${input.path}`;
   const metadata = { restaurant: r, order: order.order_id };
-  const session = await stripe().checkout.sessions.create(
+  const session = await getPaymentProvider().createCheckoutSession(
     {
       mode: "payment",
       line_items: [
@@ -353,7 +331,7 @@ export async function startCheckout(run: Run, r: string, raw: unknown) {
         .replace(/[^a-zA-Z]/g, "x")
         .slice(0, 8)}`,
     },
-    { idempotencyKey: `checkout-${order.order_id}` },
+    `checkout-${order.order_id}`,
   );
   await run(async (tx) => {
     const split = splitAmount(order.total);
@@ -505,10 +483,10 @@ async function cancelSale(run: Run, r: string, intent: string, reason: string) {
   if (!before) return;
   const { p, payout } = before;
   if (payout?.stripe_transfer_id)
-    await stripe().transfers.createReversal(
-      payout.stripe_transfer_id,
-      { amount: p.net },
-      { idempotencyKey: `reversal-${p.id}` },
+    await getPaymentProvider().createTransferReversal(
+      payout.stripe_transfer_id!,
+      p.net,
+      `reversal-${p.id}`,
     );
   await run(async (tx) => {
     await tx.query("UPDATE online_payments SET status='refunded' WHERE id=$1", [
@@ -568,11 +546,8 @@ export async function handleEvent(run: Run, r: string, event: MinimalEvent) {
     case "checkout.session.async_payment_succeeded": {
       if (o.payment_status === "unpaid") return;
       const intent = String(o.payment_intent);
-      const details = await stripe().paymentIntents.retrieve(intent, {
-        expand: ["latest_charge"],
-      });
-      const charge = details.latest_charge as Stripe.Charge | null;
-      const level = charge?.outcome?.risk_level ?? "not_assessed";
+      const details = await getPaymentProvider().retrievePaymentIntent(intent);
+      const level = details.latest_charge?.outcome?.risk_level ?? "not_assessed";
       const orphan = await run(async (tx) => {
         const p = await paymentFor(tx, r, "session_id", o.id);
         if (!p) return null;
@@ -600,10 +575,7 @@ export async function handleEvent(run: Run, r: string, event: MinimalEvent) {
         return null;
       });
       if (orphan)
-        await stripe().refunds.create(
-          { payment_intent: intent },
-          { idempotencyKey: `refund-${orphan}` },
-        );
+        await getPaymentProvider().refund(intent, `refund-${orphan}`);
       return;
     }
     case "checkout.session.expired":
@@ -695,7 +667,7 @@ export async function sendPayout(run: Run, r: string, payoutId: string) {
   if (payout.status !== "pending") return;
   if ((await refreshAccount(run, r, account.stripe_account_id)) !== "active")
     throw new Error("Compte de versement inactif : versement différé.");
-  const transfer = await stripe().transfers.create(
+  const transfer = await getPaymentProvider().createTransfer(
     {
       amount: payout.amount,
       currency: "eur",
@@ -703,7 +675,7 @@ export async function sendPayout(run: Run, r: string, payoutId: string) {
       transfer_group: payout.id,
       metadata: { restaurant: r, payout: payout.id },
     },
-    { idempotencyKey: `payout-${payout.id}` },
+    `payout-${payout.id}`,
   );
   await run(async (tx) => {
     await tx.query(

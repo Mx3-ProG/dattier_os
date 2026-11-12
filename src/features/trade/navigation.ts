@@ -1,12 +1,46 @@
-import type { NavigationContribution } from "@/core/navigation/registry";
-import { tradeNavigationLicense } from "./definitions";
+import type { NavigationContribution, NavigationIcon } from "@/core/navigation/registry";
+import { tradeTools, type TradeToolId } from "./definitions";
 
-/** Une seule entrée pour tous les outils métier installés ; chaque outil vérifie ses droits. */
-export const tradeNavigation = {
-  id: "trade-tools",
-  name: "Outils métier",
-  group: "GESTION",
-  icon: "ClipboardCheck",
-  permission: null,
-  license: tradeNavigationLicense,
-} satisfies NavigationContribution;
+/** Entrée du poste de travail d'un outil métier : `tool-<id>`. */
+export const toolNavigationId = (tool: string) => `tool-${tool}`;
+export const toolFromNavigation = (navigationId: string) =>
+  navigationId.startsWith("tool-") ? navigationId.slice("tool-".length) : null;
+
+const icons: Partial<Record<TradeToolId, NavigationIcon>> = {
+  "kitchen-display": "ChefHat",
+  "recipe-cost": "Calculator",
+  "menu-allergens": "ShieldCheck",
+  "service-pacing": "Clock",
+  "waste-tracker": "Package",
+  "site-planning": "CalendarDays",
+  "site-report": "ClipboardCheck",
+  "quote-builder": "FileSignature",
+  "equipment-log": "Truck",
+  "appointment-booking": "CalendarDays",
+  "chair-occupancy": "Activity",
+  "client-style": "Users",
+  "salon-stock": "Package",
+  "product-variants": "Package",
+  "abandoned-cart": "Receipt",
+  "shipping-rules": "Truck",
+  "product-bundles": "Package",
+  "customer-segments": "Users",
+  "loyalty-campaigns": "Heart",
+  "conversion-insights": "Activity",
+};
+
+/**
+ * Une entrée OPÉRATIONS par outil métier. Elle n'apparaît que si l'outil est
+ * installé (licence) et permis au profil ; le serveur revérifie chaque accès.
+ */
+export const tradeToolNavigation = tradeTools.map(
+  (tool) =>
+    ({
+      id: toolNavigationId(tool.id),
+      name: tool.name,
+      group: "OPÉRATIONS",
+      icon: icons[tool.id as TradeToolId] ?? "ClipboardCheck",
+      permission: tool.permission,
+      license: tool.id,
+    }) satisfies NavigationContribution,
+);

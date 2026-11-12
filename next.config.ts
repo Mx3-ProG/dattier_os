@@ -10,6 +10,14 @@ const config: NextConfig = {
   async headers() {
     return [
       {
+        source: "/api/:path*",
+        headers: [{ key: "X-Robots-Tag", value: "noindex" }],
+      },
+      {
+        source: "/api/media/:path*",
+        headers: [{ key: "X-Robots-Tag", value: "all" }],
+      },
+      {
         source: "/sw.js",
         headers: [
           {

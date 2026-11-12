@@ -8,12 +8,12 @@ import {
 } from "@/features/reservations/service";
 import { requirePlan, requirePaidAddon } from "@/features/platform/entitlements";
 import { withRequestContext } from "@/features/ops-security/context";
-import { logout } from "@/lib/auth/oidc";
+import { logout } from "@/infrastructure/auth/oidc";
 import { claimReward } from "@/features/commerce/rewards";
 import { NextRequest } from "next/server";
-import { getDb, type DB } from "@/lib/database/db";
-import { withDatabaseContext } from "@/lib/database/context";
-import { actor, type Actor } from "@/lib/auth/session";
+import { getDb, type DB } from "@/infrastructure/database/db";
+import { withDatabaseContext } from "@/infrastructure/database/context";
+import { actor, type Actor } from "@/infrastructure/auth/session";
 import { commerce } from "@/features/commerce/service";
 import { customerForActor } from "@/features/commerce/account";
 import {
@@ -34,7 +34,7 @@ import { createHash } from "node:crypto";
 import { ensureQr, labelFor } from "@/features/qr/service";
 import { onlineReady } from "@/features/payments/config";
 import { startCheckout } from "@/features/payments/service";
-import { rows } from "@/lib/database/db";
+import { rows } from "@/infrastructure/database/db";
 type Context = { params: Promise<{ restaurant: string; action: string }> };
 async function requireInstalled(db: DB, restaurant: string, addon: string) {
   const state = await db.query<{ installed: boolean }>("SELECT app.addon_installed($1,$2) AS installed", [restaurant, addon]);

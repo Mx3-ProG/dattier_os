@@ -10,7 +10,7 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 import { QrCode } from "lucide-react";
-import { money } from "@/lib/domain";
+import { money } from "@/domain/shared/units";
 import { CustomerQrSheet } from "./qr-sheet";
 import { TenantLink as Link } from "../context";
 import {

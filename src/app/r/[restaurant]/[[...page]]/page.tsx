@@ -1,12 +1,12 @@
 import { restaurantPlan } from "@/features/platform/entitlements";
-import { productPath } from "@/lib/product-pages";
+import { productPath } from "@/domain/shared/product-pages";
 import type { Metadata } from "next";
 import { cache } from "react";
 import { headers } from "next/headers";
 import { notFound, permanentRedirect, redirect } from "next/navigation";
-import { getDb, demoEnabled, one } from "@/lib/database/db";
-import { withDatabaseContext } from "@/lib/database/context";
-import { actor } from "@/lib/auth/session";
+import { getDb, demoEnabled, one } from "@/infrastructure/database/db";
+import { withDatabaseContext } from "@/infrastructure/database/context";
+import { actor } from "@/infrastructure/auth/session";
 import { website } from "@/features/cms/service";
 import { plain } from "@/features/cms/text";
 import { commerce } from "@/features/commerce/service";
@@ -17,6 +17,8 @@ import { findRedirect, siteLocale } from "@/features/seo/locale";
 import { effectiveTitle, effectiveDescription } from "@/features/seo/meta";
 import { DonutStore } from "@/components/cms-site/store";
 import { TenantSiteProvider } from "@/components/cms-site/context";
+import type { Industry } from "@/core/tenant/business";
+import { indexable as isIndexable } from "@/domain/seo/indexability";
 import { AudienceBeacon } from "@/components/cms-site/audience-beacon";
 import { SiteLoaderSync } from "@/components/cms-site/site-loader";
 import { effectiveSiteLoader } from "@/features/cms/site-addons";
@@ -40,7 +42,7 @@ const loadSite = cache(
       async () =>
         (await getDb()).transaction(async (db) => {
           await db.exec("SET LOCAL ROLE atacuisine_app");
-          await one(db, "SELECT id FROM restaurants WHERE id=$1", [restaurant]);
+          const { industry } = await one<{ industry: Industry }>(db, "SELECT id,industry FROM restaurants WHERE id=$1", [restaurant]);
           const plan = await restaurantPlan(db, restaurant);
           const { websiteInstalled, shopInstalled } = await one<{ websiteInstalled: boolean; shopInstalled: boolean }>(
             db,
@@ -52,6 +54,12 @@ const loadSite = cache(
             ((!shopInstalled || plan < 39) && ["commander", "checkout", "panier"].includes(raw))
           )
             notFound();
+          const statusRow = await one<{ archived_at: string | null; org_status: string | null }>(
+            db,
+            "SELECT r.archived_at, b.status AS org_status FROM restaurants r LEFT JOIN LATERAL app.plan_billing_context(r.organization_id) b ON true WHERE r.id=$1",
+            [restaurant],
+          );
+          if (statusRow.archived_at || statusRow.org_status === "suspended") notFound();
           const cms = website(restaurant);
           if (preview) await cms.siteScope(db, user!);
           const config = preview
@@ -61,6 +69,8 @@ const loadSite = cache(
             : await cms.getPublishedConfig(db);
           const estimationEnabled = (await one<{ enabled: boolean }>(db,
             "SELECT app.estimation_public($1) IS NOT NULL AS enabled", [restaurant])).enabled;
+          const crmContactEnabled = (await one<{ enabled: boolean }>(db,
+            "SELECT app.addon_installed($1,'pipeline-crm') AS enabled", [restaurant])).enabled;
           const route = raw === "account" ? "compte" : raw;
           const isProduct = /^produits\/[^/]+$/.test(route);
           const key = isProduct ? "carte" : route || "home";
@@ -104,8 +114,13 @@ const loadSite = cache(
             siteAddons: await cms.siteAddons(db),
             redirect: null,
             shopEnabled: plan >= 39 && shopInstalled,
+            archived: !!statusRow.archived_at,
+            suspended: statusRow.org_status === "suspended",
+            websiteInstalled,
             estimationEnabled,
+            crmContactEnabled,
             restaurant,
+            industry,
             route,
             key,
             config,
@@ -141,7 +156,7 @@ async function load(props: Props) {
   return data;
 }
 export async function generateMetadata(props: Props): Promise<Metadata> {
-  const { config, context, key, preview, urls, product } = await load(props),
+  const { config, context, key, preview, urls, product, websiteInstalled, archived, suspended } = await load(props),
     page = config.pages[key];
   const title = product
     ? product.seo_title || `${product.name} · ${context.name}`
@@ -163,13 +178,20 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
     ? urls.canonicalBase + productPath(product.id)
     : pageUrl(urls.canonicalBase, key);
   const locale = siteLocale(config);
-  const indexable =
-    !demoEnabled() &&
-    !preview &&
-    config.seo.noIndex === false &&
-    !page.seo.noIndex &&
-    (!product || page.visible) &&
-    page.kind !== "protected";
+  const indexable = isIndexable({
+    demo: demoEnabled(),
+    preview,
+    mirror: urls.canonicalBase !== urls.servedBase,
+    addonInstalled: websiteInstalled,
+    archived: !!archived,
+    suspended: !!suspended,
+    siteNoIndex: config.seo.noIndex !== false,
+    pageNoIndex: !!page.seo.noIndex,
+    pageVisible: page.visible,
+    pageKind: page.kind,
+    productPage: !!product,
+    productVisible: product ? page.visible : undefined,
+  });
   return {
     metadataBase: new URL(origin),
     alternates: { canonical },
@@ -222,6 +244,7 @@ export default async function Page(props: Props) {
   return (
     <TenantSiteProvider
       restaurant={data.restaurant}
+      industry={data.industry}
       demo={demoEnabled()}
       shopEnabled={data.shopEnabled}
       preview={data.preview}
@@ -253,6 +276,7 @@ export default async function Page(props: Props) {
         detailProduct={data.product}
         updatedAt={data.publishedAt}
         estimationEnabled={data.estimationEnabled}
+        crmContactEnabled={data.crmContactEnabled}
         siteAddons={data.siteAddons}
       />
     </TenantSiteProvider>

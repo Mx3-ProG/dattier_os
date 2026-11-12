@@ -1,4 +1,4 @@
-import { PostgresDatabase } from "../src/lib/database/postgres";
+import { PostgresDatabase } from "../src/infrastructure/database/postgres";
 import { referralPricing, type PaidPlan } from "../src/features/platform/referrals";
 
 /**

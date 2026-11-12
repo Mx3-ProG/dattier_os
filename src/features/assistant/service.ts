@@ -3,10 +3,10 @@
    hors transaction (plusieurs secondes), puis le coût réel est débité. */
 import { z } from "zod";
 import { authenticated, rateLimit } from "@/features/platform/http";
-import { snapshot } from "@/lib/snapshot";
-import { can, type Permission } from "@/lib/permissions";
-import type { DB } from "@/lib/database/db";
-import type { Actor } from "@/lib/auth/session";
+import { snapshot } from "@/application/snapshot";
+import { can, type Permission } from "@/core/permissions";
+import type { DB } from "@/infrastructure/database/db";
+import type { Actor } from "@/infrastructure/auth/session";
 import { askLlm, llmEnabled, llmModel } from "./llm";
 import {
   creditValueEur,
@@ -16,7 +16,7 @@ import {
   packs,
   reflexCredits,
   welcomeCredits,
-} from "./pricing";
+} from "@/domain/assistant/pricing";
 import { reflex } from "./reflex";
 import { financeDashboard, type PeriodQuery } from "@/features/finance/dashboard";
 import { financeIntent, financeReply, periodIn, previousMonth } from "./finance";

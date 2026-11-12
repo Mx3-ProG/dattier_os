@@ -2,8 +2,8 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import { PGlite } from "@electric-sql/pglite";
-import { migrate } from "../src/lib/database/migrate";
-import { seed } from "../src/lib/database/seed";
+import { migrate } from "../src/infrastructure/database/migrate";
+import { seed } from "../src/infrastructure/database/seed";
 import { website } from "../src/features/cms/service";
 import { registry } from "../src/features/cms/registry";
 import { sectionProps, siteConfigSchema } from "../src/features/cms/schema";
@@ -19,8 +19,8 @@ import {
   siteLoaderKey,
 } from "../src/features/cms/site-addons";
 import { tradePerformOn, type Scoped } from "../src/features/trade/service";
-import { withDatabaseContext } from "../src/lib/database/context";
-import type { DB } from "../src/lib/database/db";
+import { withDatabaseContext } from "../src/infrastructure/database/context";
+import type { DB } from "../src/infrastructure/database/db";
 import { isSiteBackground, siteBackgrounds, siteBackgroundStyle } from "../src/features/cms/site-backgrounds";
 import { themedVisualIds, themedVisuals, themedPrice } from "../src/features/cms/themed-visuals";
 

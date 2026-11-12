@@ -1,6 +1,6 @@
 import type { AccountEngagement } from "./engagement";
 import type { FlashInfo } from "./engagement-rules";
-import type { ProductPageFields } from "@/lib/product-pages";
+import type { ProductPageFields } from "@/domain/shared/product-pages";
 import { z } from "zod";
 const publicUrlSchema = z.union([
   z

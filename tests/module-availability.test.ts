@@ -2,11 +2,10 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import { PGlite } from "@electric-sql/pglite";
-import { migrate } from "../src/lib/database/migrate";
-import { seed } from "../src/lib/database/seed";
-import { roles, type Role } from "../src/lib/permissions";
+import { migrate } from "../src/infrastructure/database/migrate";
+import { seed } from "../src/infrastructure/database/seed";
+import { roles, type Role } from "../src/core/permissions";
 import { workspaceNavigation } from "../src/features/navigation/catalog";
-import { restaurantOnlyNavigation } from "../src/features/onboarding/catalog";
 import { moduleRegistry } from "../src/core/modules/catalog";
 import {
   moduleManifest,
@@ -15,7 +14,7 @@ import {
   type ModuleManifest,
 } from "../src/core/modules/manifest";
 import { availableModules, moduleAvailable } from "../src/features/modules/availability";
-import type { DB } from "../src/lib/database/types";
+import type { DB } from "../src/infrastructure/database/types";
 
 test("the manifest covers every workspace screen and the suspendable modules", () => {
   for (const entry of workspaceNavigation.list())
@@ -26,10 +25,11 @@ test("the manifest covers every workspace screen and the suspendable modules", (
 
 test("the manifest encodes the Studio scope decided on 10 November 2026", () => {
   const offer = (id: string) => moduleManifest.find((entry) => entry.id === id)?.offer;
-  for (const id of ["overview", "activity", "orders", "table-booking", "stock", "trade-tools", "team", "finance", "bank", "payouts", "settings", "security"])
+  for (const id of ["overview", "activity", "table-booking", "stock", "trade-tools", "team", "finance", "bank", "payouts", "settings", "security"])
     assert.equal(offer(id), "included", id);
-  assert.equal(offer("website"), "included-optional");
-  for (const id of ["online-orders", "floor", "kitchen", "bar", "recipes", "suppliers", "deliveries", "attendance", "payroll", "client-invoices", "invoices", "expenses"])
+  // Décision du 12 novembre 2026 : commandes, cuisine et bar sont des modules gratuits à activer selon le métier.
+  for (const id of ["website", "orders", "kitchen", "bar"]) assert.equal(offer(id), "included-optional", id);
+  for (const id of ["online-orders", "floor", "recipes", "suppliers", "deliveries", "attendance", "payroll", "client-invoices", "invoices", "expenses"])
     assert.equal(offer(id), "addon-monthly", id);
   const shop = moduleManifest.find((entry) => entry.id === "online-orders")!;
   assert.ok((shop.requires as readonly string[]).includes("website"));
@@ -47,7 +47,7 @@ test("manifest validation rejects unknown, circular and paid-in-included depende
   assert.throws(() => validateManifest([base, base]), /duplicate/);
 });
 
-/** Contexte commercial du poste de travail, calculé comme src/lib/snapshot.ts. */
+/** Contexte commercial du poste de travail, calculé comme src/application/snapshot.ts. */
 async function legacyNavigation(db: PGlite, restaurant: string) {
   const one = async <T>(sql: string, params: unknown[] = []) => (await db.query<T>(sql, params)).rows;
   const [{ plan }] = await one<{ plan: number | null }>("SELECT app.restaurant_plan($1) AS plan", [restaurant]);
@@ -59,7 +59,7 @@ async function legacyNavigation(db: PGlite, restaurant: string) {
       'offline-conflicts','connections','qr','loyalty','domain']) AS addon WHERE app.addon_installed($1,addon)`, [restaurant],
   )).map((row) => row.addon);
   const licenses = (await one<{ product_id: string; kind: string }>(
-    "SELECT l.product_id,p.kind FROM addon_licenses l JOIN addon_products p ON p.id=l.product_id WHERE l.restaurant_id=$1 AND p.kind IN ('analytics','estimation','business') AND app.addon_installed($1,l.product_id)",
+    "SELECT l.product_id,p.kind FROM addon_licenses l JOIN addon_products p ON p.id=l.product_id WHERE l.restaurant_id=$1 AND p.kind IN ('analytics','estimation','business','operations') AND app.addon_installed($1,l.product_id)",
     [restaurant],
   )).flatMap((license) => (license.kind === "business" ? [license.product_id, "trade-tools"] : [license.product_id]));
   const uninstalledAddons = (await one<{ addon_id: string }>(
@@ -74,7 +74,6 @@ async function legacyNavigation(db: PGlite, restaurant: string) {
   };
   const screens = (role: Role | readonly Role[]) => workspaceNavigation
     .resolve({ ...context, roles: role })
-    .filter((entry) => industry === "restaurant" || !restaurantOnlyNavigation.has(entry.id))
     .map((entry) => entry.id);
   return { visible: new Set(screens(roles)), screens, context, industry };
 }
@@ -88,6 +87,11 @@ async function legacyDecision(db: PGlite, restaurant: string, entry: ModuleManif
     return states[0];
   }
   if (entry.legacy.kind === "always") return true;
+  if (entry.legacy.kind === "license-kind")
+    return (await db.query<{ ok: boolean }>(
+      "SELECT EXISTS(SELECT 1 FROM addon_licenses l JOIN addon_products p ON p.id=l.product_id WHERE l.restaurant_id=$1 AND p.kind=$2 AND app.addon_installed($1,l.product_id)) AS ok",
+      [restaurant, entry.legacy.productKind],
+    )).rows[0].ok;
   assert.equal(entry.legacy.kind, "addon", `${entry.id}: no screen and no add-on to compare with`);
   const addon = (entry.legacy as { addon: string }).addon;
   return (await db.query<{ ok: boolean }>("SELECT app.addon_installed($1,$2) AS ok", [restaurant, addon])).rows[0].ok;
@@ -103,7 +107,6 @@ async function assertEquivalent(db: PGlite, step: string) {
     for (const role of [...roles.map((r) => r as Role | readonly Role[]), roles]) {
       const switched = workspaceNavigation
         .resolve({ ...nav.context, roles: role, modules })
-        .filter((entry) => nav.industry === "restaurant" || !restaurantOnlyNavigation.has(entry.id))
         .map((entry) => entry.id);
       assert.deepEqual(switched, nav.screens(role), `${step} / ${restaurant} / ${String(role)}`);
     }

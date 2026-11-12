@@ -3,7 +3,7 @@
    npm run ai:credits -- pay ID_DEMANDE             crédite un pack payé
    npm run ai:credits -- bonus ID_ORGANISATION 500  crédits offerts (geste commercial) */
 import { z } from "zod";
-import { PostgresDatabase } from "../src/lib/database/postgres";
+import { PostgresDatabase } from "../src/infrastructure/database/postgres";
 
 const [command, first, second] = process.argv.slice(2);
 const url = process.env.MIGRATION_DATABASE_URL;

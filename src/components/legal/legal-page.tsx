@@ -1,4 +1,4 @@
-/* Gabarit commun des pages légales de STUDIO OS. S’appuie sur landing.css
+/* Gabarit commun des pages légales de STUDIO S. S’appuie sur landing.css
    (en-tête, boutons) et guide.css (sommaire collant). */
 import Link from "next/link";
 import { Store } from "lucide-react";
@@ -35,7 +35,7 @@ export function LegalPage({
       </a>
       <header className="landing-header">
         <Link href="/" className="landing-brand">
-          <Store size={20} aria-hidden /> STUDIO OS
+          <Store size={20} aria-hidden /> STUDIO S
         </Link>
         <nav aria-label="Documents légaux">
           {legalDocuments.map((d) => (
@@ -80,7 +80,7 @@ export function LegalPage({
   );
 }
 
-/** Liens légaux à placer dans tous les pieds de page publics de STUDIO OS. */
+/** Liens légaux à placer dans tous les pieds de page publics de STUDIO S. */
 export function LegalLinks() {
   return (
     <>
@@ -98,7 +98,7 @@ function LegalFooter() {
   return (
     <footer className="landing-footer">
       <span className="landing-brand">
-        <Store size={18} aria-hidden /> STUDIO OS
+        <Store size={18} aria-hidden /> STUDIO S
       </span>
       <nav aria-label="Liens utiles">
         <Link href="/">Accueil</Link>
@@ -106,7 +106,7 @@ function LegalFooter() {
         <LegalLinks />
       </nav>
       <small>
-        © {new Date().getFullYear()} {legalEntity.name} SAS · STUDIO OS, logiciel libre sous licence AGPL-3.0
+        © {new Date().getFullYear()} {legalEntity.name} SAS · STUDIO S, logiciel libre sous licence AGPL-3.0
       </small>
     </footer>
   );

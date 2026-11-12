@@ -1,8 +1,9 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import { roles, can, type Permission, type Role } from "../src/lib/permissions";
+import { roles, can, type Permission, type Role } from "../src/core/permissions";
 import { workspaceNavigation } from "../src/features/navigation/catalog";
+import { tradeToolNavigation } from "../src/features/trade/navigation";
 import {
   createNavigation,
   currentNavigation,
@@ -27,10 +28,10 @@ const arranged = [
   { id: "prospect-scanner", name: "Scanner de prospects", group: "PILOTAGE", icon: "Activity", permission: "analytics" as Permission },
   { id: "pipeline-crm", name: "Pipeline CRM", group: "PILOTAGE", icon: "ClipboardList", permission: "analytics" as Permission },
   { id: "customer-health", name: "Customer Health", group: "PILOTAGE", icon: "Heart", permission: "customers" as Permission },
-  // Les outils métier se placent à la fin du groupe Gestion, après Livraisons.
+  // Chaque outil métier a son entrée dans OPÉRATIONS, après les réservations.
   ...legacy.filter((entry) => entry.id !== "addons" && entry.group !== "PILOTAGE").flatMap((entry) =>
-    entry.id === "deliveries"
-      ? [entry, { id: "trade-tools", name: "Outils métier", group: "GESTION", icon: "ClipboardCheck", permission: null }]
+    entry.id === "reservations"
+      ? [entry, ...tradeToolNavigation.map(({ id, name, group, icon, permission }) => ({ id, name, group, icon, permission }))]
       : [entry],
   ),
   legacy.find((entry) => entry.id === "addons")!,
@@ -62,7 +63,8 @@ test("navigation requires each independent paid add-on as well as the member rol
         const expected = arranged
           .filter(
             (m) =>
-              !["audience", "estimation", "trade-tools"].includes(m.id) &&
+              // Entrées portées par une licence (outils métier, commandes, cuisine, bar) : absentes sans licence.
+              !["audience", "estimation", "orders", "kitchen", "bar"].includes(m.id) && !m.id.startsWith("tool-") &&
               (!paid[m.id] || addons.includes(paid[m.id])) &&
               (!m.permission ||
               ((plan >= 39 ||
@@ -135,14 +137,24 @@ test("suspended floor and table booking disappear from navigation", () => {
     plan: 39,
     roles: "OWNER",
     activeModules: { floor: false, "table-booking": false },
+    licenses: ["ops-orders"],
   });
   assert.equal(entries.some((entry) => entry.id === "dining"), false);
   assert.equal(entries.some((entry) => entry.id === "reservations"), false);
   assert.equal(entries.some((entry) => entry.id === "orders"), true);
 });
 
-test("outils métier : l’entrée n’apparaît qu’avec au moins un outil installé", () => {
-  const ids = (licenses: string[]) => workspaceNavigation.resolve({ roles: "WAITER", plan: 39, addons: [], licenses }).map((entry) => entry.id);
-  assert.equal(ids([]).includes("trade-tools"), false);
-  assert.equal(ids(["site-planning", "trade-tools"]).includes("trade-tools"), true);
+test("outils métier : chaque outil installé a son entrée dans OPÉRATIONS, les autres sont absents", () => {
+  const entries = (licenses: string[], modules?: string[]) =>
+    workspaceNavigation.resolve({ roles: "WAITER", plan: 39, addons: [], licenses, modules });
+  const ids = (licenses: string[], modules?: string[]) => entries(licenses, modules).map((entry) => entry.id);
+  assert.equal(ids([]).some((id) => id.startsWith("tool-")), false);
+  assert.deepEqual(ids(["site-planning", "trade-tools"]).filter((id) => id.startsWith("tool-")), ["tool-site-planning"]);
+  // Chemin des modules (snapshot) : le module « outils métier » et la licence de l'outil.
+  const viaModules = entries(["site-planning", "trade-tools"], ["trade-tools", "activity"]);
+  assert.deepEqual(viaModules.filter((entry) => entry.id.startsWith("tool-")).map((entry) => [entry.id, entry.group]), [["tool-site-planning", "OPÉRATIONS"]]);
+  // Commandes, cuisine et bar sont des modules gratuits : leur licence les fait apparaître.
+  assert.equal(ids([]).includes("kitchen"), false);
+  assert.equal(entries(["ops-kitchen"]).some((entry) => entry.id === "kitchen"), false); // permission « kitchen » absente pour WAITER
+  assert.equal(workspaceNavigation.resolve({ roles: "OWNER", plan: 39, licenses: ["ops-kitchen"] }).some((entry) => entry.id === "kitchen"), true);
 });

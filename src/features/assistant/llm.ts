@@ -32,7 +32,7 @@ import {
   serveProposal,
   tableStatusProposal,
 } from "./proposals";
-import { providerCostEur, type TokenUsage } from "./pricing";
+import { providerCostEur, type TokenUsage } from "@/domain/assistant/pricing";
 import type { Answer, AssistantContext, Proposal, Turn } from "./types";
 import type { PeriodQuery } from "@/features/finance/dashboard";
 

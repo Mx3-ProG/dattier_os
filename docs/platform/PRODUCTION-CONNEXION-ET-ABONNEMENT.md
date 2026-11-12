@@ -95,3 +95,18 @@ abonnement par carte → « Abonnement mensuel actif » ; portail → résiliati
 Premier mois offert du parrainage et places d'établissements supplémentaires :
 non facturés automatiquement (toujours gérés par l'opérateur). Add-ons : toujours
 limités au mode test.
+
+## Mise à jour : paiement en ligne complet
+
+- Une seule clé Stripe (`STUDIO_BILLING_STRIPE_SECRET_KEY`, live ou test) et un
+  seul webhook (`/api/webhooks/billing`) pour l'abonnement, les add-ons, les achats
+  ponctuels et les crédits. Tout objet Stripe d'un autre mode que la clé est refusé.
+- Les prix sont retrouvés automatiquement dans le catalogue Stripe par nom de produit
+  et montant ; `STUDIO_ADDON_<ID>_PRICE_ID` et `STUDIO_PLAN_PRICE_ID` restent des
+  surcharges facultatives.
+- Carte bancaire obligatoire dès l'essai : fin du parcours de création → Stripe
+  Checkout (abonnement en essai, premier prélèvement à la fin des 3 jours). Sans
+  carte, le tableau de bord reste fermé (`app.restaurant_card_required`, migration 112).
+- Mise en service : `./scripts/stripe-production-setup.sh` (demande la clé secrète
+  live, crée webhook, portail, rôle de facturation, variables Vercel, puis déploie).
+  Ne le lancer qu'une fois : chaque exécution crée un nouveau webhook.

@@ -6,8 +6,9 @@ import { TemplateExtras } from "./template-extras";
 import "./templates.css";
 import { ProductRecommendations } from "../product-recommendations";
 import { ProductDetails } from "../product-details";
-import { productPath } from "@/lib/product-pages";
+import { productPath } from "@/domain/shared/product-pages";
 import { useTenantSite } from "./context";
+import { ContactInquiry } from "./contact-inquiry";
 /* eslint-disable @next/next/no-img-element */
 import { TenantLink as Link } from "./context";
 import dynamic from "next/dynamic";
@@ -45,7 +46,7 @@ import type {
 import { preparation } from "@/features/commerce/schema";
 import { Modal } from "../forms";
 import { prepLabels } from "@/features/commerce/client";
-import { money } from "@/lib/domain";
+import { money } from "@/domain/shared/units";
 import { CookieConsent } from "./cookie-consent";
 import { CustomerAccount } from "./customer-account";
 import { OrderQrCard } from "./account/qr-sheet";
@@ -75,13 +76,29 @@ import {
   Categories,
   Cta,
   Faq,
+  Article,
+  BlogList,
+  Comparison,
+  FaqAdvanced,
   Gallery,
+  ReviewAdvanced,
+  Hook,
   Hours,
+  Newsletter,
+  Partners,
+  Pricing,
   PromoBanner,
+  ReviewForm,
+  Stats,
+  Team,
+  Testimonials,
+  Timeline,
+  Urgency,
   SiteLink,
   TextBlock,
   TextImage,
   Video,
+  Wheel,
 } from "../site/sections";
 type Line = { menu: string; quantity: number; choices: string[]; note: string };
 type PurchaseMode = "solo" | "menu";
@@ -136,6 +153,7 @@ export function DonutStore({
   initialCategory = "Tout",
   detailProduct,
   estimationEnabled = false,
+  crmContactEnabled = false,
   siteAddons = emptySiteAddons,
 }: {
   route: string;
@@ -150,6 +168,7 @@ export function DonutStore({
   initialCategory?: string;
   detailProduct?: Product;
   estimationEnabled?: boolean;
+  crmContactEnabled?: boolean;
   /** Add-ons installés visibles sur le site, et leurs données publiques. */
   siteAddons?: SiteAddonData;
 }) {
@@ -161,6 +180,7 @@ export function DonutStore({
     restaurant,
     demo,
     shopEnabled,
+    text: t,
   } = useTenantSite();
   const router = { push: (path: string) => nextRouter.push(href(path)) };
   const [config, setConfig] = useState(initialConfig),
@@ -1135,6 +1155,130 @@ export function DonutStore({
             hours={data?.settings.hours}
           />
         );
+      case "pricing":
+        return (
+          <Pricing
+            key={section.id}
+            props={section.props}
+            ctx={ctx}
+            attrs={attrs}
+          />
+        );
+      case "urgency":
+        return (
+          <Urgency
+            key={section.id}
+            props={section.props}
+            ctx={ctx}
+            attrs={attrs}
+          />
+        );
+      case "hook":
+        return (
+          <Hook key={section.id} props={section.props} ctx={ctx} attrs={attrs} />
+        );
+      case "reviewForm":
+        return (
+          <ReviewForm
+            key={section.id}
+            props={section.props}
+            ctx={ctx}
+            attrs={attrs}
+          />
+        );
+      case "blogList":
+        return (
+          <BlogList
+            key={section.id}
+            props={section.props}
+            ctx={ctx}
+            attrs={attrs}
+          />
+        );
+      case "article":
+        return (
+          <Article
+            key={section.id}
+            props={section.props}
+            ctx={ctx}
+            attrs={attrs}
+          />
+        );
+      case "comparison":
+        return (
+          <Comparison
+            key={section.id}
+            props={section.props}
+            ctx={ctx}
+            attrs={attrs}
+          />
+        );
+      case "reviewAdvanced":
+        return (
+          <ReviewAdvanced
+            key={section.id}
+            props={section.props}
+            ctx={ctx}
+            attrs={attrs}
+          />
+        );
+      case "faqAdvanced":
+        return (
+          <FaqAdvanced
+            key={section.id}
+            props={section.props}
+            ctx={ctx}
+            attrs={attrs}
+          />
+        );
+      case "wheel":
+        return (
+          <Wheel key={section.id} props={section.props} ctx={ctx} attrs={attrs} />
+        );
+      case "partners":
+        return (
+          <Partners
+            key={section.id}
+            props={section.props}
+            ctx={ctx}
+            attrs={attrs}
+          />
+        );
+      case "timeline":
+        return (
+          <Timeline
+            key={section.id}
+            props={section.props}
+            ctx={ctx}
+            attrs={attrs}
+          />
+        );
+      case "testimonials":
+        return (
+          <Testimonials
+            key={section.id}
+            props={section.props}
+            ctx={ctx}
+            attrs={attrs}
+          />
+        );
+      case "newsletter":
+        return (
+          <Newsletter
+            key={section.id}
+            props={section.props}
+            ctx={ctx}
+            attrs={attrs}
+          />
+        );
+      case "team":
+        return (
+          <Team key={section.id} props={section.props} ctx={ctx} attrs={attrs} />
+        );
+      case "stats":
+        return (
+          <Stats key={section.id} props={section.props} ctx={ctx} attrs={attrs} />
+        );
       case "legal":
         return (
           <LegalPage
@@ -1240,7 +1384,7 @@ export function DonutStore({
               </h1>
               <p>
                 Merci {receipt.customer_name}. Votre commande est enregistrée
-                dans le restaurant de démonstration.
+                {t("dans le restaurant de démonstration.")}
               </p>
               <div className="donut-progress">
                 {["waiting", "preparing", "ready", "served"].map((s, i) => (
@@ -1552,7 +1696,7 @@ export function DonutStore({
             <Link
               className={`donut-button compact donut-reserve-link${shopEnabled ? " outline" : ""}`}
               href="/reservations"
-              aria-label="Réserver une table"
+              aria-label={t("Réserver une table")}
             >
               <CalendarDays size={17} aria-hidden />
               <span>Réserver</span>
@@ -1598,7 +1742,7 @@ export function DonutStore({
               image={detailProduct.images[0] || "/cms/restaurant.svg"}
             >
               <Link className="donut-button outline" href="/carte">
-                Retour à la carte
+                {t("Retour à la carte")}
               </Link>
               {shopEnabled && !preview && detailProduct.portions > 0 && (
                 <button
@@ -1611,7 +1755,7 @@ export function DonutStore({
               )}
               {canReserve && (
                 <Link className="donut-text-link" href="/reservations">
-                  Le déguster sur place ? Réserver une table
+                  {t("Le déguster sur place ? Réserver une table")}
                 </Link>
               )}
             </ProductDetails>
@@ -1649,6 +1793,7 @@ export function DonutStore({
             .filter((s) => s.visible)
             .map(renderSection)
         )}
+        {route === "contact" && crmContactEnabled && !preview && <ContactInquiry />}
       </main>
       {route !== "checkout" && (
         <footer className="donut-footer" {...cms({ id: "site-footer" })}>
@@ -1673,7 +1818,7 @@ export function DonutStore({
           {extraPages.length > 0 && (
             <nav
               className="donut-extra-pages"
-              aria-label="Autres pages du restaurant"
+              aria-label={t("Autres pages du restaurant")}
             >
               {extraPages.map(([key, page]) => (
                 <Link
@@ -2253,8 +2398,7 @@ export function DonutStore({
                     </label>
                     {!data?.slots.length && (
                       <p role="alert">
-                        Aucun créneau disponible. Le restaurant est fermé ou les
-                        créneaux sont complets.
+                        {t("Aucun créneau disponible. Le restaurant est fermé ou les créneaux sont complets.")}
                       </p>
                     )}
                     <p>
@@ -2315,7 +2459,7 @@ export function DonutStore({
                       </p>
                     )}
                     <div className="donut-order-finality">
-                      <strong>Commande transmise directement en cuisine</strong>
+                      <strong>{t("Commande transmise directement en cuisine")}</strong>
                       <p>
                         Après validation, elle ne peut plus être modifiée,
                         annulée ou remboursée à votre initiative, sous réserve

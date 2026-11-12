@@ -260,6 +260,90 @@ export function Field({ def, value, disabled, onChange }: FieldProps) {
           onChange={onChange}
         />
       );
+    case "team":
+      return (
+        <TeamField
+          value={
+            value as { name: string; role: string; bio: string; image: { src: string; alt: string } }[]
+          }
+          disabled={disabled}
+          onChange={onChange}
+        />
+      );
+    case "pricing":
+      return (
+        <PricingField
+          value={
+            value as { name: string; price: string; period: string; features: string[]; cta: { label: string; href: string }; highlight: boolean }[]
+          }
+          disabled={disabled}
+          onChange={onChange}
+        />
+      );
+    case "blogList":
+      return (
+        <BlogListField
+          value={value as { title: string; excerpt: string; image: { src: string; alt: string }; date: string; href: string }[]}
+          disabled={disabled}
+          onChange={onChange}
+        />
+      );
+    case "comparison":
+      return (
+        <ComparisonField
+          value={value as { label: string; values: string[] }[]}
+          disabled={disabled}
+          onChange={onChange}
+        />
+      );
+    case "faqAdvanced":
+      return (
+        <FaqAdvancedField
+          value={value as { name: string; items: { question: string; answer: string }[] }[]}
+          disabled={disabled}
+          onChange={onChange}
+        />
+      );
+    case "wheel":
+      return (
+        <WheelField
+          value={value as { label: string; color: string }[]}
+          disabled={disabled}
+          onChange={onChange}
+        />
+      );
+    case "partners":
+      return (
+        <PartnersField
+          value={value as { name: string; image: { src: string; alt: string }; link: { label: string; href: string } }[]}
+          disabled={disabled}
+          onChange={onChange}
+        />
+      );
+    case "timeline":
+      return (
+        <TimelineField
+          value={value as { title: string; text: string; image: { src: string; alt: string } }[]}
+          disabled={disabled}
+          onChange={onChange}
+        />
+      );
+    case "testimonials":
+      return (
+        <TestimonialsField
+          value={value as { quote: string; author: string; role: string; image: { src: string; alt: string }; rating: number }[]}
+          disabled={disabled}
+          onChange={onChange}
+        />
+      );
+    case "stats":
+      return (
+        <StatsField
+          value={value as { value: string; label: string }[]}
+          disabled={disabled}
+          onChange={onChange}
+        />
+      );
     case "badges":
       return (
         <BadgesField
@@ -795,6 +879,658 @@ function VideoField({
             setPicking(null);
           }}
         />
+      )}
+    </fieldset>
+  );
+}
+
+
+function TeamField({
+  value,
+  disabled,
+  onChange,
+}: {
+  value: { name: string; role: string; bio: string; image: { src: string; alt: string } }[];
+  disabled: boolean;
+  onChange: (v: unknown) => void;
+}) {
+  const set = (i: number, v: (typeof value)[number]) =>
+    onChange(value.map((x, j) => (j === i ? v : x)));
+  return (
+    <fieldset className="site-group" disabled={disabled}>
+      <legend>Membres</legend>
+      {value.map((m, i) => (
+        <div className="site-faq-row" key={i}>
+          <input
+            aria-label={`Nom ${i + 1}`}
+            value={m.name}
+            placeholder="Nom"
+            onChange={(e) => set(i, { ...m, name: e.target.value })}
+          />
+          <input
+            aria-label={`Rôle ${i + 1}`}
+            value={m.role}
+            placeholder="Rôle"
+            onChange={(e) => set(i, { ...m, role: e.target.value })}
+          />
+          <textarea
+            aria-label={`Bio ${i + 1}`}
+            rows={2}
+            value={m.bio}
+            placeholder="Bio"
+            onChange={(e) => set(i, { ...m, bio: e.target.value })}
+          />
+          <input
+            aria-label={`Image ${i + 1}`}
+            value={m.image.src}
+            placeholder="/cms/restaurant.svg"
+            onChange={(e) =>
+              set(i, { ...m, image: { ...m.image, src: e.target.value } })
+            }
+          />
+          <RowActions
+            i={i}
+            length={value.length}
+            move={(from, to) => onChange(moveItem(value, from, to))}
+            remove={() => onChange(value.filter((_, j) => j !== i))}
+          />
+        </div>
+      ))}
+      {value.length < 12 && (
+        <Button
+          type="button"
+          variant="secondary"
+          onClick={() =>
+            onChange([
+              ...value,
+              {
+                name: "",
+                role: "",
+                bio: "",
+                image: { src: "/cms/restaurant.svg", alt: "Photo" },
+              },
+            ])
+          }
+        >
+          <Plus size={16} /> Ajouter un membre
+        </Button>
+      )}
+    </fieldset>
+  );
+}
+
+function StatsField({
+  value,
+  disabled,
+  onChange,
+}: {
+  value: { value: string; label: string }[];
+  disabled: boolean;
+  onChange: (v: unknown) => void;
+}) {
+  const set = (i: number, v: (typeof value)[number]) =>
+    onChange(value.map((x, j) => (j === i ? v : x)));
+  return (
+    <fieldset className="site-group" disabled={disabled}>
+      <legend>Chiffres</legend>
+      {value.map((it, i) => (
+        <div className="site-list-row" key={i}>
+          <input
+            aria-label={`Valeur ${i + 1}`}
+            value={it.value}
+            placeholder="10+"
+            onChange={(e) => set(i, { ...it, value: e.target.value })}
+          />
+          <input
+            aria-label={`Libellé ${i + 1}`}
+            value={it.label}
+            placeholder="Années d’expérience"
+            onChange={(e) => set(i, { ...it, label: e.target.value })}
+          />
+          <RowActions
+            i={i}
+            length={value.length}
+            move={(from, to) => onChange(moveItem(value, from, to))}
+            remove={() => onChange(value.filter((_, j) => j !== i))}
+          />
+        </div>
+      ))}
+      {value.length < 6 && (
+        <Button
+          type="button"
+          variant="secondary"
+          onClick={() => onChange([...value, { value: "", label: "" }])}
+        >
+          <Plus size={16} /> Ajouter un chiffre
+        </Button>
+      )}
+    </fieldset>
+  );
+}
+
+
+function PartnersField({
+  value,
+  disabled,
+  onChange,
+}: {
+  value: { name: string; image: { src: string; alt: string }; link: { label: string; href: string } }[];
+  disabled: boolean;
+  onChange: (v: unknown) => void;
+}) {
+  const set = (i: number, v: (typeof value)[number]) =>
+    onChange(value.map((x, j) => (j === i ? v : x)));
+  return (
+    <fieldset className="site-group" disabled={disabled}>
+      <legend>Logos</legend>
+      {value.map((l, i) => (
+        <div className="site-faq-row" key={i}>
+          <input
+            aria-label={`Nom ${i + 1}`}
+            value={l.name}
+            placeholder="Nom du partenaire"
+            onChange={(e) => set(i, { ...l, name: e.target.value })}
+          />
+          <input
+            aria-label={`Logo ${i + 1}`}
+            value={l.image.src}
+            placeholder="/cms/restaurant.svg"
+            onChange={(e) =>
+              set(i, { ...l, image: { ...l.image, src: e.target.value } })
+            }
+          />
+          <input
+            aria-label={`Lien ${i + 1}`}
+            value={l.link.href}
+            placeholder="https://…"
+            onChange={(e) => set(i, { ...l, link: { ...l.link, href: e.target.value } })}
+          />
+          <RowActions
+            i={i}
+            length={value.length}
+            move={(from, to) => onChange(moveItem(value, from, to))}
+            remove={() => onChange(value.filter((_, j) => j !== i))}
+          />
+        </div>
+      ))}
+      {value.length < 20 && (
+        <Button
+          type="button"
+          variant="secondary"
+          onClick={() =>
+            onChange([
+              ...value,
+              { name: "", image: { src: "/cms/restaurant.svg", alt: "" }, link: { label: "", href: "" } },
+            ])
+          }
+        >
+          <Plus size={16} /> Ajouter un logo
+        </Button>
+      )}
+    </fieldset>
+  );
+}
+
+function TimelineField({
+  value,
+  disabled,
+  onChange,
+}: {
+  value: { title: string; text: string; image: { src: string; alt: string } }[];
+  disabled: boolean;
+  onChange: (v: unknown) => void;
+}) {
+  const set = (i: number, v: (typeof value)[number]) =>
+    onChange(value.map((x, j) => (j === i ? v : x)));
+  return (
+    <fieldset className="site-group" disabled={disabled}>
+      <legend>Étapes</legend>
+      {value.map((st, i) => (
+        <div className="site-faq-row" key={i}>
+          <input
+            aria-label={`Titre ${i + 1}`}
+            value={st.title}
+            placeholder="Titre de l’étape"
+            onChange={(e) => set(i, { ...st, title: e.target.value })}
+          />
+          <textarea
+            aria-label={`Texte ${i + 1}`}
+            rows={2}
+            value={st.text}
+            placeholder="Description"
+            onChange={(e) => set(i, { ...st, text: e.target.value })}
+          />
+          <input
+            aria-label={`Image ${i + 1}`}
+            value={st.image.src}
+            placeholder="/cms/restaurant.svg (optionnel)"
+            onChange={(e) => set(i, { ...st, image: { ...st.image, src: e.target.value } })}
+          />
+          <RowActions
+            i={i}
+            length={value.length}
+            move={(from, to) => onChange(moveItem(value, from, to))}
+            remove={() => onChange(value.filter((_, j) => j !== i))}
+          />
+        </div>
+      ))}
+      {value.length < 8 && (
+        <Button
+          type="button"
+          variant="secondary"
+          onClick={() =>
+            onChange([...value, { title: "", text: "", image: { src: "", alt: "" } }])
+          }
+        >
+          <Plus size={16} /> Ajouter une étape
+        </Button>
+      )}
+    </fieldset>
+  );
+}
+
+function TestimonialsField({
+  value,
+  disabled,
+  onChange,
+}: {
+  value: { quote: string; author: string; role: string; image: { src: string; alt: string }; rating: number }[];
+  disabled: boolean;
+  onChange: (v: unknown) => void;
+}) {
+  const set = (i: number, v: (typeof value)[number]) =>
+    onChange(value.map((x, j) => (j === i ? v : x)));
+  return (
+    <fieldset className="site-group" disabled={disabled}>
+      <legend>Témoignages</legend>
+      {value.map((it, i) => (
+        <div className="site-faq-row" key={i}>
+          <textarea
+            aria-label={`Citation ${i + 1}`}
+            rows={2}
+            value={it.quote}
+            placeholder="Citation"
+            onChange={(e) => set(i, { ...it, quote: e.target.value })}
+          />
+          <input
+            aria-label={`Auteur ${i + 1}`}
+            value={it.author}
+            placeholder="Auteur"
+            onChange={(e) => set(i, { ...it, author: e.target.value })}
+          />
+          <input
+            aria-label={`Rôle ${i + 1}`}
+            value={it.role}
+            placeholder="Rôle"
+            onChange={(e) => set(i, { ...it, role: e.target.value })}
+          />
+          <input
+            type="number"
+            min={1}
+            max={5}
+            aria-label={`Note ${i + 1}`}
+            value={it.rating}
+            onChange={(e) => set(i, { ...it, rating: Number(e.target.value) || 5 })}
+          />
+          <input
+            aria-label={`Photo ${i + 1}`}
+            value={it.image.src}
+            placeholder="/cms/restaurant.svg (optionnel)"
+            onChange={(e) => set(i, { ...it, image: { ...it.image, src: e.target.value } })}
+          />
+          <RowActions
+            i={i}
+            length={value.length}
+            move={(from, to) => onChange(moveItem(value, from, to))}
+            remove={() => onChange(value.filter((_, j) => j !== i))}
+          />
+        </div>
+      ))}
+      {value.length < 12 && (
+        <Button
+          type="button"
+          variant="secondary"
+          onClick={() =>
+            onChange([
+              ...value,
+              { quote: "", author: "", role: "", image: { src: "", alt: "" }, rating: 5 },
+            ])
+          }
+        >
+          <Plus size={16} /> Ajouter un témoignage
+        </Button>
+      )}
+    </fieldset>
+  );
+}
+
+
+function PricingField({
+  value,
+  disabled,
+  onChange,
+}: {
+  value: { name: string; price: string; period: string; features: string[]; cta: { label: string; href: string }; highlight: boolean }[];
+  disabled: boolean;
+  onChange: (v: unknown) => void;
+}) {
+  const set = (i: number, v: (typeof value)[number]) =>
+    onChange(value.map((x, j) => (j === i ? v : x)));
+  return (
+    <fieldset className="site-group" disabled={disabled}>
+      <legend>Offres</legend>
+      {value.map((pl, i) => (
+        <div className="site-faq-row" key={i}>
+          <input
+            aria-label={`Nom ${i + 1}`}
+            value={pl.name}
+            placeholder="Nom de l’offre"
+            onChange={(e) => set(i, { ...pl, name: e.target.value })}
+          />
+          <input
+            aria-label={`Prix ${i + 1}`}
+            value={pl.price}
+            placeholder="9 €"
+            onChange={(e) => set(i, { ...pl, price: e.target.value })}
+          />
+          <input
+            aria-label={`Période ${i + 1}`}
+            value={pl.period}
+            placeholder="/mois"
+            onChange={(e) => set(i, { ...pl, period: e.target.value })}
+          />
+          <label>
+            <input
+              type="checkbox"
+              checked={pl.highlight}
+              onChange={(e) => set(i, { ...pl, highlight: e.target.checked })}
+            />{" "}
+            Mettre en avant
+          </label>
+          <textarea
+            aria-label={`Avantages ${i + 1}`}
+            rows={3}
+            value={pl.features.join("\n")}
+            placeholder="Un avantage par ligne"
+            onChange={(e) =>
+              set(i, { ...pl, features: e.target.value.split("\n").filter(Boolean) })
+            }
+          />
+          <input
+            aria-label={`Bouton ${i + 1}`}
+            value={pl.cta.label}
+            placeholder="Libellé du bouton"
+            onChange={(e) => set(i, { ...pl, cta: { ...pl.cta, label: e.target.value } })}
+          />
+          <input
+            aria-label={`Lien ${i + 1}`}
+            value={pl.cta.href}
+            placeholder="/commander"
+            onChange={(e) => set(i, { ...pl, cta: { ...pl.cta, href: e.target.value } })}
+          />
+          <RowActions
+            i={i}
+            length={value.length}
+            move={(from, to) => onChange(moveItem(value, from, to))}
+            remove={() => onChange(value.filter((_, j) => j !== i))}
+          />
+        </div>
+      ))}
+      {value.length < 6 && (
+        <Button
+          type="button"
+          variant="secondary"
+          onClick={() =>
+            onChange([
+              ...value,
+              {
+                name: "",
+                price: "",
+                period: "",
+                features: [],
+                cta: { label: "Choisir", href: "/commander" },
+                highlight: false,
+              },
+            ])
+          }
+        >
+          <Plus size={16} /> Ajouter une offre
+        </Button>
+      )}
+    </fieldset>
+  );
+}
+
+
+function BlogListField({
+  value,
+  disabled,
+  onChange,
+}: {
+  value: { title: string; excerpt: string; image: { src: string; alt: string }; date: string; href: string }[];
+  disabled: boolean;
+  onChange: (v: unknown) => void;
+}) {
+  const set = (i: number, v: (typeof value)[number]) =>
+    onChange(value.map((x, j) => (j === i ? v : x)));
+  return (
+    <fieldset className="site-group" disabled={disabled}>
+      <legend>Articles</legend>
+      {value.map((a, i) => (
+        <div className="site-faq-row" key={i}>
+          <input
+            aria-label={`Titre ${i + 1}`}
+            value={a.title}
+            placeholder="Titre"
+            onChange={(e) => set(i, { ...a, title: e.target.value })}
+          />
+          <textarea
+            aria-label={`Extrait ${i + 1}`}
+            rows={2}
+            value={a.excerpt}
+            placeholder="Extrait"
+            onChange={(e) => set(i, { ...a, excerpt: e.target.value })}
+          />
+          <input
+            aria-label={`Image ${i + 1}`}
+            value={a.image.src}
+            placeholder="/cms/restaurant.svg (optionnel)"
+            onChange={(e) => set(i, { ...a, image: { ...a.image, src: e.target.value } })}
+          />
+          <input
+            aria-label={`Date ${i + 1}`}
+            value={a.date}
+            placeholder="2026-01-01"
+            onChange={(e) => set(i, { ...a, date: e.target.value })}
+          />
+          <input
+            aria-label={`Lien ${i + 1}`}
+            value={a.href}
+            placeholder="/mon-article"
+            onChange={(e) => set(i, { ...a, href: e.target.value })}
+          />
+          <RowActions
+            i={i}
+            length={value.length}
+            move={(from, to) => onChange(moveItem(value, from, to))}
+            remove={() => onChange(value.filter((_, j) => j !== i))}
+          />
+        </div>
+      ))}
+      {value.length < 20 && (
+        <Button
+          type="button"
+          variant="secondary"
+          onClick={() =>
+            onChange([
+              ...value,
+              { title: "", excerpt: "", image: { src: "", alt: "" }, date: "", href: "" },
+            ])
+          }
+        >
+          <Plus size={16} /> Ajouter un article
+        </Button>
+      )}
+    </fieldset>
+  );
+}
+
+
+function ComparisonField({
+  value,
+  disabled,
+  onChange,
+}: {
+  value: { label: string; values: string[] }[];
+  disabled: boolean;
+  onChange: (v: unknown) => void;
+}) {
+  const set = (i: number, v: (typeof value)[number]) =>
+    onChange(value.map((x, j) => (j === i ? v : x)));
+  return (
+    <fieldset className="site-group" disabled={disabled}>
+      <legend>Lignes</legend>
+      {value.map((r, i) => (
+        <div className="site-faq-row" key={i}>
+          <input
+            aria-label={`Libellé ${i + 1}`}
+            value={r.label}
+            placeholder="Libellé"
+            onChange={(e) => set(i, { ...r, label: e.target.value })}
+          />
+          <input
+            aria-label={`Valeurs ${i + 1}`}
+            value={r.values.join(" | ")}
+            placeholder="val1 | val2"
+            onChange={(e) =>
+              set(i, { ...r, values: e.target.value.split("|").map((x) => x.trim()).filter(Boolean) })
+            }
+          />
+          <RowActions
+            i={i}
+            length={value.length}
+            move={(from, to) => onChange(moveItem(value, from, to))}
+            remove={() => onChange(value.filter((_, j) => j !== i))}
+          />
+        </div>
+      ))}
+      {value.length < 20 && (
+        <Button
+          type="button"
+          variant="secondary"
+          onClick={() => onChange([...value, { label: "", values: [] }])}
+        >
+          <Plus size={16} /> Ajouter une ligne
+        </Button>
+      )}
+    </fieldset>
+  );
+}
+
+function FaqAdvancedField({
+  value,
+  disabled,
+  onChange,
+}: {
+  value: { name: string; items: { question: string; answer: string }[] }[];
+  disabled: boolean;
+  onChange: (v: unknown) => void;
+}) {
+  const set = (i: number, v: (typeof value)[number]) =>
+    onChange(value.map((x, j) => (j === i ? v : x)));
+  return (
+    <fieldset className="site-group" disabled={disabled}>
+      <legend>Catégories</legend>
+      {value.map((cat, i) => (
+        <div className="site-faq-row" key={i}>
+          <input
+            aria-label={`Catégorie ${i + 1}`}
+            value={cat.name}
+            placeholder="Nom de la catégorie"
+            onChange={(e) => set(i, { ...cat, name: e.target.value })}
+          />
+          <textarea
+            aria-label={`Questions ${i + 1}`}
+            rows={4}
+            value={cat.items.map((it) => `${it.question}||${it.answer}`).join("\n")}
+            placeholder="question||réponse (une par ligne)"
+            onChange={(e) => {
+              const items = e.target.value
+                .split("\n")
+                .map((line) => {
+                  const [q, a] = line.split("||");
+                  return { question: (q ?? "").trim(), answer: (a ?? "").trim() };
+                })
+                .filter((it) => it.question);
+              set(i, { ...cat, items });
+            }}
+          />
+          <RowActions
+            i={i}
+            length={value.length}
+            move={(from, to) => onChange(moveItem(value, from, to))}
+            remove={() => onChange(value.filter((_, j) => j !== i))}
+          />
+        </div>
+      ))}
+      {value.length < 8 && (
+        <Button
+          type="button"
+          variant="secondary"
+          onClick={() => onChange([...value, { name: "", items: [] }])}
+        >
+          <Plus size={16} /> Ajouter une catégorie
+        </Button>
+      )}
+    </fieldset>
+  );
+}
+
+
+function WheelField({
+  value,
+  disabled,
+  onChange,
+}: {
+  value: { label: string; color: string }[];
+  disabled: boolean;
+  onChange: (v: unknown) => void;
+}) {
+  const set = (i: number, v: (typeof value)[number]) =>
+    onChange(value.map((x, j) => (j === i ? v : x)));
+  return (
+    <fieldset className="site-group" disabled={disabled}>
+      <legend>Lots</legend>
+      {value.map((pr, i) => (
+        <div className="site-list-row" key={i}>
+          <input
+            aria-label={`Libellé ${i + 1}`}
+            value={pr.label}
+            placeholder="Lot"
+            onChange={(e) => set(i, { ...pr, label: e.target.value })}
+          />
+          <input
+            type="color"
+            aria-label={`Couleur ${i + 1}`}
+            value={pr.color}
+            onChange={(e) => set(i, { ...pr, color: e.target.value })}
+          />
+          <RowActions
+            i={i}
+            length={value.length}
+            move={(from, to) => onChange(moveItem(value, from, to))}
+            remove={() => onChange(value.filter((_, j) => j !== i))}
+          />
+        </div>
+      ))}
+      {value.length < 12 && (
+        <Button
+          type="button"
+          variant="secondary"
+          onClick={() => onChange([...value, { label: "", color: "#9ca3af" }])}
+        >
+          <Plus size={16} /> Ajouter un lot
+        </Button>
       )}
     </fieldset>
   );

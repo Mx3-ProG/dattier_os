@@ -1,10 +1,11 @@
 "use client";
+import { BlackFridayBanner } from "@/components/auth/black-friday-banner";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
-import { ArrowUpRight, RefreshCw, UtensilsCrossed } from "lucide-react";
-import type { Actor } from "@/lib/auth/session";
-import { roleLabels } from "@/lib/permissions";
+import { ArrowUpRight, RefreshCw, Store } from "lucide-react";
+import type { Actor } from "@/infrastructure/auth/session";
+import { roleLabels } from "@/core/permissions";
 export function Demo({ returnTo = "/dashboard" }: { returnTo?: string }) {
   const router = useRouter();
   const [profiles, setProfiles] = useState<Actor[]>([]),
@@ -45,12 +46,13 @@ export function Demo({ returnTo = "/dashboard" }: { returnTo?: string }) {
   return (
     <main className="demo">
       <Link href="/" className="brand">
-        <UtensilsCrossed /> STUDIO OS
+        <Store /> STUDIO S
       </Link>
-      <div className="eyebrow">UN RESTAURANT. UNE ÉQUIPE. UN MÊME OUTIL.</div>
+      <BlackFridayBanner />
+      <div className="eyebrow">UN COMMERCE. UNE ÉQUIPE. UN MÊME OUTIL.</div>
       <h1>Entrez dans les coulisses.</h1>
       <p>
-        Choisissez un métier et vivez un service connecté.
+        Choisissez un profil et découvrez le quotidien d’une équipe connectée.
         <br />
         Les profils partagent les mêmes données, conservées à chaque visite.
       </p>

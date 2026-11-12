@@ -1,8 +1,8 @@
-import { monthlyAddonIds } from "@/features/addons/catalog";
 import type { DB } from "./types";
 
 /** Appelée exclusivement pour la base PGlite de démonstration, jamais sur PostgreSQL. */
 export async function grantDemoAddons(db: DB) {
+  const { monthlyAddonIds } = await import("@/features/addons/catalog");
   await db.query(`INSERT INTO addon_legacy_grants(restaurant_id,addon_id)
     SELECT r.id,a.id FROM restaurants r CROSS JOIN unnest($1::text[]) AS a(id)
     WHERE r.archived_at IS NULL

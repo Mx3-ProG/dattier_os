@@ -3,11 +3,11 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import { randomUUID } from "node:crypto";
 import { PGlite } from "@electric-sql/pglite";
-import { migrate } from "../src/lib/database/migrate";
-import { seed } from "../src/lib/database/seed";
-import { one, rows } from "../src/lib/database/db";
+import { migrate } from "../src/infrastructure/database/migrate";
+import { seed } from "../src/infrastructure/database/seed";
+import { one, rows } from "../src/infrastructure/database/db";
 import { changeItem, createOrder } from "../src/features/orders/service";
-import type { Actor } from "../src/lib/auth/session";
+import type { Actor } from "../src/infrastructure/auth/session";
 
 const R = "bernay";
 const owner: Actor = { id: "nadia", name: "Nadia", role: "OWNER" };
@@ -46,9 +46,11 @@ test("with the kitchen module, a line cannot skip preparation", async () => {
 test("without the kitchen module, a line is served directly and consumes its stock once", async () => {
   const { db, line, stock } = await setup();
   try {
-    // Seul moyen actuel de rendre la Cuisine indisponible : secteur hors restauration
-    // (règle commerciale actuelle). La bascule de l'offre l'ouvrira aux non-abonnés.
-    await db.query("UPDATE restaurants SET industry='retail' WHERE id=$1", [R]);
+    // La Cuisine est ouverte à tous les métiers : on simule ici un établissement
+    // qui ne l'a pas (future offre à la carte) en masquant ce seul module.
+    await db.exec(`ALTER FUNCTION app.module_available(text,text) RENAME TO module_available_base;
+      CREATE FUNCTION app.module_available(rid text, module text) RETURNS boolean
+      LANGUAGE sql STABLE AS $$ SELECT module<>'kitchen' AND app.module_available_base(rid,module) $$;`);
     const before = await stock();
     assert.ok(before.reserved > 0);
     await db.transaction((tx) => changeItem(tx, R, line, "served", owner));

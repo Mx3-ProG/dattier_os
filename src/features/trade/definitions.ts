@@ -1,4 +1,4 @@
-import type { Permission } from "@/lib/permissions";
+import type { Permission } from "@/core/permissions";
 
 /**
  * Outils métier : un moteur commun (fiches, validation, stockage, indicateurs)

@@ -1,6 +1,6 @@
 import { createHash } from "node:crypto";
-import type { DB } from "@/lib/database/db";
-import type { Actor } from "@/lib/auth/session";
+import type { DB } from "@/infrastructure/database/db";
+import type { Actor } from "@/infrastructure/auth/session";
 import { record } from "./events";
 export async function registerPresence(db: DB, r: string, user: Actor) {
   const ref = createHash("sha256")

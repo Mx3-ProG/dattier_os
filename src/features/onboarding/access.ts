@@ -1,4 +1,4 @@
-import { one, type DB } from "@/lib/database/db";
+import { one, type DB } from "@/infrastructure/database/db";
 import type { Industry } from "./catalog";
 export async function establishmentIndustry(db:DB,restaurant:string):Promise<Industry> {
   return (await one<{industry:Industry}>(db,"SELECT industry FROM restaurants WHERE id=$1",[restaurant])).industry;

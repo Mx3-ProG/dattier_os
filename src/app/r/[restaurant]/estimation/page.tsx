@@ -1,10 +1,10 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { getDb, one } from "@/lib/database/db";
-import { withDatabaseContext } from "@/lib/database/context";
+import { getDb, one } from "@/infrastructure/database/db";
+import { withDatabaseContext } from "@/infrastructure/database/context";
 import { EstimationCalculator } from "@/components/estimation/calculator";
-import type { PublicEstimationItem } from "@/features/estimation/model";
+import type { PublicEstimationItem } from "@/domain/estimation/model";
 import "@/components/estimation/estimation.css";
 
 export const dynamic = "force-dynamic";

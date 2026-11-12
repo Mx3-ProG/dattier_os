@@ -1,6 +1,6 @@
 import { readFile } from "node:fs/promises";
-import { PostgresDatabase } from "../src/lib/database/postgres";
-import { applyMigrations } from "../src/lib/database/migrate";
+import { PostgresDatabase } from "../src/infrastructure/database/postgres";
+import { applyMigrations } from "../src/infrastructure/database/migrate";
 const url = process.env.MIGRATION_DATABASE_URL;
 if (!url)
   throw new Error(

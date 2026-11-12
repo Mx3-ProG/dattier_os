@@ -13,6 +13,21 @@ export type FieldKind =
   | "images"
   | "list"
   | "faq"
+  | "team"
+  | "stats"
+  | "partners"
+  | "timeline"
+  | "testimonials"
+  | "pricing"
+  | "urgency"
+  | "hook"
+  | "reviewForm"
+  | "blogList"
+  | "article"
+  | "comparison"
+  | "reviewAdvanced"
+  | "faqAdvanced"
+  | "wheel"
   | "badges"
   | "boolean"
   | "number"
@@ -437,7 +452,7 @@ export const registry: Record<SectionType, SectionDef> = {
     addon: "menu-allergens",
     fields: [kicker, title, { key: "lead", label: "Texte", kind: "textarea" }],
     partialFields: ["kicker", "title", "lead"],
-    liveData: { label: "Allergènes de la carte", module: "trade-tools" },
+    liveData: { label: "Allergènes de la carte", module: "tool-menu-allergens" },
     create: () => ({ kicker: "TRANSPARENCE", title: "Les *allergènes* de notre carte", lead: "Une question ? Notre équipe vous renseigne avec plaisir." }),
   },
   delivery: {
@@ -447,7 +462,7 @@ export const registry: Record<SectionType, SectionDef> = {
     addon: "shipping-rules",
     fields: [kicker, title, { key: "lead", label: "Texte", kind: "textarea" }, { key: "checker", label: "Afficher le vérificateur de code postal", kind: "boolean" }],
     partialFields: ["kicker", "title", "lead"],
-    liveData: { label: "Zones de livraison", module: "trade-tools" },
+    liveData: { label: "Zones de livraison", module: "tool-shipping-rules" },
     create: () => ({ kicker: "LIVRAISON", title: "On vous *livre* ?", lead: "Vérifiez si votre adresse est couverte et découvrez nos frais de livraison.", checker: true }),
   },
   bundles: {
@@ -457,7 +472,7 @@ export const registry: Record<SectionType, SectionDef> = {
     addon: "product-bundles",
     fields: [kicker, title, { key: "lead", label: "Texte", kind: "textarea" }],
     partialFields: ["kicker", "title", "lead"],
-    liveData: { label: "Lots actifs", module: "trade-tools" },
+    liveData: { label: "Lots actifs", module: "tool-product-bundles" },
     create: () => ({ kicker: "BONS PLANS", title: "Nos *formules*", lead: "Des associations gourmandes, à prix doux." }),
   },
   services: {
@@ -467,7 +482,7 @@ export const registry: Record<SectionType, SectionDef> = {
     addon: "appointment-booking",
     fields: [kicker, title, { key: "lead", label: "Texte", kind: "textarea" }, { key: "buttonLabel", label: "Texte du bouton", kind: "text" }, { key: "buttonLink", label: "Lien du bouton (tél:, https:// ou /page)", kind: "text" }],
     partialFields: ["kicker", "title", "lead", "buttonLabel", "buttonLink"],
-    liveData: { label: "Prestations de l’agenda", module: "trade-tools" },
+    liveData: { label: "Prestations de l’agenda", module: "tool-appointment-booking" },
     create: () => ({ kicker: "PRESTATIONS", title: "Nos *prestations*", lead: "Des soins pensés pour vous, réalisés par une équipe passionnée.", buttonLabel: "Prendre rendez-vous", buttonLink: "/contact" }),
   },
   legal: {
@@ -490,6 +505,370 @@ export const registry: Record<SectionType, SectionDef> = {
     addable: false,
     fields: [],
     partialFields: [],
+  },
+  newsletter: {
+    label: "Newsletter",
+    description: "Un formulaire d’inscription à votre infolettre.",
+    addable: true,
+    addon: "site-content",
+    fields: [
+      kicker,
+      title,
+      { key: "text", label: "Texte", kind: "textarea" },
+      { key: "placeholder", label: "Texte du champ", kind: "text" },
+      { key: "buttonLabel", label: "Bouton", kind: "text" },
+    ],
+    partialFields: ["kicker", "title", "text", "placeholder", "buttonLabel"],
+    create: () => ({
+      kicker: "RESTONS EN CONTACT",
+      title: "Recevez nos *nouvelles*",
+      text: "Offres, nouveautés et invitations, directement dans votre boîte.",
+      placeholder: "Votre adresse e-mail",
+      buttonLabel: "Je m’inscris",
+    }),
+  },
+  team: {
+    label: "Équipe",
+    description: "Présentez les membres de votre équipe.",
+    addable: true,
+    addon: "site-content",
+    fields: [
+      kicker,
+      title,
+      { key: "intro", label: "Introduction", kind: "textarea" },
+      { key: "members", label: "Membres", kind: "team", max: 12 },
+    ],
+    partialFields: ["kicker", "title", "intro", "members"],
+    create: () => ({
+      kicker: "L’ÉQUIPE",
+      title: "Les visages de la *maison*",
+      intro: "",
+      members: [
+        {
+          name: "Prénom Nom",
+          role: "Fondateur",
+          bio: "Quelques mots sur cette personne.",
+          image: { src: "/cms/restaurant.svg", alt: "Photo de l’équipe" },
+        },
+      ],
+    }),
+  },
+  stats: {
+    label: "Chiffres clés",
+    description: "Des compteurs qui mettent en avant vos résultats.",
+    addable: true,
+    addon: "site-content",
+    fields: [
+      kicker,
+      title,
+      { key: "items", label: "Chiffres", kind: "stats", max: 6 },
+    ],
+    partialFields: ["kicker", "title", "items"],
+    create: () => ({
+      kicker: "EN QUELQUES CHIFFRES",
+      title: "La maison *en chiffres*",
+      items: [
+        { value: "10+", label: "Années d’expérience" },
+        { value: "1000", label: "Clients satisfaits" },
+        { value: "50", label: "Produits à la carte" },
+      ],
+    }),
+  },
+  partners: {
+    label: "Partenaires",
+    description: "Un bandeau de logos de vos partenaires.",
+    addable: true,
+    addon: "site-content",
+    fields: [
+      kicker,
+      title,
+      { key: "logos", label: "Logos", kind: "partners", max: 20 },
+    ],
+    partialFields: ["kicker", "title", "logos"],
+    create: () => ({
+      kicker: "ILS NOUS FONT CONFIANCE",
+      title: "Nos *partenaires*",
+      logos: [],
+    }),
+  },
+  timeline: {
+    label: "Étapes",
+    description: "Un processus en étapes numérotées.",
+    addable: true,
+    addon: "site-content",
+    fields: [
+      kicker,
+      title,
+      { key: "intro", label: "Introduction", kind: "textarea" },
+      { key: "steps", label: "Étapes", kind: "timeline", max: 8 },
+    ],
+    partialFields: ["kicker", "title", "intro", "steps"],
+    create: () => ({
+      kicker: "COMMENT ÇA MARCHE",
+      title: "En *4 étapes*",
+      intro: "",
+      steps: [
+        { title: "Étape 1", text: "Décrivez cette étape.", image: { src: "", alt: "" } },
+      ],
+    }),
+  },
+  testimonials: {
+    label: "Témoignages",
+    description: "Un carrousel d’avis clients avec photo.",
+    addable: true,
+    addon: "site-content",
+    fields: [
+      kicker,
+      title,
+      { key: "items", label: "Témoignages", kind: "testimonials", max: 12 },
+    ],
+    partialFields: ["kicker", "title", "items"],
+    create: () => ({
+      kicker: "ILS TÉMOIGNENT",
+      title: "Ce qu’ils *en disent*",
+      items: [
+        {
+          quote: "Un lieu formidable, on reviendra !",
+          author: "Prénom Nom",
+          role: "Client",
+          image: { src: "", alt: "" },
+          rating: 5,
+        },
+      ],
+    }),
+  },
+  pricing: {
+    label: "Tarifs",
+    description: "Un tableau d’offres avec prix et avantages.",
+    addable: true,
+    addon: "site-commerce",
+    fields: [
+      kicker,
+      title,
+      { key: "intro", label: "Introduction", kind: "textarea" },
+      { key: "plans", label: "Offres", kind: "pricing", max: 6 },
+    ],
+    partialFields: ["kicker", "title", "intro", "plans"],
+    create: () => ({
+      kicker: "NOS OFFRES",
+      title: "Choisissez votre *formule*",
+      intro: "",
+      plans: [
+        {
+          name: "Essentiel",
+          price: "9 €",
+          period: "/mois",
+          features: ["Fonctionnalité 1", "Fonctionnalité 2"],
+          cta: { label: "Choisir", href: "/commander" },
+          highlight: false,
+        },
+      ],
+    }),
+  },
+  urgency: {
+    label: "Urgence / compteur",
+    description: "Un compte à rebours avec stock limité.",
+    addable: true,
+    addon: "site-commerce",
+    fields: [
+      kicker,
+      title,
+      { key: "text", label: "Texte", kind: "textarea" },
+      { key: "endDate", label: "Date de fin (ISO)", kind: "text" },
+      { key: "stock", label: "Stock restant", kind: "number", min: 0, max: 10000 },
+      { key: "stockLabel", label: "Libellé stock", kind: "text" },
+      { key: "cta", label: "Bouton", kind: "link" },
+    ],
+    partialFields: ["kicker", "title", "text", "endDate", "stock", "stockLabel", "cta"],
+    create: () => ({
+      kicker: "OFFRE LIMITÉE",
+      title: "Plus que quelques *places*",
+      text: "Profitez-en avant la fin de l’offre.",
+      endDate: "",
+      stock: 12,
+      stockLabel: "places restantes",
+      cta: { label: "J’en profite", href: "/commander" },
+    }),
+  },
+  hook: {
+    label: "Accroche",
+    description: "Un bandeau d’accroche animé pleine largeur.",
+    addable: true,
+    addon: "site-commerce",
+    fields: [
+      { key: "text", label: "Message", kind: "text" },
+      { key: "link", label: "Lien", kind: "link" },
+      {
+        key: "tone",
+        label: "Couleur",
+        kind: "select",
+        options: [
+          { value: "pink", label: "Rose" },
+          { value: "dark", label: "Foncé" },
+          { value: "light", label: "Clair" },
+        ],
+      },
+    ],
+    partialFields: ["text", "link", "tone"],
+    create: () => ({
+      text: "Nouveauté : découvrez notre nouvelle carte ✦",
+      link: { label: "Voir", href: "/carte" },
+      tone: "pink",
+    }),
+  },
+  reviewForm: {
+    label: "Formulaire d’avis",
+    description: "Invite vos visiteurs à laisser un avis.",
+    addable: true,
+    addon: "site-commerce",
+    fields: [
+      kicker,
+      title,
+      { key: "text", label: "Texte", kind: "textarea" },
+      { key: "buttonLabel", label: "Bouton", kind: "text" },
+    ],
+    partialFields: ["kicker", "title", "text", "buttonLabel"],
+    create: () => ({
+      kicker: "VOTRE AVIS",
+      title: "Laissez-nous un *message*",
+      text: "Votre retour nous aide à progresser.",
+      buttonLabel: "Envoyer mon avis",
+    }),
+  },
+  blogList: {
+    label: "Liste d’articles",
+    description: "Affiche vos derniers articles de blog.",
+    addable: true,
+    addon: "site-content",
+    fields: [
+      kicker,
+      title,
+      { key: "intro", label: "Introduction", kind: "textarea" },
+      { key: "articles", label: "Articles", kind: "blogList", max: 20 },
+    ],
+    partialFields: ["kicker", "title", "intro", "articles"],
+    create: () => ({
+      kicker: "LE BLOG",
+      title: "Nos *derniers articles*",
+      intro: "",
+      articles: [],
+    }),
+  },
+  article: {
+    label: "Article",
+    description: "Un article avec titre, image et contenu.",
+    addable: true,
+    addon: "site-content",
+    fields: [
+      kicker,
+      title,
+      { key: "image", label: "Image", kind: "image" },
+      { key: "author", label: "Auteur", kind: "text" },
+      { key: "date", label: "Date", kind: "text" },
+      { key: "body", label: "Contenu", kind: "textarea" },
+    ],
+    partialFields: ["kicker", "title", "image", "author", "date", "body"],
+    create: () => ({
+      kicker: "",
+      title: "Titre de l’article",
+      image: { src: "/cms/restaurant.svg", alt: "Illustration" },
+      author: "",
+      date: "",
+      body: "Votre article.",
+    }),
+  },
+  comparison: {
+    label: "Comparatif",
+    description: "Un tableau comparatif de produits ou offres.",
+    addable: true,
+    addon: "site-commerce",
+    fields: [
+      kicker,
+      title,
+      { key: "intro", label: "Introduction", kind: "textarea" },
+      { key: "columns", label: "Colonnes", kind: "list", max: 5 },
+      { key: "rows", label: "Lignes", kind: "comparison", max: 20 },
+    ],
+    partialFields: ["kicker", "title", "intro", "columns", "rows"],
+    create: () => ({
+      kicker: "COMPARATIF",
+      title: "Comparez nos *offres*",
+      intro: "",
+      columns: ["Offre A", "Offre B"],
+      rows: [{ label: "Prix", values: ["9 €", "19 €"] }],
+    }),
+  },
+  reviewAdvanced: {
+    label: "Avis avancé",
+    description: "Formulaire d’avis avec note et photo.",
+    addable: true,
+    addon: "site-commerce",
+    fields: [
+      kicker,
+      title,
+      { key: "text", label: "Texte", kind: "textarea" },
+      { key: "allowPhoto", label: "Autoriser une photo", kind: "boolean" },
+      { key: "allowRating", label: "Autoriser une note", kind: "boolean" },
+      { key: "buttonLabel", label: "Bouton", kind: "text" },
+    ],
+    partialFields: ["kicker", "title", "text", "allowPhoto", "allowRating", "buttonLabel"],
+    create: () => ({
+      kicker: "VOTRE AVIS",
+      title: "Partagez votre *expérience*",
+      text: "",
+      allowPhoto: true,
+      allowRating: true,
+      buttonLabel: "Envoyer",
+    }),
+  },
+  faqAdvanced: {
+    label: "FAQ avancée",
+    description: "FAQ organisée par catégories avec recherche.",
+    addable: true,
+    addon: "site-engagement",
+    fields: [
+      kicker,
+      title,
+      { key: "intro", label: "Introduction", kind: "textarea" },
+      { key: "categories", label: "Catégories", kind: "faqAdvanced", max: 8 },
+    ],
+    partialFields: ["kicker", "title", "intro", "categories"],
+    create: () => ({
+      kicker: "QUESTIONS",
+      title: "Questions *fréquentes*",
+      intro: "",
+      categories: [
+        { name: "Général", items: [{ question: "Une question ?", answer: "Une réponse." }] },
+      ],
+    }),
+  },
+  wheel: {
+    label: "Roue de la fortune",
+    description: "Un mini-jeu : tournez la roue pour gagner un lot.",
+    addable: true,
+    addon: "site-engagement",
+    fields: [
+      kicker,
+      title,
+      { key: "text", label: "Texte", kind: "textarea" },
+      { key: "prizes", label: "Lots", kind: "wheel", max: 12 },
+      { key: "buttonLabel", label: "Bouton", kind: "text" },
+      { key: "resultText", label: "Texte de résultat", kind: "text" },
+    ],
+    partialFields: ["kicker", "title", "text", "prizes", "buttonLabel", "resultText"],
+    create: () => ({
+      kicker: "JEU",
+      title: "Tentez votre *chance*",
+      text: "Tournez la roue et gagnez un lot.",
+      prizes: [
+        { label: "10 % de réduction", color: "#f59e0b" },
+        { label: "Dessert offert", color: "#ef4444" },
+        { label: "Boisson offerte", color: "#3b82f6" },
+        { label: "Perdu", color: "#9ca3af" },
+      ],
+      buttonLabel: "Tourner",
+      resultText: "Vous avez gagné : {prize}",
+    }),
   },
 };
 export const systemBlockLabels = {

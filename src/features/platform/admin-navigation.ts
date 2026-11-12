@@ -1,5 +1,4 @@
-import { can, type Permission, type Role } from "@/lib/permissions";
-import type { Industry } from "@/features/onboarding/catalog";
+import { can, type Permission, type Role } from "@/core/permissions";
 
 export type RestaurantModuleId =
   | "team"
@@ -65,7 +64,6 @@ export function availableRestaurantModules(
   roles: Role[],
   plan: number,
   addons: readonly string[] = [],
-  industry: Industry = "restaurant",
 ): RestaurantModule[] {
   return restaurantModules.filter(
     (module) =>
@@ -74,8 +72,7 @@ export function availableRestaurantModules(
        module.id === "integrations" ? addons.includes("connections") :
        module.id === "domains" ? plan >= 39 && addons.includes("domain") :
        plan >= (module.minimumPlan ?? 0)) &&
-      module.permissions.some((permission) => can(roles, permission)) &&
-      (industry === "restaurant" || !["shop","inventory"].includes(module.id)),
+      module.permissions.some((permission) => can(roles, permission)),
   );
 }
 

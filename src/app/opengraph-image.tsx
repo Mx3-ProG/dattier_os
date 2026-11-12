@@ -1,30 +1,20 @@
 import { readFile } from "node:fs/promises";
 import { join } from "node:path";
 import { ImageResponse } from "next/og";
-import { FORK_PATH, KNIFE_PATH } from "@/components/brand/paths";
+import { STUDIO_S_PATH, STUDIO_S_TRANSFORM } from "@/components/brand/studio-s-path";
 
 export const alt =
-  "STUDIO OS — commandes, salle, réservations, stocks, équipe et site web dans un seul outil";
+  "STUDIO S — un outil complet pour gagner du temps dans votre commerce";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
 const font = (file: string) =>
   readFile(join(process.cwd(), "public/fonts", file));
 
-function Utensils({ size, color }: { size: number; color: string }) {
+function StudioS({ size, color }: { size: number; color: string }) {
   return (
-    <svg
-      viewBox="0 0 48 48"
-      width={size}
-      height={size}
-      fill="none"
-      stroke={color}
-      strokeWidth={3.2}
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path transform="rotate(-45 24 24)" d={FORK_PATH} />
-      <path transform="rotate(45 24 24)" d={KNIFE_PATH} />
+    <svg viewBox="0 0 64 64" width={size} height={size}>
+      <path d={STUDIO_S_PATH} transform={STUDIO_S_TRANSFORM} fill={color} />
     </svg>
   );
 }
@@ -35,7 +25,7 @@ export default async function Image() {
     font("poppins.ttf"),
     font("poppins-bold.ttf"),
   ]);
-  const modules = ["Commandes", "Salle", "Réservations", "Stocks", "Équipe"];
+  const modules = ["Clients", "Ventes", "Stocks", "Équipe", "Site web"];
   return new ImageResponse(
     <div
       style={{
@@ -69,7 +59,7 @@ export default async function Image() {
               background: "#344d3e",
             }}
           >
-            <Utensils size={40} color="#f1ddbb" />
+            <StudioS size={40} color="#f1ddbb" />
           </div>
           <div
             style={{
@@ -80,7 +70,7 @@ export default async function Image() {
               color: "#344d3e",
             }}
           >
-            STUDIO OS
+            STUDIO S
           </div>
         </div>
         <div style={{ display: "flex", flexDirection: "column", gap: 22 }}>
@@ -93,11 +83,10 @@ export default async function Image() {
               color: "#2f4034",
             }}
           >
-            Tout votre restaurant dans un seul OS
+            Le bureau dans la poche.
           </div>
           <div style={{ fontSize: 23, lineHeight: 1.45, color: "#5b6556" }}>
-            Le logiciel de gestion ouvert des restaurateurs, avec des données
-            cloisonnées par structure.
+            Un outil complet pour vous faire gagner du temps au quotidien dans votre commerce.
           </div>
         </div>
         <div style={{ display: "flex", flexWrap: "wrap", gap: 10 }}>
@@ -153,7 +142,7 @@ export default async function Image() {
             display: "flex",
           }}
         />
-        <Utensils size={230} color="#f1ddbb" />
+        <StudioS size={230} color="#f1ddbb" />
       </div>
     </div>,
     {

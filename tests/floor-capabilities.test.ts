@@ -5,8 +5,8 @@ import {
   compareArrangement,
 } from "../src/features/floor/capabilities";
 import { canArrange } from "../src/features/floor/access";
-import type { DB } from "../src/lib/database/db";
-import { roles, can } from "../src/lib/permissions";
+import type { DB } from "../src/infrastructure/database/db";
+import { roles, can } from "../src/core/permissions";
 
 test("all roles and individual overrides preserve floor arrangement permissions", () => {
   for (const role of roles)

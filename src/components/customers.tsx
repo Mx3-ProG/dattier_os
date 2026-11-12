@@ -1,7 +1,7 @@
 "use client";
 import { useState } from "react";
-import type { Snapshot } from "@/lib/types";
-import { money } from "@/lib/domain";
+import type { Snapshot } from "@/shared/types";
+import { money } from "@/domain/shared/units";
 import { Button } from "./ui/button";
 import { Mail, MessageSquare } from "lucide-react";
 import { Form, Modal, type Field, type Act } from "./forms";

@@ -1,0 +1,1074 @@
+From fca23e8b95e3751d0b99c23e3d260b28ec8dd8bd Mon Sep 17 00:00:00 2001
+From: Amadeus_Mvtty <mat75.deff@gmail.com>
+Date: Thu, 12 Nov 2026 16:27:51 +0100
+Subject: [PATCH] Connect Studio billing with seven-day card trial and account
+ history
+
+---
+ .../migrations/112_trial_card_required.sql    |  20 +++
+ database/migrations/171_platform_billing.sql  |  60 ++++++++
+ .../api/platform/billing/reminder/route.ts    |  12 ++
+ src/app/api/platform/billing/route.ts         |  19 ++-
+ src/app/checkout/[plan]/page.tsx              |  15 +-
+ src/app/layout.tsx                            |   2 +
+ src/components/platform/billing-account.tsx   |  94 +++++++++++++
+ src/components/platform/home.tsx              |   2 +
+ src/components/platform/platform.css          |  11 ++
+ src/components/platform/subscription-form.tsx |  27 ++--
+ src/components/platform/trial-reminder.tsx    |  36 +++++
+ src/features/billing/stripe-saas.ts           |  94 +++++++++++++
+ src/features/platform/billing-account.ts      | 103 ++++++++++++++
+ src/features/platform/billing-rules.ts        |  14 ++
+ src/features/platform/entitlements.ts         |   7 +-
+ src/features/platform/plan-billing.ts         | 128 +++++++++---------
+ src/features/platform/promotion.ts            |   2 +-
+ src/lib/database/migrate.ts                   |   2 +
+ tests/billing-rules.test.ts                   |  14 ++
+ tests/plan-subscription.test.ts               |  30 ++++
+ 20 files changed, 605 insertions(+), 87 deletions(-)
+ create mode 100644 database/migrations/112_trial_card_required.sql
+ create mode 100644 database/migrations/171_platform_billing.sql
+ create mode 100644 src/app/api/platform/billing/reminder/route.ts
+ create mode 100644 src/components/platform/billing-account.tsx
+ create mode 100644 src/components/platform/trial-reminder.tsx
+ create mode 100644 src/features/billing/stripe-saas.ts
+ create mode 100644 src/features/platform/billing-account.ts
+ create mode 100644 src/features/platform/billing-rules.ts
+ create mode 100644 tests/billing-rules.test.ts
+
+diff --git a/database/migrations/112_trial_card_required.sql b/database/migrations/112_trial_card_required.sql
+new file mode 100644
+index 0000000..7a79ae7
+--- /dev/null
++++ b/database/migrations/112_trial_card_required.sql
+@@ -0,0 +1,20 @@
++-- With online billing enabled, a free trial opens the workspace only once a
++-- card is registered on Stripe (subscription trialing). Read-only check used by
++-- the application; it never grants access by itself. Idempotent.
++CREATE OR REPLACE FUNCTION app.restaurant_card_required(rid text) RETURNS boolean
++LANGUAGE sql STABLE SECURITY DEFINER SET search_path=public,pg_temp AS $$
++  SELECT COALESCE((
++    SELECT p.plan=0 AND app.effective_plan(p.plan,p.bonus_plan)=0
++      AND p.cancelled_at IS NULL AND p.trial_ends_at>now()
++      AND NOT EXISTS (
++        SELECT 1 FROM app.plan_subscriptions s
++        WHERE s.organization_id=p.organization_id AND s.status IN ('active','trialing','past_due')
++      )
++    FROM restaurants r JOIN app.organization_plans p ON p.organization_id=r.organization_id
++    WHERE r.id=rid AND app.has_restaurant(rid)
++  ), false)
++$$;
++REVOKE ALL ON FUNCTION app.restaurant_card_required(text) FROM PUBLIC;
++GRANT EXECUTE ON FUNCTION app.restaurant_card_required(text) TO atacuisine_app;
++
++INSERT INTO schema_versions(version) VALUES(112) ON CONFLICT DO NOTHING;
+diff --git a/database/migrations/171_platform_billing.sql b/database/migrations/171_platform_billing.sql
+new file mode 100644
+index 0000000..e72091d
+--- /dev/null
++++ b/database/migrations/171_platform_billing.sql
+@@ -0,0 +1,60 @@
++-- Billing-only reconciliation of capacity and the actual Stripe trial dates.
++CREATE OR REPLACE FUNCTION app.plan_reconcile_details(oid text, subscription text, quantity integer,
++  trial_start timestamptz, trial_end timestamptz) RETURNS void
++LANGUAGE plpgsql SECURITY DEFINER SET search_path=public,pg_temp AS $$
++DECLARE s app.plan_subscriptions;
++BEGIN
++  SELECT * INTO s FROM app.plan_subscriptions WHERE organization_id=oid FOR UPDATE;
++  IF s.stripe_subscription IS DISTINCT FROM subscription THEN RETURN; END IF;
++  IF quantity < 1 OR quantity > 100 THEN RAISE EXCEPTION 'Capacité invalide.'; END IF;
++  -- Do not grant extra capacity for an unpaid upgrade.
++  IF s.status IN ('active','trialing') THEN
++    UPDATE app.organization_plans SET seats=quantity WHERE organization_id=oid;
++  END IF;
++  IF s.status='trialing' AND trial_start IS NOT NULL AND trial_end=trial_start+interval '7 days' THEN
++    UPDATE app.organization_plans SET trial_started_at=trial_start,trial_ends_at=trial_end WHERE organization_id=oid;
++  END IF;
++END $$;
++REVOKE ALL ON FUNCTION app.plan_reconcile_details(text,text,integer,timestamptz,timestamptz) FROM PUBLIC;
++GRANT EXECUTE ON FUNCTION app.plan_reconcile_details(text,text,integer,timestamptz,timestamptz) TO atacuisine_addon_billing;
++
++CREATE OR REPLACE FUNCTION app.plan_checkout_session(oid text) RETURNS text
++LANGUAGE plpgsql STABLE SECURITY DEFINER SET search_path=public,pg_temp AS $$
++BEGIN
++  IF NOT EXISTS(SELECT 1 FROM organization_memberships m JOIN profiles p ON p.id=m.profile_id
++    WHERE m.organization_id=oid AND m.profile_id=app.user_id() AND m.role='OWNER' AND p.status='active')
++    THEN RAISE EXCEPTION 'Accès non autorisé.'; END IF;
++  RETURN (SELECT stripe_session FROM app.plan_subscriptions WHERE organization_id=oid);
++END $$;
++REVOKE ALL ON FUNCTION app.plan_checkout_session(text) FROM PUBLIC;
++GRANT EXECUTE ON FUNCTION app.plan_checkout_session(text) TO atacuisine_app;
++
++-- One reminder per owner every ten hours, shared across devices and tabs.
++CREATE TABLE IF NOT EXISTS app.billing_reminders (
++  profile_id text PRIMARY KEY REFERENCES public.profiles(id) ON DELETE CASCADE,
++  shown_at timestamptz NOT NULL
++);
++ALTER TABLE app.billing_reminders ENABLE ROW LEVEL SECURITY;
++REVOKE ALL ON app.billing_reminders FROM PUBLIC;
++CREATE OR REPLACE FUNCTION app.claim_billing_reminder() RETURNS text
++LANGUAGE plpgsql SECURITY DEFINER SET search_path=public,pg_temp AS $$
++DECLARE oid text; claimed text;
++BEGIN
++  SELECT p.organization_id INTO oid FROM app.organization_plans p
++  JOIN organization_memberships m ON m.organization_id=p.organization_id
++  JOIN profiles u ON u.id=m.profile_id
++  WHERE m.profile_id=app.user_id() AND m.role='OWNER' AND u.status='active'
++    AND p.plan=0 AND coalesce(p.bonus_plan,0)=0 AND p.trial_ends_at<=now()
++    AND NOT EXISTS(SELECT 1 FROM app.plan_subscriptions s WHERE s.organization_id=p.organization_id
++      AND s.status IN ('active','trialing','past_due'))
++  ORDER BY p.trial_ends_at LIMIT 1;
++  IF oid IS NULL THEN RETURN NULL; END IF;
++  INSERT INTO app.billing_reminders(profile_id,shown_at) VALUES(app.user_id(),now())
++    ON CONFLICT(profile_id) DO UPDATE SET shown_at=excluded.shown_at
++    WHERE app.billing_reminders.shown_at<=now()-interval '10 hours'
++    RETURNING profile_id INTO claimed;
++  RETURN CASE WHEN claimed IS NOT NULL THEN oid END;
++END $$;
++REVOKE ALL ON FUNCTION app.claim_billing_reminder() FROM PUBLIC;
++GRANT EXECUTE ON FUNCTION app.claim_billing_reminder() TO atacuisine_app;
++INSERT INTO schema_versions(version) VALUES(171) ON CONFLICT DO NOTHING;
+diff --git a/src/app/api/platform/billing/reminder/route.ts b/src/app/api/platform/billing/reminder/route.ts
+new file mode 100644
+index 0000000..ac33d9a
+--- /dev/null
++++ b/src/app/api/platform/billing/reminder/route.ts
+@@ -0,0 +1,12 @@
++import { NextRequest } from "next/server";
++import { authenticated, assertOrigin, json, failure } from "@/features/platform/http";
++import { planBillingReady } from "@/features/platform/plan-billing";
++import { one } from "@/lib/database/db";
++export const runtime="nodejs";
++export async function POST(req:NextRequest) {
++  try {
++    await assertOrigin(req);
++    if(!planBillingReady())return json({organization:null});
++    return json(await authenticated(undefined,db=>one<{organization:string|null}>(db,"SELECT app.claim_billing_reminder() AS organization")));
++  }catch(e){return failure(e);}
++}
+diff --git a/src/app/api/platform/billing/route.ts b/src/app/api/platform/billing/route.ts
+index 81e0a2f..143246f 100644
+--- a/src/app/api/platform/billing/route.ts
++++ b/src/app/api/platform/billing/route.ts
+@@ -2,20 +2,26 @@ import { NextRequest } from "next/server";
+ import { z } from "zod";
+ import { withRequestContext } from "@/features/ops-security/context";
+ import { assertOrigin, readBody, json, failure } from "@/features/platform/http";
++import { billingAccount, billingInvoices, capacityCheckout } from "@/features/platform/billing-account";
+ import { planCheckout, planPortal } from "@/features/platform/plan-billing";
+ 
+ export const runtime = "nodejs";
+ 
+ const input = z.object({
+-  action: z.enum(["checkout", "portal"]),
++  action: z.enum(["checkout", "portal", "capacity"]),
+   organization: z.string().min(1).max(150),
++  quantity: z.number().int().min(2).max(100).optional(),
+ });
+ 
+ /** Opens Stripe Checkout (new subscription) or the Stripe customer portal. */
+ async function routePOST(req: NextRequest) {
+   try {
+     await assertOrigin(req);
+-    const { action, organization } = input.parse(await readBody(req, 2000));
++    const { action, organization, quantity } = input.parse(await readBody(req, 2000));
++    if(action === "capacity") {
++      if(!quantity) throw new Error("Nombre de places requis.");
++      return json(await capacityCheckout(organization,quantity));
++    }
+     return json(action === "checkout" ? await planCheckout(organization) : await planPortal(organization));
+   } catch (e) {
+     console.error("[billing] Abonnement", e instanceof Error ? e.message : e);
+@@ -24,3 +30,12 @@ async function routePOST(req: NextRequest) {
+ }
+ 
+ export const POST = withRequestContext("/api/platform/billing", routePOST);
++
++export const GET = withRequestContext("/api/platform/billing", async (req: NextRequest) => {
++  try {
++    const query = z.object({ organization:z.string().min(1).max(150), page:z.coerce.number().int().min(0).max(100000).default(0),
++      source:z.string().min(1).max(150).optional(), cursor:z.string().regex(/^in_[A-Za-z0-9]+$/).optional()
++    }).parse(Object.fromEntries(req.nextUrl.searchParams));
++    return json(query.source ? await billingInvoices(query.organization,query.source,query.cursor) : await billingAccount(query.organization,query.page));
++  } catch(e) { return failure(e); }
++});
+diff --git a/src/app/checkout/[plan]/page.tsx b/src/app/checkout/[plan]/page.tsx
+index 5831273..c90e6fe 100644
+--- a/src/app/checkout/[plan]/page.tsx
++++ b/src/app/checkout/[plan]/page.tsx
+@@ -40,7 +40,8 @@ export default async function Page({ params }: { params: Promise<{ plan: string
+   const promo = activePromotion();
+   const days = trialDays();
+   // Pendant l'offre, le paiement Stripe s'ouvre dès la création de l'espace.
+-  const payNow = Boolean(promo && planBillingReady());
++  const cardRequired = !demoEnabled();
++
+   const login = `/connexion?returnTo=${encodeURIComponent(`/checkout/${offer.price}`)}`;
+   return (
+     <main className="access-shell">
+@@ -61,7 +62,7 @@ export default async function Page({ params }: { params: Promise<{ plan: string
+               <p className="access-referral" role="status">
+                 <Gift size={18} aria-hidden />
+                 <span>
+-                  Black Friday : code <strong>{promo.code}</strong> déjà appliqué au paiement. Offre valable
++                  Black Friday : code <strong>{promo.code}</strong> à saisir sur Stripe. Offre valable
+                   jusqu’au {promo.lastDay} minuit, puis {offer.price} € TTC / mois. Sans engagement, résiliable à tout moment.
+                 </span>
+               </p>
+@@ -69,7 +70,7 @@ export default async function Page({ params }: { params: Promise<{ plan: string
+           ) : (
+             <>
+               <p className="access-price"><strong>{offer.price} €</strong> TTC / mois</p>
+-              <p>{days} jours d’essai gratuits dès la création de votre espace. Aucun paiement initial. Sans engagement.</p>
++              <p>{days} jours d’essai gratuits après confirmation de votre carte. Aucun paiement initial. Sans engagement.</p>
+             </>
+           )}
+           <p>{offer.description}</p>
+@@ -86,12 +87,8 @@ export default async function Page({ params }: { params: Promise<{ plan: string
+             <>
+               <span className="access-label">Connecté en tant que {user.name}</span>
+               <h2>Créer votre espace professionnel</h2>
+-              {payNow && promo ? (
+-                <p>Créez votre espace en quelques questions, puis réglez <strong>{promo.price} €</strong> sur la page de paiement sécurisée Stripe : le code {promo.code} y est déjà appliqué. Vous bloquez ainsi le tarif de {promo.price} € TTC / mois pendant {promo.months} mois, sans engagement.</p>
+-              ) : (
+-                <p>Votre essai démarre à la création de l’espace et dure {days} jours, sans carte bancaire. Vous pourrez ensuite vous abonner en ligne depuis votre espace (39 € TTC par mois, paiement sécurisé par Stripe, sans engagement). Aucun prélèvement sans votre accord.</p>
+-              )}
+-              <SubscriptionForm plan={offer.price} userName={user.name} userEmail={user.email} payNow={payNow ? promo : null} />
++              <p>Enregistrez votre carte sur Stripe : 0 € aujourd’hui, sept jours gratuits après confirmation, puis {offer.price} € TTC par mois hors réduction. Vous pouvez résilier avant le premier prélèvement.</p>
++              {cardRequired && !planBillingReady() ? <p>Le paiement est momentanément indisponible.</p> : <SubscriptionForm plan={offer.price} userName={user.name} userEmail={user.email} cardRequired={cardRequired} />}
+             </>
+           ) : (
+             <>
+diff --git a/src/app/layout.tsx b/src/app/layout.tsx
+index 4c55c22..ebdfea4 100644
+--- a/src/app/layout.tsx
++++ b/src/app/layout.tsx
+@@ -1,3 +1,4 @@
++import { TrialReminder } from "@/components/platform/trial-reminder";
+ import { PublicModeProvider } from "@/components/cms-site/public-appearance";
+ import Link from "next/link";
+ import { ServiceWorkerUpdate } from "@/components/service-worker-update";
+@@ -54,6 +55,7 @@ export default async function Layout({
+           <AppearanceApplication initial={initial} publicSite={!!site}>
+             <ServiceWorkerUpdate />
+             {children}
++            {!site && <TrialReminder />}
+             {demoEnabled() && (
+               <Link
+                 className="demo-purchase-link"
+diff --git a/src/components/platform/billing-account.tsx b/src/components/platform/billing-account.tsx
+new file mode 100644
+index 0000000..482a83a
+--- /dev/null
++++ b/src/components/platform/billing-account.tsx
+@@ -0,0 +1,94 @@
++"use client";
++import { useEffect, useState, useCallback } from "react";
++import type { billingAccount, billingInvoices } from "@/features/platform/billing-account";
++
++type State = Awaited<ReturnType<typeof billingAccount>>;
++type Invoice = Awaited<ReturnType<typeof billingInvoices>>["invoices"][number];
++const money=(value:number,currency="eur")=>new Intl.NumberFormat("fr-FR",{style:"currency",currency}).format(value/100);
++const date=(value:string|number|null)=>value?new Date(typeof value==="number"?value*1000:value).toLocaleDateString("fr-FR",{dateStyle:"long",timeZone:"Europe/Paris"}):"Non prévue";
++const labels:Record<string,string>={paid:"Payé",open:"À régler",draft:"Brouillon",void:"Annulé",uncollectible:"Impayé",active:"Actif",trialing:"Essai avec carte",past_due:"Paiement à régulariser",canceled:"Résilié",cancelled:"Résilié",pending:"En attente",none:"Non souscrit",refunded:"Remboursé",expired:"Expiré",failed:"Échec",disputed:"Contesté",dispute_lost:"Litige perdu",duplicate:"Doublon",unpaid:"Impayé",incomplete:"Paiement incomplet",incomplete_expired:"Expiré",paused:"Suspendu"};
++export function BillingAccount({organization,name,onChanged}:{organization:string;name:string;onChanged:()=>Promise<void>}) {
++  const [state,setState]=useState<State>();
++  const [error,setError]=useState("");
++  const [busy,setBusy]=useState(false);
++  const [page,setPage]=useState(0);
++  const [quantity,setQuantity]=useState(2);
++  const [source,setSource]=useState("plan");
++  const [invoices,setInvoices]=useState<Invoice[]>([]);
++  const [next,setNext]=useState<string|null>(null);
++  const [invoiceError,setInvoiceError]=useState("");
++  const [invoiceBusy,setInvoiceBusy]=useState(false);
++  const load=useCallback(async()=>{
++    const r=await fetch(`/api/platform/billing?organization=${encodeURIComponent(organization)}&page=${page}`);
++    const data=await r.json();
++    if(!r.ok) throw new Error(data.error?.message||"Facturation indisponible.");
++    setState(data);setQuantity(Math.max(2,(data.subscription?.quantity??data.capacity.seats)+1));
++  },[organization,page]);
++  useEffect(()=>{void load().catch(e=>setError(e.message));},[load]);
++  useEffect(()=>{
++    let active=true;
++    setInvoices([]);setNext(null);setInvoiceError("");setInvoiceBusy(true);
++    void fetch(`/api/platform/billing?organization=${encodeURIComponent(organization)}&source=${encodeURIComponent(source)}`)
++      .then(async r=>{const d=await r.json();if(!r.ok)throw new Error(d.error?.message||"Factures indisponibles.");return d;})
++      .then(d=>{if(active){setInvoices(d.invoices);setNext(d.next);}})
++      .catch(e=>{if(active)setInvoiceError(e.message);}).finally(()=>{if(active)setInvoiceBusy(false);});
++    return()=>{active=false;};
++  },[organization,source]);
++  async function moreInvoices(){
++    if(!next||invoiceBusy)return;setInvoiceBusy(true);setInvoiceError("");
++    try{const r=await fetch(`/api/platform/billing?organization=${encodeURIComponent(organization)}&source=${encodeURIComponent(source)}&cursor=${next}`);
++      const d=await r.json();if(!r.ok)throw new Error(d.error?.message||"Factures indisponibles.");
++      setInvoices(old=>[...old,...d.invoices]);setNext(d.next);
++    }catch(e){setInvoiceError((e as Error).message);}finally{setInvoiceBusy(false);}
++  }
++  async function action(action:"checkout"|"portal"|"capacity"|"cancelSubscription"){
++    if(action==="cancelSubscription"&&!window.confirm("Arrêter le renouvellement ? Votre accès reste disponible jusqu’à la fin de la période en cours. Les add-ons se gèrent séparément."))return;
++    setBusy(true);setError("");
++    try{
++      const r=await fetch(action==="cancelSubscription"?"/api/platform":"/api/platform/billing",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({action,organization,...(action==="capacity"?{quantity}:{})})});
++      const d=await r.json();if(!r.ok)throw new Error(d.error?.message||"Opération impossible.");
++      if(d.url)window.location.assign(d.url);else{await load();await onChanged();}
++    }catch(e){setError((e as Error).message);}finally{setBusy(false);}
++  }
++  const sub=state?.subscription;
++  return <section className="billing-account" aria-label={`Abonnements et achats — ${name}`}>
++    <h3>{name}</h3>
++    {error&&<p role="alert" className="error">{error}</p>}
++    {!state?<p>Chargement de la facturation…</p>:<>
++      {!state.ready&&<p role="status">Le paiement en ligne n’est pas encore disponible. Aucun prélèvement automatique n’est activé.</p>}
++      {state.ready&&!state.live&&<p role="status">Mode test Stripe — aucun paiement réel.</p>}
++      {state.warning&&<p role="status">{state.warning}</p>}
++      <div className="billing-metrics">
++        <div><small>Abonnement Studio</small><strong>{labels[sub?.status??state.context.status]??"État à vérifier"}</strong></div>
++        <div><small>Places d’établissement</small><strong>{state.capacity.occupied} utilisées / {state.capacity.seats} activées</strong></div>
++        <div><small>{sub?.cancelling?"Fin d’accès":"Prochaine échéance"}</small><strong>{date(sub?.status==="trialing"?sub.trialEnd:sub?.periodEnd??null)}</strong></div>
++        <div><small>Prochaine facture estimée</small><strong>{state.upcoming?money(state.upcoming.amount,state.upcoming.currency):sub?.cancelling?"Renouvellement arrêté":"Non disponible"}</strong></div>
++      </div>
++      {sub&&<p>Tarif récurrent : {money(sub.unitAmount*sub.quantity,sub.currency)} / mois avant réductions éventuelles. Les add-ons sont facturés séparément.</p>}
++      {sub?.status==="trialing"&&<p>Carte enregistrée. Aucun prélèvement avant le {date(sub.trialEnd)}. Vous pouvez résilier avant cette date.</p>}
++      {sub?.pendingUpdate&&<p role="status">Modification en attente de paiement. Les places supplémentaires seront activées après confirmation.</p>}
++      <div className="actions">
++        {state.ready&&!sub&&!state.context.hasCustomer&&<button disabled={busy} onClick={()=>void action("checkout")}>Activer mon abonnement · 39 € TTC / mois</button>}
++        {state.ready&&state.context.hasCustomer&&<button disabled={busy} onClick={()=>void action("portal")}>Carte bancaire, factures et abonnement</button>}
++        {state.ready&&sub&&["active","trialing","past_due"].includes(sub.status)&&!sub.cancelling&&<button disabled={busy} onClick={()=>void action("cancelSubscription")}>Résilier à la fin de la période</button>}
++      </div>
++      {state.ready&&sub?.status==="active"&&!sub.cancelling&&!sub.pendingUpdate&&<form onSubmit={e=>{e.preventDefault();void action("capacity");}}>
++        <h4>Ajouter des établissements à mon abonnement</h4>
++        <label>Nombre total de places<input type="number" min={sub.quantity+1} max={100} required value={quantity} onChange={e=>setQuantity(Number(e.target.value))}/></label>
++        <p>{money(quantity*3900)} TTC / mois avant réductions. Stripe affiche le montant exact et le prorata avant votre confirmation. Chaque place permet de créer un établissement.</p>
++        <button disabled={busy}>Voir le montant et confirmer sur Stripe</button>
++      </form>}
++      <h4>Mes add-ons mensuels</h4>
++      {!state.addons.length?<p>Aucun abonnement à un add-on enregistré.</p>:<ul className="billing-list">{state.addons.map(a=><li key={a.id}><strong>{a.label} · {a.restaurant}</strong><span>{labels[a.status]??a.status} · {a.renewal_cancelled?"Fin d’accès":"Échéance"} : {date(a.valid_until)}</span><a href={`/dashboard?restaurant=${encodeURIComponent(a.restaurant_id)}&module=addons`}>Gérer cet add-on</a></li>)}</ul>}
++      <h4>Factures et paiements des abonnements</h4>
++      <label>Abonnement<select value={source} onChange={e=>setSource(e.target.value)}><option value="plan">Abonnement Studio — toutes les factures du compte</option>{state.addons.map(a=><option key={a.id} value={a.id}>{a.label} · {a.restaurant}</option>)}</select></label>
++      {invoiceError&&<p role="alert">{invoiceError}</p>}
++      {invoiceBusy&&!invoices.length?<p>Chargement des factures…</p>:!invoices.length&&!invoiceError&&<p>Aucune facture disponible pour cet abonnement.</p>}
++      <ul className="billing-list">{invoices.map(i=><li key={i.id}><strong>{i.number||"Facture"} · {date(i.date)}</strong><span>{labels[i.status??""]??i.status} · {money(i.amount,i.currency)} · réglé : {money(i.paid,i.currency)}</span><div className="actions">{i.url&&<a href={i.url} target="_blank" rel="noopener noreferrer">Voir la facture</a>}{i.pdf&&<a href={i.pdf} target="_blank" rel="noopener noreferrer">Télécharger le PDF</a>}</div></li>)}</ul>
++      {next&&<button disabled={invoiceBusy} onClick={()=>void moreInvoices()}>Charger les factures précédentes</button>}
++      <h4>Achats ponctuels et recharges</h4>
++      {!state.purchases.length?<p>Aucun achat enregistré sur cette page.</p>:<ul className="billing-list">{state.purchases.map(p=><li key={p.id}><strong>{p.label} · {p.restaurant}</strong><span>{date(p.created_at)} · {money(p.amount,p.currency)} · {labels[p.status]??p.status}{p.refunded>0?` · remboursé : ${money(p.refunded,p.currency)}`:""}</span></li>)}</ul>}
++      <div className="actions"><button disabled={page===0} onClick={()=>setPage(p=>p-1)}>Achats plus récents</button><span>Page {page+1}</span><button disabled={!state.morePurchases} onClick={()=>setPage(p=>p+1)}>Achats plus anciens</button></div>
++    </>}
++  </section>;
++}
+diff --git a/src/components/platform/home.tsx b/src/components/platform/home.tsx
+index 7fe5941..4dce58b 100644
+--- a/src/components/platform/home.tsx
++++ b/src/components/platform/home.tsx
+@@ -3,6 +3,7 @@ import { UtensilsLoader } from "@/components/brand/utensils";
+ import { type Plan } from "@/features/platform/pricing";
+ import type { Promotion } from "@/features/platform/promotion";
+ import { referralPricing, type PaidPlan } from "@/features/platform/referrals";
++import { BillingAccount } from "./billing-account";
+ import { AccountWorkspace } from "./account-workspace";
+ import { ReferralPanel } from "./referral-panel";
+ import Link from "next/link";
+@@ -228,6 +229,7 @@ export function PlatformHome() {
+                 );
+               })}
+             </div>
++            <section id="abonnements"><h2>Abonnements et achats</h2>{data.organizations.filter(o=>o.role==="OWNER").map(o=><BillingAccount key={o.id} organization={o.id} name={o.name} onChanged={load} />)}</section>
+             {data.organizations.map((o) => {
+               const paying = o.paying_referrals ?? 0;
+               const price = referralPricing(o.paid_plan, o.seats, paying);
+diff --git a/src/components/platform/platform.css b/src/components/platform/platform.css
+index 7259452..68b4ee9 100644
+--- a/src/components/platform/platform.css
++++ b/src/components/platform/platform.css
+@@ -768,3 +768,14 @@ body:has(.restaurant-workspace) > .demo-purchase-link { display: none; }
+ .account-home-content .add-restaurant-panel { scroll-margin-top: 95px; }
+ body:has(.account-workspace) > .demo-purchase-link { display: none; }
+ @media(max-width:700px) { .account-page-heading { flex-direction: column; align-items: flex-start; } .account-overview { align-items: flex-start; flex-direction: column; gap: 12px; } .account-home-content .account-restaurants { grid-template-columns: minmax(0,1fr); } .account-home-content .organization-summary { align-items: flex-start; flex-direction: column; gap: 5px; } }
++
++.billing-account { border:1px solid var(--border); border-radius:18px; padding:clamp(16px,3vw,28px); margin:20px 0; overflow-wrap:anywhere; }
++.billing-account h4 { margin-top:28px; }
++.billing-metrics { display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,200px),1fr)); gap:16px; margin:20px 0; }
++.billing-metrics small,.billing-metrics strong { display:block; }
++.billing-metrics strong { margin-top:6px; }
++.billing-list { list-style:none; padding:0; }
++.billing-list li { display:flex; flex-direction:column; gap:8px; padding:16px 0; border-bottom:1px solid var(--border); }
++.billing-account label { display:flex; flex-direction:column; gap:8px; max-width:100%; }
++.billing-account select,.billing-account input { max-width:100%; min-width:0; }
++.billing-account .actions { display:flex; flex-wrap:wrap; gap:12px; align-items:center; margin:12px 0; }
+diff --git a/src/components/platform/subscription-form.tsx b/src/components/platform/subscription-form.tsx
+index ba0629f..d5c7d4c 100644
+--- a/src/components/platform/subscription-form.tsx
++++ b/src/components/platform/subscription-form.tsx
+@@ -3,7 +3,6 @@ import { useEffect, useState, type FormEvent } from "react";
+ import Link from "next/link";
+ import { useRouter } from "next/navigation";
+ import { industries, industryLabels, trades, discoverySources, discoveryLabels, workflowChoices, workflowLabels, relevantCapabilities, type Industry } from "@/features/onboarding/catalog";
+-import type { Promotion } from "@/features/platform/promotion";
+ import "./onboarding.css";
+ 
+ type Draft = {
+@@ -31,7 +30,7 @@ const invitationRoles: Record<Industry, { id: string; label: string }[]> = {
+   other: [{ id: "MANAGER", label: "Responsable" }, { id: "WAITER", label: "Collaborateur" }],
+ };
+ 
+-export function SubscriptionForm({ plan, userName, userEmail, payNow = null }: { plan: number; userName: string; userEmail?: string; payNow?: Promotion | null }) {
++export function SubscriptionForm({ plan, userName, userEmail, cardRequired = false }: { plan: number; userName: string; userEmail?: string; cardRequired?: boolean }) {
+   const router = useRouter();
+   const [draft, setDraft] = useState<Draft | null>(null);
+   const [step, setStep] = useState(0);
+@@ -87,13 +86,14 @@ export function SubscriptionForm({ plan, userName, userEmail, payNow = null }: {
+       const body = await response.json();
+       if (!response.ok) throw new Error(body.error?.message || "Création impossible.");
+       setCreated(body.restaurant);
+-      setOrganization(body.organization ?? null);
+-      if (payNow && body.organization) await pay(body.organization);
++      setOrganization(body.organization);
++      if (cardRequired) await registerCard(body.organization);
+     } catch (cause) { setError(cause instanceof Error ? cause.message : "Service indisponible."); }
+     finally { setBusy(false); }
+   }
+-  /** Opens Stripe Checkout with the promotion code already applied. */
+-  async function pay(org: string) {
++  /** Stripe Checkout: card registered now, first charge at the end of the trial. */
++  async function registerCard(org: string | null = organization) {
++    if (!org) return;
+     setBusy(true); setError("");
+     try {
+       const response = await fetch("/api/platform/billing", {
+@@ -123,12 +123,15 @@ export function SubscriptionForm({ plan, userName, userEmail, payNow = null }: {
+     finally { setBusy(false); }
+   }
+   if (!draft) return <p>Chargement de votre parcours…</p>;
++  if (created && cardRequired) return <section className="onboarding-form" role="status">
++    <h2>Dernière étape : votre carte bancaire</h2>
++    <p>Votre espace est créé. Enregistrez votre carte sur la page sécurisée Stripe pour démarrer vos 7 jours d’essai gratuits : aucun prélèvement avant la fin de l’essai, résiliable à tout moment.</p>
++    {error && <p role="alert">{error}</p>}
++    <div className="onboarding-actions"><button className="access-primary" disabled={busy} onClick={() => void registerCard()}>{busy ? "Ouverture de Stripe…" : "Enregistrer ma carte"}</button></div>
++  </section>;
+   if (created) return <section className="onboarding-form" role="status">
+     <h2>Votre espace est prêt</h2>
+-    {payNow && organization ? <div className="onboarding-pay">
+-      <p>{busy ? "Ouverture du paiement sécurisé…" : <>Dernière étape : réglez <strong>{payNow.price} €</strong> pour bloquer le tarif Black Friday ({payNow.price} € TTC / mois pendant {payNow.months} mois, code {payNow.code} déjà appliqué).</>}</p>
+-      <button type="button" className="access-primary" disabled={busy} onClick={() => void pay(organization)}>Payer {payNow.price} € et activer mon abonnement</button>
+-    </div> : <p>Votre essai gratuit a commencé. L’équipe et les clients peuvent être ajoutés maintenant ou plus tard.</p>}
++    <p>Votre essai gratuit de sept jours a commencé. L’équipe et les clients peuvent être ajoutés maintenant ou plus tard.</p>
+     <form onSubmit={invite} className="onboarding-fields"><h3>Inviter un collaborateur</h3>
+       <label>E-mail<input type="email" required value={inviteEmail} onChange={(e) => setInviteEmail(e.target.value)} /></label>
+       <label>Rôle<select value={inviteRole} onChange={(e) => setInviteRole(e.target.value)}>{invitationRoles[draft.activity.industry].map((role) => <option key={role.id} value={role.id}>{role.label}</option>)}</select></label>
+@@ -149,8 +152,8 @@ export function SubscriptionForm({ plan, userName, userEmail, payNow = null }: {
+     {step === 2 && <div className="onboarding-fields"><label>Famille d’activité<select value={activity.industry} onChange={(e) => { const industry = e.target.value as Industry; change({ activity: { industry, trade: trades[industry][0], tradeDetail: "" } }); }}>{industries.map((industry) => <option value={industry} key={industry}>{industryLabels[industry]}</option>)}</select></label><label>Métier précis (recherchable)<input list="studio-trades" value={activity.trade} onChange={(e) => change({ activity: { ...activity, trade: e.target.value } })} /><datalist id="studio-trades">{trades[activity.industry].map((trade) => <option key={trade} value={trade} />)}</datalist></label>{activity.trade.startsWith("Autre") && <label>Décrivez votre métier<input required value={activity.tradeDetail} onChange={(e) => change({ activity: { ...activity, tradeDetail: e.target.value } })} /></label>}</div>}
+     {step === 3 && <div className="onboarding-fields"><label>Taille de l’équipe<select value={draft.answers.teamSize} onChange={(e) => change({ answers: { ...draft.answers, teamSize: e.target.value } })}><option value="solo">Je travaille seul</option><option value="2-5">2 à 5 personnes</option><option value="6-20">6 à 20 personnes</option><option value="21+">Plus de 20 personnes</option></select></label><fieldset><legend>Que gérez-vous au quotidien ?</legend>{workflowChoices.map((item) => <label className="onboarding-check" key={item}><input type="checkbox" checked={draft.answers.workflows.includes(item)} onChange={(e) => change({ answers: { ...draft.answers, workflows: e.target.checked ? [...draft.answers.workflows,item] : draft.answers.workflows.filter((x) => x !== item) } })} />{workflowLabels[item]}</label>)}</fieldset><label>Logiciel actuel (facultatif)<input value={draft.answers.currentTools} onChange={(e) => change({ answers: { ...draft.answers, currentTools: e.target.value } })} /></label><label>Votre principal besoin<textarea required value={draft.answers.mainChallenge} onChange={(e) => change({ answers: { ...draft.answers, mainChallenge: e.target.value } })} placeholder="Qu’aimeriez-vous simplifier ?" /></label></div>}
+     {step === 4 && <div className="onboarding-fields"><label>Comment avez-vous découvert Studio OS ?<select required value={draft.discovery.source} onChange={(e) => change({ discovery: { ...draft.discovery, source: e.target.value } })}><option value="">Choisir</option>{discoverySources.map((source) => <option key={source} value={source}>{discoveryLabels[source]}</option>)}</select></label><label>{draft.discovery.source === "other" ? "Précisez votre réponse" : "Une précision ? (facultatif)"}<input required={draft.discovery.source === "other"} value={draft.discovery.detail} onChange={(e) => change({ discovery: { ...draft.discovery, detail: e.target.value } })} /></label></div>}
+-    {step === 5 && <div className="onboarding-recap"><p><strong>{draft.organization}</strong> · {draft.restaurant}</p><p>{industryLabels[activity.industry]} · {activity.trade}{activity.tradeDetail ? " — " + activity.tradeDetail : ""}</p><p>Votre priorité : {draft.answers.mainChallenge}</p><h3>Inclus dans votre espace</h3><ul>{capabilities.included.map((item) => <li key={item}>{item}</li>)}</ul><h3>Options à découvrir, sans activation automatique</h3><ul>{capabilities.optional.map((item) => <li key={item}>{item}</li>)}</ul><p>{payNow ? `Après la création, vous passez directement au paiement sécurisé : ${payNow.price} € TTC / mois pendant ${payNow.months} mois avec le code ${payNow.code}, sans engagement.` : "L’essai gratuit commence à la création. Aucun paiement n’est prélevé automatiquement."}</p></div>}
++    {step === 5 && <div className="onboarding-recap"><p><strong>{draft.organization}</strong> · {draft.restaurant}</p><p>{industryLabels[activity.industry]} · {activity.trade}{activity.tradeDetail ? " — " + activity.tradeDetail : ""}</p><p>Votre priorité : {draft.answers.mainChallenge}</p><h3>Inclus dans votre espace</h3><ul>{capabilities.included.map((item) => <li key={item}>{item}</li>)}</ul><h3>Options à découvrir, sans activation automatique</h3><ul>{capabilities.optional.map((item) => <li key={item}>{item}</li>)}</ul><p>{cardRequired ? "Votre carte vous sera demandée à l’étape suivante. Les sept jours gratuits commencent après confirmation sur Stripe : aucun prélèvement pendant l’essai, puis 39 € TTC par mois, sans engagement." : "L’essai de sept jours commence à la création. Aucun paiement n’est prélevé automatiquement."}</p></div>}
+     {error && <p role="alert" className="onboarding-error">{error}</p>}
+-    <div className="onboarding-actions">{step > 0 && <button type="button" onClick={() => { setError(""); setStep(step - 1); change({step:step-1}); }}>Retour</button>}<button className="access-primary" disabled={busy}>{busy ? "Création en cours…" : step === steps.length - 1 ? (payNow ? `Créer mon espace et payer ${payNow.price} €` : "Créer mon espace") : "Continuer"}</button></div>
++    <div className="onboarding-actions">{step > 0 && <button type="button" onClick={() => { setError(""); setStep(step - 1); change({step:step-1}); }}>Retour</button>}<button className="access-primary" disabled={busy}>{busy ? "Création en cours…" : step === steps.length - 1 ? "Créer mon espace" : "Continuer"}</button></div>
+   </form>;
+ }
+diff --git a/src/components/platform/trial-reminder.tsx b/src/components/platform/trial-reminder.tsx
+new file mode 100644
+index 0000000..598f867
+--- /dev/null
++++ b/src/components/platform/trial-reminder.tsx
+@@ -0,0 +1,36 @@
++"use client";
++import { usePathname } from "next/navigation";
++import { useEffect, useState } from "react";
++import { Modal } from "@/components/forms";
++export function TrialReminder() {
++  const path=usePathname();
++  const [organization,setOrganization]=useState<string|null>(null);
++  const [busy,setBusy]=useState(false);
++  const [error,setError]=useState("");
++  const eligible=/^\/(platform|dashboard|restaurant)(\/|$)/.test(path);
++  useEffect(()=>{
++    if(!eligible)return;
++    let active=true;
++    const check=async()=>{
++      if(document.visibilityState!=="visible")return;
++      try{const r=await fetch("/api/platform/billing/reminder",{method:"POST"});
++        if(r.ok){const d=await r.json();if(active&&d.organization)setOrganization(d.organization);}
++      }catch{/* A reminder never prevents work when the network is offline. */}
++    };
++    void check();const timer=setInterval(()=>void check(),60_000);
++    document.addEventListener("visibilitychange",check);
++    return()=>{active=false;clearInterval(timer);document.removeEventListener("visibilitychange",check);};
++  },[eligible]);
++  async function checkout(){
++    setBusy(true);setError("");
++    try{const r=await fetch("/api/platform/billing",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({action:"checkout",organization})});
++      const d=await r.json();if(!r.ok||!d.url)throw new Error(d.error?.message||"Paiement indisponible.");window.location.assign(d.url);
++    }catch(e){setError((e as Error).message);setBusy(false);}
++  }
++  if(!organization||!eligible)return null;
++  return <Modal title="Vous avez aimé votre version gratuite ?" description="Votre essai de sept jours est terminé. Il est temps de choisir votre abonnement Studio pour continuer." close={()=>setOrganization(null)}>
++    <p>39 € TTC par mois, hors add-ons. Stripe affiche la date du premier prélèvement et les éventuelles réductions avant votre confirmation.</p>
++    {error&&<p role="alert">{error}</p>}
++    <div className="actions"><button disabled={busy} onClick={()=>void checkout()}>M’abonner sur Stripe</button><button disabled={busy} onClick={()=>setOrganization(null)}>Payer plus tard</button></div>
++  </Modal>;
++}
+diff --git a/src/features/billing/stripe-saas.ts b/src/features/billing/stripe-saas.ts
+new file mode 100644
+index 0000000..e99420c
+--- /dev/null
++++ b/src/features/billing/stripe-saas.ts
+@@ -0,0 +1,94 @@
++/**
++ * Stripe account billing STUDIO OS itself (subscription, add-ons, credits).
++ * Distinct from merchant payments (Stripe Connect). One key, live or test:
++ * every Stripe object must belong to the same mode as that key.
++ */
++import Stripe from "stripe";
++
++export function saasStripeKey() {
++  return (
++    process.env.STUDIO_BILLING_STRIPE_SECRET_KEY ||
++    process.env.STUDIO_PLAN_STRIPE_SECRET_KEY ||
++    ""
++  );
++}
++export function saasWebhookSecret() {
++  return (
++    process.env.STUDIO_BILLING_STRIPE_WEBHOOK_SECRET ||
++    process.env.STUDIO_PLAN_STRIPE_WEBHOOK_SECRET ||
++    ""
++  );
++}
++export const saasKeyValid = () => /^(sk|rk)_(live|test)_/.test(saasStripeKey());
++/** True with a live key: test objects are then refused, and the reverse. */
++export const saasLive = () => /^(sk|rk)_live_/.test(saasStripeKey());
++export const saasReady = () =>
++  saasKeyValid() && !!saasWebhookSecret() && !!process.env.STUDIO_BILLING_DATABASE_URL;
++/** Stripe Tax only when explicitly configured on the Stripe account. */
++export const saasAutomaticTax = () =>
++  process.env.STUDIO_STRIPE_AUTOMATIC_TAX === "true" ||
++  process.env.STUDIO_PLAN_AUTOMATIC_TAX === "true";
++
++let client: Stripe | undefined;
++let clientKey = "";
++export function saasStripe() {
++  const key = saasStripeKey();
++  if (!saasKeyValid()) throw new Error("Paiement en ligne non configuré.");
++  if (!client || clientKey !== key) {
++    client = new Stripe(key, { maxNetworkRetries: 2, timeout: 20_000 });
++    clientKey = key;
++  }
++  return client;
++}
++export function assertSameMode(object: { livemode: boolean }) {
++  if (object.livemode !== saasLive()) throw new Error("Objet Stripe d’un autre mode.");
++}
++
++type PriceRule = {
++  /** Explicit override, e.g. STUDIO_ADDON_QR_PRICE_ID. */
++  env: string;
++  /** Product names accepted in the Stripe catalog (exact match, case-insensitive). */
++  names: string[];
++  /** Product id accepted without a name match. */
++  product?: string;
++  cents: number;
++};
++
++const cache = new Map<string, { id: string; at: number }>();
++const ttl = 10 * 60 * 1000;
++
++/**
++ * Finds the active monthly EUR price for a product of the STUDIO OS catalog.
++ * Avoids one environment variable per add-on: the Stripe catalog is the source.
++ */
++export async function resolveMonthlyPrice(rule: PriceRule) {
++  const override = process.env[rule.env];
++  if (override) return override;
++  const hit = cache.get(rule.env);
++  if (hit && Date.now() - hit.at < ttl) return hit.id;
++  const stripe = saasStripe();
++  const names = rule.names.map((name) => name.toLowerCase());
++  for await (const price of stripe.prices.list({
++    active: true,
++    type: "recurring",
++    currency: "eur",
++    limit: 100,
++    expand: ["data.product"],
++  })) {
++    const product = price.product as Stripe.Product | Stripe.DeletedProduct;
++    if (!product || ("deleted" in product && product.deleted)) continue;
++    const named = "name" in product && names.includes(product.name.trim().toLowerCase());
++    if (
++      (named || product.id === rule.product) &&
++      ("active" in product ? product.active : true) &&
++      price.unit_amount === rule.cents &&
++      price.recurring?.interval === "month" &&
++      price.recurring.interval_count === 1 &&
++      price.livemode === saasLive()
++    ) {
++      cache.set(rule.env, { id: price.id, at: Date.now() });
++      return price.id;
++    }
++  }
++  throw new Error("Tarif introuvable dans le catalogue Stripe.");
++}
+diff --git a/src/features/platform/billing-account.ts b/src/features/platform/billing-account.ts
+new file mode 100644
+index 0000000..6288e8c
+--- /dev/null
++++ b/src/features/platform/billing-account.ts
+@@ -0,0 +1,103 @@
++import { authenticated } from "./http";
++import { billingContext, planBillingReady, planStripe, planPriceId } from "./plan-billing";
++import { one, rows, type DB } from "@/lib/database/db";
++import { appOrigin } from "@/lib/auth/oidc";
++import { assertSameMode, saasLive } from "@/features/billing/stripe-saas";
++import { validateCapacity } from "./billing-rules";
++import { addonCatalog } from "@/features/addons/catalog";
++
++export async function ownerBillingContext(db: DB, organization: string) {
++  const context = await billingContext(db, organization);
++  if (!context.owner) throw new Error("Facturation réservée au propriétaire : accès non autorisé.");
++  return context;
++}
++
++/** All lookups are authorized against the organization before querying Stripe. */
++export async function billingAccount(organization: string, page = 0) {
++  const state = await authenticated(undefined, async db => {
++    const context = await ownerBillingContext(db, organization);
++    const capacity = await one<{ seats: number; occupied: number }>(db,
++      "SELECT seats,occupied FROM app.organization_plan($1)", [organization]);
++    const addons = await rows<{id:string;addon:string;status:string;restaurant:string;restaurant_id:string;valid_until:string|null;renewal_cancelled:boolean}>(db,
++      "SELECT s.id,s.addon,s.status,r.name AS restaurant,r.id AS restaurant_id,s.valid_until,s.renewal_cancelled FROM addon_subscriptions s JOIN restaurants r ON r.id=s.restaurant_id WHERE r.organization_id=$1 ORDER BY s.created_at DESC", [organization]);
++    const purchases = await rows<{id:string;label:string;restaurant:string;amount:number;refunded:number;currency:string;status:string;created_at:string}>(db, `
++      SELECT * FROM (
++        SELECT 'addon:'||a.id AS id,p.name AS label,r.name AS restaurant,a.amount_cents AS amount,
++          a.refunded_cents AS refunded,a.currency,a.status,a.created_at
++        FROM addon_purchases a JOIN restaurants r ON r.id=a.restaurant_id JOIN addon_products p ON p.id=a.product_id
++        WHERE r.organization_id=$1
++        UNION ALL
++        SELECT 'credit:'||c.id,'Crédits Studio',r.name,c.pack_cents,c.refunded_cents,'eur',c.status,c.created_at
++        FROM studio_credit_orders c JOIN restaurants r ON r.id=c.restaurant_id WHERE r.organization_id=$1
++      ) orders ORDER BY created_at DESC,id DESC LIMIT 21 OFFSET $2`, [organization,page*20]);
++    return { context, capacity, addons, purchases:purchases.slice(0,20), morePurchases:purchases.length>20 };
++  });
++  let subscription: null | {status:string;quantity:number;unitAmount:number;currency:string;periodEnd:number|null;trialEnd:number|null;cancelling:boolean;pendingUpdate:boolean} = null;
++  let upcoming: null | {amount:number;currency:string;date:number|null} = null;
++  let warning = "";
++  if (planBillingReady() && state.context.stripe_subscription) {
++    try {
++      const stripe = planStripe();
++      const sub = await stripe.subscriptions.retrieve(state.context.stripe_subscription);
++      assertSameMode(sub);
++      if(sub.metadata.studio_plan_org!==organization) throw new Error("Abonnement incompatible.");
++      const item=sub.items.data[0];
++      subscription = {status:sub.status,quantity:item?.quantity??1,unitAmount:item?.price.unit_amount??0,
++        currency:sub.currency,periodEnd:item?.current_period_end??null,trialEnd:sub.trial_end,
++        cancelling:Boolean(sub.cancel_at_period_end||sub.cancel_at),pendingUpdate:!!sub.pending_update};
++      if (!subscription.cancelling && ["active","trialing"].includes(sub.status)) {
++        try {
++          const invoice=await stripe.invoices.createPreview({subscription:sub.id});
++          upcoming={amount:invoice.amount_due,currency:invoice.currency,date:sub.status==="trialing"?sub.trial_end:item?.current_period_end??null};
++        } catch { warning="Le montant de la prochaine facture n’est pas disponible pour le moment."; }
++      }
++    } catch { warning="Stripe est momentanément indisponible. Les achats enregistrés restent consultables."; }
++  }
++  return {...state, context: {status:state.context.status,trialEnd:state.context.trial_ends_at,hasCustomer:!!state.context.stripe_customer},
++    addons:state.addons.map(a=>({...a,label:addonCatalog.find(p=>p.id===a.addon)?.name??a.addon})),
++    ready:planBillingReady(),live:saasLive(),subscription,upcoming,warning};
++}
++
++/** Paginated invoices for the plan or one authorized add-on subscription. */
++export async function billingInvoices(organization:string, source:string, cursor?:string) {
++  const filter = await authenticated(undefined,async db=>{
++    const context=await ownerBillingContext(db,organization);
++    if(source==='plan') return context.stripe_customer ? {customer:context.stripe_customer} : null;
++    const addon=await one<{stripe_subscription:string|null}>(db,
++      "SELECT s.stripe_subscription FROM addon_subscriptions s JOIN restaurants r ON r.id=s.restaurant_id WHERE s.id=$1 AND r.organization_id=$2",[source,organization]);
++    return addon.stripe_subscription ? {subscription:addon.stripe_subscription} : null;
++  });
++  if(!filter || !planBillingReady()) return {invoices:[],next:null};
++  const invoices=await planStripe().invoices.list({...filter,limit:20,...(cursor?{starting_after:cursor}:{})});
++  return {invoices:invoices.data.map(i=>({id:i.id,number:i.number,date:i.created,status:i.status,
++    amount:i.total,paid:i.amount_paid,currency:i.currency,url:i.hosted_invoice_url,pdf:i.invoice_pdf})),
++    next:invoices.has_more?invoices.data.at(-1)?.id??null:null};
++}
++
++/** Stripe displays the exact prorated charge and requests confirmation. */
++export async function capacityCheckout(organization:string,quantity:number) {
++  const context=await authenticated(undefined,db=>ownerBillingContext(db,organization));
++  if(!context.stripe_subscription || !context.stripe_customer) throw new Error("Activez d’abord votre abonnement.");
++  const stripe=planStripe();
++  const sub=await stripe.subscriptions.retrieve(context.stripe_subscription);
++  assertSameMode(sub);
++  const item=sub.items.data[0];
++  if(sub.metadata.studio_plan_org!==organization || sub.items.data.length!==1 || item.price.id!==await planPriceId())
++    throw new Error("Abonnement incompatible.");
++  if(sub.status!=="active" || sub.cancel_at_period_end || sub.cancel_at || sub.pending_update)
++    throw new Error("L’ajout de places nécessite un abonnement actif, hors essai, sans résiliation ni paiement en attente.");
++  validateCapacity(item.quantity??1,quantity);
++  // A narrowly scoped portal: quantity only, never switch to another product or remove occupied seats.
++  const product=typeof item.price.product==='string'?item.price.product:item.price.product.id;
++  const configuration=await stripe.billingPortal.configurations.create({
++    business_profile:{headline:"Studio — ajouter des établissements"},
++    features:{subscription_update:{enabled:true,default_allowed_updates:["quantity"],proration_behavior:"always_invoice",
++      products:[{product,prices:[item.price.id],adjustable_quantity:{enabled:true,minimum:item.quantity??1,maximum:100}}]}},
++    metadata:{studio_capacity:"true"},
++  },{idempotencyKey:`studio-capacity-config:${sub.id}:${item.quantity??1}`});
++  const session=await stripe.billingPortal.sessions.create({customer:context.stripe_customer,configuration:configuration.id,
++    return_url:`${appOrigin()}/platform#abonnements`,locale:"fr",
++    flow_data:{type:"subscription_update_confirm",subscription_update_confirm:{subscription:sub.id,items:[{id:item.id,quantity}]},
++      after_completion:{type:"redirect",redirect:{return_url:`${appOrigin()}/platform#abonnements`}}}});
++  return {url:session.url};
++}
+diff --git a/src/features/platform/billing-rules.ts b/src/features/platform/billing-rules.ts
+new file mode 100644
+index 0000000..0609f28
+--- /dev/null
++++ b/src/features/platform/billing-rules.ts
+@@ -0,0 +1,14 @@
++/** Only the first card-backed subscription gets an introductory trial. */
++export function subscriptionTrial(context: {
++  stripe_subscription: string | null; status: string; paid_plan: number; trial_ends_at: string | null;
++}) {
++  return !context.stripe_subscription && !context.paid_plan && context.trial_ends_at &&
++    ["none", "pending"].includes(context.status)
++    ? { trial_period_days: 7, trial_settings: { end_behavior: { missing_payment_method: "cancel" as const } } }
++    : {};
++}
++export function validateCapacity(current: number, requested: number) {
++  if (!Number.isInteger(requested) || requested <= current || requested > 100)
++    throw new Error("Choisissez un nombre de places supérieur à votre capacité actuelle (maximum 100).");
++  return requested;
++}
+diff --git a/src/features/platform/entitlements.ts b/src/features/platform/entitlements.ts
+index 68a06bd..660b91c 100644
+--- a/src/features/platform/entitlements.ts
++++ b/src/features/platform/entitlements.ts
+@@ -1,11 +1,16 @@
++import { saasReady } from "@/features/billing/stripe-saas";
+ import { compareLegacyThreshold, compareLegacyCapability, legacyMinimum, type Capability } from "@/core/modules/entitlements";
+-import type { DB } from "@/lib/database/db";
++import { demoEnabled, type DB } from "@/lib/database/db";
+ import type { Plan } from "./pricing";
+ 
+ export async function restaurantPlan(
+   db: DB,
+   restaurant: string,
+ ): Promise<Plan> {
++  if (!demoEnabled() && saasReady()) {
++    const card = await db.query<{required:boolean}>("SELECT app.restaurant_card_required($1) AS required",[restaurant]);
++    if(card.rows[0]?.required) return 0;
++  }
+   const result = await db.query<{ plan: Plan | null }>(
+     "SELECT app.restaurant_plan($1) AS plan",
+     [restaurant],
+diff --git a/src/features/platform/plan-billing.ts b/src/features/platform/plan-billing.ts
+index 1ee96d6..848b8e9 100644
+--- a/src/features/platform/plan-billing.ts
++++ b/src/features/platform/plan-billing.ts
+@@ -10,35 +10,33 @@ import { Pool } from "pg";
+ import { authenticated } from "./http";
+ import { basePlan } from "./pricing";
+ import { activePromotion } from "./promotion";
++import { subscriptionTrial } from "./billing-rules";
+ import { appOrigin } from "@/lib/auth/oidc";
+ import { one, type DB } from "@/lib/database/db";
++import { assertSameMode, resolveMonthlyPrice, saasAutomaticTax, saasReady, saasStripe, saasWebhookSecret } from "@/features/billing/stripe-saas";
+ 
+ const grantingStatuses = new Set(["active", "trialing", "past_due"]);
+ const planAmountCents = basePlan * 100;
+ 
+-const secretKey = () => process.env.STUDIO_PLAN_STRIPE_SECRET_KEY ?? "";
+-export const planPriceId = () => process.env.STUDIO_PLAN_PRICE_ID ?? "";
++/** Monthly Studio price: env override, else the "Exploitation" product of the catalog. */
++export const planPriceId = () =>
++  resolveMonthlyPrice({
++    env: "STUDIO_PLAN_PRICE_ID",
++    names: ["Exploitation", "Studio", "STUDIO OS", "Abonnement Studio"],
++    product: process.env.STUDIO_PLAN_PRODUCT_ID || "prod_VZZaLSq8yVya1u",
++    cents: planAmountCents,
++  });
+ 
+ /** True when visitors can be sent to the monthly subscription checkout. */
+-export function planBillingReady() {
+-  return (
+-    /^(sk|rk)_(live|test)_/.test(secretKey()) &&
+-    /^price_/.test(planPriceId()) &&
+-    !!process.env.STUDIO_BILLING_DATABASE_URL
+-  );
+-}
+-
+-let client: Stripe | undefined;
+-export function planStripe() {
+-  if (!planBillingReady()) throw new Error("Abonnement en ligne non configuré.");
+-  client ??= new Stripe(secretKey(), { maxNetworkRetries: 2, timeout: 20_000 });
+-  return client;
+-}
++export const planBillingReady = saasReady;
++export const planStripe = saasStripe;
+ 
+ export function planWebhookEvent(raw: string, signature: string) {
+-  const secret = process.env.STUDIO_PLAN_STRIPE_WEBHOOK_SECRET;
++  const secret = saasWebhookSecret();
+   if (!secret || !planBillingReady()) throw new Error("Notifications d’abonnement non configurées.");
+-  return Stripe.webhooks.constructEvent(raw, signature, secret);
++  const event = Stripe.webhooks.constructEvent(raw, signature, secret);
++  assertSameMode(event);
++  return event;
+ }
+ 
+ type BillingContext = {
+@@ -55,11 +53,13 @@ export const billingContext = (db: DB, organization: string) =>
+   one<BillingContext>(db, "SELECT * FROM app.plan_billing_context($1)", [organization]);
+ 
+ async function assertPlanPrice(stripe: Stripe) {
+-  const price = await stripe.prices.retrieve(planPriceId());
++  const price = await stripe.prices.retrieve(await planPriceId());
++  assertSameMode(price);
+   if (
+     !price.active ||
+     price.currency !== "eur" ||
+     price.unit_amount !== planAmountCents ||
++    price.tax_behavior === "exclusive" ||
+     price.recurring?.interval !== "month" ||
+     price.recurring.interval_count !== 1
+   )
+@@ -67,43 +67,35 @@ async function assertPlanPrice(stripe: Stripe) {
+   return price;
+ }
+ 
+-/**
+- * Pendant l'offre en cours, le code promo créé dans Stripe est pré-appliqué.
+- * Introuvable, expiré ou en erreur : le client peut toujours le saisir lui-même.
+- */
+-async function promotionDiscount(stripe: Stripe) {
+-  const promotion = activePromotion();
+-  if (!promotion) return null;
+-  try {
+-    const { data } = await stripe.promotionCodes.list({ code: promotion.code, active: true, limit: 1 });
+-    return data[0]?.id ?? null;
+-  } catch {
+-    return null;
+-  }
+-}
+-
+ /** Opens a Stripe Checkout page for the organization owner. */
+ export async function planCheckout(organization: string) {
+   const stripe = planStripe();
+   const price = await assertPlanPrice(stripe);
+-  const { context, email } = await authenticated(undefined, async (db, user) => ({
++  const { context, email, previousSession } = await authenticated(undefined, async (db, user) => ({
+     context: await billingContext(db, organization),
+     email: user.email,
++    previousSession: (await one<{id:string|null}>(db,"SELECT app.plan_checkout_session($1) AS id",[organization])).id,
+   }));
+   if (!context.owner) throw new Error("Abonnement réservé au propriétaire de l’organisation.");
+   if (grantingStatuses.has(context.status))
+     throw new Error("Cette organisation a déjà un abonnement en cours.");
+-  // Keep the remaining free days when Stripe allows it (trial end ≥ 48 h ahead).
+-  // During a promotion the first discounted month is charged right away instead,
+-  // so the customer locks the offer before the code expires.
+-  const trialEnd = context.trial_ends_at && !context.paid_plan && !activePromotion()
+-    ? Math.floor(Date.parse(context.trial_ends_at) / 1000)
+-    : 0;
+-  const keepTrial = trialEnd > Math.floor(Date.now() / 1000) + 49 * 3600;
++  if(previousSession) {
++    const previous=await stripe.checkout.sessions.retrieve(previousSession);
++    assertSameMode(previous);
++    if(previous.status==="open" && previous.url) return {url:previous.url};
++    if(previous.status==="complete" && !["canceled","unpaid","incomplete_expired"].includes(context.status)) {
++      await reconcilePlanSession(previousSession);
++      throw new Error("Une souscription a déjà été effectuée. Actualisez votre espace.");
++    }
++  }
+   const origin = appOrigin();
+   const metadata = { studio_plan_org: organization };
+-  const automaticTax = process.env.STUDIO_PLAN_AUTOMATIC_TAX === "true";
+-  const promotion = await promotionDiscount(stripe);
++  const automaticTax = saasAutomaticTax();
++  let promotion: string | undefined;
++  const offer = activePromotion();
++  if (offer) {
++    try { promotion = (await stripe.promotionCodes.list({code:offer.code,active:true,limit:1})).data[0]?.id; } catch { /* Checkout still accepts a manually entered code. */ }
++  }
+   const session = await stripe.checkout.sessions.create({
+     mode: "subscription",
+     line_items: [{ price: price.id, quantity: 1 }],
+@@ -112,15 +104,16 @@ export async function planCheckout(organization: string) {
+       : email ? { customer_email: email } : {}),
+     client_reference_id: organization,
+     metadata,
+-    subscription_data: { metadata, ...(keepTrial ? { trial_end: trialEnd } : {}) },
+-    // Stripe refuse `discounts` et `allow_promotion_codes` ensemble.
+-    ...(promotion ? { discounts: [{ promotion_code: promotion }] } : { allow_promotion_codes: true }),
++    subscription_data: { metadata, ...subscriptionTrial(context) },
++    allowed_payment_method_types: ["card"],
++    // The card is always registered, even when the first charge waits for the trial end.
++    payment_method_collection: "always",
++    ...(promotion ? {discounts:[{promotion_code:promotion}]} : {allow_promotion_codes:true}),
+     ...(automaticTax ? { automatic_tax: { enabled: true } } : {}),
+     locale: "fr",
+     success_url: `${origin}/abonnement/retour?session_id={CHECKOUT_SESSION_ID}`,
+     cancel_url: `${origin}/platform?abonnement=annule`,
+-    expires_at: Math.floor(Date.now() / 1000) + 3600,
+-  });
++  }, {idempotencyKey:`studio-plan:${organization}:${previousSession||"first"}`});
+   await authenticated(undefined, (db) =>
+     db.query("SELECT app.plan_record_session($1,$2,$3)", [
+       organization,
+@@ -142,6 +135,9 @@ export async function planPortal(organization: string) {
+     customer: context.stripe_customer,
+     return_url: `${appOrigin()}/platform`,
+     locale: "fr",
++    ...(process.env.STUDIO_STRIPE_PORTAL_CONFIGURATION
++      ? { configuration: process.env.STUDIO_STRIPE_PORTAL_CONFIGURATION }
++      : {}),
+   });
+   return { url: portal.url };
+ }
+@@ -163,9 +159,11 @@ async function withBillingDb<T>(fn: (query: Pool["query"]) => Promise<T>) {
+     max: 1,
+     connectionTimeoutMillis: 5000,
+   });
++  const client = await pool.connect();
+   try {
+-    return await fn(pool.query.bind(pool) as Pool["query"]);
++    return await fn(client.query.bind(client) as Pool["query"]);
+   } finally {
++    client.release();
+     await pool.end();
+   }
+ }
+@@ -177,20 +175,26 @@ export async function reconcilePlanSubscription(subscriptionId: string) {
+   const organization = sub.metadata?.studio_plan_org;
+   if (!organization) return null; // Not a Studio plan subscription.
+   const item = sub.items.data[0];
+-  if (sub.items.data.length !== 1 || item.price.id !== planPriceId())
++  assertSameMode(sub);
++  if (sub.items.data.length !== 1 || item.price.id !== (await planPriceId()))
+     throw new Error("Abonnement incompatible avec le forfait Studio.");
+   const customer = typeof sub.customer === "string" ? sub.customer : sub.customer.id;
+-  await withBillingDb((query) =>
+-    query("SELECT app.plan_reconcile($1,$2,$3,$4,$5,$6,$7)", [
+-      organization,
+-      customer,
+-      sub.id,
+-      sub.status,
+-      item.current_period_end ? new Date(item.current_period_end * 1000) : null,
+-      Boolean(sub.cancel_at_period_end || sub.cancel_at),
+-      sub.livemode,
+-    ]),
+-  );
++  await withBillingDb(async (query) => {
++    await query("BEGIN");
++    try {
++      await query("SELECT app.plan_reconcile($1,$2,$3,$4,$5,$6,$7)", [
++        organization, customer, sub.id, sub.status,
++        item.current_period_end ? new Date(item.current_period_end * 1000) : null,
++        Boolean(sub.cancel_at_period_end || sub.cancel_at), sub.livemode,
++      ]);
++      await query("SELECT app.plan_reconcile_details($1,$2,$3,$4,$5)", [
++        organization, sub.id, item.quantity ?? 1,
++        sub.trial_start ? new Date(sub.trial_start * 1000) : null,
++        sub.trial_end ? new Date(sub.trial_end * 1000) : null,
++      ]);
++      await query("COMMIT");
++    } catch (error) { await query("ROLLBACK"); throw error; }
++  });
+   return { organization, status: sub.status };
+ }
+ 
+diff --git a/src/features/platform/promotion.ts b/src/features/platform/promotion.ts
+index 02767fa..fa0315f 100644
+--- a/src/features/platform/promotion.ts
++++ b/src/features/platform/promotion.ts
+@@ -17,7 +17,7 @@ export const blackFriday = {
+   trialDays: 7,
+ } as const;
+ 
+-export const standardTrialDays = 3;
++export const standardTrialDays = 7;
+ 
+ export type Promotion = typeof blackFriday & { price: number; lastDay: string };
+ 
+diff --git a/src/lib/database/migrate.ts b/src/lib/database/migrate.ts
+index a6b9cb4..f9e76d8 100644
+--- a/src/lib/database/migrate.ts
++++ b/src/lib/database/migrate.ts
+@@ -87,6 +87,8 @@ const migrations: [number, string][] = [
+   [151, "151_services_products.sql"],
+   [160, "160_denied_access_journal.sql"],
+   [170, "170_black_friday_trial.sql"],
++  [112, "112_trial_card_required.sql"],
++  [171, "171_platform_billing.sql"],
+ ];
+ /** Applies every additive migration not yet recorded, inside the caller's transaction. */
+ export async function applyMigrations(tx: DB) {
+diff --git a/tests/billing-rules.test.ts b/tests/billing-rules.test.ts
+new file mode 100644
+index 0000000..6bd3e2b
+--- /dev/null
++++ b/tests/billing-rules.test.ts
+@@ -0,0 +1,14 @@
++import test from "node:test";
++import assert from "node:assert/strict";
++import {subscriptionTrial,validateCapacity} from "../src/features/platform/billing-rules";
++test("seven full days at first card registration, never another trial after cancellation",()=>{
++  const first={stripe_subscription:null,status:"pending",paid_plan:0,trial_ends_at:"2020-01-01"};
++  assert.equal(subscriptionTrial(first).trial_period_days,7);
++  assert.equal(subscriptionTrial(first).trial_settings?.end_behavior.missing_payment_method,"cancel");
++  for(const patch of [{stripe_subscription:"sub_old"},{status:"canceled"},{paid_plan:39},{trial_ends_at:null}])
++    assert.deepEqual(subscriptionTrial({...first,...patch}),{});
++});
++test("extra establishments cannot reduce capacity or accept unbounded quantities",()=>{
++  for(const n of [0,1,2,2.5,101,NaN])assert.throws(()=>validateCapacity(2,n));
++  assert.equal(validateCapacity(2,3),3);
++});
+diff --git a/tests/plan-subscription.test.ts b/tests/plan-subscription.test.ts
+index c99db15..f361d0a 100644
+--- a/tests/plan-subscription.test.ts
++++ b/tests/plan-subscription.test.ts
+@@ -39,6 +39,15 @@ test("abonnement Stripe : activation, impayé, résiliation, droits réservés a
+     // The app role can never grant itself a paid plan.
+     await assert.rejects(as("plan-owner", (tx) => tx.query("SELECT app.plan_reconcile($1,'cus_1','sub_1','active',now(),false,true)", [organization])), /permission denied/);
+ 
++    const cardRequired = async () => (await as("plan-owner", (tx) => tx.query<{ required: boolean }>("SELECT app.restaurant_card_required($1) AS required", [restaurant]))).rows[0].required;
++    // Trial without a registered card: the workspace waits for the card.
++    assert.equal(await cardRequired(), true);
++    await billing("SELECT app.plan_reconcile($1,'cus_1','sub_1','trialing',now()+interval '3 days',false,true)", [organization]);
++    assert.equal(await cardRequired(), false);
++    assert.equal((await paid()).plan, 39);
++    await billing("SELECT app.plan_reconcile($1,'cus_1','sub_1','canceled',NULL,false,true)", [organization]);
++    await db.query("UPDATE app.organization_plans SET cancelled_at=NULL WHERE organization_id=$1", [organization]);
++    await db.query("DELETE FROM app.plan_subscriptions WHERE organization_id=$1", [organization]);
+     // An incomplete first payment keeps the free trial untouched.
+     await billing("SELECT app.plan_reconcile($1,'cus_1','sub_1','incomplete',NULL,false,true)", [organization]);
+     assert.equal((await paid()).plan, 0);
+@@ -63,6 +72,27 @@ test("abonnement Stripe : activation, impayé, résiliation, droits réservés a
+     await billing("SELECT app.plan_reconcile($1,'cus_1','sub_2','active',now()+interval '30 days',false,true)", [organization]);
+     assert.deepEqual([(await paid()).plan, (await paid()).cancelled_at], [39, null]);
+     assert.equal(await plan(), 39);
++    // Capacity is granted only by billing, for the current paid subscription.
++    await assert.rejects(as("plan-owner",tx=>tx.query("SELECT app.plan_reconcile_details($1,'sub_2',5,NULL,NULL)",[organization])),/permission denied/);
++    await billing("SELECT app.plan_reconcile_details($1,'sub_2',2,NULL,NULL)",[organization]);
++    assert.equal((await db.query<{seats:number}>("SELECT seats FROM app.organization_plans WHERE organization_id=$1",[organization])).rows[0].seats,2);
++    await billing("SELECT app.plan_reconcile_details($1,'sub_old',9,NULL,NULL)",[organization]);
++    assert.equal((await db.query<{seats:number}>("SELECT seats FROM app.organization_plans WHERE organization_id=$1",[organization])).rows[0].seats,2);
++    await billing("SELECT app.plan_reconcile($1,'cus_1','sub_2','past_due',now(),false,true)",[organization]);
++    await billing("SELECT app.plan_reconcile_details($1,'sub_2',9,NULL,NULL)",[organization]);
++    assert.equal((await db.query<{seats:number}>("SELECT seats FROM app.organization_plans WHERE organization_id=$1",[organization])).rows[0].seats,2);
++    // Expired free owners get one reminder per ten hours; other users never get one.
++    await billing("SELECT app.plan_reconcile($1,'cus_1','sub_2','canceled',NULL,false,true)",[organization]);
++    await db.query("UPDATE app.organization_plans SET trial_started_at=now()-interval '8 days',trial_ends_at=now()-interval '1 day' WHERE organization_id=$1",[organization]);
++    const claim=(user:string)=>as(user,async tx=>(await tx.query<{id:string|null}>("SELECT app.claim_billing_reminder() AS id")).rows[0].id);
++    assert.equal(await claim("plan-staff"),null);
++    assert.equal(await claim("plan-owner"),organization);
++    assert.equal(await claim("plan-owner"),null);
++    await db.exec("UPDATE app.billing_reminders SET shown_at=now()-interval '10 hours'");
++    assert.equal(await claim("plan-owner"),organization);
++    await billing("SELECT app.plan_reconcile($1,'cus_1','sub_3','trialing',now()+interval '7 days',false,true)",[organization]);
++    await db.exec("UPDATE app.billing_reminders SET shown_at=now()-interval '11 hours'");
++    assert.equal(await claim("plan-owner"),null);
+   } finally {
+     await db.close();
+   }
+-- 
+2.55.0
+

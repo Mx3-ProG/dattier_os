@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
-import { demoEnabled } from "@/lib/database/db";
+import { demoEnabled } from "@/infrastructure/database/db";
 import { Demo } from "@/components/demo";
-import { safeReturnTo } from "@/lib/auth/oidc";
+import { safeReturnTo } from "@/infrastructure/auth/oidc";
 export const dynamic = "force-dynamic";
 export default async function Page({
   searchParams,

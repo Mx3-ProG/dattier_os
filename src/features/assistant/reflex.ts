@@ -21,7 +21,7 @@ import {
   similarity,
   stopwords,
   words,
-} from "./text";
+} from "@/domain/assistant/text";
 import type { Answer, AssistantContext, Engine } from "./types";
 
 export type ReflexResult = Answer & { engine: Extract<Engine, "reflex" | "free"> };

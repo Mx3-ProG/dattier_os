@@ -3,8 +3,8 @@
    navigateur ne peut pas désigner une opération arbitraire. */
 import { createHash, randomUUID } from "node:crypto";
 import { z } from "zod";
-import type { Actor } from "@/lib/auth/session";
-import { one, rows, type DB } from "@/lib/database/db";
+import type { Actor } from "@/infrastructure/auth/session";
+import { one, rows, type DB } from "@/infrastructure/database/db";
 import { log } from "@/features/orders/service";
 import { ensureDefaults } from "@/features/finance/service";
 import { financeAccess, invoiceAction } from "@/features/invoices/service";
@@ -16,7 +16,7 @@ import {
   type BankTx,
   type Candidate,
   type Pools,
-} from "./matching";
+} from "@/domain/bank/matching";
 import { parseStatement, withKeys } from "./parsers";
 
 export type Run = <T>(fn: (tx: DB) => Promise<T>) => Promise<T>;

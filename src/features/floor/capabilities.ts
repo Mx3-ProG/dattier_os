@@ -1,4 +1,4 @@
-import { can, type Role } from "@/lib/permissions";
+import { can, type Role } from "@/core/permissions";
 
 export type FloorArrangementDecision = {
   allowed: boolean;

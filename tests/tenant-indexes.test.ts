@@ -2,8 +2,8 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { readFile, readdir } from "node:fs/promises";
 import { PGlite } from "@electric-sql/pglite";
-import { applyMigrations } from "../src/lib/database/migrate";
-import type { DB } from "../src/lib/database/types";
+import { applyMigrations } from "../src/infrastructure/database/migrate";
+import type { DB } from "../src/infrastructure/database/types";
 
 /**
  * Every RLS policy and service filters by business. A table carrying `restaurant_id`

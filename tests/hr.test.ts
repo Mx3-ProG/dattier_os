@@ -3,12 +3,12 @@ import assert from "node:assert/strict";
 import { randomUUID } from "node:crypto";
 import { readFile } from "node:fs/promises";
 import { PGlite } from "@electric-sql/pglite";
-import { migrate } from "../src/lib/database/migrate";
-import { seed } from "../src/lib/database/seed";
-import { one, rows, type DB } from "../src/lib/database/db";
-import { withDatabaseContext } from "../src/lib/database/context";
-import { actionSchema, perform } from "../src/lib/actions";
-import { can } from "../src/lib/permissions";
+import { migrate } from "../src/infrastructure/database/migrate";
+import { seed } from "../src/infrastructure/database/seed";
+import { one, rows, type DB } from "../src/infrastructure/database/db";
+import { withDatabaseContext } from "../src/infrastructure/database/context";
+import { actionSchema, perform } from "../src/application/actions";
+import { can } from "../src/core/permissions";
 import { financeDashboard } from "../src/features/finance/dashboard";
 import { financeReply } from "../src/features/assistant/finance";
 import {

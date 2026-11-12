@@ -1,4 +1,4 @@
-import { rows, type DB } from "@/lib/database/db";
+import { rows, type DB } from "@/infrastructure/database/db";
 import type { SiteConfig, FontId } from "@/features/cms/schema";
 import type { Product, Settings } from "@/features/commerce/schema";
 import type { PlaceholderContext } from "@/features/cms/text";

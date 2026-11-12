@@ -1,6 +1,6 @@
 "use client";
 import { useCallback, useEffect, useState } from "react";
-import { money } from "@/lib/domain";
+import { money } from "@/domain/shared/units";
 import { Form, Modal, type Field } from "./forms";
 import { Button } from "./ui/button";
 

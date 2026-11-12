@@ -60,30 +60,31 @@ export type ModuleManifest = {
   enhancedBy: readonly string[];
   /** Entrées de navigation du poste de travail portées par ce module. */
   navigation: readonly string[];
+  /**
+   * Entrées générées par une feature (une par outil métier installé) : toutes celles
+   * qui commencent par ce préfixe appartiennent à ce module.
+   */
+  navigationPrefix?: string;
   /** Secteurs visés par l'offre cible. Vide : tous les secteurs. */
   industries: readonly Industry[];
-  legacy: LegacyRule & {
-    /** Aujourd'hui réservé aux commerces du secteur restauration. */
-    restaurantOnly?: true;
-  };
+  legacy: LegacyRule;
   /** Point de l'offre cible encore à confirmer. */
   pending?: string;
 };
 
 const always = { kind: "always" } as const;
 const plan = { kind: "plan" } as const;
-const food = { restaurantOnly: true } as const;
 const addon = (id: string) => ({ kind: "addon", addon: id }) as const;
 
 export const moduleManifest = [
   // --- Compris dans Studio --------------------------------------------------------
   { id: "overview", label: "Vue d'ensemble", family: "pilotage", offer: "included", requires: [], enhancedBy: [], navigation: ["overview"], industries: [], legacy: plan },
   { id: "activity", label: "Activité", family: "pilotage", offer: "included", requires: [], enhancedBy: [], navigation: ["activity"], industries: [], legacy: always },
-  { id: "orders", label: "Commandes", family: "operations", offer: "included", requires: ["catalog"], enhancedBy: ["floor", "kitchen", "bar"], navigation: ["orders"], industries: [], legacy: { ...always, ...food } },
+  { id: "orders", label: "Commandes", family: "operations", offer: "included-optional", requires: ["catalog"], enhancedBy: ["floor", "kitchen", "bar"], navigation: ["orders"], industries: [], legacy: { kind: "license", product: "ops-orders" } },
   { id: "table-booking", label: "Réservations", family: "operations", offer: "included", requires: [], enhancedBy: ["floor"], navigation: ["reservations"], industries: [], legacy: { kind: "module", module: "table-booking" } },
-  { id: "catalog", label: "Carte et catalogue", family: "configuration", offer: "included", requires: [], enhancedBy: [], navigation: ["menu"], industries: [], legacy: { ...always, ...food } },
-  { id: "stock", label: "Stock simple", family: "gestion", offer: "included", requires: ["catalog"], enhancedBy: ["recipes", "deliveries"], navigation: ["stocks"], industries: [], legacy: { ...always, ...food } },
-  { id: "trade-tools", label: "Outils métier", family: "gestion", offer: "included", requires: [], enhancedBy: [], navigation: ["trade-tools"], industries: [], legacy: { kind: "license-kind", productKind: "business" } },
+  { id: "catalog", label: "Carte et catalogue", family: "configuration", offer: "included", requires: [], enhancedBy: [], navigation: ["menu"], industries: [], legacy: always },
+  { id: "stock", label: "Stock simple", family: "gestion", offer: "included", requires: ["catalog"], enhancedBy: ["recipes", "deliveries"], navigation: ["stocks"], industries: [], legacy: always },
+  { id: "trade-tools", label: "Outils métier", family: "operations", offer: "included", requires: [], enhancedBy: [], navigation: [], navigationPrefix: "tool-", industries: [], legacy: { kind: "license-kind", productKind: "business" } },
   { id: "team", label: "Équipe", family: "equipe", offer: "included", requires: [], enhancedBy: [], navigation: ["team"], industries: [], legacy: always },
   { id: "finance", label: "Finance et rapports", family: "finance", offer: "included", requires: [], enhancedBy: [], navigation: ["finance"], industries: [], legacy: plan },
   { id: "bank", label: "Banque", family: "finance", offer: "included", requires: [], enhancedBy: [], navigation: ["bank"], industries: [], legacy: plan },
@@ -95,12 +96,12 @@ export const moduleManifest = [
   // --- Add-ons mensuels -----------------------------------------------------------
   { id: "online-orders", label: "Boutique en ligne", family: "site", offer: "addon-monthly", requires: ["website", "catalog"], enhancedBy: ["stock"], navigation: [], industries: [], legacy: addon("online-orders") },
   { id: "domain", label: "Domaine personnalisé", family: "site", offer: "addon-monthly", requires: ["website"], enhancedBy: [], navigation: [], industries: [], legacy: addon("domain") },
-  { id: "floor", label: "Plan de salle", family: "operations", offer: "addon-monthly", requires: [], enhancedBy: [], navigation: ["dining"], industries: ["restaurant"], legacy: { kind: "module", module: "floor" } },
-  { id: "kitchen", label: "Cuisine", family: "operations", offer: "addon-monthly", requires: ["orders"], enhancedBy: [], navigation: ["kitchen"], industries: ["restaurant"], legacy: { ...always, ...food } },
-  { id: "bar", label: "Bar", family: "operations", offer: "addon-monthly", requires: ["orders"], enhancedBy: [], navigation: ["bar"], industries: ["restaurant"], legacy: { ...always, ...food } },
-  { id: "recipes", label: "Recettes", family: "gestion", offer: "addon-monthly", requires: ["catalog"], enhancedBy: ["deliveries"], navigation: ["recipes"], industries: [], legacy: { ...always, ...food } },
-  { id: "suppliers", label: "Fournisseurs", family: "gestion", offer: "addon-monthly", requires: [], enhancedBy: [], navigation: ["suppliers"], industries: [], legacy: { ...always, ...food } },
-  { id: "deliveries", label: "Réceptions et lots", family: "gestion", offer: "addon-monthly", requires: ["suppliers"], enhancedBy: [], navigation: ["deliveries"], industries: [], legacy: { ...always, ...food } },
+  { id: "floor", label: "Plan de salle", family: "operations", offer: "addon-monthly", requires: [], enhancedBy: [], navigation: ["dining"], industries: [], legacy: { kind: "module", module: "floor" } },
+  { id: "kitchen", label: "Cuisine", family: "operations", offer: "included-optional", requires: ["orders"], enhancedBy: [], navigation: ["kitchen"], industries: [], legacy: { kind: "license", product: "ops-kitchen" } },
+  { id: "bar", label: "Bar", family: "operations", offer: "included-optional", requires: ["orders"], enhancedBy: [], navigation: ["bar"], industries: [], legacy: { kind: "license", product: "ops-bar" } },
+  { id: "recipes", label: "Recettes", family: "gestion", offer: "addon-monthly", requires: ["catalog"], enhancedBy: ["deliveries"], navigation: ["recipes"], industries: [], legacy: always },
+  { id: "suppliers", label: "Fournisseurs", family: "gestion", offer: "addon-monthly", requires: [], enhancedBy: [], navigation: ["suppliers"], industries: [], legacy: always },
+  { id: "deliveries", label: "Réceptions et lots", family: "gestion", offer: "addon-monthly", requires: ["suppliers"], enhancedBy: [], navigation: ["deliveries"], industries: [], legacy: always },
   { id: "attendance", label: "Présences et pointage", family: "equipe", offer: "addon-monthly", requires: ["team"], enhancedBy: [], navigation: ["attendance", "hr"], industries: [], legacy: addon("attendance") },
   { id: "payroll", label: "Paie", family: "equipe", offer: "addon-monthly", requires: ["team"], enhancedBy: ["attendance"], navigation: ["payroll"], industries: [], legacy: addon("payroll") },
   { id: "accounting", label: "Comptabilité", family: "finance", offer: "addon-monthly", requires: ["finance"], enhancedBy: [], navigation: ["accounting"], industries: [], legacy: plan, pending: "Non cité dans le périmètre Studio : add-on par défaut, à confirmer." },
@@ -108,7 +109,7 @@ export const moduleManifest = [
   { id: "client-invoices", label: "Factures clients", family: "finance", offer: "addon-monthly", requires: ["finance"], enhancedBy: [], navigation: ["billing"], industries: [], legacy: addon("client-invoices") },
   { id: "invoices", label: "Factures fournisseurs", family: "finance", offer: "addon-monthly", requires: ["finance"], enhancedBy: ["suppliers"], navigation: ["invoices"], industries: [], legacy: addon("invoices") },
   { id: "loyalty", label: "Clients et fidélité", family: "relation-client", offer: "addon-monthly", requires: [], enhancedBy: ["website"], navigation: ["customers"], industries: [], legacy: addon("loyalty") },
-  { id: "qr", label: "QR codes", family: "relation-client", offer: "addon-monthly", requires: [], enhancedBy: ["orders"], navigation: ["qr"], industries: [], legacy: { ...addon("qr"), ...food } },
+  { id: "qr", label: "QR codes", family: "relation-client", offer: "addon-monthly", requires: [], enhancedBy: ["orders"], navigation: ["qr"], industries: [], legacy: addon("qr") },
   { id: "analytics", label: "Audience", family: "pilotage", offer: "addon-monthly", requires: [], enhancedBy: ["website"], navigation: ["audience"], industries: [], legacy: { kind: "license", product: "earth-tracker-3d" } },
   { id: "estimation", label: "Estimation", family: "pilotage", offer: "addon-monthly", requires: [], enhancedBy: ["website"], navigation: ["estimation"], industries: [], legacy: { kind: "license", product: "estimation-studio" } },
   { id: "prospect-scanner", label: "Scanner de prospects", family: "pilotage", offer: "addon-monthly", requires: [], enhancedBy: ["pipeline-crm"], navigation: ["prospect-scanner"], industries: [], legacy: addon("prospect-scanner") },
@@ -168,7 +169,11 @@ export const isModuleId = (value: string): value is ModuleId => manifestById.has
 export const manifestFor = (id: ModuleId) => manifestById.get(id)!;
 /** Module qui porte une entrée de navigation du poste de travail. */
 export const moduleForNavigation = (navigationId: string) =>
-  moduleManifest.find((entry) => (entry.navigation as readonly string[]).includes(navigationId));
+  moduleManifest.find(
+    (entry: ModuleManifest) =>
+      (entry.navigation as readonly string[]).includes(navigationId) ||
+      (!!entry.navigationPrefix && navigationId.startsWith(entry.navigationPrefix)),
+  );
 
 /**
  * Modules qu'un abonné payant actuel conserve sans surcoût quand l'offre cible s'applique

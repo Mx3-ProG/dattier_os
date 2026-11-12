@@ -6,10 +6,10 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 import { PGlite } from "@electric-sql/pglite";
 import { PDFDocument } from "pdf-lib";
-import { migrate } from "../src/lib/database/migrate";
-import { seed } from "../src/lib/database/seed";
-import { one, rows, type DB } from "../src/lib/database/db";
-import { withDatabaseContext } from "../src/lib/database/context";
+import { migrate } from "../src/infrastructure/database/migrate";
+import { seed } from "../src/infrastructure/database/seed";
+import { one, rows, type DB } from "../src/infrastructure/database/db";
+import { withDatabaseContext } from "../src/infrastructure/database/context";
 import { financeAction, financeState } from "../src/features/finance/service";
 import { financeDashboard } from "../src/features/finance/dashboard";
 import { financeIntent, financeReply } from "../src/features/assistant/finance";
@@ -17,7 +17,7 @@ import {
   checkInvoice,
   dedupeKey,
   emptyDraft,
-} from "../src/features/invoices/checks";
+} from "../src/domain/invoices/checks";
 import { setInvoiceAi } from "../src/features/invoices/extract";
 import {
   factureXFromPdf,

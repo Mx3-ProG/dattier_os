@@ -1,9 +1,9 @@
 import { requirePlan } from "@/features/platform/entitlements";
 import { withRequestContext } from "@/features/ops-security/context";
 import { NextRequest, NextResponse } from "next/server";
-import { actor, type Actor } from "@/lib/auth/session";
-import { getDb } from "@/lib/database/db";
-import { withDatabaseContext } from "@/lib/database/context";
+import { actor, type Actor } from "@/infrastructure/auth/session";
+import { getDb } from "@/infrastructure/database/db";
+import { withDatabaseContext } from "@/infrastructure/database/context";
 import { website } from "@/features/cms/service";
 import { cmsMedia } from "@/features/cms/media";
 async function routeGET(

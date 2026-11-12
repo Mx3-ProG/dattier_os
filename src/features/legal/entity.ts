@@ -1,4 +1,4 @@
-/* Identité légale de l’éditeur de STUDIO OS, reprise par les pages légales
+/* Identité légale de l’éditeur de STUDIO S, reprise par les pages légales
    (/mentions-legales, /cgu, /confidentialite, /cookies) et le bandeau cookies.
    Source : registre SIRENE / RNE (immatriculation du 18/08/2026). Mettre à jour
    ici, et seulement ici, en cas de transfert de siège, de changement de
@@ -8,9 +8,9 @@ import { basePlan } from "@/features/platform/pricing";
 import { additionalRestaurantPrice, freeThreshold } from "@/features/platform/referrals";
 
 export const legalEntity = {
-  product: "STUDIO OS",
+  product: "STUDIO S",
   name: "Wayne-web",
-  /** Nom commercial sous lequel Wayne-web développe et commercialise STUDIO OS. */
+  /** Nom commercial sous lequel Wayne-web développe et commercialise STUDIO S. */
   tradeName: "Studio ATS",
   form: "Société par actions simplifiée (SAS)",
   capital: "50,00 €",

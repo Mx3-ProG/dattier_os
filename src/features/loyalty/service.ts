@@ -1,8 +1,8 @@
 import { randomBytes, randomUUID } from "node:crypto";
 import { z } from "zod";
-import { one, type DB } from "@/lib/database/db";
-import type { Actor } from "@/lib/auth/session";
-import { requirePermission } from "@/lib/permissions";
+import { one, type DB } from "@/infrastructure/database/db";
+import type { Actor } from "@/infrastructure/auth/session";
+import { requirePermission } from "@/core/permissions";
 import { log } from "@/features/orders/service";
 export const promoSchema = z.object({
   action: z.literal("issuePromo"),

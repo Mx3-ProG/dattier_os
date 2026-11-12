@@ -1,4 +1,4 @@
-import type { DB } from "@/lib/database/types";
+import type { DB } from "@/infrastructure/database/types";
 import type { BusinessId } from "@/core/tenant/business";
 import { isModuleId, moduleIds, type ModuleId } from "@/core/modules/manifest";
 

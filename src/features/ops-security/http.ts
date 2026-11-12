@@ -1,7 +1,7 @@
-import { databaseContext } from "@/lib/database/context";
-import type { Database as PGlite } from "@/lib/database/types";
-import { getDb } from "@/lib/database/db";
-import { actor } from "@/lib/auth/session";
+import { databaseContext } from "@/infrastructure/database/context";
+import type { Database as PGlite } from "@/infrastructure/database/types";
+import { getDb } from "@/infrastructure/database/db";
+import { actor } from "@/infrastructure/auth/session";
 import { classifyFailure, type FailureContext } from "./classify";
 import { record } from "./events";
 import { startScheduler } from "./engine";

@@ -1,6 +1,6 @@
 import { randomUUID } from "node:crypto";
-import type { DB } from "@/lib/database/types";
-import { rows } from "@/lib/database/db";
+import type { DB } from "@/infrastructure/database/types";
+import { rows } from "@/infrastructure/database/db";
 
 export type ParsedCsv = { headers: string[]; rows: string[][] };
 export function parseCustomerCsv(raw: string): ParsedCsv {

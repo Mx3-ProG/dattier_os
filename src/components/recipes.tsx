@@ -1,8 +1,8 @@
 "use client";
 import { useState } from "react";
-import type { Snapshot } from "@/lib/types";
-import { can } from "@/lib/permissions";
-import { money } from "@/lib/domain";
+import type { Snapshot } from "@/shared/types";
+import { can } from "@/core/permissions";
+import { money } from "@/domain/shared/units";
 import { Form, Modal, type Act } from "./forms";
 import { Button } from "./ui/button";
 export function Recipes({

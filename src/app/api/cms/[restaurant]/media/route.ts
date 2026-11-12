@@ -10,7 +10,7 @@ import { optimizeMedia, reserveMediaJob } from "@/features/cms/media-optimizer";
 import { cmsMedia, limits } from "@/features/cms/media";
 import { website } from "@/features/cms/service";
 import { log } from "@/features/orders/service";
-import { demoEnabled } from "@/lib/database/db";
+import { demoEnabled } from "@/infrastructure/database/db";
 async function routePOST(
   req: NextRequest,
   c: { params: Promise<{ restaurant: string }> },

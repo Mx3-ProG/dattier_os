@@ -2,7 +2,9 @@
    Mode test par défaut : les clés réelles sont refusées tant que la validation
    juridique et comptable n’a pas été confirmée par l’opérateur. */
 import Stripe from "stripe";
-import type { DB } from "@/lib/database/db";
+import { setPaymentClient } from "./provider";
+import type { DB } from "@/infrastructure/database/db";
+import { createMockStripe } from "@/infrastructure/payments/mock-stripe";
 
 const number = (name: string, fallback: number) => {
   const value = Number(process.env[name]);
@@ -38,12 +40,20 @@ export const stripeEnabled = () => !!process.env.STRIPE_SECRET_KEY;
 export const liveKey = (key: string) => /^(sk|rk)_live_/.test(key);
 
 let client: Stripe | undefined;
+export const paymentsSandbox = () =>
+  process.env.PAYMENTS_SANDBOX === "true" ||
+  process.env.ATACUISINE_DEMO === "true";
 /** Remplace le client Stripe pendant les tests. */
 export function setStripeClient(fake: unknown) {
   client = fake as Stripe | undefined;
+  setPaymentClient(fake);
 }
 export function stripe(): Stripe {
   if (client) return client;
+  if (paymentsSandbox()) {
+    client = createMockStripe() as Stripe;
+    return client;
+  }
   const key = process.env.STRIPE_SECRET_KEY;
   if (!key) throw new Error("Paiement en ligne non configuré.");
   if (liveKey(key) && process.env.ATACUISINE_STRIPE_LIVE_APPROVED !== "true")
@@ -54,6 +64,13 @@ export function stripe(): Stripe {
   return client;
 }
 export function constructEvent(raw: string, signature: string) {
+  if (paymentsSandbox()) {
+    try {
+      return JSON.parse(raw);
+    } catch {
+      throw new Error("Signature Stripe invalide.");
+    }
+  }
   const secret = process.env.STRIPE_WEBHOOK_SECRET;
   if (!secret) throw new Error("Webhook non configuré.");
   try {

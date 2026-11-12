@@ -4,9 +4,9 @@
    crée pas une seconde. Facture manuelle : elle crée sa vente et sa créance client. */
 import { randomUUID } from "node:crypto";
 import { z } from "zod";
-import { scope, type Actor } from "@/lib/auth/session";
-import { one, rows, type DB } from "@/lib/database/db";
-import { requirePermission } from "@/lib/permissions";
+import { scope, type Actor } from "@/infrastructure/auth/session";
+import { one, rows, type DB } from "@/infrastructure/database/db";
+import { requirePermission } from "@/core/permissions";
 import { requirePaidAddon } from "@/features/platform/entitlements";
 import { log } from "@/features/orders/service";
 import { ensureDefaults } from "@/features/finance/service";

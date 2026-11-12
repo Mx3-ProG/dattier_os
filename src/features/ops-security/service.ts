@@ -1,8 +1,8 @@
 import { z } from "zod";
-import type { Database as PGlite } from "@/lib/database/types";
-import { one, rows, type DB } from "@/lib/database/db";
-import { scope, type Actor } from "@/lib/auth/session";
-import { requirePermission } from "@/lib/permissions";
+import type { Database as PGlite } from "@/infrastructure/database/types";
+import { one, rows, type DB } from "@/infrastructure/database/db";
+import { scope, type Actor } from "@/infrastructure/auth/session";
+import { requirePermission } from "@/core/permissions";
 import { verifyArchives, archivePending, type ArchiveOptions } from "./archive";
 import { bufferState, emit, record } from "./events";
 import {

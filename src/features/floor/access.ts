@@ -1,7 +1,7 @@
 import { compareArrangement } from "./capabilities";
-import { rows, type DB } from "@/lib/database/db";
-import type { Actor } from "@/lib/auth/session";
-import { can, requirePermission, type Role } from "@/lib/permissions";
+import { rows, type DB } from "@/infrastructure/database/db";
+import type { Actor } from "@/infrastructure/auth/session";
+import { can, requirePermission, type Role } from "@/core/permissions";
 import { moduleEnabled, requireModule } from "@/features/modules/access";
 
 /** Rôles qui gardent toujours le droit d’aménager : il ne leur est pas retirable. */

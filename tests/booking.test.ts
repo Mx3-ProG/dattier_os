@@ -2,10 +2,10 @@ import { test, before, after } from "node:test";
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import { PGlite } from "@electric-sql/pglite";
-import { migrate } from "../src/lib/database/migrate";
-import { seed } from "../src/lib/database/seed";
-import { one } from "../src/lib/database/db";
-import { perform, actionSchema } from "../src/lib/actions";
+import { migrate } from "../src/infrastructure/database/migrate";
+import { seed } from "../src/infrastructure/database/seed";
+import { one } from "../src/infrastructure/database/db";
+import { perform, actionSchema } from "../src/application/actions";
 import {
   availability,
   booking,
@@ -15,7 +15,7 @@ import {
   requestReservation,
   reservationSchema,
 } from "../src/features/reservations/service";
-import type { Actor } from "../src/lib/auth/session";
+import type { Actor } from "../src/infrastructure/auth/session";
 let db: PGlite;
 const owner: Actor = { id: "nadia", name: "Nadia", role: "OWNER" },
   bar: Actor = { id: "youssef", name: "Youssef", role: "BARTENDER" },

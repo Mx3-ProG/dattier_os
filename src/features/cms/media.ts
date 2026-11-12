@@ -4,12 +4,12 @@ import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { Readable } from "node:stream";
 import {
-  S3Client,
   PutObjectCommand,
   GetObjectCommand,
   DeleteObjectCommand,
 } from "@aws-sdk/client-s3";
-import { rows, one, demoEnabled, type DB } from "@/lib/database/db";
+import { rows, one, demoEnabled, type DB } from "@/infrastructure/database/db";
+import { s3Client } from "@/infrastructure/storage/s3";
 import { limits, optimizeMedia, type OptimizedMedia } from "./media-optimizer";
 import { enqueue } from "@/features/platform/jobs";
 export { limits } from "./media-optimizer";
@@ -31,16 +31,6 @@ export type MediaRow = {
 };
 export const mediaObjectKey = (restaurant: string, file: string) =>
   `${encodeURIComponent(restaurant)}/cms/${file}`;
-export function mediaStorage() {
-  if (!process.env.S3_BUCKET) throw new Error("Stockage non configuré.");
-  return new S3Client({
-    endpoint: process.env.S3_ENDPOINT,
-    region: process.env.S3_REGION || "eu-west-3",
-    forcePathStyle: process.env.S3_PATH_STYLE === "true",
-    requestChecksumCalculation: "WHEN_REQUIRED",
-    responseChecksumValidation: "WHEN_REQUIRED",
-  });
-}
 function localFile(r: string, file: string) {
   if (!FILE_NAME.test(file)) throw new Error("Média invalide.");
   const root = path.resolve(
@@ -92,7 +82,7 @@ export function cmsMedia(restaurant: string) {
       await mkdir(path.dirname(target), { recursive: true });
       await writeFile(target, data, { flag: "wx" });
     } else
-      await mediaStorage().send(
+      await s3Client().send(
         new PutObjectCommand({
           Bucket: process.env.S3_BUCKET,
           Key: mediaObjectKey(restaurant, name),
@@ -132,7 +122,7 @@ export function cmsMedia(restaurant: string) {
   async function storeIncoming(file: File) {
     const id = randomUUID(),
       key = `${encodeURIComponent(restaurant)}/cms/incoming/${id}`;
-    await mediaStorage().send(
+    await s3Client().send(
       new PutObjectCommand({
         Bucket: process.env.S3_BUCKET,
         Key: key,
@@ -143,7 +133,7 @@ export function cmsMedia(restaurant: string) {
     return { id, key };
   }
   async function removeIncoming(key: string) {
-    await mediaStorage()
+    await s3Client()
       .send(new DeleteObjectCommand({ Bucket: process.env.S3_BUCKET, Key: key }))
       .catch(() => undefined);
   }
@@ -237,7 +227,7 @@ export function cmsMedia(restaurant: string) {
       return Readable.toWeb(
         createReadStream(localFile(restaurant, file), { start, end }),
       ) as ReadableStream;
-    const result = await mediaStorage().send(
+    const result = await s3Client().send(
       new GetObjectCommand({
         Bucket: process.env.S3_BUCKET,
         Key: mediaObjectKey(restaurant, file),

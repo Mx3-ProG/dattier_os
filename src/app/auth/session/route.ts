@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { appOrigin, establishIdentity, safeReturnTo } from "@/lib/auth/oidc";
-import { supabaseIssuer, supabaseUser } from "@/lib/auth/supabase";
+import { appOrigin, establishIdentity, safeReturnTo } from "@/infrastructure/auth/oidc";
+import { supabaseIssuer, supabaseUser } from "@/infrastructure/auth/supabase";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";

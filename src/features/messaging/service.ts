@@ -1,9 +1,9 @@
 import { randomUUID as uuid } from "node:crypto";
 import { z } from "zod";
-import { one, rows, type DB } from "@/lib/database/db";
-import { productionEnabled } from "@/lib/database/db";
-import type { Actor } from "@/lib/auth/session";
-import { requirePermission } from "@/lib/permissions";
+import { one, rows, type DB } from "@/infrastructure/database/db";
+import { productionEnabled } from "@/infrastructure/database/db";
+import type { Actor } from "@/infrastructure/auth/session";
+import { requirePermission } from "@/core/permissions";
 import { asEmail, asPhone, commercial, optOut, type Channel } from "./contact";
 
 export const messageSchema = z
@@ -58,17 +58,19 @@ export function recipientOf(
 const escapeHtml = (s: string) =>
   s.replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`);
 
-async function sendEmail(
+export async function sendEmail(
   to: string,
   subject: string,
   text: string,
   from: string,
+  options: { attachment?: { filename: string; content: Buffer }; idempotencyKey?: string } = {},
 ) {
   const r = await fetch("https://api.resend.com/emails", {
     method: "POST",
     headers: {
       Authorization: `Bearer ${process.env.RESEND_API_KEY}`,
       "Content-Type": "application/json",
+      ...(options.idempotencyKey ? { "Idempotency-Key": options.idempotencyKey } : {}),
     },
     body: JSON.stringify({
       from,
@@ -76,6 +78,7 @@ async function sendEmail(
       subject,
       text,
       html: `<div style="font-family:system-ui,sans-serif;font-size:15px;line-height:1.6;color:#1f2937">${escapeHtml(text).replace(/\n/g, "<br>")}</div>`,
+      ...(options.attachment ? { attachments: [{ filename: options.attachment.filename, content: options.attachment.content.toString("base64") }] } : {}),
     }),
     signal: AbortSignal.timeout(10000),
   });

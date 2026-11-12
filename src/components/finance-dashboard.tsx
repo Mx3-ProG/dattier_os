@@ -13,7 +13,7 @@ import type {
   FinanceDashboard as Data,
   Metric,
 } from "@/features/finance/dashboard";
-import { money } from "@/lib/domain";
+import { money } from "@/domain/shared/units";
 import { Button } from "./ui/button";
 
 const periods = [

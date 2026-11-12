@@ -1,7 +1,8 @@
+import { TrialReminder } from "@/components/platform/trial-reminder";
 import { PublicModeProvider } from "@/components/cms-site/public-appearance";
 import Link from "next/link";
 import { ServiceWorkerUpdate } from "@/components/service-worker-update";
-import { demoEnabled } from "@/lib/database/db";
+import { demoEnabled } from "@/infrastructure/database/db";
 import type { Metadata } from "next";
 import { AppearanceApplication } from "@/components/appearance/appearance";
 import { readAppearance } from "@/features/appearance/service";
@@ -15,14 +16,14 @@ import "./fonts.css";
 import "./public-site.css";
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.APP_URL || "https://atacuisine.vercel.app"),
-  applicationName: "STUDIO OS",
-  title: "STUDIO OS · Votre espace professionnel",
+  applicationName: "STUDIO S",
+  title: "STUDIO S · Votre espace professionnel",
   description:
-    "Le système ouvert pour gérer les commandes, stocks, équipes et clients de vos restaurants.",
+    "Un outil complet pour gagner du temps dans votre commerce : clients, ventes, stocks, équipe et site web.",
   robots: { index: false, follow: false },
   openGraph: {
-    title: "STUDIO OS",
-    description: "Votre espace de gestion, par Studio ATS",
+    title: "STUDIO S",
+    description: "Le bureau dans la poche : un outil complet pour gagner du temps dans votre commerce.",
   },
 };
 export default async function Layout({
@@ -54,6 +55,7 @@ export default async function Layout({
           <AppearanceApplication initial={initial} publicSite={!!site}>
             <ServiceWorkerUpdate />
             {children}
+            {!site && <TrialReminder />}
             {demoEnabled() && (
               <Link
                 className="demo-purchase-link"

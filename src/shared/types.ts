@@ -1,6 +1,6 @@
 import type { CustomerMessage } from "@/features/messaging/service";
-import type { ProductPageFields } from "./product-pages";
-import type { Actor } from "./auth/session";
+import type { ProductPageFields } from "@/domain/shared/product-pages";
+import type { Actor } from "../infrastructure/auth/session";
 export type Restaurant = {
   id: string;
   name: string;
@@ -184,6 +184,17 @@ export type Snapshot = {
   licenses?: string[];
   uninstalledAddons?: string[];
   plan: import("@/features/platform/pricing").Plan;
+  /** Free trial of the organization, read for the end-of-trial reminder. */
+  /** Chiffres des outils métier repris par la vue d’ensemble. */
+  tradePilotage?: import("@/features/trade/service").TradePilotage;
+  trial?: {
+    organization: string;
+    owner: boolean;
+    active: boolean;
+    endsAt: string | null;
+    subscribed: boolean;
+    billingReady: boolean;
+  } | null;
   demo: boolean;
   categories: string[];
   promos: Promo[];

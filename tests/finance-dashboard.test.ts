@@ -3,12 +3,12 @@ import assert from "node:assert/strict";
 import { randomUUID } from "node:crypto";
 import { readFile } from "node:fs/promises";
 import { PGlite } from "@electric-sql/pglite";
-import { migrate } from "../src/lib/database/migrate";
-import { seed } from "../src/lib/database/seed";
-import { one, rows, type DB } from "../src/lib/database/db";
-import { withDatabaseContext } from "../src/lib/database/context";
+import { migrate } from "../src/infrastructure/database/migrate";
+import { seed } from "../src/infrastructure/database/seed";
+import { one, rows, type DB } from "../src/infrastructure/database/db";
+import { withDatabaseContext } from "../src/infrastructure/database/context";
 import { changeItem, createOrder, pay } from "../src/features/orders/service";
-import { perform, actionSchema } from "../src/lib/actions";
+import { perform, actionSchema } from "../src/application/actions";
 import { financeAction, financeState } from "../src/features/finance/service";
 import {
   financeDashboard,
@@ -26,7 +26,7 @@ import {
   readFinanceTool,
   toolsFor,
 } from "../src/features/assistant/llm";
-import { euros } from "../src/features/assistant/text";
+import { euros } from "../src/domain/assistant/text";
 
 const R = "bernay";
 const owner = { id: "nadia", name: "Nadia", role: "OWNER" as const };

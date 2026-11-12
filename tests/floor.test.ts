@@ -2,13 +2,13 @@ import { test, before, after } from "node:test";
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import { PGlite } from "@electric-sql/pglite";
-import { migrate } from "../src/lib/database/migrate";
-import { seed } from "../src/lib/database/seed";
-import { one, rows, type DB } from "../src/lib/database/db";
-import { perform, actionSchema } from "../src/lib/actions";
-import { scope, type Actor } from "../src/lib/auth/session";
+import { migrate } from "../src/infrastructure/database/migrate";
+import { seed } from "../src/infrastructure/database/seed";
+import { one, rows, type DB } from "../src/infrastructure/database/db";
+import { perform, actionSchema } from "../src/application/actions";
+import { scope, type Actor } from "../src/infrastructure/auth/session";
 import { platformPerform } from "../src/features/platform/service";
-import { snapshot } from "../src/lib/snapshot";
+import { snapshot } from "../src/application/snapshot";
 import {
   availability,
   booking,

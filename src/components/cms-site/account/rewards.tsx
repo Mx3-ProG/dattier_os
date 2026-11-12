@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import { Check, Copy, Gift, Lock, PiggyBank, Ticket } from "lucide-react";
-import { money } from "@/lib/domain";
+import { money } from "@/domain/shared/units";
 import { levels } from "@/features/commerce/engagement-rules";
 import { useTenantSite } from "../context";
 import { CustomerQrSheet, QrPill } from "./qr-sheet";

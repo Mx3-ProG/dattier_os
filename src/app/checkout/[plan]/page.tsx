@@ -2,9 +2,10 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Gift, Store } from "lucide-react";
 import { cookies } from "next/headers";
+import { planBillingReady } from "@/features/platform/plan-billing";
 import { plans, referralCookie } from "@/features/platform/pricing";
-import { actor } from "@/lib/auth/session";
-import { demoEnabled, getDb } from "@/lib/database/db";
+import { actor } from "@/infrastructure/auth/session";
+import { demoEnabled, getDb } from "@/infrastructure/database/db";
 import { SubscriptionForm } from "@/components/platform/subscription-form";
 import "@/components/platform/access.css";
 
@@ -35,11 +36,13 @@ export default async function Page({ params }: { params: Promise<{ plan: string 
     actor().catch(() => null),
     referrerName(),
   ]);
+  const cardRequired = !demoEnabled();
+  const ready = planBillingReady();
   const login = `/connexion?returnTo=${encodeURIComponent(`/checkout/${offer.price}`)}`;
   return (
     <main className="access-shell">
       <nav className="access-nav" aria-label="Souscription">
-        <Link href="/" className="access-brand"><Store size={22} /> STUDIO OS</Link>
+        <Link href="/" className="access-brand"><Store size={22} /> STUDIO S</Link>
         <Link href="/#offres">Changer d’offre</Link>
         {user && <form action="/auth/logout" method="post"><button>Se déconnecter</button></form>}
       </nav>
@@ -48,7 +51,7 @@ export default async function Page({ params }: { params: Promise<{ plan: string 
           <span className="access-label">Votre abonnement</span>
           <h1>{offer.title}</h1>
           <p className="access-price"><strong>{offer.price} €</strong> TTC / mois</p>
-          <p>3 jours d’essai gratuits dès la création de votre espace. Aucun paiement initial. Sans engagement.</p>
+          <p>7 jours gratuits après l’enregistrement de votre carte sur Stripe, puis 39 € TTC par mois. Résiliez avant la fin de l’essai pour éviter le premier prélèvement.</p>
           <p>{offer.description}</p>
           <p>Premier établissement inclus.</p>
           {referrer && (
@@ -63,13 +66,13 @@ export default async function Page({ params }: { params: Promise<{ plan: string 
             <>
               <span className="access-label">Connecté en tant que {user.name}</span>
               <h2>Créer votre espace professionnel</h2>
-              <p>Votre essai démarre à la création de l’espace et dure 3 jours, sans carte bancaire. Vous pourrez ensuite vous abonner en ligne depuis votre espace (39 € TTC par mois, paiement sécurisé par Stripe, sans engagement). Aucun prélèvement sans votre accord.</p>
-              <SubscriptionForm plan={offer.price} userName={user.name} userEmail={user.email} />
+              <p>Enregistrez votre carte sur Stripe : 0 € aujourd’hui, puis 39 € TTC par mois après sept jours. La date et le montant sont affichés avant votre confirmation. Vous pouvez résilier pendant l’essai.</p>
+              {cardRequired && !ready ? <p role="status">L’activation par carte est momentanément indisponible. Aucun prélèvement ne sera effectué. Revenez lorsque le paiement sera disponible.</p> : <SubscriptionForm plan={offer.price} userName={user.name} userEmail={user.email} cardRequired={cardRequired} />}
             </>
           ) : (
             <>
               <span className="access-label">Votre compte</span>
-              <h2>Commencer vos 3 jours gratuits</h2>
+              <h2>Commencer vos 7 jours gratuits</h2>
               <p>Votre offre sera conservée pendant la connexion.</p>
               <Link className="access-primary" href={demoEnabled() ? login : `${login}&mode=register`}>
                 {demoEnabled() ? "Choisir un profil de démonstration" : "Créer un compte"}

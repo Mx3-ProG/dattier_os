@@ -3,11 +3,11 @@ import { registerPresence } from "@/features/ops-security/presence";
 import { recordFailure } from "@/features/ops-security/http";
 import { NextRequest, NextResponse } from "next/server";
 import { ZodError } from "zod";
-import { actor, type Actor } from "@/lib/auth/session";
-import { getDb, demoEnabled, type DB } from "@/lib/database/db";
-import { withDatabaseContext } from "@/lib/database/context";
+import { actor, type Actor } from "@/infrastructure/auth/session";
+import { getDb, demoEnabled, type DB } from "@/infrastructure/database/db";
+import { withDatabaseContext } from "@/infrastructure/database/context";
 import { log } from "@/features/orders/service";
-import { appOrigin } from "@/lib/auth/oidc";
+import { appOrigin } from "@/infrastructure/auth/oidc";
 export const json = (value: unknown, status = 200) =>
   NextResponse.json(value, {
     status,

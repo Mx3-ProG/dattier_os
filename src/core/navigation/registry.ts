@@ -1,6 +1,6 @@
 import { legacyMinimum, type Capability } from "@/core/modules/entitlements";
 import { moduleForNavigation } from "@/core/modules/manifest";
-import { can, type Permission, type Role } from "@/lib/permissions";
+import { can, type Permission, type Role } from "@/core/permissions";
 export type NavigationGroup =
   | "PILOTAGE"
   | "OPÉRATIONS"
@@ -89,6 +89,8 @@ export function createNavigation(
             const owner = moduleForNavigation(entry.id);
             // Une entrée sans module connu reste masquée : décision fermée par défaut.
             return !!owner && modules.includes(owner.id) &&
+              // Entrée portée par une licence (outil métier, opération) : installée seulement.
+              (!entry.license || !context.licenses || context.licenses.includes(entry.license)) &&
               (!entry.permission || can(context.roles, entry.permission));
           }),
         );

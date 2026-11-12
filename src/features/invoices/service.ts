@@ -2,14 +2,14 @@
    Aucune écriture sans validation. Les appels externes ont lieu hors transaction. */
 import { createHash, randomUUID } from "node:crypto";
 import { z } from "zod";
-import { scope, type Actor } from "@/lib/auth/session";
-import { one, rows, type DB } from "@/lib/database/db";
-import { requirePermission } from "@/lib/permissions";
+import { scope, type Actor } from "@/infrastructure/auth/session";
+import { one, rows, type DB } from "@/infrastructure/database/db";
+import { requirePermission } from "@/core/permissions";
 import { requireCommercialCapability } from "@/features/platform/entitlements";
 import { log } from "@/features/orders/service";
 import { ensureDefaults } from "@/features/finance/service";
-import { normalize } from "@/features/assistant/text";
-import { llmCredits } from "@/features/assistant/pricing";
+import { normalize } from "@/domain/assistant/text";
+import { llmCredits } from "@/domain/assistant/pricing";
 import { imageType } from "@/features/site/media";
 import {
   categories,
@@ -19,7 +19,7 @@ import {
   type Category,
   type InvoiceDraft,
   type Issue,
-} from "./checks";
+} from "@/domain/invoices/checks";
 import { extractionEnabled, extractWithAi } from "./extract";
 import { saveDocument } from "./storage";
 import { factureXFromPdf, parseInvoiceXml } from "./structured";

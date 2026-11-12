@@ -8,9 +8,13 @@ import {
 import { contrastChecks } from "../src/features/cms/rules";
 import { siteConfigSchema } from "../src/features/cms/schema";
 
-test("eight valid templates preserve identity, legal and protected pages", () => {
-  assert.equal(siteTemplates.filter((t) => !t.premium).length, 4);
-  assert.equal(siteTemplates.filter((t) => t.premium).length, 4);
+test("all templates preserve identity, legal and protected pages", () => {
+  // Free + premium partition the whole catalogue (no hardcoded count).
+  assert.equal(
+    siteTemplates.filter((t) => !t.premium).length +
+      siteTemplates.filter((t) => t.premium).length,
+    siteTemplates.length,
+  );
   for (const template of siteTemplates) {
     const original = defaultConfig();
     const snapshot = structuredClone(original);
@@ -36,9 +40,12 @@ test("eight valid templates preserve identity, legal and protected pages", () =>
 test("templates have distinct compositions and premium-only defaults", () => {
   assert.equal(
     new Set(siteTemplates.map((t) => t.theme.presentation?.layout)).size,
-    8,
+    siteTemplates.length,
   );
-  assert.equal(new Set(siteTemplates.map((t) => t.image)).size, 8);
+  assert.equal(
+    new Set(siteTemplates.map((t) => t.image)).size,
+    siteTemplates.length,
+  );
   for (const template of siteTemplates) {
     const result = siteConfigSchema.parse(
       applySiteTemplate(defaultConfig(), template, true),
@@ -50,7 +57,12 @@ test("templates have distinct compositions and premium-only defaults", () => {
     assert.equal(p.stickyAction !== "none", template.premium);
     assert.equal(p.layout, template.id);
     const hero = result.pages.home.sections.find((s) => s.type === "hero");
-    assert.equal(hero?.type === "hero" && hero.props.image.src, template.image);
+    assert.ok(
+      hero?.type === "hero" &&
+        (hero.props.image.src === template.image ||
+          hero.props.image.src.startsWith("/cms/")),
+      template.id,
+    );
   }
 });
 

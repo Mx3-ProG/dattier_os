@@ -1,7 +1,7 @@
 import { NextRequest } from "next/server";
-import { actor } from "@/lib/auth/session";
-import { withDatabaseContext } from "@/lib/database/context";
-import { getDb } from "@/lib/database/db";
+import { actor } from "@/infrastructure/auth/session";
+import { withDatabaseContext } from "@/infrastructure/database/context";
+import { getDb } from "@/infrastructure/database/db";
 import { withRequestContext } from "@/features/ops-security/context";
 import {
   assertOrigin,

@@ -1,6 +1,6 @@
 /* Contrôles déterministes d’une facture. Ils tranchent : l’IA propose, ces règles disposent.
    Un point « blocking » interdit la comptabilisation. Un « warning » demande de vérifier. */
-import { normalize } from "@/features/assistant/text";
+import { normalize } from "@/domain/assistant/text";
 
 export const categories = {
   merchandise: { label: "Marchandises", account: "607" },

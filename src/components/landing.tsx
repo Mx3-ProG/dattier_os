@@ -1,5 +1,6 @@
+import { BlackFridayBanner } from "@/components/auth/black-friday-banner";
 import { plans, additionalRestaurantPrice } from "@/features/platform/pricing";
-import { addonCatalog, addonMonthlyCents } from "@/features/addons/catalog";
+import { addonCatalog } from "@/features/addons/catalog";
 import Link from "next/link";
 import { LegalLinks } from "@/components/legal/legal-page";
 import { PlatformCookieConsent } from "@/components/legal/platform-cookie-consent";
@@ -35,7 +36,7 @@ const modules = [
   {
     icon: LayoutGrid,
     title: "Gardez le fil de votre commerce",
-    text: "Suivez vos espaces, vos commandes et votre activité en direct. Pour la restauration, aménagez aussi votre salle et vos tables en quelques gestes.",
+    text: "Suivez vos espaces, vos commandes et votre activité en direct. Boutique, salon, atelier ou restaurant : adaptez vos espaces à votre métier.",
   },
   {
     icon: CalendarDays,
@@ -91,11 +92,11 @@ const faq = [
   },
   {
     q: "Puis-je essayer gratuitement et arrêter quand je veux ?",
-    a: "Oui. À la création de votre espace, vous disposez de 3 jours d’essai gratuits, sans paiement initial. À la fin, l’accès payant ne démarre qu’après activation de votre abonnement. Vous pouvez arrêter votre essai ou résilier votre abonnement à tout moment depuis votre espace, sans engagement. Les options et crédits IA sont facturés séparément.",
+    a: "Oui. À la création de votre espace, vous disposez de 7 jours d’essai gratuits, sans paiement initial. À la fin, l’accès payant ne démarre qu’après activation de votre abonnement. Vous pouvez arrêter votre essai ou résilier votre abonnement à tout moment depuis votre espace, sans engagement. Les options et crédits IA sont facturés séparément.",
   },
   {
     q: "Puis-je essayer avant de créer mon compte ?",
-    a: "Oui. La démonstration montre un restaurant fictif pour explorer concrètement les écrans et le travail d’une équipe.",
+    a: "Oui. Explorez les écrans et le travail d’une équipe dans une démonstration avec des données fictives. L’exemple présenté est un restaurant ; STUDIO S s’adresse aussi aux boutiques, salons et autres commerces.",
   },
   {
     q: "Mes données sont-elles visibles par d’autres commerces ?",
@@ -107,7 +108,7 @@ const faq = [
   },
   {
     q: "Le code est-il ouvert ?",
-    a: "Oui. STUDIO OS est distribué sous licence AGPL-3.0. Le code de la version en service reste consultable à tout moment en ligne.",
+    a: "Oui. STUDIO S est distribué sous licence AGPL-3.0. Le code de la version en service reste consultable à tout moment en ligne.",
   },
   {
     q: "Comment puis-je migrer mes données ?",
@@ -115,7 +116,7 @@ const faq = [
   },
   {
     q: "Puis-je essayer avant de créer mon compte ?",
-    a: "Oui. La démonstration montre un restaurant fictif pour explorer concrètement les écrans et le travail d’une équipe.",
+    a: "Oui. Explorez les écrans et le travail d’une équipe dans une démonstration avec des données fictives. L’exemple présenté est un restaurant ; STUDIO S s’adresse aussi aux boutiques, salons et autres commerces.",
   },
   {
     q: "Mes données sont-elles visibles par d’autres commerces ?",
@@ -146,7 +147,7 @@ function Cta({ demoHref, inverse }: { demoHref?: string; inverse?: boolean }) {
         className={`landing-btn ${inverse ? "light" : "primary"}`}
         href="/checkout/39"
       >
-        Essayer gratuitement 3 jours <ArrowUpRight size={16} aria-hidden />
+        Essayer gratuitement 7 jours <ArrowUpRight size={16} aria-hidden />
       </Link>
       <Link className="landing-btn outline" href={demoHref || "/guide"}>
         {demoHref ? "Me projeter dans la démo" : "Découvrir comment ça marche"}
@@ -167,9 +168,10 @@ export function Landing({
       <a className="skip-link" href="#contenu">
         Aller au contenu
       </a>
+      <BlackFridayBanner />
       <header className="landing-header">
         <Link href="/" className="landing-brand">
-          <Store size={20} aria-hidden /> STUDIO OS
+          <Store size={20} aria-hidden /> STUDIO S
         </Link>
         <nav aria-label="Navigation principale">
           <a href="#modules">Votre quotidien</a>
@@ -196,7 +198,7 @@ export function Landing({
             </h1>
             <p className="landing-lead">
               Vous avez lancé votre affaire pour la faire vivre, pas pour passer
-              vos soirées à jongler entre les outils. STUDIO OS réunit vos
+              vos soirées à jongler entre les outils. STUDIO S réunit vos
               clients, vos ventes, votre équipe, vos stocks et votre site dans
               un même espace. Moins d’administratif, plus de temps pour vos idées
               et les personnes qui comptent.
@@ -214,7 +216,7 @@ export function Landing({
               </a>
             </div>
             <p className="landing-note">
-              3 jours gratuits · Puis 39 € TTC / mois après activation · Sans engagement
+              7 jours gratuits · Puis 39 € TTC / mois après activation · Sans engagement
             </p>
           </div>
           <div className="landing-hero-scene">
@@ -267,7 +269,7 @@ export function Landing({
               de vos clients.
             </p>
             <span className="landing-note">
-              Illustration d’une journée avec STUDIO OS
+              Illustration d’une journée avec STUDIO S
             </span>
           </div>
         </section>
@@ -605,10 +607,10 @@ export function Landing({
 
         <section className="landing-section landing-team" id="equipe">
           <div className="landing-heading">
-            <span className="landing-eyebrow">Derrière STUDIO OS</span>
+            <span className="landing-eyebrow">Derrière STUDIO S</span>
             <h2>Une plateforme. Une équipe identifiée.</h2>
             <p>
-              Studio ATS assure le développement et la maintenance de STUDIO OS.
+              Studio ATS assure le développement et la maintenance de STUDIO S.
               Un même interlocuteur pour faire évoluer l’outil qui accompagne
               votre commerce.
             </p>
@@ -655,7 +657,7 @@ export function Landing({
             <span className="landing-eyebrow">Offres</span>
             <h2>Un abonnement. Des add-ons à la carte.</h2>
             <p>
-              3 jours d’essai gratuits, sans paiement initial. Puis un établissement
+              7 jours d’essai gratuits, sans paiement initial. Puis un établissement
               inclus à 39 € TTC par mois après activation. Chaque établissement supplémentaire coûte{" "}
               {additionalRestaurantPrice} € TTC par mois et bénéficie du même
               abonnement. Le hors ligne, la sécurité, la traçabilité et les
@@ -783,11 +785,11 @@ export function Landing({
 
       <footer className="landing-footer">
         <span className="landing-brand">
-          <Store size={18} aria-hidden /> STUDIO OS
+          <Store size={18} aria-hidden /> STUDIO S
         </span>
         <nav aria-label="Liens utiles">
           {demoHref && <Link href={demoHref}>Démonstration</Link>}
-          {demo && <Link href="/site-demo">Exemple de site restaurant</Link>}
+          {demo && <Link href="/site-demo">Exemple de site de commerce</Link>}
           <Link href="/guide">Comment ça marche</Link>
           <Link href="/guide#evolutions">Évolutions et maintenance</Link>
           <a
@@ -803,7 +805,7 @@ export function Landing({
           <Link href="/source">Code source et licence</Link>
           <LegalLinks />
         </nav>
-        <small>© Wayne-web SAS · STUDIO OS, logiciel libre sous licence AGPL-3.0</small>
+        <small>© Wayne-web SAS · STUDIO S, logiciel libre sous licence AGPL-3.0</small>
       </footer>
       <PlatformCookieConsent />
     </div>

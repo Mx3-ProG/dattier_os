@@ -6,8 +6,8 @@ import {
   json,
   failure,
 } from "@/features/platform/http";
-import { scope } from "@/lib/auth/session";
-import { requirePermission } from "@/lib/permissions";
+import { scope } from "@/infrastructure/auth/session";
+import { requirePermission } from "@/core/permissions";
 import { saveAsset } from "@/features/site/media";
 async function routePOST(
   req: NextRequest,

@@ -4,9 +4,9 @@ import { mirrorAudit } from "@/features/ops-security/events";
 import { redeemPromo } from "@/features/loyalty/service";
 import { createHash, randomUUID as uuid } from "node:crypto";
 import { z } from "zod";
-import { one, rows, type DB } from "@/lib/database/db";
-import type { Actor } from "@/lib/auth/session";
-import { requirePermission } from "@/lib/permissions";
+import { one, rows, type DB } from "@/infrastructure/database/db";
+import type { Actor } from "@/infrastructure/auth/session";
+import { requirePermission } from "@/core/permissions";
 import { moduleAvailable } from "@/features/modules/availability";
 export const orderSchema = z.object({
   restaurant: z.string(),

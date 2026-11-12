@@ -1,6 +1,6 @@
 import { authenticated } from "@/features/platform/http";
 import { restaurantPlan } from "@/features/platform/entitlements";
-import { scope } from "@/lib/auth/session";
+import { scope } from "@/infrastructure/auth/session";
 import type { Industry } from "@/features/onboarding/catalog";
 
 export async function restaurantAdminContext(restaurant: string) {

@@ -1,13 +1,13 @@
 import { restaurantPlan } from "@/features/platform/entitlements";
 import { notFound } from "next/navigation";
 import { NextRequest } from "next/server";
-import { getDb, demoEnabled } from "@/lib/database/db";
-import { withDatabaseContext } from "@/lib/database/context";
+import { getDb, demoEnabled } from "@/infrastructure/database/db";
+import { withDatabaseContext } from "@/infrastructure/database/context";
 import { website } from "@/features/cms/service";
 import { seoFacts, platformUrl } from "@/features/seo/server";
 import { siteUrls } from "@/features/seo/urls";
-import { menu } from "@/lib/snapshot";
-import { productPath } from "@/lib/product-pages";
+import { menu } from "@/application/snapshot";
+import { productPath } from "@/domain/shared/product-pages";
 import {
   indexablePages,
   renderSitemap,

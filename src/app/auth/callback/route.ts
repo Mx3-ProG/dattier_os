@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { finishLogin, appOrigin } from "@/lib/auth/oidc";
+import { finishLogin, appOrigin } from "@/infrastructure/auth/oidc";
 export async function GET(req: NextRequest) {
   try {
     const path = await finishLogin(

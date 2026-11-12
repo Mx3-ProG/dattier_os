@@ -1,7 +1,7 @@
 import { authenticated } from "@/features/platform/http";
-import { scope } from "@/lib/auth/session";
-import { one, rows, type DB } from "@/lib/database/db";
-import { estimationSaveSchema, type EstimationItem } from "./model";
+import { scope } from "@/infrastructure/auth/session";
+import { one, rows, type DB } from "@/infrastructure/database/db";
+import { estimationSaveSchema, type EstimationItem } from "@/domain/estimation/model";
 
 type Config = {
   title: string;

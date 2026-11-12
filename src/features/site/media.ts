@@ -1,23 +1,12 @@
 import {
-  S3Client,
   PutObjectCommand,
   GetObjectCommand,
 } from "@aws-sdk/client-s3";
 import { randomUUID } from "node:crypto";
 import { readFile, writeFile, mkdir } from "node:fs/promises";
 import path from "node:path";
-import { rows, demoEnabled, type DB } from "@/lib/database/db";
-function storage() {
-  if (!process.env.S3_BUCKET)
-    throw new Error("Stockage des médias non configuré.");
-  return new S3Client({
-    endpoint: process.env.S3_ENDPOINT,
-    region: process.env.S3_REGION || "eu-west-3",
-    forcePathStyle: process.env.S3_PATH_STYLE === "true",
-    requestChecksumCalculation: "WHEN_REQUIRED",
-    responseChecksumValidation: "WHEN_REQUIRED",
-  });
-}
+import { rows, demoEnabled, type DB } from "@/infrastructure/database/db";
+import { s3Client } from "@/infrastructure/storage/s3";
 export function imageType(data: Buffer) {
   if (
     data.subarray(0, 8).equals(Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]))
@@ -52,7 +41,7 @@ export async function saveAsset(db: DB, r: string, data: Buffer) {
     await mkdir(path.dirname(file), { recursive: true });
     await writeFile(file, data, { flag: "wx" });
   } else
-    await storage().send(
+    await s3Client().send(
       new PutObjectCommand({
         Bucket: process.env.S3_BUCKET,
         Key: key,
@@ -78,7 +67,7 @@ export async function resolveAsset(db: DB, r: string, id: string) {
 }
 export async function openAsset(key: string): Promise<BodyInit> {
   if (demoEnabled()) return new Uint8Array(await readFile(localPath(key)));
-  const result = await storage().send(
+  const result = await s3Client().send(
     new GetObjectCommand({ Bucket: process.env.S3_BUCKET, Key: key }),
   );
   return result.Body!.transformToWebStream();

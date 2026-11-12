@@ -1,6 +1,6 @@
 import { randomUUID } from "node:crypto";
-import { one, rows, type DB } from "@/lib/database/db";
-import type { Actor } from "@/lib/auth/session";
+import { one, rows, type DB } from "@/infrastructure/database/db";
+import type { Actor } from "@/infrastructure/auth/session";
 export async function customerForActor(db: DB, r: string, user: Actor) {
   await one(db, "SELECT id FROM profiles WHERE id=$1 AND status='active'", [
     user.id,

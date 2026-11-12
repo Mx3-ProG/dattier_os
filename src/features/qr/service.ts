@@ -1,9 +1,9 @@
 import { randomBytes, randomUUID } from "node:crypto";
 import { z } from "zod";
-import { one, rows, type DB } from "@/lib/database/db";
-import type { Actor } from "@/lib/auth/session";
-import { can, type Permission } from "@/lib/permissions";
-import { productPath } from "@/lib/product-pages";
+import { one, rows, type DB } from "@/infrastructure/database/db";
+import type { Actor } from "@/infrastructure/auth/session";
+import { can, type Permission } from "@/core/permissions";
+import { productPath } from "@/domain/shared/product-pages";
 import { log } from "@/features/orders/service";
 import { requirePaidAddon } from "@/features/platform/entitlements";
 

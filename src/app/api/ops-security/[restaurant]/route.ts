@@ -7,7 +7,7 @@ import {
   json,
   failure,
 } from "@/features/platform/http";
-import { nestedDatabase } from "@/lib/database/nested";
+import { nestedDatabase } from "@/infrastructure/database/nested";
 import {
   securityScope,
   overview,

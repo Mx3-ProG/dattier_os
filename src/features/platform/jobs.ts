@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto";
-import type { DB } from "@/lib/database/db";
+import type { DB } from "@/infrastructure/database/db";
 import type { BusinessId } from "@/core/tenant/business";
 /** Durable outbox job, scoped to one business (column `restaurant_id`, historic name). */
 export async function enqueue(

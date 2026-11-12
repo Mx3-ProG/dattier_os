@@ -15,6 +15,22 @@ export const addonSectionAddons = {
   delivery: "shipping-rules",
   bundles: "product-bundles",
   services: "appointment-booking",
+  pricing: "site-commerce",
+  comparison: "site-commerce",
+  urgency: "site-commerce",
+  hook: "site-commerce",
+  reviewForm: "site-commerce",
+  reviewAdvanced: "site-commerce",
+  blogList: "site-content",
+  article: "site-content",
+  newsletter: "site-content",
+  testimonials: "site-content",
+  timeline: "site-content",
+  partners: "site-content",
+  stats: "site-content",
+  team: "site-content",
+  wheel: "site-engagement",
+  faqAdvanced: "site-engagement",
 } as const;
 export type AddonSectionType = keyof typeof addonSectionAddons;
 export const isAddonSection = (type: string): type is AddonSectionType => Object.hasOwn(addonSectionAddons, type);
@@ -26,6 +42,9 @@ export const addonNames: Record<string, string> = {
   "shipping-rules": "Livraison",
   "product-bundles": "Lots de produits",
   "appointment-booking": "Agenda de rendez-vous",
+  "site-commerce": "Pack Commerce",
+  "site-content": "Pack Contenu",
+  "site-engagement": "Pack Engagement",
 };
 
 export type SiteAddonProduct = { id: string; renderer: string; name: string };
