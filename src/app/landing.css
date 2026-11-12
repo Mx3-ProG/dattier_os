@@ -23,7 +23,7 @@
   outline: none;
 }
 .landing [id] {
-  scroll-margin-top: 88px;
+  scroll-margin-top: 140px;
 }
 @media (prefers-reduced-motion: no-preference) {
   html:has(.landing) {
@@ -1030,6 +1030,16 @@ body:has(.landing) > .demo-purchase-link {
   }
 }
 
+/* Bandeau Black Friday et en-tête restent ensemble en haut de l’écran au défilement. */
+.landing-top {
+  position: sticky;
+  top: 0;
+  z-index: 40;
+}
+.landing-top .landing-header {
+  position: static;
+}
+
 /* Bandeau Black Friday au-dessus de l’en-tête (affiché jusqu’à la date de fin de promotion.ts) */
 .bf-bar {
   --bf-gold: #f2c46d;
@@ -1112,8 +1122,16 @@ body:has(.landing) > .demo-purchase-link {
     padding: 10px 16px;
     font-size: max(var(--appearance-min-text, 0px), calc((13px) * var(--appearance-text-scale, 1)));
   }
-  .bf-bar-deadline {
+  .bf-bar {
+    padding: 8px 16px;
+  }
+  .bf-bar-deadline,
+  .bf-bar-timer,
+  .bf-bar-tag {
     display: none;
+  }
+  .bf-bar-cta {
+    padding: 5px 12px;
   }
 }
 .landing-plan-quota s {
