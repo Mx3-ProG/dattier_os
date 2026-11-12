@@ -79,7 +79,7 @@ export async function studioCreditCheckout(restaurant:string,pack:number){
   const origin=new URL(process.env.APP_URL||"http://127.0.0.1:3000").origin;
   const returnUrl=`${origin}/dashboard?restaurant=${encodeURIComponent(restaurant)}&module=addons`;
   const session=await stripe.checkout.sessions.create({
-    mode:"payment",line_items:[{quantity:1,price_data:{currency:"eur",unit_amount:pack,tax_behavior:"inclusive",product_data:{name:`${pack} crédits Studio · test`}}}],
+    mode:"payment",line_items:[{quantity:1,price_data:{currency:"eur",unit_amount:pack,tax_behavior:"inclusive",product_data:{name:`${pack} crédits Studio`}}}],
     ...(saasAutomaticTax()?{automatic_tax:{enabled:true}}:{}),locale:"fr",success_url:returnUrl,cancel_url:returnUrl,
     metadata:{studio_credit_order:order.id},payment_intent_data:{metadata:{studio_credit_order:order.id}},
     expires_at:Math.floor(Date.now()/1000)+1800,

@@ -1,3 +1,4 @@
+import { saasAutomaticTax } from "@/features/billing/stripe-saas";
 import { addonStripe } from "./billing-config";
 import {
   loadingSettingsSchema,
@@ -187,11 +188,8 @@ type OpenOrder = {
   stripe_session: string | null;
   stale: boolean;
 };
-/** Identifiant Stripe fixe, pour comparer ce parcours dans le tableau de bord. */
-const checkoutLabel = "studio-addon-purchase-qmvtrxkp";
-
 export async function purchaseAddon(restaurant: string, product: string) {
-  if (!purchaseCheckoutReady()) throw new Error("La boutique Stripe de test n’est pas configurée.");
+  if (!purchaseCheckoutReady()) throw new Error("Le paiement de cet achat n’est pas encore configuré.");
   const stripe = addonStripe();
   const open = () =>
     authenticated(restaurant, async (db, user) => {
@@ -223,13 +221,12 @@ export async function purchaseAddon(restaurant: string, product: string) {
           },
         },
       ],
-      automatic_tax: { enabled: true },
+      ...(saasAutomaticTax() ? { automatic_tax: { enabled: true } } : {}),
       success_url: returnUrl,
       cancel_url: returnUrl,
       metadata: { addon_purchase: order.id },
       payment_intent_data: { metadata: { addon_purchase: order.id } },
       expires_at: Math.floor(Date.now() / 1000) + 1800,
-      integration_identifier: checkoutLabel,
     },
     { idempotencyKey: `addon-purchase:${order.id}:${order.amount_cents}` },
   );
