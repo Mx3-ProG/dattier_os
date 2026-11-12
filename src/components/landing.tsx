@@ -1,4 +1,5 @@
 import { plans, additionalRestaurantPrice } from "@/features/platform/pricing";
+import { activePromotion, trialDays, type Promotion } from "@/features/platform/promotion";
 import { addonCatalog, addonMonthlyCents } from "@/features/addons/catalog";
 import Link from "next/link";
 import { LegalLinks } from "@/components/legal/legal-page";
@@ -125,14 +126,14 @@ const steps = [
   },
 ];
 
-const faq = [
+const faq = (days: number) => [
   {
     q: "L’IA peut-elle agir sans mon accord ?",
     a: "Non. STUDIO VOICE prépare les actions et vous demande de les confirmer. Vous pouvez lui écrire ou lui parler, selon la compatibilité de votre navigateur. Les réponses utilisent des crédits, avec des recharges payantes distinctes de votre abonnement.",
   },
   {
     q: "Puis-je essayer gratuitement et arrêter quand je veux ?",
-    a: "Oui. À la création de votre espace, vous disposez de 3 jours d’essai gratuits, sans paiement initial. À la fin, l’accès payant ne démarre qu’après activation de votre abonnement. Vous pouvez arrêter votre essai ou résilier votre abonnement à tout moment depuis votre espace, sans engagement. Les options et crédits IA sont facturés séparément.",
+    a: `Oui. À la création de votre espace, vous disposez de ${days} jours d’essai gratuits, sans paiement initial. À la fin, l’accès payant ne démarre qu’après activation de votre abonnement. Vous pouvez arrêter votre essai ou résilier votre abonnement à tout moment depuis votre espace, sans engagement. Les options et crédits IA sont facturés séparément.`,
   },
   {
     q: "Puis-je essayer avant de créer mon compte ?",
@@ -180,19 +181,35 @@ const faq = [
   }
 ];
 
-function Cta({ demoHref, inverse }: { demoHref?: string; inverse?: boolean }) {
+function Cta({ demoHref, inverse, days }: { demoHref?: string; inverse?: boolean; days: number }) {
   return (
     <div className="landing-cta">
       <Link
         className={`landing-btn ${inverse ? "light" : "primary"}`}
         href="/checkout/39"
       >
-        Essayer gratuitement 3 jours <ArrowUpRight size={16} aria-hidden />
+        Essayer gratuitement {days} jours <ArrowUpRight size={16} aria-hidden />
       </Link>
       <Link className="landing-btn outline" href={demoHref || "/guide"}>
         {demoHref ? "Me projeter dans la démo" : "Découvrir comment ça marche"}
       </Link>
     </div>
+  );
+}
+
+function PromoBanner({ promo }: { promo: Promotion }) {
+  return (
+    <aside className="landing-promo" aria-label="Offre Black Friday">
+      <span className="landing-promo-tag">Black Friday</span>
+      <p>
+        <strong>{promo.price} € TTC / mois</strong> les {promo.months} premiers mois au lieu de 39 €,
+        et <strong>{promo.trialDays} jours d’essai</strong> gratuits. Code{" "}
+        <code>{promo.code}</code> jusqu’au {promo.lastDay} minuit.
+      </p>
+      <Link className="landing-btn light small" href="/checkout/39">
+        J’en profite <ArrowUpRight size={16} aria-hidden />
+      </Link>
+    </aside>
   );
 }
 
@@ -275,6 +292,8 @@ export function Landing({
   demoHref?: string;
   account?: Account | null;
 }) {
+  const promo = activePromotion();
+  const days = trialDays();
   return (
     <div className="landing">
       <a className="skip-link" href="#contenu">
@@ -302,6 +321,7 @@ export function Landing({
       </header>
 
       <main id="contenu" tabIndex={-1}>
+        {promo && <PromoBanner promo={promo} />}
         <section className="landing-hero">
           <div className="landing-hero-copy">
             <span className="landing-eyebrow">
@@ -322,7 +342,7 @@ export function Landing({
               Relation client (CRM), gestion de votre activité (ERP) et création
               de site (CMS) : les outils de votre commerce réunis au même endroit.
             </p>
-            <Cta demoHref={demoHref} />
+            <Cta demoHref={demoHref} days={days} />
             <div className="landing-trust-links">
               <a href="#equipe">Maintenu par Studio ATS</a>
               <Link href="/guide">Un guide ouvert à tous</Link>
@@ -331,7 +351,9 @@ export function Landing({
               </a>
             </div>
             <p className="landing-note">
-              3 jours gratuits · Puis 39 € TTC / mois après activation · Sans engagement
+              {promo
+                ? `${days} jours gratuits · Puis ${promo.price} € TTC / mois pendant ${promo.months} mois avec le code ${promo.code}, ensuite 39 € · Sans engagement`
+                : `${days} jours gratuits · Puis 39 € TTC / mois après activation · Sans engagement`}
             </p>
           </div>
           <div className="landing-hero-scene">
@@ -796,7 +818,7 @@ export function Landing({
             <span className="landing-eyebrow">Offres</span>
             <h2>Un abonnement. Des add-ons à la carte.</h2>
             <p>
-              3 jours d’essai gratuits, sans paiement initial. Puis un établissement
+              {days} jours d’essai gratuits, sans paiement initial. Puis un établissement
               inclus à 39 € TTC par mois après activation. Chaque établissement supplémentaire coûte{" "}
               {additionalRestaurantPrice} € TTC par mois et bénéficie du même
               abonnement. Le hors ligne, la sécurité, la traçabilité et les
@@ -823,9 +845,18 @@ export function Landing({
               <article key={p.price} className="landing-plan" data-featured>
                 <span className="landing-eyebrow">Votre activité, à votre façon</span>
                 <h3>{p.title}</h3>
-                <strong className="landing-plan-quota">
-                  {p.price} € TTC / mois
-                </strong>
+                {promo ? (
+                  <strong className="landing-plan-quota">
+                    <s>{p.price} €</s> {promo.price} € TTC / mois pendant {promo.months} mois
+                    <span className="landing-plan-promo">
+                      Code {promo.code} · puis {p.price} € TTC / mois · jusqu’au {promo.lastDay} minuit
+                    </span>
+                  </strong>
+                ) : (
+                  <strong className="landing-plan-quota">
+                    {p.price} € TTC / mois
+                  </strong>
+                )}
                 <ul>
                   {p.features.map((feature) => (
                     <li key={feature}>
@@ -862,7 +893,7 @@ export function Landing({
             <h2>Avant de vous lancer.</h2>
           </div>
           <div className="landing-faq">
-            {faq.map((f) => (
+            {faq(days).map((f) => (
               <details key={f.q}>
                 <summary>{f.q}</summary>
                 <p>{f.a}</p>
@@ -919,7 +950,7 @@ export function Landing({
               ? "Prenez le temps de vous projeter dans la démo. Imaginez votre prochaine journée avec moins de choses à gérer."
               : "Commencez par ce qui vous pèse le plus. Les clients, le site, les commandes : avancez à votre rythme."}
           </p>
-          <Cta demoHref={demoHref} inverse />
+          <Cta demoHref={demoHref} inverse days={days} />
         </section>
       </main>
 

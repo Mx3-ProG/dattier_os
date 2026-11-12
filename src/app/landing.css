@@ -1029,3 +1029,53 @@ body:has(.landing) > .demo-purchase-link {
     grid-template-columns: 1fr;
   }
 }
+
+/* Offre Black Friday (affichée jusqu’à la date de fin de promotion.ts) */
+.landing-promo {
+  display: flex;
+  align-items: center;
+  gap: 16px 24px;
+  flex-wrap: wrap;
+  margin: 20px var(--l-gutter) 0;
+  padding: 16px 20px;
+  border-radius: 18px;
+  background: var(--l-green-dark);
+  color: #fff;
+}
+.landing-promo p {
+  flex: 1 1 320px;
+  margin: 0;
+  line-height: 1.5;
+  color: #fff;
+}
+.landing-promo strong {
+  color: #fff;
+}
+.landing-promo code {
+  padding: 2px 8px;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.16);
+  font-weight: 700;
+  letter-spacing: 1px;
+}
+.landing-promo-tag {
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: var(--l-accent);
+  color: #fff;
+  font-size: max(var(--appearance-min-text, 0px), calc((12px) * var(--appearance-text-scale, 1)));
+  font-weight: 700;
+  letter-spacing: 1.6px;
+  text-transform: uppercase;
+}
+.landing-plan-quota s {
+  opacity: 0.6;
+  font-weight: 400;
+}
+.landing-plan-promo {
+  display: block;
+  margin-top: 6px;
+  font-size: max(var(--appearance-min-text, 0px), calc((13px) * var(--appearance-text-scale, 1)));
+  font-weight: 500;
+  opacity: 0.85;
+}

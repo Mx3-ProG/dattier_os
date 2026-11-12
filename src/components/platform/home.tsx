@@ -1,6 +1,7 @@
 "use client";
 import { UtensilsLoader } from "@/components/brand/utensils";
 import { type Plan } from "@/features/platform/pricing";
+import type { Promotion } from "@/features/platform/promotion";
 import { referralPricing, type PaidPlan } from "@/features/platform/referrals";
 import { AccountWorkspace } from "./account-workspace";
 import { ReferralPanel } from "./referral-panel";
@@ -16,6 +17,7 @@ type Overview = {
   user: { id: string; name: string };
   platformAdmin?: boolean;
   billingReady?: boolean;
+  promotion?: Promotion | null;
   organizations: {
     id: string;
     name: string;
@@ -270,7 +272,9 @@ export function PlatformHome() {
                     )}
                     {data.billingReady && o.role === "OWNER" && !o.paid_plan && !["active", "trialing", "past_due"].includes(o.billing_status || "") && (
                       <button type="button" className="access-primary" disabled={busy} onClick={() => void billing("checkout", o.id)}>
-                        S’abonner · 39 € TTC / mois
+                        {data.promotion
+                          ? `S’abonner · ${data.promotion.price} € TTC / mois les ${data.promotion.months} premiers mois (code ${data.promotion.code})`
+                          : "S’abonner · 39 € TTC / mois"}
                       </button>
                     )}
                     {data.billingReady && o.role === "OWNER" && o.billing_customer && (

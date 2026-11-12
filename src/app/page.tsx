@@ -3,14 +3,17 @@ import { demoEnabled } from "@/lib/database/db";
 import { Landing, type Account } from "@/components/landing";
 import { authenticated } from "@/features/platform/http";
 import { overview } from "@/features/platform/service";
+import { activePromotion, trialDays } from "@/features/platform/promotion";
 import "./landing.css";
 import "./legal.css";
 export const dynamic = "force-dynamic";
 export function generateMetadata(): Metadata {
+  const promo = activePromotion();
   return {
     title: "STUDIO OS · Votre commerce, votre temps, vos choix",
-    description:
-      "Pilotez clients, ventes, stocks, équipe, site web et boutique en ligne au même endroit. Essayez STUDIO OS gratuitement pendant 3 jours, puis 39 € TTC par mois sans engagement.",
+    description: `Pilotez clients, ventes, stocks, équipe, site web et boutique en ligne au même endroit. Essayez STUDIO OS gratuitement pendant ${trialDays()} jours, puis ${
+      promo ? `${promo.price} € TTC par mois pendant ${promo.months} mois avec le code ${promo.code} (Black Friday), ensuite ` : ""
+    }39 € TTC par mois sans engagement.`,
     robots: { index: !demoEnabled(), follow: !demoEnabled() },
   };
 }

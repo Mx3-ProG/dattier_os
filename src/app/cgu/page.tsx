@@ -138,7 +138,8 @@ const sections: LegalSection[] = [
       <>
         <p>
           Chaque nouveau Client bénéficie d’un essai gratuit de <strong>{o.trialDays} jours</strong>, qui démarre à
-          la création de l’espace. L’essai ne requiert aucun paiement initial et{" "}
+          la création de l’espace (<strong>7 jours</strong> pour les espaces créés pendant l’offre Black Friday, jusqu’au
+          lundi 16 novembre 2026 à minuit, heure de Paris). L’essai ne requiert aucun paiement initial et{" "}
           <strong>ne déclenche aucun prélèvement automatique</strong> à son terme : l’Abonnement Studio n’est activé
           que sur action volontaire du Client.
         </p>
