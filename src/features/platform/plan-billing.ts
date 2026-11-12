@@ -9,6 +9,7 @@ import Stripe from "stripe";
 import { Pool } from "pg";
 import { authenticated } from "./http";
 import { basePlan } from "./pricing";
+import { activePromotion } from "./promotion";
 import { appOrigin } from "@/lib/auth/oidc";
 import { one, type DB } from "@/lib/database/db";
 
@@ -66,6 +67,21 @@ async function assertPlanPrice(stripe: Stripe) {
   return price;
 }
 
+/**
+ * Pendant l'offre en cours, le code promo créé dans Stripe est pré-appliqué.
+ * Introuvable, expiré ou en erreur : le client peut toujours le saisir lui-même.
+ */
+async function promotionDiscount(stripe: Stripe) {
+  const promotion = activePromotion();
+  if (!promotion) return null;
+  try {
+    const { data } = await stripe.promotionCodes.list({ code: promotion.code, active: true, limit: 1 });
+    return data[0]?.id ?? null;
+  } catch {
+    return null;
+  }
+}
+
 /** Opens a Stripe Checkout page for the organization owner. */
 export async function planCheckout(organization: string) {
   const stripe = planStripe();
@@ -78,13 +94,16 @@ export async function planCheckout(organization: string) {
   if (grantingStatuses.has(context.status))
     throw new Error("Cette organisation a déjà un abonnement en cours.");
   // Keep the remaining free days when Stripe allows it (trial end ≥ 48 h ahead).
-  const trialEnd = context.trial_ends_at && !context.paid_plan
+  // During a promotion the first discounted month is charged right away instead,
+  // so the customer locks the offer before the code expires.
+  const trialEnd = context.trial_ends_at && !context.paid_plan && !activePromotion()
     ? Math.floor(Date.parse(context.trial_ends_at) / 1000)
     : 0;
   const keepTrial = trialEnd > Math.floor(Date.now() / 1000) + 49 * 3600;
   const origin = appOrigin();
   const metadata = { studio_plan_org: organization };
   const automaticTax = process.env.STUDIO_PLAN_AUTOMATIC_TAX === "true";
+  const promotion = await promotionDiscount(stripe);
   const session = await stripe.checkout.sessions.create({
     mode: "subscription",
     line_items: [{ price: price.id, quantity: 1 }],
@@ -94,7 +113,8 @@ export async function planCheckout(organization: string) {
     client_reference_id: organization,
     metadata,
     subscription_data: { metadata, ...(keepTrial ? { trial_end: trialEnd } : {}) },
-    allow_promotion_codes: true,
+    // Stripe refuse `discounts` et `allow_promotion_codes` ensemble.
+    ...(promotion ? { discounts: [{ promotion_code: promotion }] } : { allow_promotion_codes: true }),
     ...(automaticTax ? { automatic_tax: { enabled: true } } : {}),
     locale: "fr",
     success_url: `${origin}/abonnement/retour?session_id={CHECKOUT_SESSION_ID}`,

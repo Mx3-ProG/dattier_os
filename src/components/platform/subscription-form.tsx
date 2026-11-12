@@ -3,6 +3,7 @@ import { useEffect, useState, type FormEvent } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { industries, industryLabels, trades, discoverySources, discoveryLabels, workflowChoices, workflowLabels, relevantCapabilities, type Industry } from "@/features/onboarding/catalog";
+import type { Promotion } from "@/features/platform/promotion";
 import "./onboarding.css";
 
 type Draft = {
@@ -30,13 +31,14 @@ const invitationRoles: Record<Industry, { id: string; label: string }[]> = {
   other: [{ id: "MANAGER", label: "Responsable" }, { id: "WAITER", label: "Collaborateur" }],
 };
 
-export function SubscriptionForm({ plan, userName, userEmail }: { plan: number; userName: string; userEmail?: string }) {
+export function SubscriptionForm({ plan, userName, userEmail, payNow = null }: { plan: number; userName: string; userEmail?: string; payNow?: Promotion | null }) {
   const router = useRouter();
   const [draft, setDraft] = useState<Draft | null>(null);
   const [step, setStep] = useState(0);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [created, setCreated] = useState<string | null>(null);
+  const [organization, setOrganization] = useState<string | null>(null);
   const [inviteEmail, setInviteEmail] = useState("");
   const [inviteRole, setInviteRole] = useState("MANAGER");
   const [inviteLink, setInviteLink] = useState("");
@@ -85,8 +87,26 @@ export function SubscriptionForm({ plan, userName, userEmail }: { plan: number; 
       const body = await response.json();
       if (!response.ok) throw new Error(body.error?.message || "Création impossible.");
       setCreated(body.restaurant);
+      setOrganization(body.organization ?? null);
+      if (payNow && body.organization) await pay(body.organization);
     } catch (cause) { setError(cause instanceof Error ? cause.message : "Service indisponible."); }
     finally { setBusy(false); }
+  }
+  /** Opens Stripe Checkout with the promotion code already applied. */
+  async function pay(org: string) {
+    setBusy(true); setError("");
+    try {
+      const response = await fetch("/api/platform/billing", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "checkout", organization: org }),
+      });
+      const body = await response.json();
+      if (!response.ok || !body.url) throw new Error(body.error?.message || "Paiement indisponible pour le moment.");
+      window.location.assign(body.url);
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : "Paiement indisponible pour le moment.");
+      setBusy(false);
+    }
   }
   async function invite(event: FormEvent) {
     event.preventDefault(); if (!created) return;
@@ -105,7 +125,10 @@ export function SubscriptionForm({ plan, userName, userEmail }: { plan: number; 
   if (!draft) return <p>Chargement de votre parcours…</p>;
   if (created) return <section className="onboarding-form" role="status">
     <h2>Votre espace est prêt</h2>
-    <p>Votre essai gratuit de trois jours a commencé. L’équipe et les clients peuvent être ajoutés maintenant ou plus tard.</p>
+    {payNow && organization ? <div className="onboarding-pay">
+      <p>{busy ? "Ouverture du paiement sécurisé…" : <>Dernière étape : réglez <strong>{payNow.price} €</strong> pour bloquer le tarif Black Friday ({payNow.price} € TTC / mois pendant {payNow.months} mois, code {payNow.code} déjà appliqué).</>}</p>
+      <button type="button" className="access-primary" disabled={busy} onClick={() => void pay(organization)}>Payer {payNow.price} € et activer mon abonnement</button>
+    </div> : <p>Votre essai gratuit a commencé. L’équipe et les clients peuvent être ajoutés maintenant ou plus tard.</p>}
     <form onSubmit={invite} className="onboarding-fields"><h3>Inviter un collaborateur</h3>
       <label>E-mail<input type="email" required value={inviteEmail} onChange={(e) => setInviteEmail(e.target.value)} /></label>
       <label>Rôle<select value={inviteRole} onChange={(e) => setInviteRole(e.target.value)}>{invitationRoles[draft.activity.industry].map((role) => <option key={role.id} value={role.id}>{role.label}</option>)}</select></label>
@@ -126,8 +149,8 @@ export function SubscriptionForm({ plan, userName, userEmail }: { plan: number; 
     {step === 2 && <div className="onboarding-fields"><label>Famille d’activité<select value={activity.industry} onChange={(e) => { const industry = e.target.value as Industry; change({ activity: { industry, trade: trades[industry][0], tradeDetail: "" } }); }}>{industries.map((industry) => <option value={industry} key={industry}>{industryLabels[industry]}</option>)}</select></label><label>Métier précis (recherchable)<input list="studio-trades" value={activity.trade} onChange={(e) => change({ activity: { ...activity, trade: e.target.value } })} /><datalist id="studio-trades">{trades[activity.industry].map((trade) => <option key={trade} value={trade} />)}</datalist></label>{activity.trade.startsWith("Autre") && <label>Décrivez votre métier<input required value={activity.tradeDetail} onChange={(e) => change({ activity: { ...activity, tradeDetail: e.target.value } })} /></label>}</div>}
     {step === 3 && <div className="onboarding-fields"><label>Taille de l’équipe<select value={draft.answers.teamSize} onChange={(e) => change({ answers: { ...draft.answers, teamSize: e.target.value } })}><option value="solo">Je travaille seul</option><option value="2-5">2 à 5 personnes</option><option value="6-20">6 à 20 personnes</option><option value="21+">Plus de 20 personnes</option></select></label><fieldset><legend>Que gérez-vous au quotidien ?</legend>{workflowChoices.map((item) => <label className="onboarding-check" key={item}><input type="checkbox" checked={draft.answers.workflows.includes(item)} onChange={(e) => change({ answers: { ...draft.answers, workflows: e.target.checked ? [...draft.answers.workflows,item] : draft.answers.workflows.filter((x) => x !== item) } })} />{workflowLabels[item]}</label>)}</fieldset><label>Logiciel actuel (facultatif)<input value={draft.answers.currentTools} onChange={(e) => change({ answers: { ...draft.answers, currentTools: e.target.value } })} /></label><label>Votre principal besoin<textarea required value={draft.answers.mainChallenge} onChange={(e) => change({ answers: { ...draft.answers, mainChallenge: e.target.value } })} placeholder="Qu’aimeriez-vous simplifier ?" /></label></div>}
     {step === 4 && <div className="onboarding-fields"><label>Comment avez-vous découvert Studio OS ?<select required value={draft.discovery.source} onChange={(e) => change({ discovery: { ...draft.discovery, source: e.target.value } })}><option value="">Choisir</option>{discoverySources.map((source) => <option key={source} value={source}>{discoveryLabels[source]}</option>)}</select></label><label>{draft.discovery.source === "other" ? "Précisez votre réponse" : "Une précision ? (facultatif)"}<input required={draft.discovery.source === "other"} value={draft.discovery.detail} onChange={(e) => change({ discovery: { ...draft.discovery, detail: e.target.value } })} /></label></div>}
-    {step === 5 && <div className="onboarding-recap"><p><strong>{draft.organization}</strong> · {draft.restaurant}</p><p>{industryLabels[activity.industry]} · {activity.trade}{activity.tradeDetail ? " — " + activity.tradeDetail : ""}</p><p>Votre priorité : {draft.answers.mainChallenge}</p><h3>Inclus dans votre espace</h3><ul>{capabilities.included.map((item) => <li key={item}>{item}</li>)}</ul><h3>Options à découvrir, sans activation automatique</h3><ul>{capabilities.optional.map((item) => <li key={item}>{item}</li>)}</ul><p>L’essai de trois jours commence à la création. Aucun paiement n’est prélevé automatiquement.</p></div>}
+    {step === 5 && <div className="onboarding-recap"><p><strong>{draft.organization}</strong> · {draft.restaurant}</p><p>{industryLabels[activity.industry]} · {activity.trade}{activity.tradeDetail ? " — " + activity.tradeDetail : ""}</p><p>Votre priorité : {draft.answers.mainChallenge}</p><h3>Inclus dans votre espace</h3><ul>{capabilities.included.map((item) => <li key={item}>{item}</li>)}</ul><h3>Options à découvrir, sans activation automatique</h3><ul>{capabilities.optional.map((item) => <li key={item}>{item}</li>)}</ul><p>{payNow ? `Après la création, vous passez directement au paiement sécurisé : ${payNow.price} € TTC / mois pendant ${payNow.months} mois avec le code ${payNow.code}, sans engagement.` : "L’essai gratuit commence à la création. Aucun paiement n’est prélevé automatiquement."}</p></div>}
     {error && <p role="alert" className="onboarding-error">{error}</p>}
-    <div className="onboarding-actions">{step > 0 && <button type="button" onClick={() => { setError(""); setStep(step - 1); change({step:step-1}); }}>Retour</button>}<button className="access-primary" disabled={busy}>{busy ? "Création en cours…" : step === steps.length - 1 ? "Créer mon espace" : "Continuer"}</button></div>
+    <div className="onboarding-actions">{step > 0 && <button type="button" onClick={() => { setError(""); setStep(step - 1); change({step:step-1}); }}>Retour</button>}<button className="access-primary" disabled={busy}>{busy ? "Création en cours…" : step === steps.length - 1 ? (payNow ? `Créer mon espace et payer ${payNow.price} €` : "Créer mon espace") : "Continuer"}</button></div>
   </form>;
 }

@@ -1,6 +1,7 @@
 "use client";
 import { UtensilsLoader } from "@/components/brand/utensils";
 import { type Plan } from "@/features/platform/pricing";
+import type { Promotion } from "@/features/platform/promotion";
 import { referralPricing, type PaidPlan } from "@/features/platform/referrals";
 import { AccountWorkspace } from "./account-workspace";
 import { ReferralPanel } from "./referral-panel";
@@ -16,6 +17,7 @@ type Overview = {
   user: { id: string; name: string };
   platformAdmin?: boolean;
   billingReady?: boolean;
+  promotion?: Promotion | null;
   organizations: {
     id: string;
     name: string;
@@ -268,9 +270,19 @@ export function PlatformHome() {
                               : `Abonnement mensuel actif${o.billing_period_end ? ` · prochain renouvellement le ${new Date(o.billing_period_end).toLocaleDateString("fr-FR", { dateStyle: "long", timeZone: "Europe/Paris" })}` : ""}`}
                       </p>
                     )}
+                    {data.promotion && data.billingReady && o.role === "OWNER" && !o.paid_plan && !["active", "trialing", "past_due"].includes(o.billing_status || "") && (
+                      <p className="onboarding-pay">
+                        <span>
+                          <strong>Black Friday</strong> : {data.promotion.price} € TTC / mois pendant {data.promotion.months} mois au lieu de 39 €,
+                          code {data.promotion.code} déjà appliqué. Payez maintenant pour bloquer ce tarif avant le {data.promotion.lastDay} minuit. Sans engagement.
+                        </span>
+                      </p>
+                    )}
                     {data.billingReady && o.role === "OWNER" && !o.paid_plan && !["active", "trialing", "past_due"].includes(o.billing_status || "") && (
                       <button type="button" className="access-primary" disabled={busy} onClick={() => void billing("checkout", o.id)}>
-                        S’abonner · 39 € TTC / mois
+                        {data.promotion
+                          ? `Payer ${data.promotion.price} € et activer mon abonnement`
+                          : "S’abonner · 39 € TTC / mois"}
                       </button>
                     )}
                     {data.billingReady && o.role === "OWNER" && o.billing_customer && (

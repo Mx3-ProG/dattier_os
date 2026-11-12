@@ -392,3 +392,8 @@
 .access-link:disabled { opacity: .6; cursor: wait; }
 .access-error { color: #a1271b; font-weight: 650; }
 .access-fine { font-size: .9em; opacity: .8; }
+.access-price s { opacity: .55; margin-right: .35rem; }
+.onboarding-pay { display: grid; gap: .75rem; margin: 1rem 0 1.5rem; padding: 1rem 1.1rem; border-radius: 14px; background: #17140d; color: #f6f1e7; }
+.onboarding-pay p { margin: 0; color: inherit; }
+.onboarding-pay strong { color: #f2c46d; }
+.onboarding-pay .access-primary { justify-self: start; }

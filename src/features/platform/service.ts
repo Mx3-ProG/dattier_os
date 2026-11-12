@@ -5,6 +5,7 @@ import { scope, type Actor } from "@/lib/auth/session";
 import { roles } from "@/lib/permissions";
 import { log } from "@/features/orders/service";
 import { planBillingReady } from "./plan-billing";
+import { activePromotion } from "./promotion";
 import { setLayoutAccess } from "@/features/floor/service";
 import { industries, trades, freeTradeTools, discoverySources, workflowChoices, type Industry } from "@/features/onboarding/catalog";
 const text = z.string().trim().min(2).max(150),
@@ -117,6 +118,7 @@ export async function overview(db: DB, user: Actor) {
   return {
     user,
     billingReady: planBillingReady(),
+    promotion: activePromotion(),
     draft: (await rows<{ draft: unknown }>(db, "SELECT draft FROM onboarding_drafts WHERE profile_id=$1", [user.id]))[0]?.draft ?? null,
     platformAdmin: (
       await one<{ allowed: boolean }>(
