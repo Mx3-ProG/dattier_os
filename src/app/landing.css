@@ -23,7 +23,7 @@
   outline: none;
 }
 .landing [id] {
-  scroll-margin-top: 88px;
+  scroll-margin-top: 140px;
 }
 @media (prefers-reduced-motion: no-preference) {
   html:has(.landing) {
@@ -109,6 +109,16 @@
   display: flex;
   flex-wrap: wrap;
   gap: 12px;
+}
+
+/* Bandeau Black Friday et en-tête restent ensemble en haut de l’écran au défilement. */
+.landing-top {
+  position: sticky;
+  top: 0;
+  z-index: 40;
+}
+.landing-top .landing-header {
+  position: static;
 }
 
 /* Header */

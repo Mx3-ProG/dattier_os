@@ -168,6 +168,7 @@ export function Landing({
       <a className="skip-link" href="#contenu">
         Aller au contenu
       </a>
+      <div className="landing-top">
       <BlackFridayBanner />
       <header className="landing-header">
         <Link href="/" className="landing-brand">
@@ -185,6 +186,7 @@ export function Landing({
           Se connecter
         </Link>
       </header>
+      </div>
 
       <main id="contenu" tabIndex={-1}>
         <section className="landing-hero">
