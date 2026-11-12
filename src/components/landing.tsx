@@ -1,5 +1,6 @@
 import { plans, additionalRestaurantPrice } from "@/features/platform/pricing";
 import { activePromotion, trialDays, type Promotion } from "@/features/platform/promotion";
+import { BlackFridayBar } from "@/components/black-friday-bar";
 import { addonCatalog, addonMonthlyCents } from "@/features/addons/catalog";
 import Link from "next/link";
 import { LegalLinks } from "@/components/legal/legal-page";
@@ -181,35 +182,19 @@ const faq = (days: number) => [
   }
 ];
 
-function Cta({ demoHref, inverse, days }: { demoHref?: string; inverse?: boolean; days: number }) {
+function Cta({ demoHref, inverse, days, promo }: { demoHref?: string; inverse?: boolean; days: number; promo: Promotion | null }) {
   return (
     <div className="landing-cta">
       <Link
         className={`landing-btn ${inverse ? "light" : "primary"}`}
         href="/checkout/39"
       >
-        Essayer gratuitement {days} jours <ArrowUpRight size={16} aria-hidden />
+        {promo ? `Je m’abonne à ${promo.price} € / mois` : `Essayer gratuitement ${days} jours`} <ArrowUpRight size={16} aria-hidden />
       </Link>
       <Link className="landing-btn outline" href={demoHref || "/guide"}>
         {demoHref ? "Me projeter dans la démo" : "Découvrir comment ça marche"}
       </Link>
     </div>
-  );
-}
-
-function PromoBanner({ promo }: { promo: Promotion }) {
-  return (
-    <aside className="landing-promo" aria-label="Offre Black Friday">
-      <span className="landing-promo-tag">Black Friday</span>
-      <p>
-        <strong>{promo.price} € TTC / mois</strong> les {promo.months} premiers mois au lieu de 39 €,
-        et <strong>{promo.trialDays} jours d’essai</strong> gratuits. Code{" "}
-        <code>{promo.code}</code> jusqu’au {promo.lastDay} minuit.
-      </p>
-      <Link className="landing-btn light small" href="/checkout/39">
-        J’en profite <ArrowUpRight size={16} aria-hidden />
-      </Link>
-    </aside>
   );
 }
 
@@ -299,6 +284,7 @@ export function Landing({
       <a className="skip-link" href="#contenu">
         Aller au contenu
       </a>
+      {promo && <BlackFridayBar promo={promo} />}
       <header className="landing-header">
         <Link href="/" className="landing-brand">
           <Store size={20} aria-hidden /> STUDIO OS
@@ -321,7 +307,6 @@ export function Landing({
       </header>
 
       <main id="contenu" tabIndex={-1}>
-        {promo && <PromoBanner promo={promo} />}
         <section className="landing-hero">
           <div className="landing-hero-copy">
             <span className="landing-eyebrow">
@@ -342,7 +327,7 @@ export function Landing({
               Relation client (CRM), gestion de votre activité (ERP) et création
               de site (CMS) : les outils de votre commerce réunis au même endroit.
             </p>
-            <Cta demoHref={demoHref} days={days} />
+            <Cta demoHref={demoHref} days={days} promo={promo} />
             <div className="landing-trust-links">
               <a href="#equipe">Maintenu par Studio ATS</a>
               <Link href="/guide">Un guide ouvert à tous</Link>
@@ -352,7 +337,7 @@ export function Landing({
             </div>
             <p className="landing-note">
               {promo
-                ? `${days} jours gratuits · Puis ${promo.price} € TTC / mois pendant ${promo.months} mois avec le code ${promo.code}, ensuite 39 € · Sans engagement`
+                ? `Black Friday : ${promo.price} € TTC / mois pendant ${promo.months} mois avec le code ${promo.code}, puis 39 € · Sans engagement, résiliable à tout moment`
                 : `${days} jours gratuits · Puis 39 € TTC / mois après activation · Sans engagement`}
             </p>
           </div>
@@ -865,7 +850,7 @@ export function Landing({
                   ))}
                 </ul>
                 <Link className="landing-btn light" href={`/checkout/${p.price}`}>
-                  Essayer {p.title} gratuitement
+                  {promo ? `Je m’abonne à ${promo.price} € / mois` : `Essayer ${p.title} gratuitement`}
                 </Link>
               </article>
             ))}
@@ -950,7 +935,7 @@ export function Landing({
               ? "Prenez le temps de vous projeter dans la démo. Imaginez votre prochaine journée avec moins de choses à gérer."
               : "Commencez par ce qui vous pèse le plus. Les clients, le site, les commandes : avancez à votre rythme."}
           </p>
-          <Cta demoHref={demoHref} inverse days={days} />
+          <Cta demoHref={demoHref} inverse days={days} promo={promo} />
         </section>
       </main>
 

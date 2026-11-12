@@ -94,7 +94,9 @@ export async function planCheckout(organization: string) {
   if (grantingStatuses.has(context.status))
     throw new Error("Cette organisation a déjà un abonnement en cours.");
   // Keep the remaining free days when Stripe allows it (trial end ≥ 48 h ahead).
-  const trialEnd = context.trial_ends_at && !context.paid_plan
+  // During a promotion the first discounted month is charged right away instead,
+  // so the customer locks the offer before the code expires.
+  const trialEnd = context.trial_ends_at && !context.paid_plan && !activePromotion()
     ? Math.floor(Date.parse(context.trial_ends_at) / 1000)
     : 0;
   const keepTrial = trialEnd > Math.floor(Date.now() / 1000) + 49 * 3600;
