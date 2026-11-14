@@ -1,5 +1,7 @@
-/* Outils de langue française du moteur réflexe : normalisation, nombres en
-   lettres, rapprochement approximatif des mots (pluriels, fautes de frappe). */
+/* Outils de langue française : normalisation, nombres en
+   lettres, rapprochement approximatif des mots (pluriels, fautes de frappe).
+   Module partagé du noyau, utilisé par l’assistant et par les modules métier
+   (factures, banque, rapprochement). Indépendant de l’IA. */
 
 export function normalize(value: string) {
   return value

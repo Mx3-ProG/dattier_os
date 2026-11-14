@@ -21,7 +21,7 @@ import { chapterIcons } from "./tutorial/icons";
 import { GuideToc } from "./guide-toc";
 import { LegalLinks } from "./legal/legal-page";
 import { PlatformCookieConsent } from "./legal/platform-cookie-consent";
-import { packs, welcomeCredits, eur } from "@/domain/assistant/pricing";
+
 
 const matrix: [Permission, string][] = [
   ["orders", "Commandes"],
@@ -55,7 +55,7 @@ const stock = [
   ["Perte", "Si une préparation commencée est annulée."],
 ];
 
-const faq = [
+const faq = (welcomeCredits: number) => [
   [
     "STUDIO S encaisse-t-il l’argent dans mon commerce ?",
     "Non. Vous encaissez avec votre terminal de paiement ou en espèces, puis vous déclarez le règlement dans STUDIO S. Les ventes, la fidélité et les rapports restent ainsi justes. Pour la commande en ligne, le paiement peut passer par Stripe.",
@@ -93,7 +93,7 @@ const faq = [
 /** La démo s’ouvre dans un nouvel onglet : la page d’origine reste ouverte. */
 const newTab = { target: "_blank", rel: "noopener" } as const;
 
-export function GuidePage({
+export async function GuidePage({
   demoHref,
   demoSiteHref,
 }: {
@@ -101,6 +101,23 @@ export function GuidePage({
   demoHref?: string;
   demoSiteHref?: string;
 }) {
+  let packs: { id: string; title: string; credits: number; priceCents: number; hint: string }[] = [];
+  let welcomeCredits = 0;
+  let eur = (cents: number) =>
+    new Intl.NumberFormat("fr-FR", { style: "currency", currency: "EUR" }).format(cents / 100);
+  try {
+    const moduleName = "@/domain/assistant/pricing";
+    const mod = (await import(moduleName)) as {
+      packs?: typeof packs;
+      welcomeCredits?: number;
+      eur?: (cents: number) => string;
+    };
+    if (mod.packs) packs = mod.packs;
+    if (typeof mod.welcomeCredits === "number") welcomeCredits = mod.welcomeCredits;
+    if (mod.eur) eur = mod.eur;
+  } catch {
+    // module IA absent : section crédits masquée
+  }
   const toc = [
     { id: "bien-demarrer", label: "Bien démarrer, pas à pas" },
     { id: "comprendre", label: "Comprendre STUDIO S" },
@@ -405,20 +422,24 @@ export function GuidePage({
                   STUDIO VOICE vous propose la suite : suivi, règlement, table.
                 </li>
               </ol>
-              <h3 className="guide-sub">Crédits</h3>
-              <p>
-                {welcomeCredits} crédits offerts à l’inscription. Réponse
-                réflexe : 1 crédit. Analyse IA avancée : 2 à 60 crédits selon la
-                longueur. Solde, aide et navigation : gratuits.
-              </p>
-              <ul className="guide-points">
-                {packs.map((p) => (
-                  <li key={p.id}>
-                    <b>Pack {p.title}</b> : {p.credits.toLocaleString("fr-FR")}{" "}
-                    crédits pour {eur(p.priceCents)} TTC · {p.hint}
-                  </li>
-                ))}
-              </ul>
+              {(packs.length > 0 || welcomeCredits > 0) && (
+                <>
+                  <h3 className="guide-sub">Crédits</h3>
+                  <p>
+                    {welcomeCredits} crédits offerts à l’inscription. Réponse
+                    réflexe : 1 crédit. Analyse IA avancée : 2 à 60 crédits selon la
+                    longueur. Solde, aide et navigation : gratuits.
+                  </p>
+                  <ul className="guide-points">
+                    {packs.map((p) => (
+                      <li key={p.id}>
+                        <b>Pack {p.title}</b> : {p.credits.toLocaleString("fr-FR")}{" "}
+                        crédits pour {eur(p.priceCents)} TTC · {p.hint}
+                      </li>
+                    ))}
+                  </ul>
+                </>
+              )}
               <Link className="guide-practice" href="/dashboard">
                 <Wand2 size={15} aria-hidden /> Essayer STUDIO VOICE dans le poste
                 <ArrowRight size={15} aria-hidden />
@@ -552,7 +573,7 @@ export function GuidePage({
               <span className="landing-eyebrow">Questions fréquentes</span>
               <h2>Vous vous demandez peut-être…</h2>
               <div className="guide-faq">
-                {faq.map(([q, a]) => (
+                {faq(welcomeCredits).map(([q, a]) => (
                   <details key={q}>
                     <summary>{q}</summary>
                     <p>{a}</p>

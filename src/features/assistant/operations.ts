@@ -15,7 +15,7 @@ import {
   parisParts,
   type BaseUnit,
 } from "./parse";
-import { euros, similarity, words } from "@/domain/assistant/text";
+import { euros, similarity, words } from "@/domain/shared/text";
 import type { ActionPayload, AssistantContext, Proposal } from "./types";
 
 export type Step = {

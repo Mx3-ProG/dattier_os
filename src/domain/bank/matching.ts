@@ -1,6 +1,6 @@
 /* Recherche de correspondances, sans accès à la base : entièrement testable.
    Ne propose que des opérations qui existent déjà. Sans correspondance : rien. */
-import { normalize } from "@/domain/assistant/text";
+import { normalize } from "@/domain/shared/text";
 
 export type BankTx = {
   id: string;

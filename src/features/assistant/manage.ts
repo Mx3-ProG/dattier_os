@@ -24,7 +24,7 @@ import {
 } from "./operations";
 import { parseAmount, parseDay, parseEuros, parseHour, parseTimeRange } from "./parse";
 import { reservationProposal } from "./proposals";
-import { normalize, sameWord, similarity, words } from "@/domain/assistant/text";
+import { normalize, sameWord, similarity, words } from "@/domain/shared/text";
 import type { Answer, AssistantContext, Proposal } from "./types";
 
 const filler = new Set([

@@ -1,7 +1,7 @@
 /* Base de connaissances de STUDIO VOICE : le guide d’utilisation (même source que
    la page /guide et la visite interactive). */
 import { chapters, glossary } from "@/features/guide/content";
-import { normalize, similarity, words } from "@/domain/assistant/text";
+import { normalize, similarity, words } from "@/domain/shared/text";
 import type { Answer } from "./types";
 
 type Passage = {

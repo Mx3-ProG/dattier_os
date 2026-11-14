@@ -579,3 +579,16 @@
   font-weight: 800;
   font-size: 18px;
 }
+
+/* Actions de suivi : article, formation, prestation. */
+.site-blog-actions,
+.site-article-actions {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-top: 10px;
+}
+.site-article-actions {
+  margin: 0 0 12px;
+}

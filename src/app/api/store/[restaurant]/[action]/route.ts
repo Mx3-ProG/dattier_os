@@ -15,7 +15,11 @@ import { getDb, type DB } from "@/infrastructure/database/db";
 import { withDatabaseContext } from "@/infrastructure/database/context";
 import { actor, type Actor } from "@/infrastructure/auth/session";
 import { commerce } from "@/features/commerce/service";
-import { customerForActor } from "@/features/commerce/account";
+import {
+  customerForActor,
+  followItem,
+  unfollowItem,
+} from "@/features/commerce/account";
 import {
   attachCustomerReferral,
   ensureReferralCode,
@@ -296,6 +300,23 @@ async function routePOST(req: NextRequest, c: Context) {
                 body,
                 await customerForActor(db, restaurant, user),
               );
+            }
+            // Espace client contextuel : suivre ou arrêter de suivre un contenu.
+            if (action === "follow" || action === "unfollow") {
+              if (!user) throw new Error("Connexion client requise.");
+              const customer = await customerForActor(db, restaurant, user);
+              const kind = String(body.kind || "");
+              if (!["article", "course", "service"].includes(kind))
+                throw new Error("Type de contenu inconnu.");
+              const refId = String(body.ref_id || "");
+              if (action === "unfollow")
+                return unfollowItem(db, customer, kind as "article", refId);
+              return followItem(db, restaurant, customer, {
+                kind: kind as "article",
+                refId,
+                label: body.label,
+                progress: Number(body.progress ?? 0),
+              });
             }
             throw new Error("Action inconnue.");
           }),

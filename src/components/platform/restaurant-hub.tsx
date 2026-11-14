@@ -11,7 +11,7 @@ import type { Settings } from "@/features/commerce/schema";
 import { can, roleLabels, type Role } from "@/core/permissions";
 import { availableRestaurantModules, type RestaurantModuleId } from "@/features/platform/admin-navigation";
 import { industries, industryLabels, trades, type Industry } from "@/features/onboarding/catalog";
-import { RestaurantAdminShell } from "./restaurant-admin-shell";
+import { BusinessAdminShell } from "./restaurant-admin-shell";
 import { adaptText } from "@/core/tenant/vocabulary";
 type Member = { id: string; name: string; email: string; role: string };
 type ShopOrder = {
@@ -97,7 +97,7 @@ export function RestaurantHub({
       );
       const d = await r.json();
       if (r.status === 401) {
-        router.push(`/auth/login?returnTo=/restaurant/${restaurant}`);
+        router.push(`/auth/login?returnTo=/commerce/${restaurant}`);
         throw new Error("Connexion requise.");
       }
       if (!r.ok) throw new Error(d.error?.message || "Opération impossible.");
@@ -163,7 +163,7 @@ export function RestaurantHub({
     allowed: boolean;
   }[];
   return (
-    <RestaurantAdminShell
+    <BusinessAdminShell
       restaurant={restaurant}
       restaurantName={restaurantName}
       industry={activity.industry}
@@ -992,7 +992,7 @@ export function RestaurantHub({
         </>
       )}
       </div>
-    </RestaurantAdminShell>
+    </BusinessAdminShell>
   );
 }
 

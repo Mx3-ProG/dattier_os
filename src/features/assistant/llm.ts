@@ -2,9 +2,17 @@
    Le modèle voit un résumé du service limité aux droits de l’utilisateur et le
    guide complet. Il ne modifie jamais les données : ses outils fabriquent des
    propositions que l’utilisateur confirme dans le poste. */
-import Anthropic from "@anthropic-ai/sdk";
 import { guideDigest } from "./knowledge";
 import { navigation } from "./reflex";
+import {
+  createLlmProvider,
+  llmEnabled as providerLlmEnabled,
+  llmModel as providerLlmModel,
+  type LlmProvider,
+  type LlmTool,
+  type ToolCall,
+  type ChatMessage,
+} from "./providers";
 import { linkStep, supplierStep } from "./manage";
 import {
   customerStep,
@@ -36,15 +44,15 @@ import { providerCostEur, type TokenUsage } from "@/domain/assistant/pricing";
 import type { Answer, AssistantContext, Proposal, Turn } from "./types";
 import type { PeriodQuery } from "@/features/finance/dashboard";
 
-export const llmEnabled = () => !!process.env.ANTHROPIC_API_KEY;
-export const llmModel = () => process.env.ATACUISINE_AI_MODEL || "claude-opus-5-5";
+export const llmEnabled = providerLlmEnabled;
+export const llmModel = providerLlmModel;
 
-let client: Anthropic | undefined;
-const anthropic = () => (client ??= new Anthropic({ maxRetries: 1, timeout: 45_000 }));
+let provider: LlmProvider | undefined;
+const llm = () => (provider ??= createLlmProvider());
 
 const object = (
   properties: Record<string, unknown>,
-): Anthropic.Beta.BetaTool.InputSchema => ({
+): Record<string, unknown> => ({
   type: "object",
   properties,
   required: Object.keys(properties),
@@ -53,7 +61,7 @@ const object = (
 const tableNumber = { type: "integer", description: "Numéro de table affiché en salle." };
 const modules = navigation.map(([, id]) => id);
 
-const tools: Anthropic.Beta.BetaTool[] = [
+const tools: LlmTool[] = [
   {
     name: "propose_order",
     description:
@@ -285,7 +293,7 @@ const tools: Anthropic.Beta.BetaTool[] = [
 ];
 
 /** Outil en lecture seule, proposé uniquement aux profils ayant accès aux finances. */
-export const readFinanceTool: Anthropic.Beta.BetaTool = {
+export const readFinanceTool: LlmTool = {
   name: "read_finance",
   description:
     "Lit les indicateurs financiers réels de l’établissement sur une période. Lecture seule. Chaque valeur porte un statut : confirmed, partial, estimate ou missing (valeur null, avec la raison).",
@@ -317,19 +325,14 @@ Règles :
 - Pour une commande, choisis le menu_id le plus proche du nom demandé ; si un plat n’existe pas, propose les plus proches au lieu d’inventer.
 - Texte simple, listes courtes avec « • », gras avec **…** pour l’essentiel. Pas de tableau, pas de titre.
 - Réponse orale possible : reste sous 90 mots sauf demande d’analyse détaillée.
+- Confirmation orale : commence toujours ta réponse par une phrase courte qui montre que tu as compris la demande (« C’est noté, je prépare… », « Je commence le travail… », « J’ai bien entendu… »). Cette phrase doit tenir en une seule courte phrase, avant tout détail ou liste.
+- Quand l’utilisateur parle, réponds comme si tu lui parlais à l’oreille : phrases courtes, ton chaleureux et direct, sans jargon. Évite les parenthèses et les listes trop longues.
 
 # Guide d’utilisation de STUDIO OS
 `;
 
-let systemCache: Anthropic.Beta.BetaTextBlockParam[] | undefined;
-const system = () =>
-  (systemCache ??= [
-    {
-      type: "text",
-      text: instructions + guideDigest(),
-      cache_control: { type: "ephemeral" },
-    },
-  ]);
+let systemCache: string | undefined;
+const system = () => (systemCache ??= instructions + guideDigest());
 
 function contextJson(ctx: AssistantContext) {
   return JSON.stringify({
@@ -382,7 +385,7 @@ type Out = {
 
 function runTool(
   ctx: AssistantContext,
-  block: Anthropic.Beta.BetaToolUseBlock,
+  block: ToolCall,
   out: Out,
 ) {
   const input = block.input as Record<string, unknown>;
@@ -528,7 +531,7 @@ function runTool(
 
 /** Toute erreur, droits compris, revient au modèle comme un refus sans détail technique. */
 export async function financeTool(
-  call: Pick<Anthropic.Beta.BetaToolUseBlock, "input">,
+  call: Pick<ToolCall, "input">,
   readFinance?: (query: PeriodQuery) => Promise<unknown>,
 ) {
   if (!readFinance)
@@ -559,14 +562,13 @@ export async function askLlm(
   ctx: AssistantContext,
   readFinance?: (query: PeriodQuery) => Promise<unknown>,
 ): Promise<Outcome> {
-  const messages: Anthropic.Beta.BetaMessageParam[] = [
-    ...history.slice(-8).map((t) => ({ role: t.role, content: t.content.slice(0, 1500) })),
+  const messages: ChatMessage[] = [
+    ...history.slice(-8).map((t) => ({ role: t.role as "user" | "assistant", content: t.content.slice(0, 1500) })),
     {
       role: "user",
       content: `<contexte>${contextJson(ctx)}</contexte>\n\n${question}`,
     },
   ];
-  if (messages[0]?.role !== "user") messages.shift();
   const out: Out = {
     proposals: [],
     suggestions: [],
@@ -574,53 +576,37 @@ export async function askLlm(
   const usages: TokenUsage[] = [];
   const texts: string[] = [];
   let model = llmModel();
+  const tools = toolsFor(ctx) as LlmTool[];
   for (let round = 0; round < 4; round++) {
-    const response = await anthropic().beta.messages.create({
+    const response = await llm().chat({
       model: llmModel(),
-      max_tokens: 8000,
-      betas: ["server-side-fallback-2026-07-01"],
-      fallbacks: "default",
-      output_config: { effort: "low" },
       system: system(),
-      tools: toolsFor(ctx),
       messages,
+      tools,
+      maxTokens: 8000,
     });
     model = response.model;
     usages.push(response.usage);
-    if (response.stop_reason === "refusal") {
-      texts.push("Je ne peux pas répondre à cette demande.");
-      break;
-    }
-    for (const block of response.content)
-      if (block.type === "text" && block.text.trim()) texts.push(block.text.trim());
-    const calls = response.content.filter(
-      (b): b is Anthropic.Beta.BetaToolUseBlock => b.type === "tool_use",
+    for (const t of response.text) if (t.trim()) texts.push(t.trim());
+    const calls = response.toolCalls;
+    if (!calls.length) break;
+    messages.push({ role: "assistant", content: response.text.join("\n"), tool_calls: calls });
+    const results = await Promise.all(
+      calls.map(async (call) => {
+        const result =
+          call.name === "read_finance"
+            ? await financeTool(call, readFinance)
+            : runTool(ctx, call, out);
+        return { tool_call_id: call.id, content: result.content, is_error: result.error };
+      }),
     );
-    if (response.stop_reason !== "tool_use" || !calls.length) break;
-    messages.push({ role: "assistant", content: response.content });
-    messages.push({
-      role: "user",
-      content: await Promise.all(
-        calls.map(async (call) => {
-          const result =
-            call.name === "read_finance"
-              ? await financeTool(call, readFinance)
-              : runTool(ctx, call, out);
-          return {
-            type: "tool_result" as const,
-            tool_use_id: call.id,
-            content: result.content,
-            is_error: result.error,
-          };
-        }),
-      ),
-    });
-    // Question posée : on attend l’utilisateur, inutile de relancer le modèle.
+    for (const r of results) {
+      messages.push({ role: "tool", tool_call_id: r.tool_call_id, content: r.content });
+    }
     if (out.question) {
       if (!texts.some((t) => t.includes(out.question!))) texts.push(out.question);
       break;
     }
-    // Si seules des suggestions ou une navigation restent, inutile de relancer.
     if (calls.every((c) => ["suggest_followups", "open_module"].includes(c.name)) && texts.length) break;
   }
   return {

@@ -44,7 +44,7 @@ export function TenantSiteProvider({
   audience?: AudienceMode | null;
   /** Famille d'activité : adapte le vocabulaire du site (carte, table, restaurant…). */
   industry?: Industry;
-  children: ReactNode;
+  children?: ReactNode;
 }) {
   const value = useMemo(
     () => ({ restaurant, demo, platformOrigin, preview, shopEnabled, audience, industry }),
@@ -78,7 +78,7 @@ export function useTenantSite() {
       )
         return context.platformOrigin + base + path;
       if (["/demo", "/dashboard", "/platform"].includes(path))
-        return `${context.platformOrigin}/restaurant/${context.restaurant}`;
+        return `${context.platformOrigin}/commerce/${context.restaurant}`;
       if (path === "/source") return `${context.platformOrigin}/source`;
       return base + (path === "/" ? "" : path);
     }

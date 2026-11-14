@@ -8,8 +8,11 @@ import {
   LayoutTemplate,
   PenLine,
   Search,
+  Sparkles,
 } from "lucide-react";
 import { siteTemplates, type SiteTemplate } from "@/features/cms/templates";
+import { templateContent } from "@/features/cms/template-content";
+import { effectLabels } from "@/features/cms/effects";
 import { fonts } from "@/features/cms/theme";
 import { Button } from "../ui/button";
 import { Modal } from "../forms";
@@ -51,9 +54,11 @@ function TemplatePreview({ template: t }: { template: SiteTemplate }) {
           </div>
           <div
             className="tpl-site-photo"
-            style={{ backgroundImage: `url("${t.image}")` }}
+            style={{
+              backgroundImage: `url("${templateContent[t.id]?.hero?.image?.src ?? t.image}")`,
+            }}
             role="img"
-            aria-label="Illustration culinaire de démonstration"
+            aria-label="Aperçu du modèle"
           />
         </div>
         {t.premium && (
@@ -287,6 +292,16 @@ export function TemplatesPanel({
                   </li>
                 ))}
               </ul>
+              <ul className="tpl-features tpl-effects">
+                {([t.effects.title, t.effects.button, t.effects.card] as const)
+                  .filter((e) => e !== "none")
+                  .map((e) => (
+                    <li key={e}>
+                      <Sparkles size={13} />
+                      {effectLabels[e]}
+                    </li>
+                  ))}
+              </ul>
               <div className="tpl-card-foot">
                 <span className="tpl-swatches" aria-hidden="true">
                   <i style={{ background: t.theme.colors.primary }} />
@@ -352,6 +367,22 @@ export function TemplatesPanel({
                 <Check size={14} /> {f}
               </li>
             ))}
+          </ul>
+          <ul className="tpl-features tpl-effects">
+            {(
+              [
+                selected.effects.title,
+                selected.effects.button,
+                selected.effects.card,
+                selected.effects.badge,
+              ] as const
+            )
+              .filter((e) => e !== "none")
+              .map((e) => (
+                <li key={e}>
+                  <Sparkles size={14} /> {effectLabels[e]}
+                </li>
+              ))}
           </ul>
           <label className="shop-apply-option">
             <input

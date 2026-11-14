@@ -3,6 +3,9 @@ import { PublicAppearance, PublicModeSwitch } from "./public-appearance";
 import { SiteDecoration } from "./site-decoration";
 import { SiteBackgroundMotion } from "./site-background";
 import { TemplateExtras } from "./template-extras";
+import { EffectBadge, EffectButton, EffectCard, EffectTitle } from "./effects";
+import { spaceOf } from "@/features/cms/account-space";
+import { FollowButton } from "./account/follow-button";
 import "./templates.css";
 import { ProductRecommendations } from "../product-recommendations";
 import { ProductDetails } from "../product-details";
@@ -541,6 +544,23 @@ export function DonutStore({
       preview ? { "data-cms-section": section.id } : {},
     { branding, header, footer } = config;
   const css = useMemo(() => themeCss(config.theme), [config.theme]);
+  // Effets du modèle : coupés si les animations sont désactivées par l'établissement.
+  const effects =
+    config.theme.presentation?.motion === false
+      ? undefined
+      : config.theme.presentation?.effects;
+  // L'espace client s'adapte au modèle de site choisi.
+  const space = spaceOf(config.theme.presentation?.layout);
+  // Palette réelle du thème : React Bits analyse les couleurs dans un canvas.
+  const palette = useMemo(
+    () => ({
+      text: config.theme.colors.text,
+      accent: config.theme.colors.accent,
+      primary: config.theme.colors.primary,
+      onAccent: config.theme.colors.buttonText,
+    }),
+    [config.theme.colors],
+  );
   const backgroundDesign = effectiveSiteBackground(config.branding.background, siteAddons.backgrounds);
   // Each section of the page, in the order chosen in the CMS. The JSX of the
   // original sections is unchanged; only their texts and media come from the
@@ -574,12 +594,25 @@ export function DonutStore({
                   <span /> {r(p.kicker)}
                 </p>
               )}
-              <h1>{r(p.title)}</h1>
+              <h1>
+                <EffectTitle
+                  effect={effects?.title ?? "none"}
+                  palette={palette}
+                >
+                  {r(p.title)}
+                </EffectTitle>
+              </h1>
               {p.lead && <p className="donut-lead">{r(p.lead)}</p>}
               <div className="donut-hero-actions">
-                <SiteLink link={p.primary} className="donut-button">
-                  <ArrowUpRight size={21} />
-                </SiteLink>
+                <EffectButton
+                  effect={effects?.button ?? "none"}
+                  palette={palette}
+                  className="effect-button"
+                >
+                  <SiteLink link={p.primary} className="donut-button">
+                    <ArrowUpRight size={21} />
+                  </SiteLink>
+                </EffectButton>
                 <SiteLink link={p.secondary} className="donut-text-link">
                   <ArrowRight size={17} />
                 </SiteLink>
@@ -590,7 +623,10 @@ export function DonutStore({
                     const Icon = badgeIcons[badge.icon];
                     return (
                       <span key={index}>
-                        <Icon size={17} /> {badge.label}
+                        <Icon size={17} />{" "}
+                        <EffectBadge effect={effects?.badge ?? "none"}>
+                          {badge.label}
+                        </EffectBadge>
                       </span>
                     );
                   })}
@@ -707,6 +743,12 @@ export function DonutStore({
                   .filter((p) => category === "Tout" || p.category === category)
                   .slice(0, fp.limit && category === "Tout" ? fp.limit : 100)
                   .map((p, i) => (
+                    <EffectCard
+                      key={p.id}
+                      effect={effects?.card ?? "none"}
+                      palette={palette}
+                      className="effect-card"
+                    >
                     <article
                       className={`donut-product tone-${i % 4}`}
                       key={p.id}
@@ -807,8 +849,22 @@ export function DonutStore({
                             <Plus size={20} aria-hidden />
                           </button>
                         )}
+                        {/* Sur un site de formation ou de services, un produit
+                            s'inscrit depuis l'espace client. */}
+                        {space !== "commerce" && (
+                          <FollowButton
+                            kind={
+                              space === "learner" ? ("course" as const) : ("service" as const)
+                            }
+                            refId={p.id}
+                            label={p.name}
+                          >
+                            {space === "learner" ? "Suivre la formation" : "Suivre"}
+                          </FollowButton>
+                        )}
                       </span>
                     </article>
+                    </EffectCard>
                   ))}
               </div>
             )}
@@ -1310,7 +1366,10 @@ export function DonutStore({
           </p>
         </section>
       ) : (
-        <CustomerAccount onReorder={reorder} />
+        <CustomerAccount
+          onReorder={reorder}
+          space={space}
+        />
       );
     if (preview && block === "reservationForm")
       return (

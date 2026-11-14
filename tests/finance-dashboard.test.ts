@@ -26,7 +26,7 @@ import {
   readFinanceTool,
   toolsFor,
 } from "../src/features/assistant/llm";
-import { euros } from "../src/domain/assistant/text";
+import { euros } from "../src/domain/shared/text";
 
 const R = "bernay";
 const owner = { id: "nadia", name: "Nadia", role: "OWNER" as const };
@@ -317,7 +317,7 @@ test("assistant : réponses tirées des vraies données, chiffres absents annonc
 test("outil IA : réservé à la finance, lecture seule, erreurs sans détail", async () => {
   assert.ok(toolsFor({ permissions: ["finance"] }).includes(readFinanceTool));
   assert.ok(!toolsFor({ permissions: ["orders"] }).includes(readFinanceTool));
-  assert.equal(readFinanceTool.input_schema.required?.includes("period"), true);
+  assert.equal((readFinanceTool.input_schema.required as string[] | undefined)?.includes("period"), true);
   let received: unknown;
   const ok = await financeTool(
     { input: { period: "custom", from: "2026-01-01", to: "2026-01-31" } },

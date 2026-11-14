@@ -31,10 +31,18 @@ type Props = {
   params: Promise<{ restaurant: string; page?: string[] }>;
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 };
+import { getSiteCache, setSiteCache } from "@/infrastructure/cache/site-cache";
+
 /** Memoised per request: metadata and page share a single database round. */
 const loadSite = cache(
   async (restaurant: string, raw: string, mode: string, host: string) => {
     const preview = mode === "draft" || /^version:[a-f0-9-]{36}$/.test(mode);
+    const cacheable = !preview && mode === "" && !demoEnabled();
+    if (cacheable) {
+      const cached = getSiteCache(restaurant, host, mode, demoEnabled());
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      if (cached) return cached as any;
+    }
     const user = preview ? await actor().catch(() => null) : null;
     if (preview && !user) notFound();
     return withDatabaseContext(
@@ -109,7 +117,7 @@ const loadSite = cache(
               )
             : undefined;
           if (isProduct && !product) notFound();
-          return {
+          const result = {
             product,
             siteAddons: await cms.siteAddons(db),
             redirect: null,
@@ -139,6 +147,10 @@ const loadSite = cache(
                   )
                 ).rows[0]?.mode ?? null,
           };
+          if (cacheable) {
+            setSiteCache(restaurant, host, mode, demoEnabled(), result);
+          }
+          return result;
         }),
     );
   },

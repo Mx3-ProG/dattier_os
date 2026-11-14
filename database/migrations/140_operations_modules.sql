@@ -52,7 +52,7 @@ LANGUAGE sql STABLE SECURITY DEFINER SET search_path=public,pg_temp AS $$
       WHEN 'team' THEN true
       WHEN 'settings' THEN true
       WHEN 'security' THEN true
-      WHEN 'ai-assistant' THEN true
+      WHEN 'ai-assistant' THEN b.studio
       -- Ouverts à toutes les familles d'activité (commandes, cuisine et bar : modules gratuits ci-dessous)
       WHEN 'orders' THEN app.addon_installed(rid,'ops-orders')
       WHEN 'catalog' THEN true

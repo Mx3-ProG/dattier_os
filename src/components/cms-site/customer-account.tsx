@@ -2,8 +2,10 @@
 import { useTenantSite, TenantLink as Link } from "./context";
 import { useCallback, useEffect, useState } from "react";
 import {
+  BookOpen,
   CalendarDays,
   Gift,
+  GraduationCap,
   History,
   Home,
   LogOut,
@@ -11,6 +13,7 @@ import {
   Sparkles,
   Star,
   UserPlus,
+  Wrench,
   Zap,
   type LucideIcon,
 } from "lucide-react";
@@ -28,6 +31,16 @@ import {
 import { ReferralCard } from "./account/referral";
 import { longDate, SectionTitle, type Account, type ReorderItem } from "./account/shared";
 import { CustomerQrSheet, QrPill } from "./account/qr-sheet";
+import { SpacePanel, SpaceProgress } from "./account/space";
+import { AccountGuestHero, AccountInvitation } from "./account/guest";
+import type { FollowKind } from "./account/follow-button";
+import {
+  accountSpaceLabels,
+  accountTabs,
+  followKindsBySpace,
+  type AccountSpaceId,
+  type AccountTabId,
+} from "@/features/cms/account-space";
 
 const reviewSuggestions = [
   "J’ai vraiment aimé cette commande, tout était délicieux !",
@@ -52,13 +65,30 @@ const orderDate = (date: string) =>
     minute: "2-digit",
   });
 
-type Tab = "accueil" | "recompenses" | "parrainage" | "historique";
-const tabs: { id: Tab; label: string; icon: LucideIcon }[] = [
-  { id: "accueil", label: "Accueil", icon: Home },
-  { id: "recompenses", label: "Cadeaux", icon: Gift },
-  { id: "parrainage", label: "Parrainage", icon: UserPlus },
-  { id: "historique", label: "Historique", icon: History },
-];
+type Tab = AccountTabId;
+type TabDef = { id: Tab; label: string; icon: LucideIcon };
+
+/** Les onglets dépendent du modèle de site : la fidélité n'a pas de sens sur
+ * un blog, et un tableau de bord d'apprenant n'a pas de sens en brasserie. */
+const tabsFor = (space: AccountSpaceId): TabDef[] =>
+  accountTabs[space].map((t) => ({
+    id: t.id,
+    label: t.label,
+    icon:
+      t.id === "accueil"
+        ? Home
+        : t.id === "recompenses"
+          ? Gift
+          : t.id === "parrainage"
+            ? UserPlus
+            : t.id === "suivis"
+              ? space === "learner"
+                ? GraduationCap
+                : space === "reader"
+                  ? BookOpen
+                  : Wrench
+              : History,
+  }));
 const referralKey = "ca-referral-code";
 const bookingStatus: Record<string, string> = {
   requested: "En attente",
@@ -85,10 +115,14 @@ function pendingReferral() {
 
 export function CustomerAccount({
   onReorder,
+  space = "commerce",
 }: {
   onReorder: (items: ReorderItem[]) => void;
+  /** Le modèle de site décide de la forme de l'espace client. */
+  space?: AccountSpaceId;
 }) {
   const { request: fetch, shopPost } = useTenantSite();
+  const tabs = tabsFor(space);
   const [account, setAccount] = useState<Account | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -180,6 +214,16 @@ export function CustomerAccount({
     })();
   }, [load, fetch, shopPost]);
 
+  const unfollow = async (kind: FollowKind, refId: string) => {
+    setError("");
+    try {
+      await shopPost("unfollow", { kind, ref_id: refId });
+      await load();
+    } catch (reason) {
+      setError((reason as Error).message);
+    }
+  };
+
   const go = (target: string) => {
     if (target === "fidelite") {
       setTab("accueil");
@@ -215,38 +259,12 @@ export function CustomerAccount({
     return (
       <section className="ca ca-guest">
         {invitation && (
-          <div className="ca-invite" role="status">
-            <Gift />
-            <span>
-              <b>{invitation.referrer} vous invite !</b>
-              {invitation.welcome
-                ? ` Créez votre compte : ${invitation.welcome} sur votre première commande.`
-                : " Créez votre compte pour rejoindre la maison."}
-            </span>
-          </div>
+          <AccountInvitation
+            referrer={invitation.referrer}
+            welcome={invitation.welcome}
+          />
         )}
-        <div className="ca-guest-hero">
-          <p className="ca-kicker">Espace client privé</p>
-          <h1>Votre fidélité, à votre nom.</h1>
-          <p className="ca-muted">
-            Un compte gratuit pour commander en click & collect, réserver,
-            cumuler des points et débloquer des cadeaux.
-          </p>
-          <ul className="ca-perks">
-            <li>
-              <Star /> <span><b>Des points à chaque commande</b> échangeables contre des cadeaux</span>
-            </li>
-            <li>
-              <Zap /> <span><b>Ventes flash</b> réservées et bonus membres</span>
-            </li>
-            <li>
-              <UserPlus /> <span><b>Parrainage</b> : vos amis reçoivent un cadeau, vous gagnez des points</span>
-            </li>
-            <li>
-              <Sparkles /> <span><b>Badges et niveaux</b> à débloquer au fil de vos visites</span>
-            </li>
-          </ul>
-        </div>
+        <AccountGuestHero space={space} />
         {error && (
           <p className="ca-error" role="alert">
             {error}
@@ -280,7 +298,16 @@ export function CustomerAccount({
     <section className="ca">
       <div className="ca-topbar">
         <nav className="ca-tabs" aria-label="Sections de mon espace">
-          {tabs.filter((t) => e.enabled || t.id === "accueil" || t.id === "historique").map((t) => {
+          {tabs
+            .filter(
+              (t) =>
+                space === "commerce" ||
+                e.enabled ||
+                t.id === "accueil" ||
+                t.id === "historique" ||
+                t.id === "suivis",
+            )
+            .map((t) => {
             const Icon = t.icon;
             return (
               <button
@@ -324,7 +351,25 @@ export function CustomerAccount({
 
       {visibleTab === "accueil" && (
         <div className="ca-stack" key="accueil">
-          {!e.enabled ? (
+          {space !== "commerce" ? (
+            <>
+              <section className="ca-card">
+                <h1>Bonjour {account.customer.name.trim().split(/\s+/)[0]}</h1>
+                <p>
+                  {accountSpaceLabels[space]} : retrouvez ici ce que vous
+                  suivez et votre progression.
+                </p>
+                <button className="ca-button" onClick={() => go("suivis")}>
+                  {space === "reader"
+                    ? "Voir mes articles"
+                    : space === "learner"
+                      ? "Voir mes formations"
+                      : "Voir mes prestations"}
+                </button>
+              </section>
+              <SpaceProgress account={account} />
+            </>
+          ) : !e.enabled ? (
             <section className="ca-card">
               <h1>Bonjour {account.customer.name.trim().split(/\s+/)[0]}</h1>
               <p>Retrouvez vos commandes dans votre espace client.</p>
@@ -359,6 +404,20 @@ export function CustomerAccount({
             <LevelsLadder account={account} />
             <PointsHistory account={account} />
           </div>
+        </div>
+      )}
+
+      {space !== "commerce" && visibleTab === "suivis" && (
+        <div className="ca-stack" key="suivis">
+          {followKindsBySpace[space].map((k) => (
+            <SpacePanel
+              key={k.kind}
+              kind={k.kind}
+              account={account}
+              onUnfollow={(kind, refId) => void unfollow(kind, refId)}
+            />
+          ))}
+          <SpaceProgress account={account} />
         </div>
       )}
 

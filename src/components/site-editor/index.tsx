@@ -570,7 +570,7 @@ export function SiteEditor({
           >
             Réessayer
           </button>
-          <Link href={`/restaurant/${restaurant}`}>
+          <Link href={`/commerce/${restaurant}`}>
             Retour à l’administration
           </Link>
           <Link href={`/dashboard?restaurant=${restaurant}`}>

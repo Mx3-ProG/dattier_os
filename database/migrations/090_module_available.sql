@@ -36,7 +36,7 @@ LANGUAGE sql STABLE SECURITY DEFINER SET search_path=public,pg_temp AS $$
       WHEN 'team' THEN true
       WHEN 'settings' THEN true
       WHEN 'security' THEN true
-      WHEN 'ai-assistant' THEN true
+      WHEN 'ai-assistant' THEN b.studio
       -- Aujourd'hui réservés au secteur restauration, sans condition commerciale
       WHEN 'orders' THEN b.food
       WHEN 'catalog' THEN b.food

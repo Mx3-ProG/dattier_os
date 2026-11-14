@@ -5,8 +5,18 @@ import {
   applySiteTemplate,
   siteTemplates,
 } from "../src/features/cms/templates";
-import { contrastChecks } from "../src/features/cms/rules";
+import { checkInvariants, contrastChecks } from "../src/features/cms/rules";
 import { siteConfigSchema } from "../src/features/cms/schema";
+import { createElement } from "react";
+import { renderToString } from "react-dom/server";
+import { TenantSiteProvider } from "../src/components/cms-site/context";
+import { PresentationFields } from "../src/components/site-editor/presentation-fields";
+import {
+  effectIsPremium,
+  effectsAreValid,
+} from "../src/features/cms/effects";
+import { existsSync } from "node:fs";
+import { resolve } from "node:path";
 
 test("all templates preserve identity, legal and protected pages", () => {
   // Free + premium partition the whole catalogue (no hardcoded count).
@@ -91,4 +101,150 @@ test("legacy sites keep their theme and premium effects can be disabled and save
   const free = applySiteTemplate(result, siteTemplates[0]);
   assert.equal(free.theme.presentation?.stickyAction, "none");
   assert.equal(free.theme.presentation?.stickyHeader, false);
+});
+
+test("templates ship unique content, media on disk and distinct compositions", () => {
+  const compositions = new Set<string>();
+  const heroes = new Set<string>();
+  for (const template of siteTemplates) {
+    const result = siteConfigSchema.parse(
+      applySiteTemplate(defaultConfig(), template, true),
+    );
+    const home = result.pages.home;
+    const hero = home.sections.find((s) => s.type === "hero");
+    assert.ok(hero?.type === "hero", template.id);
+    // Unique voice: no two templates share the same hero title or lead.
+    assert.ok(!heroes.has(hero.props.title), `${template.id}: hero title duplicated`);
+    heroes.add(hero.props.title);
+    assert.ok(hero.props.lead.length > 40, `${template.id}: hero lead too short`);
+    // Composition differs from every other template.
+    const signature = home.sections.map((s) => s.type).join("|");
+    assert.ok(!compositions.has(signature), `${template.id}: composition duplicated`);
+    compositions.add(signature);
+    // Media referenced by the template exists in the repository.
+    for (const section of home.sections) {
+      const props = section.props as Record<string, unknown>;
+      const sources: string[] = [];
+      if (typeof props.image === "object" && props.image) {
+        const src = (props.image as { src?: string }).src;
+        if (src) sources.push(src);
+      }
+      if (typeof props.source === "object" && props.source) {
+        const src = (props.source as { src?: string }).src;
+        if (src) sources.push(src);
+      }
+      for (const src of sources) {
+        if (!src.startsWith("/cms/")) continue;
+        assert.ok(
+          existsSync(resolve("public", src.replace(/^\//, ""))),
+          `${template.id}: missing ${src}`,
+        );
+      }
+    }
+  }
+});
+
+test("every template has its own effect signature, no signature twice", () => {
+  const signatures = new Set<string>();
+  for (const template of siteTemplates) {
+    const effects = template.theme.presentation?.effects;
+    assert.ok(effects, `${template.id}: no effect signature`);
+    assert.ok(
+      effectsAreValid(effects),
+      `${template.id}: invalid effect signature`,
+    );
+    const signature = `${effects.title}|${effects.button}|${effects.card}|${effects.badge}`;
+    assert.ok(!signatures.has(signature), `${template.id}: effect signature duplicated`);
+    signatures.add(signature);
+    // Les effets payants en CPU sont réservés aux modèles premium.
+    if (effectIsPremium(effects.button) || effectIsPremium(effects.card))
+      assert.ok(template.premium, `${template.id}: heavy effect on a free model`);
+  }
+  assert.equal(signatures.size, siteTemplates.length);
+});
+
+test("un modèle gratuit ne peut pas activer un effet premium", () => {
+  const free = siteTemplates.find((t) => !t.premium)!;
+  const premium = siteTemplates.find((t) => t.premium)!;
+  const freeConfig = applySiteTemplate(defaultConfig(), free, true);
+  freeConfig.theme.presentation!.effects = {
+    ...freeConfig.theme.presentation!.effects!,
+    button: "spark",
+  };
+  assert.throws(() => checkInvariants(freeConfig), /premium/);
+  const premiumConfig = applySiteTemplate(defaultConfig(), premium, true);
+  premiumConfig.theme.presentation!.effects = {
+    ...premiumConfig.theme.presentation!.effects!,
+    button: "spark",
+  };
+  assert.doesNotThrow(() => checkInvariants(premiumConfig));
+});
+
+test("une composition sans effet reste acceptée (site ancien, effets coupés)", () => {
+  const template = siteTemplates.find((t) => t.id === "bistrot")!;
+  const config = applySiteTemplate(defaultConfig(), template, true);
+  config.theme.presentation!.effects = undefined;
+  assert.doesNotThrow(() => checkInvariants(config));
+  const parsed = siteConfigSchema.parse(config);
+  assert.equal(parsed.theme.presentation?.effects, undefined);
+});
+
+test("l’éditeur propose un choix d’effet par emplacement", () => {
+  const template = siteTemplates.find((t) => t.id === "signature")!;
+  const html = renderToString(
+    createElement(
+      TenantSiteProvider,
+      { restaurant: "atelier" },
+      createElement(PresentationFields, {
+        value: template.theme.presentation!,
+        change: () => {},
+      }),
+    ),
+  );
+  for (const label of [
+    "Effets d’interface",
+    "Titre de la bannière",
+    "Bouton principal",
+    "Cartes de la carte",
+    "Pastilles d’avantages",
+  ])
+    assert.ok(html.includes(label), label);
+  // Sur un modèle gratuit, l’effet premium est proposé mais verrouillé.
+  const free = siteTemplates.find((t) => !t.premium)!;
+  const freeHtml = renderToString(
+    createElement(
+      TenantSiteProvider,
+      { restaurant: "atelier" },
+      createElement(PresentationFields, {
+        value: free.theme.presentation!,
+        change: () => {},
+      }),
+    ),
+  );
+  assert.match(freeHtml, /<option value="spark" disabled=""/);
+});
+
+test("every template ships a playable video and a gallery with photos", () => {
+  for (const template of siteTemplates) {
+    const result = siteConfigSchema.parse(
+      applySiteTemplate(defaultConfig(), template, true),
+    );
+    const types = result.pages.home.sections.map((s) => s.type);
+    assert.ok(types.includes("video"), `${template.id}: no video section`);
+    assert.ok(types.includes("featuredProducts"), `${template.id}: no offer section`);
+    if (types.includes("gallery")) {
+      const gallery = result.pages.home.sections.find((s) => s.type === "gallery");
+      assert.ok(
+        gallery?.type === "gallery" && gallery.props.images.length > 0,
+        `${template.id}: gallery has no photo`,
+      );
+    }
+    const video = result.pages.home.sections.find((s) => s.type === "video");
+    assert.ok(
+      video?.type === "video" &&
+        video.props.source.kind === "file" &&
+        video.props.source.src.endsWith(".mp4"),
+      `${template.id}: video has no local file`,
+    );
+  }
 });

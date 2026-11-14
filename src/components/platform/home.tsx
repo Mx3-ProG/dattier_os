@@ -214,7 +214,7 @@ export function PlatformHome() {
                         >
                           Ouvrir le poste de travail <ArrowUpRight size={16} />
                         </a>
-                        <a href={`/restaurant/${r.id}`}>Administrer</a>
+                        <a href={`/commerce/${r.id}`}>Administrer</a>
                         {plan >= 39 && <a href={`/r/${r.id}`}>Voir le site</a>}
                         {can(r.user_roles, "orders") && (
                           <a href={`/offline?restaurant=${r.id}`}>

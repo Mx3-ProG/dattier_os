@@ -5,6 +5,7 @@ import { useState, type ReactNode } from "react";
 import { ArrowUpRight, Play } from "lucide-react";
 import type { SectionOf } from "@/features/cms/schema";
 import { rich, type PlaceholderContext } from "@/features/cms/text";
+import { FollowButton } from "../cms-site/account/follow-button";
 import type { Settings } from "@/features/commerce/schema";
 
 /**
@@ -660,11 +661,20 @@ export function BlogList({
               {a.date && <time>{rich(a.date, ctx)}</time>}
               <h3>{rich(a.title, ctx)}</h3>
               {a.excerpt && <p>{rich(a.excerpt, ctx)}</p>}
-              {a.href && (
-                <SiteLink link={{ label: "Lire la suite", href: a.href }} className="donut-text-link">
-                  <ArrowUpRight size={16} />
-                </SiteLink>
-              )}
+              <span className="site-blog-actions">
+                {a.href && (
+                  <SiteLink link={{ label: "Lire la suite", href: a.href }} className="donut-text-link">
+                    <ArrowUpRight size={16} />
+                  </SiteLink>
+                )}
+                <FollowButton
+                  kind="article"
+                  refId={a.href || a.title}
+                  label={a.title}
+                >
+                  Suivre
+                </FollowButton>
+              </span>
             </div>
           </article>
         ))}
@@ -681,6 +691,16 @@ export function Article({
   return (
     <article className="donut-section site-article" {...attrs}>
       <Heading kicker={p.kicker} title={p.title} ctx={ctx} />
+      <div className="site-article-actions">
+        <FollowButton
+          kind="article"
+          refId={p.title}
+          label={p.title}
+          progress={100}
+        >
+          Marquer comme lu
+        </FollowButton>
+      </div>
       {p.image?.src && (
         <img
           src={p.image.src}

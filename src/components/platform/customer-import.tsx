@@ -41,7 +41,7 @@ export function CustomerImport({restaurant}:{restaurant:string}) {
     void run(false,value,nc,cc);
   }
   return <main className="access-shell"><div className="access-panel" style={{maxWidth:880,margin:"2rem auto"}}>
-    <Link href={"/restaurant/"+restaurant}>← Établissement</Link>
+    <Link href={"/commerce/"+restaurant}>← Établissement</Link>
     <h1>Importer vos clients</h1><p>Importez des fiches propres à cet établissement. Aucun compte client, point de fidélité ou consentement marketing n’est créé.</p>
     <div className="onboarding-fields"><label>Fichier CSV (5 Mo et 5 000 clients maximum)<input type="file" accept=".csv,text/csv" onChange={(e)=>void load(e.target.files?.[0])}/></label>
       {csv&&<><p>{filename}</p><label>Colonne du nom<select value={nameColumn} onChange={(e)=>{setNameColumn(Number(e.target.value));setPreview(null);}}>{headers.map((h,i)=><option key={i} value={i}>{h}</option>)}</select></label>

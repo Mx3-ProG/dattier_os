@@ -197,3 +197,26 @@
   --appearance-muted: initial;
   --appearance-link: initial;
 }
+
+.tpl-effects {
+  margin-top: 8px;
+}
+.tpl-effects li {
+  color: var(--site-primary, #7c3aed);
+}
+.tpl-effects li svg {
+  color: var(--site-primary, #7c3aed);
+}
+
+.site-effects {
+  display: grid;
+  gap: 12px;
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid var(--appearance-line, #e9e9e1);
+}
+.site-effects .site-field small {
+  display: block;
+  margin-top: 4px;
+  color: var(--appearance-muted, #595f55);
+}

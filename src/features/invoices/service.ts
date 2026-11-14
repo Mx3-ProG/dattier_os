@@ -8,8 +8,8 @@ import { requirePermission } from "@/core/permissions";
 import { requireCommercialCapability } from "@/features/platform/entitlements";
 import { log } from "@/features/orders/service";
 import { ensureDefaults } from "@/features/finance/service";
-import { normalize } from "@/domain/assistant/text";
-import { llmCredits } from "@/domain/assistant/pricing";
+import { normalize } from "@/domain/shared/text";
+
 import { imageType } from "@/features/site/media";
 import {
   categories,
@@ -20,7 +20,42 @@ import {
   type InvoiceDraft,
   type Issue,
 } from "@/domain/invoices/checks";
-import { extractionEnabled, extractWithAi } from "./extract";
+/* Extraction IA optionnelle : chargée dynamiquement pour que le module factures
+   ne dépende pas statiquement du module assistant (détachabilité). */
+type InvoiceExtractor = {
+  extractionEnabled: () => boolean;
+  extractWithAi: (
+    data: Buffer,
+    contentType: string,
+  ) => Promise<{
+    draft: InvoiceDraft;
+    uncertain: string[];
+    isInvoice: boolean;
+    costEur: number;
+    model: string;
+    credits: number;
+  } | null>;
+};
+let extractorPromise: Promise<InvoiceExtractor | null> | null = null;
+function loadInvoiceExtractor(): Promise<InvoiceExtractor | null> {
+  if (extractorPromise) return extractorPromise;
+  extractorPromise = (async () => {
+    try {
+      const moduleName = "@/features/assistant/invoice-extraction";
+      const mod = (await import(moduleName)) as {
+        extractionEnabled: () => boolean;
+        extractWithAi: InvoiceExtractor["extractWithAi"];
+      };
+      return {
+        extractionEnabled: mod.extractionEnabled,
+        extractWithAi: mod.extractWithAi,
+      };
+    } catch {
+      return null;
+    }
+  })();
+  return extractorPromise;
+}
 import { saveDocument } from "./storage";
 import { factureXFromPdf, parseInvoiceXml } from "./structured";
 
@@ -163,24 +198,27 @@ export async function uploadInvoice(
     message = "Facture électronique lue : à valider.";
   } else if (type === "application/xml") {
     throw new Error("Ce fichier XML n’est pas une facture CII ou UBL.");
-  } else if (extractionEnabled()) {
-    try {
-      const read = await extractWithAi(data, type);
-      if (read) {
-        draft = read.draft;
-        uncertain = read.uncertain;
-        source = "ai";
-        usage = {
-          credits: llmCredits(read.costEur),
-          cost: read.costEur,
-          model: read.model,
-        };
-        message = read.isInvoice
-          ? "Lue par l’IA : vérifiez chaque champ avant de valider."
-          : "Ce document ne ressemble pas à une facture : vérifiez-le.";
+  } else {
+    const extractor = await loadInvoiceExtractor();
+    if (extractor?.extractionEnabled()) {
+      try {
+        const read = await extractor.extractWithAi(data, type);
+        if (read) {
+          draft = read.draft;
+          uncertain = read.uncertain;
+          source = "ai";
+          usage = {
+            credits: read.credits,
+            cost: read.costEur,
+            model: read.model,
+          };
+          message = read.isInvoice
+            ? "Lue par l’IA : vérifiez chaque champ avant de valider."
+            : "Ce document ne ressemble pas à une facture : vérifiez-le.";
+        }
+      } catch {
+        message = "Lecture automatique indisponible : à compléter à la main.";
       }
-    } catch {
-      message = "Lecture automatique indisponible : à compléter à la main.";
     }
   }
 
@@ -287,7 +325,7 @@ export async function invoicesState(db: DB, r: string, user: Actor) {
     [r],
   );
   return {
-    aiEnabled: extractionEnabled(),
+    aiEnabled: (await loadInvoiceExtractor())?.extractionEnabled() ?? false,
     vatRegime: settings.vat_regime,
     categories: Object.entries(categories).map(([id, c]) => ({
       id,

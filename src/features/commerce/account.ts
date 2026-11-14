@@ -30,3 +30,58 @@ export async function customerForActor(db: DB, r: string, user: Actor) {
   );
   return created.id;
 }
+
+/** Ce que le client suit : articles lus, formations suivies, prestations en cours. */
+export async function customerFollows(db: DB, customerId: string) {
+  return rows<{
+    kind: "article" | "course" | "service";
+    ref_id: string;
+    label: string;
+    progress: number;
+    updated_at: string;
+  }>(
+    db,
+    "SELECT kind,ref_id,label,progress,updated_at FROM customer_follows WHERE customer_id=$1 ORDER BY updated_at DESC",
+    [customerId],
+  );
+}
+
+/**
+ * Le client suit (ou arrête de suivre) un article, une formation ou une
+ * prestation. La progression est libre de 0 à 100 : lue, en cours, terminée.
+ */
+export async function followItem(
+  db: DB,
+  restaurantId: string,
+  customerId: string,
+  input: { kind: "article" | "course" | "service"; refId: string; label?: string; progress?: number },
+) {
+  const kind = input.kind;
+  const refId = String(input.refId || "").slice(0, 120);
+  if (!refId) throw new Error("Référence manquante.");
+  const progress = Math.max(0, Math.min(100, Math.round(input.progress ?? 0)));
+  const label = String(input.label ?? "").slice(0, 200);
+  return one<{ id: string }>(
+    db,
+    `INSERT INTO customer_follows(id,restaurant_id,customer_id,kind,ref_id,label,progress)
+     VALUES($1,$2,$3,$4,$5,$6,$7)
+     ON CONFLICT(restaurant_id,customer_id,kind,ref_id) DO UPDATE
+       SET progress=EXCLUDED.progress,label=EXCLUDED.label,updated_at=now()
+     RETURNING id`,
+    [randomUUID(), restaurantId, customerId, kind, refId, label, progress],
+  );
+}
+
+/** Le client arrête de suivre un contenu. */
+export async function unfollowItem(
+  db: DB,
+  customerId: string,
+  kind: "article" | "course" | "service",
+  refId: string,
+) {
+  await db.query(
+    "DELETE FROM customer_follows WHERE customer_id=$1 AND kind=$2 AND ref_id=$3",
+    [customerId, kind, String(refId).slice(0, 120)],
+  );
+  return { ok: true };
+}

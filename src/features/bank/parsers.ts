@@ -3,7 +3,7 @@
    fausseraient la trésorerie sans que personne ne le voie. */
 import { createHash } from "node:crypto";
 import { XMLParser } from "fast-xml-parser";
-import { normalize } from "@/domain/assistant/text";
+import { normalize } from "@/domain/shared/text";
 
 export type Movement = {
   bookedOn: string;

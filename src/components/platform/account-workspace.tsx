@@ -90,7 +90,7 @@ export function AccountWorkspace({
               <Link
                 className="restaurant-nav-link"
                 key={r.id}
-                href={`/restaurant/${encodeURIComponent(r.id)}`}
+                href={`/commerce/${encodeURIComponent(r.id)}`}
               >
                 <Building2 size={18} />
                 <span>{r.name}</span>

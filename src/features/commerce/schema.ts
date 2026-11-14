@@ -191,6 +191,14 @@ export type CustomerAccount = {
   }[];
   orders: ShopOrder[];
   engagement: AccountEngagement;
+  /** Ce que le client suit : articles, formations, prestations. */
+  follows: {
+    kind: "article" | "course" | "service";
+    ref_id: string;
+    label: string;
+    progress: number;
+    updated_at: string;
+  }[];
 };
 export function preparation(o: ShopOrder) {
   if (o.status === "cancelled") return "cancelled";

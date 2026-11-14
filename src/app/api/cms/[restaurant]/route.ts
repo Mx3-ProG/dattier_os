@@ -9,6 +9,7 @@ import {
   failure,
 } from "@/features/platform/http";
 import { website } from "@/features/cms/service";
+import { invalidateSiteCache } from "@/infrastructure/cache/site-cache";
 import { limits } from "@/features/cms/media";
 type Context = { params: Promise<{ restaurant: string }> };
 async function routeGET(req: NextRequest, c: Context) {
@@ -39,8 +40,10 @@ async function routePOST(req: NextRequest, c: Context) {
       const cms = website(restaurant);
       return cms.siteAction(db, await cms.siteScope(db, user), body);
     });
-    if (["publish", "restore"].includes(body.op))
+    if (["publish", "restore"].includes(body.op)) {
       revalidatePath(`/r/${restaurant}`, "layout");
+      invalidateSiteCache(restaurant);
+    }
     return json(result);
   } catch (e) {
     return failure(e);

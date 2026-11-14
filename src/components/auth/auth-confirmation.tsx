@@ -10,9 +10,11 @@ type State =
   | { step: "failed"; message: string };
 
 /**
- * Landing page of the links Supabase e-mails (sign-up confirmation, password
- * recovery). Handles the default link format (tokens in the URL fragment) and
- * custom templates passing `token_hash`, so it works from any device.
+ * Landing page of the links Supabase e-mails (sign-up confirmation, magic
+ * link, password recovery, e-mail change). Handles the default link format
+ * (tokens in the URL fragment) and the custom templates of
+ * docs/platform/email-templates, which pass `token_hash` so the token is only
+ * spent here (not by mail link scanners) and works from any device.
  */
 export function AuthConfirmation({ config, returnTo }: { config: SupabasePublic; returnTo: string }) {
   const [state, setState] = useState<State>({ step: "working" });

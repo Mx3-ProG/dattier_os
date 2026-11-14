@@ -1,5 +1,11 @@
 import { z } from "zod";
 import { isSafeHref } from "./text";
+import {
+  badgeEffectIds,
+  buttonEffectIds,
+  cardEffectIds,
+  titleEffectIds,
+} from "./effects";
 
 /** Bump when the shape changes; add a migration step in `upgrade()` (service.ts). */
 export const SCHEMA_VERSION = 1;
@@ -43,6 +49,15 @@ export const fontIds = [
 export type FontId = (typeof fontIds)[number];
 
 export const presentationSchema = z.object({
+  /** Effets d'interface du modèle (React Bits) : optionnels pour les sites existants. */
+  effects: z
+    .object({
+      title: z.enum(titleEffectIds),
+      button: z.enum(buttonEffectIds),
+      card: z.enum(cardEffectIds),
+      badge: z.enum(badgeEffectIds),
+    })
+    .optional(),
   layout: z.enum([
     "bistrot",
     "jardin",
@@ -196,7 +211,7 @@ export const sectionProps = {
           z
             .string()
             .regex(
-              /^\/api\/cms\/[a-zA-Z0-9_-]+\/media\/[a-f0-9-]{36}\.(mp4|webm)$/,
+              /^(\/cms\/[a-z0-9/_.-]+\.(mp4|webm)|\/api\/cms\/[a-zA-Z0-9_-]+\/media\/[a-f0-9-]{36}\.(mp4|webm))$/,
             ),
           z.literal(""),
         ]),

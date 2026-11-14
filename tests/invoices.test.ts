@@ -18,7 +18,7 @@ import {
   dedupeKey,
   emptyDraft,
 } from "../src/domain/invoices/checks";
-import { setInvoiceAi } from "../src/features/invoices/extract";
+import { setInvoiceAi } from "../src/features/assistant/invoice-extraction";
 import {
   factureXFromPdf,
   parseInvoiceXml,

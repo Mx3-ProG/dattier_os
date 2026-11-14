@@ -80,7 +80,7 @@ export function restaurantModuleHref(
   restaurant: string,
   module: RestaurantModuleId,
 ) {
-  const base = `/restaurant/${encodeURIComponent(restaurant)}`;
+  const base = `/commerce/${encodeURIComponent(restaurant)}`;
   if (["site", "security", "seo"].includes(module))
     return `${base}/${module}`;
   return `${base}?module=${module}`;

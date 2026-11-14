@@ -119,7 +119,7 @@ export const moduleManifest = [
   { id: "connections", label: "Connexions", family: "exploitation", offer: "addon-monthly", requires: [], enhancedBy: [], navigation: [], industries: [], legacy: addon("connections") },
 
   // --- IA, payée avec les crédits IA ----------------------------------------------
-  { id: "ai-assistant", label: "Assistant IA", family: "ia", offer: "ai-credits", requires: [], enhancedBy: [], navigation: [], industries: [], legacy: always },
+  { id: "ai-assistant", label: "Assistant IA", family: "ia", offer: "ai-credits", requires: [], enhancedBy: [], navigation: [], industries: [], legacy: plan },
   { id: "ai-invoice-extraction", label: "Lecture IA des factures", family: "ia", offer: "ai-credits", requires: ["invoices"], enhancedBy: [], navigation: [], industries: [], legacy: addon("invoices") },
 ] as const satisfies readonly ModuleManifest[];
 

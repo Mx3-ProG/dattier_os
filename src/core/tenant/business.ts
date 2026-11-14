@@ -19,6 +19,9 @@ export const industries = [
   "other",
 ] as const;
 export type Industry = (typeof industries)[number];
+/** Un secteur reçu d'une URL : seuls les secteurs déclarés sont acceptés. */
+export const isIndustry = (value: unknown): value is Industry =>
+  typeof value === "string" && (industries as readonly string[]).includes(value);
 
 /**
  * Identifiant d'un commerce. Même valeur que `restaurants.id` / `restaurant_id` :

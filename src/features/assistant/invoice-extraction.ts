@@ -4,7 +4,7 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { z } from "zod";
 import { llmModel } from "@/features/assistant/llm";
-import { providerCostEur, type TokenUsage } from "@/domain/assistant/pricing";
+import { llmCredits, providerCostEur, type TokenUsage } from "@/domain/assistant/pricing";
 import { categories, type Category, type InvoiceDraft } from "@/domain/invoices/checks";
 
 const nullable = (type: string) => ({ type: [type, "null"] });
@@ -71,6 +71,7 @@ export type Extraction = {
   isInvoice: boolean;
   costEur: number;
   model: string;
+  credits: number;
 };
 type AiClient = Pick<Anthropic["beta"], "messages">;
 let client: AiClient | undefined;
@@ -136,6 +137,7 @@ export async function extractWithAi(
       uncertain: [],
       isInvoice: true,
       costEur,
+      credits: llmCredits(costEur),
       model: response.model,
     };
   const parsed = answer.safeParse(JSON.parse(block.text));
@@ -145,6 +147,7 @@ export async function extractWithAi(
       uncertain: [],
       isInvoice: true,
       costEur,
+      credits: llmCredits(costEur),
       model: response.model,
     };
   const a = parsed.data;
@@ -163,6 +166,7 @@ export async function extractWithAi(
     uncertain: a.uncertain_fields,
     isInvoice: a.is_invoice,
     costEur,
+    credits: llmCredits(costEur),
     model: response.model,
   };
 }

@@ -5,6 +5,7 @@ import { productionEnabled } from "@/infrastructure/database/db";
 import type { Actor } from "@/infrastructure/auth/session";
 import { requirePermission } from "@/core/permissions";
 import { asEmail, asPhone, commercial, optOut, type Channel } from "./contact";
+import { emailLayout, senderName } from "./email-layout";
 
 export const messageSchema = z
   .object({
@@ -55,9 +56,6 @@ export function recipientOf(
     : asPhone(t.contact);
 }
 
-const escapeHtml = (s: string) =>
-  s.replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`);
-
 export async function sendEmail(
   to: string,
   subject: string,
@@ -77,7 +75,7 @@ export async function sendEmail(
       to: [to],
       subject,
       text,
-      html: `<div style="font-family:system-ui,sans-serif;font-size:15px;line-height:1.6;color:#1f2937">${escapeHtml(text).replace(/\n/g, "<br>")}</div>`,
+      html: emailLayout({ sender: senderName(from), text }),
       ...(options.attachment ? { attachments: [{ filename: options.attachment.filename, content: options.attachment.content.toString("base64") }] } : {}),
     }),
     signal: AbortSignal.timeout(10000),

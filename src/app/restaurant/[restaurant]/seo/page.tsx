@@ -1,5 +1,5 @@
 import { SeoDashboard } from "@/components/platform/seo-dashboard";
-import { RestaurantAdminShell } from "@/components/platform/restaurant-admin-shell";
+import { BusinessAdminShell } from "@/components/platform/restaurant-admin-shell";
 import { restaurantAdminContext } from "@/features/platform/admin-context";
 import { notFound } from "next/navigation";
 export default async function Page({
@@ -11,7 +11,7 @@ export default async function Page({
   const access = await restaurantAdminContext(restaurant).catch(() => null);
   if (!access) notFound();
   return (
-    <RestaurantAdminShell
+    <BusinessAdminShell
       restaurant={restaurant}
       restaurantName={access.restaurantName}
       industry={access.activity.industry}
@@ -23,6 +23,6 @@ export default async function Page({
       contentClassName="platform"
     >
       <SeoDashboard restaurant={restaurant} />
-    </RestaurantAdminShell>
+    </BusinessAdminShell>
   );
 }

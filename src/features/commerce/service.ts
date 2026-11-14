@@ -4,6 +4,7 @@ import { processPayment } from "@/features/finance/books";
 import { enqueue } from "@/features/platform/jobs";
 import { minimumOnlineAmount, onlineReady } from "@/features/payments/config";
 import { one, rows, type DB } from "@/infrastructure/database/db";
+import { customerFollows } from "./account";
 import { menu } from "@/application/snapshot";
 import {
   createOrder,
@@ -244,6 +245,7 @@ export function commerce(SHOP: string) {
         customer.consent,
         rewards,
       ),
+      follows: await customerFollows(db, customerId),
     };
   }
   async function checkout(

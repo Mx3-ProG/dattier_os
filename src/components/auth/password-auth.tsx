@@ -1,10 +1,10 @@
 "use client";
-import { useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import Link from "next/link";
 import { NewPasswordFields, PasswordField, newPasswordError } from "./password-field";
 
 export type SupabasePublic = { url: string; key: string };
-type Mode = "login" | "register" | "forgot";
+type Mode = "login" | "register" | "forgot" | "magic";
 
 type AuthResponse = {
   access_token?: string;
@@ -32,6 +32,8 @@ export function authError(data: AuthResponse, status: number) {
     return "Mot de passe trop faible : 12 caractères minimum, avec majuscule, minuscule, chiffre et caractère spécial.";
   if (code === "over_email_send_rate_limit" || code === "over_request_rate_limit" || status === 429)
     return "Trop de tentatives. Patientez quelques minutes puis réessayez.";
+  if (code === "otp_disabled" || /signups not allowed for otp/i.test(text))
+    return "Aucun compte n’est associé à cette adresse. Créez un compte pour commencer.";
   if (code === "signup_disabled") return "Les inscriptions sont momentanément fermées.";
   if (code === "email_address_invalid" || /invalid.*email/i.test(text))
     return "Adresse e-mail invalide.";
@@ -92,6 +94,13 @@ export function PasswordAuth({
   const [info, setInfo] = useState(notice || "");
   const [unconfirmed, setUnconfirmed] = useState(false);
   const [sent, setSent] = useState("");
+  // Supabase refuses a new link for the same address within 60 seconds.
+  const [cooldown, setCooldown] = useState(0);
+  useEffect(() => {
+    if (cooldown <= 0) return;
+    const timer = setTimeout(() => setCooldown((s) => s - 1), 1000);
+    return () => clearTimeout(timer);
+  }, [cooldown]);
   // Computed on demand: window does not exist while the page renders on the server.
   const confirmationUrl = () => `${window.location.origin}/connexion/confirmation?${new URLSearchParams({ returnTo })}`;
 
@@ -124,6 +133,16 @@ export function PasswordAuth({
         });
         if (!data.access_token) throw new Error("Connexion refusée.");
         await openSession(data.access_token, returnTo);
+        return;
+      }
+      if (mode === "magic") {
+        if (cooldown > 0) return;
+        await callAuth(config, `otp?${new URLSearchParams({ redirect_to: confirmationUrl() })}`, {
+          email: cleanEmail,
+          create_user: false,
+        });
+        setInfo(`Lien envoyé à ${cleanEmail}. Ouvrez-le depuis n’importe quel appareil pour vous connecter. Il reste valable une heure. Rien reçu ? Vérifiez vos indésirables.`);
+        setCooldown(60);
         return;
       }
       if (mode === "register") {
@@ -184,14 +203,16 @@ export function PasswordAuth({
     <>
       <span className="access-label">Espace client</span>
       <h1>
-        {mode === "register" ? "Créer votre compte" : mode === "forgot" ? "Mot de passe oublié" : "Heureux de vous revoir."}
+        {mode === "register" ? "Créer votre compte" : mode === "forgot" ? "Mot de passe oublié" : mode === "magic" ? "Connexion par e-mail" : "Heureux de vous revoir."}
       </h1>
       <p>
         {mode === "register"
           ? "Inscrivez-vous avec votre adresse e-mail pour ouvrir votre espace."
           : mode === "forgot"
             ? "Recevez un lien pour choisir un nouveau mot de passe."
-            : "Connectez-vous pour retrouver votre espace STUDIO S."}
+            : mode === "magic"
+              ? "Pas besoin de mot de passe : recevez un lien qui vous connecte en un clic."
+              : "Connectez-vous pour retrouver votre espace STUDIO S."}
       </p>
       <form className="access-form" onSubmit={submit} noValidate method="post">
         {mode === "register" && (
@@ -212,9 +233,11 @@ export function PasswordAuth({
         )}
         {error && <p role="alert" className="access-error">{error}</p>}
         {info && <p role="status">{info}</p>}
-        <button className="access-primary" disabled={busy}>
+        <button className="access-primary" disabled={busy || (mode === "magic" && cooldown > 0)}>
           {busy
             ? "Un instant…"
+            : mode === "magic"
+              ? cooldown > 0 ? `Renvoyer le lien (${cooldown} s)` : info ? "Renvoyer le lien" : "Recevoir mon lien de connexion"
             : mode === "register"
               ? "Créer mon compte"
               : mode === "forgot"
@@ -226,10 +249,13 @@ export function PasswordAuth({
         <p><button type="button" className="access-link" onClick={() => void resend()} disabled={busy}>Renvoyer l’e-mail de confirmation</button></p>
       )}
       {mode === "login" && (
-        <p><button type="button" className="access-link" onClick={() => switchTo("forgot")}>Mot de passe oublié ?</button></p>
+        <>
+          <p><button type="button" className="access-link" onClick={() => switchTo("magic")}>Recevoir un lien de connexion par e-mail</button></p>
+          <p><button type="button" className="access-link" onClick={() => switchTo("forgot")}>Mot de passe oublié ?</button></p>
+        </>
       )}
       <p>
-        {mode === "register" ? "Déjà un compte ?" : mode === "forgot" ? "Vous vous en souvenez ?" : "Première visite ?"}{" "}
+        {mode === "register" ? "Déjà un compte ?" : mode === "forgot" ? "Vous vous en souvenez ?" : mode === "magic" ? "Vous préférez le mot de passe ?" : "Première visite ?"}{" "}
         <button type="button" className="access-link" onClick={() => switchTo(mode === "login" ? "register" : "login")}>
           {mode === "login" ? "Créer un compte" : "Se connecter"}
         </button>

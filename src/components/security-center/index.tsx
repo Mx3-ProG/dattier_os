@@ -216,7 +216,7 @@ export function SecurityCenter({ restaurant }: { restaurant: string }) {
           <h2>Ce centre n’est pas disponible avec votre profil</h2>
           <p>{error}</p>
           <div className="actions">
-            <Link href={`/restaurant/${restaurant}`}>
+            <Link href={`/commerce/${restaurant}`}>
               Retour à l’administration
             </Link>
             <Link href={`/dashboard?restaurant=${encodeURIComponent(restaurant)}`}>

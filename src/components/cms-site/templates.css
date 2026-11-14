@@ -285,3 +285,376 @@ body:has(.donut-site.is-cms-preview) > .demo-purchase-link { display: none; }
   border-radius: 0;
   padding: 32px;
 }
+
+/* ── Univers : une identité visuelle propre à chaque modèle ── */
+/* Chaque modèle a sa géométrie, sa typographie de titre et son rythme. */
+
+/* Le Jardin — feuillage, vert clair, formes organiques */
+.donut-site[data-template="jardin"] .donut-hero {
+  background: linear-gradient(160deg, #f5f8ed 0%, #dcebd2 100%);
+}
+.donut-site[data-template="jardin"] .donut-hero-art {
+  border-radius: 46% 54% 40% 60% / 55% 45% 55% 45%;
+}
+.donut-site[data-template="jardin"] .donut-hero h1 {
+  font-family: "Fraunces", Georgia, serif;
+  font-weight: 400;
+}
+.donut-site[data-template="jardin"] .donut-section-title h2 {
+  font-family: "Fraunces", Georgia, serif;
+  font-weight: 400;
+}
+.donut-site[data-template="jardin"] .donut-button { border-radius: 999px; }
+.donut-site[data-template="jardin"] .donut-section:nth-of-type(even) { background: #f0f5e9; }
+.donut-site[data-template="jardin"] .donut-product-image { border-radius: 46% 54% 40% 60% / 55% 45% 55% 45%; }
+.donut-site[data-template="jardin"] .donut-marquee { font-family: "Fraunces", Georgia, serif; font-style: italic; }
+
+/* Le Comptoir — energy, uppercase, shadows */
+.donut-site[data-template="comptoir"] .donut-hero h1,
+.donut-site[data-template="comptoir"] .donut-section-title h2 {
+  font-family: "Poppins", sans-serif;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: -0.02em;
+}
+.donut-site[data-template="comptoir"] .donut-hero-art { border-radius: 0; }
+.donut-site[data-template="comptoir"] .donut-section { border-bottom: 3px solid #993d13; }
+.donut-site[data-template="comptoir"] .donut-section-title { border-bottom: 0; }
+.donut-site[data-template="comptoir"] .donut-product-image { border-radius: 0; }
+.donut-site[data-template="comptoir"] .donut-kicker { font-weight: 800; }
+
+/* La Pause — doux, pastel, arrondis */
+.donut-site[data-template="pause"] .donut-hero {
+  background: linear-gradient(180deg, #fff5f8 0%, #fde7ef 100%);
+}
+.donut-site[data-template="pause"] .donut-hero-art { border-radius: 50% 50% 24px 24px; }
+.donut-site[data-template="pause"] .donut-section-title h2 {
+  font-family: "Nunito", sans-serif;
+  font-weight: 800;
+}
+.donut-site[data-template="pause"] .donut-product-image { border-radius: 24px; }
+.donut-site[data-template="pause"] .donut-section:nth-of-type(even) { background: #fff0f5; }
+
+/* Signature — éditorial, serif, très aéré */
+.donut-site[data-template="signature"] .donut-hero h1,
+.donut-site[data-template="signature"] .donut-section-title h2 {
+  font-family: "Playfair Display", Georgia, serif;
+  font-weight: 600;
+}
+.donut-site[data-template="signature"] .donut-hero {
+  background: linear-gradient(180deg, #faf6ee 0%, #f3ece0 100%);
+}
+.donut-site[data-template="signature"] .donut-hero-art { border-radius: 0; }
+.donut-site[data-template="signature"] .donut-kicker { letter-spacing: 0.4em; }
+.donut-site[data-template="signature"] .donut-section:nth-of-type(even) { background: #f5efe4; }
+.donut-site[data-template="signature"] .donut-product-image { border-radius: 0; }
+
+/* Riviera — azur, arcs, motif rayé */
+.donut-site[data-template="riviera"] .donut-hero h1,
+.donut-site[data-template="riviera"] .donut-section-title h2 {
+  font-family: "DM Serif Display", Georgia, serif;
+}
+.donut-site[data-template="riviera"] .donut-hero-art { border-radius: 220px 220px 0 0; }
+.donut-site[data-template="riviera"] .donut-section:nth-of-type(even) { background: #eaf4fb; }
+.donut-site[data-template="riviera"] .donut-product-image { border-radius: 220px 220px 0 0; overflow: hidden; }
+.donut-site[data-template="riviera"] .donut-kicker { letter-spacing: 0.25em; text-transform: uppercase; }
+
+/* L’Atelier — typographique, minimal, noir et blanc */
+.donut-site[data-template="atelier"] .donut-hero { background: #faf9f6; }
+.donut-site[data-template="atelier"] .donut-hero h1 {
+  font-family: "Inter", sans-serif;
+  font-weight: 300;
+  letter-spacing: -0.05em;
+}
+.donut-site[data-template="atelier"] .donut-hero-art { border-radius: 0; filter: grayscale(0.15); }
+.donut-site[data-template="atelier"] .donut-kicker { letter-spacing: 0.3em; text-transform: uppercase; font-size: 12px; }
+.donut-site[data-template="atelier"] .donut-section:nth-of-type(even) { background: #f1efea; }
+.donut-site[data-template="atelier"] .donut-product-image { border-radius: 0; filter: grayscale(0.2); }
+
+/* Escale — terracotta, décalé, rotatif */
+.donut-site[data-template="escale"] .donut-hero h1,
+.donut-site[data-template="escale"] .donut-section-title h2 {
+  font-family: "Fraunces", Georgia, serif;
+  font-weight: 400;
+}
+.donut-site[data-template="escale"] .donut-hero { background: linear-gradient(135deg, #fff4eb 0%, #ffe1cc 100%); }
+.donut-site[data-template="escale"] .donut-hero-art { border-radius: 18px; transform: rotate(-2.5deg); }
+.donut-site[data-template="escale"] .donut-section:nth-of-type(even) { background: #fff0e3; }
+.donut-site[data-template="escale"] .donut-product-image { border-radius: 18px; }
+
+/* La Pizzeria — rouge brique, italique, double filet */
+.donut-site[data-template="pizzeria"] .donut-hero {
+  background: linear-gradient(180deg, #fff7ed 0%, #ffe4d1 100%);
+  border: 3px solid #b91c1c;
+  box-shadow: inset 0 0 0 5px #fff7ed, 0 0 0 3px #b91c1c;
+}
+.donut-site[data-template="pizzeria"] .donut-hero-art { border-radius: 50%; border: 4px solid #b91c1c; }
+.donut-site[data-template="pizzeria"] .donut-hero h1 { font-family: "DM Serif Display", Georgia, serif; font-style: italic; }
+.donut-site[data-template="pizzeria"] .donut-section-title h2 { font-family: "DM Serif Display", Georgia, serif; }
+.donut-site[data-template="pizzeria"] .donut-kicker { letter-spacing: 0.3em; text-transform: uppercase; }
+.donut-site[data-template="pizzeria"] .donut-section:nth-of-type(even) { background: #fff1e3; }
+.donut-site[data-template="pizzeria"] .donut-product-image { border-radius: 50%; }
+
+/* Le Sushi — épuré, noir et blanc, lignes fines */
+.donut-site[data-template="sushi"] .donut-hero { background: #fafafa; }
+.donut-site[data-template="sushi"] .donut-hero h1 {
+  font-family: "Inter", sans-serif;
+  font-weight: 200;
+  letter-spacing: 0.08em;
+}
+.donut-site[data-template="sushi"] .donut-hero-art { border-radius: 0; filter: grayscale(0.35); }
+.donut-site[data-template="sushi"] .donut-kicker { letter-spacing: 0.5em; text-transform: uppercase; font-size: 11px; }
+.donut-site[data-template="sushi"] .donut-section:nth-of-type(even) { background: #f2f2f2; }
+.donut-site[data-template="sushi"] .donut-product-image { border-radius: 0; filter: grayscale(0.3); }
+.donut-site[data-template="sushi"] .donut-section-title h2 { font-weight: 200; letter-spacing: 0.12em; text-transform: uppercase; }
+
+/* Le Salon — couleur, dégradé, moderne */
+.donut-site[data-template="coiffeur"] .donut-hero {
+  background: linear-gradient(140deg, #faf5ff 0%, #e9d5ff 100%);
+}
+.donut-site[data-template="coiffeur"] .donut-hero h1 { font-family: "Poppins", sans-serif; font-weight: 700; letter-spacing: -0.03em; }
+.donut-site[data-template="coiffeur"] .donut-hero-art { border-radius: 200px 200px 12px 12px; }
+.donut-site[data-template="coiffeur"] .donut-section-title h2 { font-family: "Poppins", sans-serif; font-weight: 700; }
+.donut-site[data-template="coiffeur"] .donut-section:nth-of-type(even) { background: #f6f0ff; }
+.donut-site[data-template="coiffeur"] .donut-product-image { border-radius: 16px; }
+
+/* Le Loft — architectural, lignes, beaucoup de blanc */
+.donut-site[data-template="loft"] .donut-hero { background: #f8fafc; }
+.donut-site[data-template="loft"] .donut-hero h1,
+.donut-site[data-template="loft"] .donut-section-title h2 { font-family: "Playfair Display", Georgia, serif; font-weight: 500; }
+.donut-site[data-template="loft"] .donut-hero-art { border-radius: 0; border: 1px solid #0f172a22; }
+.donut-site[data-template="loft"] .donut-kicker { letter-spacing: 0.35em; text-transform: uppercase; }
+.donut-site[data-template="loft"] .donut-section:nth-of-type(even) { background: #eef2f7; }
+.donut-site[data-template="loft"] .donut-product-image { border-radius: 0; }
+
+/* Le Chantier — solide, angles nets, ocre */
+.donut-site[data-template="chantier"] .donut-hero {
+  background: linear-gradient(180deg, #fef3c7 0%, #fde68a 100%);
+  border-bottom: 6px solid #92400e;
+}
+.donut-site[data-template="chantier"] .donut-hero h1 { font-family: "Poppins", sans-serif; font-weight: 800; text-transform: uppercase; letter-spacing: -0.02em; }
+.donut-site[data-template="chantier"] .donut-section-title h2 { font-family: "Poppins", sans-serif; font-weight: 800; }
+.donut-site[data-template="chantier"] .donut-hero-art { border-radius: 0; border: 3px solid #92400e; }
+.donut-site[data-template="chantier"] .donut-section:nth-of-type(even) { background: #fef7e0; }
+.donut-site[data-template="chantier"] .donut-product-image { border-radius: 0; }
+
+/* La Racing — sombre, diagonale, vitesse */
+.donut-site[data-template="racing"] .donut-hero {
+  background: repeating-linear-gradient(115deg, #0a0a0a 0 40px, #171717 40px 80px);
+}
+.donut-site[data-template="racing"] .donut-hero h1 {
+  font-family: "Inter", sans-serif;
+  font-weight: 900;
+  font-style: italic;
+  text-transform: uppercase;
+  letter-spacing: -0.04em;
+}
+.donut-site[data-template="racing"] .donut-section-title h2 { font-weight: 900; text-transform: uppercase; font-style: italic; }
+.donut-site[data-template="racing"] .donut-hero-art { border-radius: 0; border: 2px solid #dc2626; }
+.donut-site[data-template="racing"] .donut-section:nth-of-type(even) { background: #131313; color: #fafafa; }
+.donut-site[data-template="racing"] .donut-product-image { border-radius: 0; }
+
+/* Le Manuscrit — papier, serif, colonnes */
+.donut-site[data-template="manuscrit"] .donut-hero { background: #fafaf9; }
+.donut-site[data-template="manuscrit"] .donut-hero h1,
+.donut-site[data-template="manuscrit"] .donut-section-title h2 {
+  font-family: Georgia, "Times New Roman", serif;
+  font-style: italic;
+  font-weight: 400;
+}
+.donut-site[data-template="manuscrit"] .donut-hero-art { border-radius: 0; filter: sepia(0.15); }
+.donut-site[data-template="manuscrit"] .donut-kicker { letter-spacing: 0.3em; text-transform: uppercase; font-size: 11px; }
+.donut-site[data-template="manuscrit"] .donut-section:nth-of-type(even) { background: #f4f4f2; }
+.donut-site[data-template="manuscrit"] .donut-product-image { border-radius: 0; }
+.donut-site[data-template="manuscrit"] .donut-section-title { border-bottom: 1px solid #3f3f4633; padding-bottom: 12px; }
+
+/* La Confiance — bleu, lignes nettes, institutionnel */
+.donut-site[data-template="assurance"] .donut-hero {
+  background: linear-gradient(135deg, #f1f5f9 0%, #dbeafe 100%);
+}
+.donut-site[data-template="assurance"] .donut-hero h1 { font-weight: 600; letter-spacing: -0.02em; }
+.donut-site[data-template="assurance"] .donut-hero-art { border-radius: 10px; border: 1px solid #1e40af33; }
+.donut-site[data-template="assurance"] .donut-kicker { letter-spacing: 0.2em; text-transform: uppercase; }
+.donut-site[data-template="assurance"] .donut-section:nth-of-type(even) { background: #e8eff8; }
+.donut-site[data-template="assurance"] .donut-product-image { border-radius: 8px; }
+.donut-site[data-template="assurance"] .donut-section-title { border-bottom: 2px solid #1e40af; padding-bottom: 12px; }
+
+/* La Pâtisserie — rose, rond, douce */
+.donut-site[data-template="patisserie"] .donut-hero {
+  background: linear-gradient(160deg, #fff1f2 0%, #fce7f3 100%);
+}
+.donut-site[data-template="patisserie"] .donut-hero h1,
+.donut-site[data-template="patisserie"] .donut-section-title h2 { font-family: "Fraunces", Georgia, serif; font-weight: 400; }
+.donut-site[data-template="patisserie"] .donut-hero-art { border-radius: 50% 50% 20px 20px; }
+.donut-site[data-template="patisserie"] .donut-section:nth-of-type(even) { background: #fdf0f4; }
+.donut-site[data-template="patisserie"] .donut-product-image { border-radius: 50% 50% 12px 12px; }
+
+/* Le Street — néon, nuit, contrasté */
+.donut-site[data-template="streetfood"] .donut-hero {
+  background: repeating-linear-gradient(0deg, #0c0a09 0 30px, #171412 30px 60px);
+}
+.donut-site[data-template="streetfood"] .donut-hero h1 {
+  font-family: "Poppins", sans-serif;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: -0.03em;
+  text-shadow: 0 0 24px #f9731677;
+}
+.donut-site[data-template="streetfood"] .donut-section-title h2 { font-weight: 900; text-transform: uppercase; }
+.donut-site[data-template="streetfood"] .donut-hero-art { border-radius: 12px; border: 2px solid #f97316; box-shadow: 0 0 40px #f9731644; }
+.donut-site[data-template="streetfood"] .donut-section:nth-of-type(even) { background: #141110; color: #fafaf9; }
+.donut-site[data-template="streetfood"] .donut-product-image { border-radius: 12px; }
+
+/* Le Bilan — vert d'eau, structuré, tableaux */
+.donut-site[data-template="compta"] .donut-hero {
+  background: linear-gradient(150deg, #f0fdfa 0%, #ccfbf1 100%);
+}
+.donut-site[data-template="compta"] .donut-hero h1 { font-weight: 600; letter-spacing: -0.02em; }
+.donut-site[data-template="compta"] .donut-hero-art { border-radius: 6px; border: 1px solid #0f766e33; }
+.donut-site[data-template="compta"] .donut-kicker { letter-spacing: 0.2em; text-transform: uppercase; }
+.donut-site[data-template="compta"] .donut-section:nth-of-type(even) { background: #e3f7f3; }
+.donut-site[data-template="compta"] .donut-product-image { border-radius: 4px; }
+.donut-site[data-template="compta"] .donut-section-title { border-left: 4px solid #0f766e; padding-left: 12px; }
+
+/* L’École — violet, joyeux, arrondi */
+.donut-site[data-template="ecole"] .donut-hero {
+  background: linear-gradient(140deg, #faf5ff 0%, #ede9fe 100%);
+}
+.donut-site[data-template="ecole"] .donut-hero h1 { font-family: "Nunito", sans-serif; font-weight: 800; letter-spacing: -0.02em; }
+.donut-site[data-template="ecole"] .donut-hero-art { border-radius: 20px; }
+.donut-site[data-template="ecole"] .donut-section-title h2 { font-family: "Nunito", sans-serif; font-weight: 800; }
+.donut-site[data-template="ecole"] .donut-section:nth-of-type(even) { background: #f4f0ff; }
+.donut-site[data-template="ecole"] .donut-product-image { border-radius: 14px; }
+.donut-site[data-template="ecole"] .donut-kicker { letter-spacing: 0.2em; text-transform: uppercase; }
+
+/* La Table — noir et blanc, minimal, chic */
+.donut-site[data-template="gastronomique"] .donut-hero { background: #fafafa; }
+.donut-site[data-template="gastronomique"] .donut-hero h1,
+.donut-site[data-template="gastronomique"] .donut-section-title h2 {
+  font-family: "Playfair Display", Georgia, serif;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+}
+.donut-site[data-template="gastronomique"] .donut-hero-art { border-radius: 0; filter: grayscale(0.5) contrast(1.05); }
+.donut-site[data-template="gastronomique"] .donut-kicker { letter-spacing: 0.4em; text-transform: uppercase; font-size: 11px; }
+.donut-site[data-template="gastronomique"] .donut-section:nth-of-type(even) { background: #f0f0f0; }
+.donut-site[data-template="gastronomique"] .donut-product-image { border-radius: 0; filter: grayscale(0.4); }
+
+/* Le Cellier — sombre, rouge, cave */
+.donut-site[data-template="baravin"] .donut-hero {
+  background: radial-gradient(circle at 50% 0%, #3b2622 0%, #1c1917 70%);
+}
+.donut-site[data-template="baravin"] .donut-hero h1,
+.donut-site[data-template="baravin"] .donut-section-title h2 { font-family: "DM Serif Display", Georgia, serif; }
+.donut-site[data-template="baravin"] .donut-hero-art { border-radius: 0; border: 1px solid #ef444455; }
+.donut-site[data-template="baravin"] .donut-kicker { letter-spacing: 0.3em; text-transform: uppercase; }
+.donut-site[data-template="baravin"] .donut-section:nth-of-type(even) { background: #241f1d; color: #fafaf9; }
+.donut-site[data-template="baravin"] .donut-product-image { border-radius: 0; }
+
+/* Le Brunch — orange doux, lumineux */
+.donut-site[data-template="brunch"] .donut-hero {
+  background: linear-gradient(150deg, #fff7ed 0%, #ffedd5 100%);
+}
+.donut-site[data-template="brunch"] .donut-hero h1 { font-family: "Nunito", sans-serif; font-weight: 800; letter-spacing: -0.02em; }
+.donut-site[data-template="brunch"] .donut-hero-art { border-radius: 40% 40% 12px 12px; }
+.donut-site[data-template="brunch"] .donut-section-title h2 { font-family: "Nunito", sans-serif; font-weight: 800; }
+.donut-site[data-template="brunch"] .donut-section:nth-of-type(even) { background: #fff2e4; }
+.donut-site[data-template="brunch"] .donut-product-image { border-radius: 24px; }
+.donut-site[data-template="brunch"] .donut-button { border-radius: 999px; }
+
+/* Le Burger — gras, rouge, brutal */
+.donut-site[data-template="burger"] .donut-hero {
+  background: repeating-linear-gradient(135deg, #fef2f2 0 24px, #fee2e2 24px 48px);
+}
+.donut-site[data-template="burger"] .donut-hero h1 {
+  font-family: "Poppins", sans-serif;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: -0.04em;
+  line-height: 0.92;
+}
+.donut-site[data-template="burger"] .donut-section-title h2 { font-family: "Poppins", sans-serif; font-weight: 900; text-transform: uppercase; }
+.donut-site[data-template="burger"] .donut-hero-art { border-radius: 0; }
+.donut-site[data-template="burger"] .donut-kicker { font-weight: 900; letter-spacing: 0.1em; text-transform: uppercase; }
+.donut-site[data-template="burger"] .donut-section:nth-of-type(even) { background: #fee2e2; }
+.donut-site[data-template="burger"] .donut-product-image { border-radius: 0; }
+.donut-site[data-template="burger"] .donut-button { border-radius: 0; box-shadow: 5px 5px 0 #18181b; }
+
+/* ── Effets React Bits : les enveloppes ne doivent pas casser la mise en page ── */
+.effect-title {
+  display: inline-block;
+}
+/* Pastille : un voile la traverse au survol, sans jamais toucher à la couleur
+   du texte (qui dépend du thème et du mode sombre). */
+.effect-badge {
+  position: relative;
+  display: inline-block;
+  overflow: hidden;
+}
+.effect-badge::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(
+    100deg,
+    transparent 20%,
+    color-mix(in srgb, currentColor 22%, transparent) 50%,
+    transparent 80%
+  );
+  transform: translateX(-120%);
+  transition: transform 0.6s ease;
+}
+.donut-site .donut-service span:hover .effect-badge::after,
+.donut-site .donut-service span:focus-within .effect-badge::after {
+  transform: translateX(120%);
+}
+.effect-badge--gradient::after {
+  background: linear-gradient(
+    100deg,
+    transparent 25%,
+    color-mix(in srgb, var(--public-accent, var(--site-accent)) 38%, transparent) 50%,
+    transparent 75%
+  );
+}
+/* Le bouton garde son propre habillage : l'enveloppe n'apporte que l'effet. */
+.donut-site .effect-button {
+  display: inline-block;
+  border: 0;
+  border-radius: 7px;
+  background: transparent;
+  overflow: hidden;
+  isolation: isolate;
+  vertical-align: top;
+}
+.donut-site .effect-button .glare-hover__glare {
+  border-radius: inherit;
+}
+.donut-site .effect-button:hover {
+  transform: none;
+}
+/* La carte garde sa grille : l'enveloppe reste transparente. */
+.donut-site .effect-card {
+  display: block;
+  border: 0;
+  border-radius: 12px;
+  background: transparent;
+  overflow: hidden;
+  isolation: isolate;
+}
+.donut-site .effect-card .glare-hover__glare {
+  border-radius: inherit;
+}
+.donut-site .effect-card .donut-product {
+  height: 100%;
+}
+@media (prefers-reduced-motion: reduce) {
+  .effect-title {
+    background-image: none !important;
+    -webkit-text-fill-color: currentColor;
+    color: inherit;
+  }
+  .effect-badge::after {
+    display: none;
+  }
+}

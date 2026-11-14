@@ -1,6 +1,8 @@
 import { defaultTheme } from "./defaults";
 import { templateContent } from "./template-content";
+import type { TemplateEffects } from "./effects";
 import { registry } from "./registry";
+import { isAddonSection } from "./site-addons";
 import type { Section } from "./schema";
 import type { FontId, SiteConfig, Theme, Presentation } from "./schema";
 
@@ -16,6 +18,8 @@ export type SiteTemplate = {
   title: string;
   kicker: string;
   order: string[];
+  /** Signature d'effets : ce qui rend ce modèle unique à l'écran. */
+  effects: TemplateEffects;
 };
 const template = (
   id: string,
@@ -28,6 +32,12 @@ const template = (
   heading: FontId,
   title: string,
   order: string[],
+  effects: TemplateEffects = {
+    title: "none",
+    button: "none",
+    card: "none",
+    badge: "none",
+  },
   textColor: string = "#26201f",
   mutedColor: string = "#625b55",
   buttonTextColor: string = "#ffffff",
@@ -53,10 +63,12 @@ const template = (
   title,
   kicker: category.toUpperCase(),
   order,
+  effects,
   theme: {
     ...structuredClone(defaultTheme),
     presentation: {
       layout: id as Presentation["layout"],
+      effects,
       stickyHeader: premium,
       stickyAction: premium
         ? id === "signature" || id === "atelier"
@@ -96,42 +108,46 @@ export const siteTemplates: SiteTemplate[] = [
     "dmSerif",
     "Une table, une histoire, *un bistrot.*",
     ["hero", "about", "featuredProducts", "video", "marquee", "visit", "reviews", "map"],
+    { title: "shine", button: "glare", card: "sheen", badge: "none" },
   ),
   template(
     "jardin",
     "Le Jardin",
     "Cuisine végétale",
-    "Une ambiance lumineuse, des couleurs naturelles et une place pour votre histoire.",
+    "Une ambiance lumineuse, des produits de saison et une table qui prend le temps.",
     false,
     "#28543d",
     "#f5f8ed",
     "fraunces",
     "Une cuisine *pleine de vie.*",
-    ["hero", "about", "reviews", "featuredProducts", "visit", "map", "marquee"],
+    ["hero", "featuredProducts", "marquee", "about", "video", "reviews", "visit", "map"],
+    { title: "gradient", button: "glare", card: "sheen", badge: "gradient" },
   ),
   template(
     "comptoir",
     "Le Comptoir",
     "Street food & à emporter",
-    "La commande au premier plan, une typographie franche et une navigation directe.",
+    "La commande au premier plan, une typographie franche et rien qui traîne.",
     false,
     "#993d13",
     "#fff8e8",
     "poppins",
     "Une faim. *Une vraie envie.*",
-    ["hero", "featuredProducts", "visit", "marquee", "about", "reviews", "map"],
+    ["hero", "featuredProducts", "marquee", "visit", "video", "about", "reviews", "map"],
+    { title: "shine", button: "none", card: "streak", badge: "none" },
   ),
   template(
     "pause",
     "La Pause",
     "Café & pâtisserie",
-    "Une palette douce pour les petites pauses et les grandes gourmandises.",
+    "Une palette douce, un café qui tire droit et des viennoiseries sorties du four.",
     false,
     "#84415c",
     "#fff5f8",
     "nunito",
     "Votre pause *préférée.*",
-    ["hero", "marquee", "featuredProducts", "about", "visit", "reviews", "map"],
+    ["hero", "marquee", "gallery", "featuredProducts", "about", "video", "visit", "reviews", "map"],
+    { title: "none", button: "glare", card: "sheen", badge: "shine" },
   ),
   template(
     "signature",
@@ -143,7 +159,8 @@ export const siteTemplates: SiteTemplate[] = [
     "#faf6ee",
     "playfair",
     "L’émotion *à votre table.*",
-    ["hero", "about", "featuredProducts", "reviews", "visit", "map", "marquee"],
+    ["hero", "about", "video", "featuredProducts", "marquee", "reviews", "visit", "map"],
+    { title: "shine", button: "spark", card: "sheen", badge: "shine" },
   ),
   template(
     "riviera",
@@ -155,7 +172,8 @@ export const siteTemplates: SiteTemplate[] = [
     "#f4f9fc",
     "dmSerif",
     "Le soleil *se partage.*",
-    ["hero", "featuredProducts", "visit", "about", "reviews", "map", "marquee"],
+    ["hero", "gallery", "featuredProducts", "visit", "about", "video", "reviews", "map"],
+    { title: "gradient", button: "spark", card: "streak", badge: "gradient" },
   ),
   template(
     "atelier",
@@ -167,7 +185,8 @@ export const siteTemplates: SiteTemplate[] = [
     "#faf9f6",
     "inter",
     "Le goût *du détail.*",
-    ["hero", "about", "featuredProducts", "visit", "reviews", "map", "marquee"],
+    ["hero", "video", "about", "featuredProducts", "visit", "reviews", "map", "marquee"],
+    { title: "none", button: "glare", card: "streak", badge: "none" },
   ),
   template(
     "escale",
@@ -179,7 +198,8 @@ export const siteTemplates: SiteTemplate[] = [
     "#fff4eb",
     "fraunces",
     "Le voyage *commence ici.*",
-    ["hero", "marquee", "about", "featuredProducts", "reviews", "visit", "map"],
+    ["hero", "marquee", "gallery", "about", "featuredProducts", "video", "reviews", "visit", "map"],
+    { title: "gradient", button: "glare", card: "streak", badge: "shine" },
   ),
   template(
     "pizzeria",
@@ -191,7 +211,8 @@ export const siteTemplates: SiteTemplate[] = [
     "#fff7ed",
     "dmSerif",
     "Le goût de *l’Italie.*",
-    ["hero", "featuredProducts", "marquee", "about", "reviews", "visit", "map"],
+    ["hero", "video", "marquee", "featuredProducts", "about", "reviews", "visit", "map"],
+    { title: "gradient", button: "none", card: "sheen", badge: "none" },
   ),
   template(
     "sushi",
@@ -203,7 +224,8 @@ export const siteTemplates: SiteTemplate[] = [
     "#fafafa",
     "inter",
     "La précision *à votre table.*",
-    ["hero", "about", "featuredProducts", "reviews", "visit", "map", "marquee"],
+    ["hero", "about", "gallery", "featuredProducts", "video", "reviews", "visit", "map"],
+    { title: "shine", button: "glare", card: "streak", badge: "gradient" },
   ),
   template(
     "coiffeur",
@@ -215,7 +237,8 @@ export const siteTemplates: SiteTemplate[] = [
     "#faf5ff",
     "poppins",
     "Votre style, *révélé.*",
-    ["hero", "featuredProducts", "about", "reviews", "visit", "map", "marquee"],
+    ["hero", "gallery", "featuredProducts", "about", "video", "reviews", "visit", "map"],
+    { title: "shine", button: "glare", card: "none", badge: "gradient" },
   ),
   template(
     "loft",
@@ -227,7 +250,8 @@ export const siteTemplates: SiteTemplate[] = [
     "#f8fafc",
     "playfair",
     "L’espace *qui vous ressemble.*",
-    ["hero", "about", "featuredProducts", "reviews", "visit", "map", "marquee"],
+    ["hero", "gallery", "about", "featuredProducts", "video", "reviews", "visit", "map"],
+    { title: "none", button: "spark", card: "sheen", badge: "none" },
   ),
   template(
     "chantier",
@@ -239,7 +263,8 @@ export const siteTemplates: SiteTemplate[] = [
     "#fef3c7",
     "poppins",
     "On bâtit *ensemble.*",
-    ["hero", "about", "featuredProducts", "reviews", "visit", "map", "marquee"],
+    ["hero", "video", "about", "featuredProducts", "reviews", "visit", "map", "marquee"],
+    { title: "none", button: "none", card: "streak", badge: "shine" },
   ),
   template(
     "racing",
@@ -251,7 +276,8 @@ export const siteTemplates: SiteTemplate[] = [
     "#0a0a0a",
     "inter",
     "Passez *à la vitesse supérieure.*",
-    ["hero", "featuredProducts", "about", "reviews", "visit", "map", "marquee"],
+    ["hero", "video", "featuredProducts", "marquee", "about", "reviews", "visit", "map"],
+    { title: "shine", button: "spark", card: "streak", badge: "shine" },
     "#fafafa",
     "#a1a1aa",
   ),
@@ -265,7 +291,8 @@ export const siteTemplates: SiteTemplate[] = [
     "#fafaf9",
     "georgia",
     "Les mots *qui comptent.*",
-    ["hero", "about", "featuredProducts", "reviews", "visit", "map", "marquee"],
+    ["hero", "about", "blogList", "video", "featuredProducts", "reviews", "visit", "map"],
+    { title: "gradient", button: "none", card: "none", badge: "gradient" },
   ),
   template(
     "assurance",
@@ -277,7 +304,8 @@ export const siteTemplates: SiteTemplate[] = [
     "#f1f5f9",
     "inter",
     "Votre sécurité, *notre engagement.*",
-    ["hero", "about", "featuredProducts", "reviews", "visit", "map", "marquee"],
+    ["hero", "about", "featuredProducts", "reviews", "video", "visit", "map", "marquee"],
+    { title: "none", button: "glare", card: "sheen", badge: "gradient" },
   ),
   template(
     "patisserie",
@@ -289,7 +317,8 @@ export const siteTemplates: SiteTemplate[] = [
     "#fff1f2",
     "fraunces",
     "Le sucré *qui fait sourire.*",
-    ["hero", "featuredProducts", "marquee", "about", "reviews", "visit", "map"],
+    ["hero", "gallery", "featuredProducts", "marquee", "about", "video", "reviews", "visit", "map"],
+    { title: "shine", button: "none", card: "sheen", badge: "shine" },
   ),
   template(
     "streetfood",
@@ -301,7 +330,8 @@ export const siteTemplates: SiteTemplate[] = [
     "#0c0a09",
     "poppins",
     "La faim *n’attend pas.*",
-    ["hero", "featuredProducts", "marquee", "about", "reviews", "visit", "map"],
+    ["hero", "marquee", "video", "featuredProducts", "visit", "about", "reviews", "map"],
+    { title: "gradient", button: "spark", card: "sheen", badge: "none" },
     "#fafaf9",
     "#a8a29e",
     "#0c0a09",
@@ -316,7 +346,8 @@ export const siteTemplates: SiteTemplate[] = [
     "#f0fdfa",
     "inter",
     "Vos chiffres, *notre métier.*",
-    ["hero", "about", "featuredProducts", "reviews", "visit", "map", "marquee"],
+    ["hero", "video", "about", "featuredProducts", "visit", "map", "reviews", "marquee"],
+    { title: "none", button: "glare", card: "none", badge: "none" },
   ),
   template(
     "ecole",
@@ -328,7 +359,8 @@ export const siteTemplates: SiteTemplate[] = [
     "#faf5ff",
     "nunito",
     "Apprendre *avec plaisir.*",
-    ["hero", "about", "featuredProducts", "reviews", "visit", "map", "marquee"],
+    ["hero", "about", "video", "featuredProducts", "gallery", "reviews", "visit", "map"],
+    { title: "shine", button: "spark", card: "none", badge: "gradient" },
   ),
   template(
     "gastronomique",
@@ -340,7 +372,8 @@ export const siteTemplates: SiteTemplate[] = [
     "#fafafa",
     "playfair",
     "L’art *de la table.*",
-    ["hero", "about", "reviews", "featuredProducts", "visit", "map", "marquee"],
+    ["hero", "video", "about", "featuredProducts", "map", "visit", "reviews", "marquee"],
+    { title: "none", button: "spark", card: "streak", badge: "shine" },
   ),
   template(
     "baravin",
@@ -352,7 +385,8 @@ export const siteTemplates: SiteTemplate[] = [
     "#1c1917",
     "dmSerif",
     "Le temps *se partage.*",
-    ["hero", "featuredProducts", "marquee", "about", "reviews", "visit", "map"],
+    ["hero", "marquee", "featuredProducts", "video", "about", "reviews", "visit", "map"],
+    { title: "gradient", button: "spark", card: "streak", badge: "none" },
     "#fafaf9",
     "#a8a29e",
     "#fafaf9",
@@ -367,7 +401,8 @@ export const siteTemplates: SiteTemplate[] = [
     "#fff7ed",
     "nunito",
     "Le matin *qui fait du bien.*",
-    ["hero", "featuredProducts", "marquee", "about", "reviews", "visit", "map"],
+    ["hero", "gallery", "marquee", "featuredProducts", "about", "video", "reviews", "visit", "map"],
+    { title: "gradient", button: "glare", card: "streak", badge: "gradient" },
   ),
   template(
     "burger",
@@ -379,7 +414,8 @@ export const siteTemplates: SiteTemplate[] = [
     "#fef2f2",
     "poppins",
     "Une faim. *Une vraie.*",
-    ["hero", "featuredProducts", "marquee", "visit", "about", "reviews", "map"],
+    ["hero", "marquee", "featuredProducts", "video", "visit", "about", "reviews", "map"],
+    { title: "shine", button: "none", card: "streak", badge: "gradient" },
   ),
 ];
 
@@ -393,16 +429,20 @@ export function applySiteTemplate(
   next.theme = structuredClone(template.theme);
   if (composition && next.pages.home) {
     const home = next.pages.home;
+    const content = templateContent[template.id];
     // Inject sections declared by the template but missing from the home page,
     // so each template can ship a richer, self-contained composition.
     const present = new Set(home.sections.map((sec) => sec.type));
     for (const type of template.order) {
       if (present.has(type as Section["type"])) continue;
+      // Les sections d'add-on ne sont jamais injectées : leur accès dépend
+      // de l'add-on installé par l'établissement.
+      if (isAddonSection(type)) continue;
       const def = registry[type as keyof typeof registry];
       if (!def || !def.create) continue;
       const section = {
-        id: `home-${type}`,
-        type: type as any,
+        id: `home-${String(type).toLowerCase()}`,
+        type: type as Section["type"],
         lock: 1 as const,
         visible: true,
         required: false,
@@ -418,7 +458,6 @@ export function applySiteTemplate(
       };
       return rank(a.type) - rank(b.type);
     });
-    const content = templateContent[template.id];
     for (const section of home.sections) {
       if (section.type === "hero" && section.lock === 1) {
         section.props.title = content?.hero?.title ?? template.title;

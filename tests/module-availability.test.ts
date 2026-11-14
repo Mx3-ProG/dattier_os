@@ -87,6 +87,14 @@ async function legacyDecision(db: PGlite, restaurant: string, entry: ModuleManif
     return states[0];
   }
   if (entry.legacy.kind === "always") return true;
+  // Règle « plan » : l'accès suit l'abonnement Studio actif.
+  if (entry.legacy.kind === "plan")
+    return (
+      await db.query<{ studio: boolean }>(
+        "SELECT coalesce(app.restaurant_plan($1),0)>=39 AS studio",
+        [restaurant],
+      )
+    ).rows[0].studio;
   if (entry.legacy.kind === "license-kind")
     return (await db.query<{ ok: boolean }>(
       "SELECT EXISTS(SELECT 1 FROM addon_licenses l JOIN addon_products p ON p.id=l.product_id WHERE l.restaurant_id=$1 AND p.kind=$2 AND app.addon_installed($1,l.product_id)) AS ok",

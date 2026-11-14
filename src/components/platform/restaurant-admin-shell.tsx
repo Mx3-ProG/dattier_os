@@ -31,7 +31,14 @@ import {
   restaurantModuleHref,
   type RestaurantModuleId,
 } from "@/features/platform/admin-navigation";
-import { CuisineIa } from "@/components/assistant/cuisine-ia";
+import dynamic from "next/dynamic";
+const CuisineIa = dynamic(
+  () =>
+    import("@/components/assistant/cuisine-ia")
+      .then((m) => m.CuisineIa)
+      .catch(() => () => null),
+  { ssr: false },
+);
 import { AdminTutorial } from "@/components/tutorial/tour";
 import type { Industry } from "@/features/onboarding/catalog";
 import "./platform.css";

@@ -2,7 +2,7 @@
 import { SiteEditor } from "./index";
 import { TenantSiteProvider } from "../cms-site/context";
 import type { Role } from "@/core/permissions";
-import { RestaurantAdminShell } from "@/components/platform/restaurant-admin-shell";
+import { BusinessAdminShell } from "@/components/platform/restaurant-admin-shell";
 import type { Industry } from "@/features/onboarding/catalog";
 
 export function WebsiteStudio({
@@ -25,7 +25,7 @@ export function WebsiteStudio({
   const dashboard = `/dashboard?restaurant=${encodeURIComponent(restaurant)}`;
   return (
     <TenantSiteProvider restaurant={restaurant} demo={demo} industry={industry}>
-      <RestaurantAdminShell
+      <BusinessAdminShell
         restaurant={restaurant}
         restaurantName={restaurantName}
         industry={industry}
@@ -39,10 +39,10 @@ export function WebsiteStudio({
           liveDataHref={(module) =>
             module === "menu" || module.startsWith("tool-")
               ? `${dashboard}&module=${module}`
-              : `/restaurant/${restaurant}?module=shop${module === "reviews" ? "#avis" : "#reglages-commande"}`
+              : `/commerce/${restaurant}?module=shop${module === "reviews" ? "#avis" : "#reglages-commande"}`
           }
         />
-      </RestaurantAdminShell>
+      </BusinessAdminShell>
     </TenantSiteProvider>
   );
 }

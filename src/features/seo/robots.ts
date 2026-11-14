@@ -40,6 +40,7 @@ export const TENANT_PRIVATE_PATHS = [
 export const PLATFORM_PRIVATE_PATHS = [
   "/api/",
   "/auth/",
+  "/commerce/",
   "/restaurant/",
   "/platform",
   "/dashboard",

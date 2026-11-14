@@ -48,10 +48,12 @@ postgresql://atacuisine_billing_web.kaedxrnfrccwsekmbbbv:MOT_DE_PASSE_FACTURATIO
 
 - Sign In / Providers : Email activé, « Confirm email » activé.
 - URL Configuration : Site URL `https://www.studio-os.digital` ;
-  Redirect URLs : `https://www.studio-os.digital/connexion/confirmation`.
+  Redirect URLs : `https://www.studio-os.digital/connexion/confirmation**`.
 - **SMTP personnalisé obligatoire** (ex. Resend) : l'expéditeur par défaut de
   Supabase n'envoie qu'aux membres de l'équipe Supabase, donc les nouveaux
   clients ne recevraient jamais l'e-mail de confirmation.
+  Réglages SMTP, Redirect URLs et gabarits français : voir
+  `docs/platform/email-templates/README.md`.
 
 ### 3. Stripe (compte SaaS acct_1UYPwHApai8VVkXi, mode live)
 

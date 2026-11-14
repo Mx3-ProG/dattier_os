@@ -31,7 +31,13 @@ import {
   restaurantModuleHref,
   type RestaurantModuleId,
 } from "@/features/platform/admin-navigation";
-import { openCuisineIa } from "../assistant/cuisine-ia";
+const openCuisineIa = (prompt?: string) => {
+  import("../assistant/cuisine-ia")
+    .then((m) => m.openCuisineIa(prompt))
+    .catch(() => {
+      /* module IA absent : rien à faire */
+    });
+};
 import type { Snapshot } from "@/shared/types";
 import {
   chapterAllowed,

@@ -98,8 +98,11 @@ const migrations: [number, string][] = [
   [149, "149_crm_inquiry_assignment.sql"],
   [151, "151_crm_checkout_followups.sql"],
   [152, "152_site_section_packs.sql"],
+  [153, "153_customer_follows.sql"],
   [171, "171_platform_billing.sql"],
   [172, "172_seo_platform_sites_addon.sql"],
+  [173, "173_directory_opt_in.sql"],
+  [174, "174_directory_module_available.sql"],
 ];
 /** Applies every additive migration not yet recorded, inside the caller's transaction. */
 export async function applyMigrations(tx: DB) {

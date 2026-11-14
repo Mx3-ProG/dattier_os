@@ -3,7 +3,7 @@
    produisent des charges utiles exactes pour POST /api/v1/action. Le serveur
    revérifie ensuite permissions, stocks et transitions à l’exécution. */
 import { randomUUID } from "node:crypto";
-import { euros, hour } from "@/domain/assistant/text";
+import { euros, hour } from "@/domain/shared/text";
 import type { AssistantContext, Proposal } from "./types";
 
 type Built = { reply: string; proposal?: Proposal };

@@ -358,7 +358,7 @@ export function Workspace() {
           <Globe size={17} /> Voir le site public <ArrowUpRight size={16} />
         </Link>
         <Link
-          href={`/restaurant/${restaurant}`}
+          href={`/commerce/${restaurant}`}
           className="sidebar-profile"
           data-tour="profile"
         >
@@ -436,7 +436,7 @@ export function Workspace() {
         ) : (
           <div className="demo-banner" data-tour="banner">
             <span>{data.restaurant.name}</span>
-            <Link href={`/restaurant/${restaurant}`}>
+            <Link href={`/commerce/${restaurant}`}>
               {adaptText("Administrer le restaurant", data.restaurant.industry)}
             </Link>
             <Link href="/platform">Mes établissements</Link>
@@ -504,7 +504,7 @@ export function Workspace() {
           ) : current?.id === "overview" ? (
             <>
               {data.restaurant.industry && data.restaurant.industry !== "restaurant" && (
-                <section className="card" style={{ marginBottom: 20 }}><h2>Bienvenue chez {data.restaurant.name}</h2><p>Votre espace {data.restaurant.trade || "professionnel"} réunit vos outils, votre équipe et votre activité.</p><div className="actions"><button onClick={() => navigate("trade-tools")}>Ouvrir mes opérations</button><Link href={"/restaurant/" + restaurant + "/import-clients"}>Importer des clients</Link><Link href={"/restaurant/" + restaurant + "?module=team"}>Inviter mon équipe</Link></div></section>
+                <section className="card" style={{ marginBottom: 20 }}><h2>Bienvenue chez {data.restaurant.name}</h2><p>Votre espace {data.restaurant.trade || "professionnel"} réunit vos outils, votre équipe et votre activité.</p><div className="actions"><button onClick={() => navigate("trade-tools")}>Ouvrir mes opérations</button><Link href={"/restaurant/" + restaurant + "/import-clients"}>Importer des clients</Link><Link href={"/commerce/" + restaurant + "?module=team"}>Inviter mon équipe</Link></div></section>
               )}
               {/* Stats are shown for every business family; each block can be hidden in « Personnaliser mon pilotage ». */}
               <Overview data={data} navigate={navigate} />

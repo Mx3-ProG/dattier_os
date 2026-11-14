@@ -21,7 +21,7 @@ import {
   similarity,
   stopwords,
   words,
-} from "@/domain/assistant/text";
+} from "@/domain/shared/text";
 import type { Answer, AssistantContext, Engine } from "./types";
 
 export type ReflexResult = Answer & { engine: Extract<Engine, "reflex" | "free"> };
@@ -64,6 +64,16 @@ export const navigation: [RegExp, string, string][] = [
   [/\b(la carte|menu)\b/, "menu", "la carte"],
   [/\b(etablissements?|parametres?|reglages?)\b/, "settings", "les établissements"],
   [/\b(vue d ensemble|tableau de bord|accueil)\b/, "overview", "la vue d’ensemble"],
+  [/\b(activite|flux)\b/, "activity", "l’activité"],
+  [/\b(site (web|internet)|mon site)\b/, "site", "le site internet"],
+  [/\b(addons?|modules?|extensions?)\b/, "settings", "les modules et add-ons"],
+  [/\b(securite)\b/, "security", "la sécurité"],
+  [/\b(qr|codes? qr)\b/, "qr", "les QR codes"],
+  [/\b(audience|visiteurs|trafic)\b/, "audience", "l’audience"],
+  [/\b(estimation)\b/, "estimation", "l’estimation"],
+  [/\b(prospects?|scanner)\b/, "prospect-scanner", "le scanner de prospects"],
+  [/\b(pipeline|crm)\b/, "pipeline-crm", "le pipeline CRM"],
+  [/\b(customer health|sante client)\b/, "customer-health", "la santé client"],
 ];
 
 function quantityOf(segment: string): [number, string] {
@@ -293,6 +303,13 @@ export function reflex(input: string, ctx: AssistantContext): ReflexResult | nul
     const { found, unknown } = parseItems(text, ctx);
     if (found.length) {
       const name = input.match(/au nom de\s+([\p{L}-]{2,40})/u)?.[1] ?? "";
+      // Heure de retrait pour les commandes à emporter (« pour 18h », « à 18h30 »).
+      const hourMatch = input.match(/\b(?:pour|a|à)\s+(\d{1,2})\s*h(?:\s*(\d{2}))?/i);
+      const pickupHour = hourMatch
+        ? `${hourMatch[1].padStart(2, "0")}:${(hourMatch[2] ?? "00").padStart(2, "0")}`
+        : null;
+      if (pickupHour && !table)
+        for (const f of found) f.note = (f.note ? `${f.note}, ` : "") + `retrait ${pickupHour}`;
       const built = orderProposal(ctx, table, found, name);
       const missing = unknown.length
         ? ` Je n’ai pas trouvé à la carte : ${unknown.map((u) => `« ${u} »`).join(", ")}.`

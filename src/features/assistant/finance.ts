@@ -1,7 +1,7 @@
 /* Questions financières de STUDIO VOICE : réponses tirées des données réelles, avec leur
    niveau de fiabilité. Lecture seule. Le droit d’accès est revérifié à chaque lecture,
    et un chiffre absent est dit absent : il n’est jamais estimé en silence. */
-import { euros, normalize } from "@/domain/assistant/text";
+import { euros, normalize } from "@/domain/shared/text";
 import type {
   FinanceDashboard,
   Metric,

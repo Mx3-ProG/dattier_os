@@ -1,6 +1,41 @@
 # Catalogue de modèles de sites
 
-Le studio « Mon site web » s’ouvre sur une **boutique de modèles** avec recherche, filtres gratuit/premium et fiches de présentation. Le bouton « Modifier mon site » ouvre directement l’éditeur existant ; le retour à la bibliothèque conserve le brouillon en mémoire. La navigation reprend le cadre du poste de travail. La collection propose : douze modèles gratuits (Le Bistrot, Le Jardin, Le Comptoir, La Pause, La Pizzeria, Le Salon, Le Chantier, Le Manuscrit, La Pâtisserie, Le Bilan, Le Brunch, Le Burger) et douze modèles premium (Signature, Riviera, L’Atelier, Escale, Le Sushi, Le Loft, La Racing, La Confiance, Le Street, L’École, La Table, Le Cellier). Prix premium confirmé : **à partir de 9 € par modèle**.
+Le studio « Mon site web » s’ouvre sur une **boutique de modèles** avec recherche, filtres gratuit/premium et fiches de présentation. Le bouton « Modifier mon site » ouvre directement l’éditeur existant ; le retour à la bibliothèque conserve le brouillon en mémoire. La navigation reprend le cadre du poste de travail. La collection propose : douze modèles gratuits (Le Bistrot, Le Jardin, Le Comptoir, La Pause, La Pizzeria, Le Salon, Le Chantier, Le Manuscrit, La Pâtisserie, Le Bilan, Le Brunch, Le Burger) et douze modèles premium (Signature, Riviera, L’Atelier, Escale, Le Sushi, Le Loft, La Racing, La Confiance, Le Street, L’École, La Table, Le Cellier). Prix premium confirmé : **à partir de 9 € par modèle**. La collection couvre la restauration (dix modèles) comme les autres métiers : BTP, automobile, blog, assurance, immobilier, coiffure, comptabilité et formation.
+
+### Contenu pré-rempli
+
+Chaque modèle embarque une écriture qui lui est propre : textes de bannière, accroche, paragraphes, slogans, boutons, libellés d’avis, mentions d’horaires et clin d’œil. **Aucun texte n’est partagé entre deux modèles** : un test vérifie l’unicité des titres de bannière et des compositions.
+
+Les visuels sont des **photos et vidéos libres de droit** (Pexels License, usage commercial autorisé) : quatre photos par modèle (bannière, présentation, galerie) et une vidéo courte, stockées dans `public/cms/<modèle>/`. Le script `npm run assets:fetch` les récupère depuis `public/cms/assets-manifest.json` et les recompresse ; `public/cms/assets-credits.json` conserve la source de chaque ressource.
+
+### Composition propre à chaque modèle
+
+L’ordre des sections est unique pour les vingt-quatre modèles et combine toujours : bannière, présentation, produits, accroche ou bandeau, vidéo, galerie, avis, visite et localisation — dans un ordre qui raconte le modèle. Une vidéo est toujours présente ; la galerie l’est pour les modèles qui mettent en scène un lieu.
+
+L’identité visuelle est propre à chaque modèle : géométrie de la bannière (cercle, arche, filet double, rectangle plein), famille de titre, poids, capitales, filets de section, traitement des images et rythme des espacements. `src/components/cms-site/templates.css` porte cette signature.
+
+### Effets d'interface (React Bits)
+
+Chaque modèle reçoit en plus une **signature d'effets** : titre de bannière, bouton principal, cartes de produits et pastilles d'avantages. Vingt-quatre signatures différentes, aucune répétée (vérifié par test).
+
+- **Titre** : reflet mobile (`shine`) ou dégradé animé (`gradient`).
+- **Bouton** : reflet au survol (`glare`) ou étincelles au clic (`spark`).
+- **Cartes** : voile lumineux (`sheen`) ou reflet diagonal (`streak`).
+- **Pastilles** : voile au survol (`shine`) ou reflet coloré (`gradient`).
+
+Les composants viennent de [React Bits](https://reactbits.dev) (MIT + Commons Clause, usage commercial autorisé), copiés dans `src/components/reactbits/` — jamais installés comme paquet. `npm run reactbits:fetch` les récupère à nouveau.
+
+Trois règles tenues par l'intégration :
+
+1. **Le texte reste dans le HTML.** Les composants sont importés statiquement : un import dynamique les placerait derrière une frontière de suspension et viderait le titre du HTML servi aux robots.
+2. **La palette reste au chef.** Les couleurs sont lues dans la configuration du thème (hex réels) et injectées dans les composants : React Bits analyse les couleurs dans un canvas, qui ne résout pas `var(--x)`.
+3. **Les animations restent désactivables.** Les effets sont coupés quand l'établissement désactive les animations (`Composition et interactions`), et `prefers-reduced-motion` neutralise le mouvement.
+
+Le seul effet réservé aux modèles premium est `spark` (étincelles au clic) : c'est le plus coûteux en CPU sur mobile.
+
+**L'établissement garde la main.** Le panneau « Composition et interactions » affiche une case « Effets d'interface » et un choix par emplacement (titre, bouton, cartes, pastilles) avec la description de chaque effet. Décochée, le site n'affiche plus aucun effet et retrouve l'apparence sobre d'origine. La case « Animer l'apparition et les boutons » coupe elle aussi les effets, et `prefers-reduced-motion` neutralise le mouvement côté visiteur.
+
+L'effet `spark` (étincelles au clic) est réservé aux modèles premium : le serveur refuse un modèle gratuit qui l'active, même par une requête forgée. C'est vérifié dans `tests/cms-templates.test.ts`.
 
 Les vingt-quatre compositions sont maintenant rendues sur le site public (pas seulement dans les miniatures) via `theme.presentation` et `components/cms-site/templates.css`. Le Bistrot utilise un cadre de brasserie ; Le Jardin inverse texte/image ; Le Comptoir privilégie les grands titres et la commande ; La Pause adopte une composition centrée. Signature propose une grille éditoriale, Riviera des arches et rayures discrètes, L’Atelier une affiche typographique et Escale une composition décalée.
 

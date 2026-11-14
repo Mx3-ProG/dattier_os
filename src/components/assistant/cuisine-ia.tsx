@@ -223,6 +223,7 @@ export function CuisineIa({
   const statusesRef = useRef<Record<string, Status>>({});
   const progress = useRef<Record<string, unknown[]>>({});
   const handleVoiceRef = useRef<(said: string) => Promise<void>>(async () => {});
+  const voiceRetryRef = useRef(0);
   messagesRef.current = messages;
   statusesRef.current = statuses;
 
@@ -357,13 +358,13 @@ export function CuisineIa({
   );
 
   const send = useCallback(
-    async (text: string, spokenReply = false) => {
+    async (text: string, spokenReply = false): Promise<Reply | null> => {
       const message = text.trim();
-      if (!message || busyRef.current) return;
+      if (!message || busyRef.current) return null;
       if (/^recharger (mes )?credits?$/i.test(message.normalize("NFD").replace(/[̀-ͯ]/g, ""))) {
         void refresh();
         setView("credits");
-        return;
+        return null;
       }
       const last = messagesRef.current.at(-1);
       const followUp = last?.role === "assistant" ? last.followUp : undefined;
@@ -384,6 +385,13 @@ export function CuisineIa({
         const d = await r.json();
         if (!r.ok) throw new Error(d.error?.message || "STUDIO VOICE est indisponible.");
         const reply = d as Reply;
+        // Feedback vocal immédiat : lire la première phrase dès réception,
+        // avant l'affichage des cartes, pour que l'utilisateur entende tout de suite
+        // que sa demande a été comprise.
+        if (spokenReply) {
+          const firstSentence = reply.reply.split(/[.!?]/)[0]?.trim();
+          if (firstSentence && firstSentence.length > 3) speak(firstSentence);
+        }
         setMessages((m) => [...m, { id: uid(), role: "assistant", text: reply.reply, ...reply }]);
         setState((s) => (s ? { ...s, balance: reply.balance } : s));
         if (reply.navigate) onNavigate?.(reply.navigate);
@@ -397,6 +405,7 @@ export function CuisineIa({
                   : ""),
             () => listen(),
           );
+        return reply;
       } catch (e) {
         const error = (e as Error).message;
         setMessages((m) => [
@@ -409,6 +418,7 @@ export function CuisineIa({
           },
         ]);
         if (spokenReply) speak(error, () => listen());
+        return null;
       } finally {
         setBusy(false);
         busyRef.current = false;
@@ -452,7 +462,28 @@ export function CuisineIa({
       stopVoice();
       return;
     }
-    await send(said, true);
+    // Reprise après erreur de reconnaissance : si l’IA n’a pas compris, on relance
+    // l’écoute avec une demande de répétition (max 2 tentatives).
+    const reply = await send(said, true);
+    const notUnderstood =
+      !reply ||
+      reply.engine === "none" ||
+      /je n’ai pas compris|je n'ai pas compris|pas de réponse utile/i.test(reply.reply);
+    if (notUnderstood) {
+      voiceRetryRef.current += 1;
+      if (voiceRetryRef.current <= 2) {
+        speak("Je n’ai pas bien compris. Pouvez-vous répéter ?", () => listen());
+        return;
+      }
+      voiceRetryRef.current = 0;
+      speak("Désolé, je n’ai pas compris. Vous pouvez aussi écrire votre demande.", () => listen());
+      return;
+    }
+    voiceRetryRef.current = 0;
+    // Confirmation pour les phrases très courtes et ambiguës.
+    if (said.split(" ").length < 3 && !/^(oui|non|ok|go|stop|aide|quoi|annule)\b/i.test(n)) {
+      speak(`Vous avez dit : « ${said} ». C’est bien ça ?`, () => listen());
+    }
   }
   handleVoiceRef.current = handleVoice;
 

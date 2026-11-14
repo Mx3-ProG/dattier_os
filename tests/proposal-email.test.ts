@@ -27,3 +27,15 @@ test("l'envoi d'une proposition joint le PDF encodé et une clé contre les doub
     else process.env.RESEND_API_KEY = originalKey;
   }
 });
+
+test("les e-mails partent dans la mise en page de la plateforme, liens cliquables et texte échappé", async () => {
+  const { emailLayout, senderName } = await import("../src/features/messaging/email-layout");
+  assert.equal(senderName("Chez Paul <contact@example.test>"), "Chez Paul");
+  assert.equal(senderName('"Le Dattier" <contact@example.test>'), "Le Dattier");
+  const html = emailLayout({ sender: "Le Dattier", text: "Bonjour <b>Marie</b>,\n\nRéservez sur https://example.test/menu." });
+  assert.match(html, /<html lang="fr">/);
+  assert.match(html, /Le Dattier/);
+  assert.match(html, /&#60;b&#62;Marie/);
+  assert.match(html, /<a href="https:\/\/example\.test\/menu"/);
+  assert.doesNotMatch(html, /menu\.<\/a>/);
+});
