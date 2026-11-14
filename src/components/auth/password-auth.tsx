@@ -1,6 +1,7 @@
 "use client";
 import { useState, type FormEvent } from "react";
 import Link from "next/link";
+import { NewPasswordFields, PasswordField, newPasswordError } from "./password-field";
 
 export type SupabasePublic = { url: string; key: string };
 type Mode = "login" | "register" | "forgot";
@@ -28,7 +29,7 @@ export function authError(data: AuthResponse, status: number) {
   if (code === "user_already_exists" || /already registered/i.test(text))
     return "Un compte existe déjà avec cette adresse. Connectez-vous.";
   if (code === "weak_password" || /password should/i.test(text))
-    return "Mot de passe trop faible : 8 caractères minimum, avec lettres et chiffres.";
+    return "Mot de passe trop faible : 12 caractères minimum, avec majuscule, minuscule, chiffre et caractère spécial.";
   if (code === "over_email_send_rate_limit" || code === "over_request_rate_limit" || status === 429)
     return "Trop de tentatives. Patientez quelques minutes puis réessayez.";
   if (code === "signup_disabled") return "Les inscriptions sont momentanément fermées.";
@@ -85,10 +86,12 @@ export function PasswordAuth({
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [confirm, setConfirm] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [info, setInfo] = useState(notice || "");
   const [unconfirmed, setUnconfirmed] = useState(false);
+  const [sent, setSent] = useState("");
   // Computed on demand: window does not exist while the page renders on the server.
   const confirmationUrl = () => `${window.location.origin}/connexion/confirmation?${new URLSearchParams({ returnTo })}`;
 
@@ -97,7 +100,7 @@ export function PasswordAuth({
     try {
       await callAuth(config, `resend?${new URLSearchParams({ redirect_to: confirmationUrl() })}`, {
         type: "signup",
-        email: email.trim(),
+        email: (sent || email).trim(),
       });
       setInfo("Nouvel e-mail de confirmation envoyé. Pensez à vérifier vos indésirables.");
       setUnconfirmed(false);
@@ -124,26 +127,25 @@ export function PasswordAuth({
         return;
       }
       if (mode === "register") {
-        if (password.length < 8)
-          throw new Error("Mot de passe trop faible : 8 caractères minimum.");
-        const data = await callAuth(
-          config,
-          `signup?${new URLSearchParams({ redirect_to: confirmationUrl() })}`,
-          { email: cleanEmail, password, data: { name: name.trim() } },
-        );
-        // E-mail confirmation disabled in Supabase: the session is immediate.
-        if (data.access_token) {
-          await openSession(data.access_token, returnTo);
-          return;
-        }
-        const identities = data.user?.identities ?? data.identities;
-        if (Array.isArray(identities) && identities.length === 0) {
+        if (name.trim().length < 2) throw new Error("Indiquez votre nom et prénom.");
+        const weak = newPasswordError(password, confirm, cleanEmail);
+        if (weak) throw new Error(weak);
+        // Server-side validation (password rules, disposable e-mails) before Supabase.
+        const response = await fetch("/auth/signup", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ name: name.trim(), email: cleanEmail, password, confirm, returnTo }),
+        });
+        const data = (await response.json().catch(() => ({}))) as { status?: string; error?: string };
+        if (!response.ok) throw new Error(data.error || "Inscription impossible pour le moment. Réessayez.");
+        if (data.status === "exists") {
           setMode("login");
+          setPassword(""); setConfirm("");
           setError("Un compte existe déjà avec cette adresse. Connectez-vous.");
           return;
         }
-        setInfo(`Compte créé. Ouvrez le lien envoyé à ${cleanEmail} pour confirmer votre adresse, puis vous serez connecté automatiquement.`);
-        setPassword("");
+        setPassword(""); setConfirm("");
+        setSent(cleanEmail);
         return;
       }
       await callAuth(
@@ -161,7 +163,23 @@ export function PasswordAuth({
     }
   }
 
-  const switchTo = (next: Mode) => { setMode(next); setError(""); setInfo(""); setUnconfirmed(false); };
+  const switchTo = (next: Mode) => { setMode(next); setError(""); setInfo(""); setUnconfirmed(false); setPassword(""); setConfirm(""); };
+  if (sent)
+    return (
+      <>
+        <span className="access-label">Espace client</span>
+        <h1>Vérifiez votre e-mail</h1>
+        <p role="status">
+          Nous avons envoyé un lien de confirmation à <strong>{sent}</strong>. Cliquez sur le bouton
+          « Confirmer mon adresse » dans cet e-mail pour activer votre compte : vous serez ensuite connecté automatiquement.
+        </p>
+        <p className="access-fine">Rien reçu après quelques minutes ? Vérifiez vos courriers indésirables.</p>
+        {error && <p role="alert" className="access-error">{error}</p>}
+        {info && <p role="status">{info}</p>}
+        <p><button type="button" className="access-link" onClick={() => void resend()} disabled={busy}>Renvoyer l’e-mail de confirmation</button></p>
+        <p><button type="button" className="access-link" onClick={() => { setSent(""); switchTo("login"); }}>Retour à la connexion</button></p>
+      </>
+    );
   return (
     <>
       <span className="access-label">Espace client</span>
@@ -175,29 +193,22 @@ export function PasswordAuth({
             ? "Recevez un lien pour choisir un nouveau mot de passe."
             : "Connectez-vous pour retrouver votre espace STUDIO S."}
       </p>
-      <form className="access-form" onSubmit={submit} noValidate>
+      <form className="access-form" onSubmit={submit} noValidate method="post">
         {mode === "register" && (
           <label>
             Nom et prénom
-            <input value={name} onChange={(e) => setName(e.target.value)} autoComplete="name" required minLength={2} maxLength={100} />
+            <input name="name" value={name} onChange={(e) => setName(e.target.value)} autoComplete="name" required minLength={2} maxLength={100} />
           </label>
         )}
         <label>
           Adresse e-mail
-          <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} autoComplete="email" required maxLength={150} />
+          <input type="email" name="email" value={email} onChange={(e) => setEmail(e.target.value)} autoComplete="username" inputMode="email" autoCapitalize="off" spellCheck={false} required maxLength={150} />
         </label>
-        {mode !== "forgot" && (
-          <label>
-            Mot de passe
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              autoComplete={mode === "register" ? "new-password" : "current-password"}
-              required
-              minLength={mode === "register" ? 8 : 1}
-            />
-          </label>
+        {mode === "login" && (
+          <PasswordField label="Mot de passe" value={password} onChange={setPassword} autoComplete="current-password" />
+        )}
+        {mode === "register" && (
+          <NewPasswordFields password={password} confirm={confirm} onPassword={setPassword} onConfirm={setConfirm} email={email} />
         )}
         {error && <p role="alert" className="access-error">{error}</p>}
         {info && <p role="status">{info}</p>}

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { appOrigin, establishIdentity, safeReturnTo } from "@/infrastructure/auth/oidc";
 import { supabaseIssuer, supabaseUser } from "@/infrastructure/auth/supabase";
+import { loginEmailCheck } from "@/infrastructure/auth/disposable-email";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -23,6 +24,8 @@ export async function POST(req: NextRequest) {
     if (typeof body.accessToken !== "string")
       return reply({ error: "Connexion refusée." }, 400);
     const user = await supabaseUser(body.accessToken);
+    const verdict = await loginEmailCheck(user.email);
+    if (!verdict.ok) return reply({ error: verdict.reason }, 403);
     await establishIdentity(supabaseIssuer(), user.sub, user.name, user.email);
     return reply({
       returnTo: safeReturnTo(typeof body.returnTo === "string" ? body.returnTo : undefined),
