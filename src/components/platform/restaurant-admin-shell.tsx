@@ -242,7 +242,11 @@ export function RestaurantAdminShell({
           </footer>
         )}
       </div>
-      {industry === "restaurant" && <CuisineIa restaurant={restaurant} />}
+      {industry === "restaurant" ? (
+        <CuisineIa restaurant={restaurant} />
+      ) : (
+        modules.some((m) => m.id === "site") && <CuisineIa restaurant={restaurant} voiceAssistant={false} />
+      )}
       {industry === "restaurant" && <AdminTutorial
         restaurant={restaurant}
         surface={`admin:${activeModule ?? ""}`}

@@ -13,9 +13,11 @@ import {
   Sparkles,
   Settings,
   Volume2,
+  Wand2,
   X,
   Zap,
 } from "lucide-react";
+import { FluxView } from "./flux";
 import "./cuisine-ia.css";
 
 type ActionPayload = { action: string } & Record<string, unknown>;
@@ -62,9 +64,14 @@ type State = {
 type Status = { state: "running" | "done" | "dismissed" | "error"; error?: string };
 
 const OPEN_EVENT = "cuisine-ia:open";
+type Mode = "voice" | "flux";
 /** Ouvre STUDIO VOICE, éventuellement avec une question déjà posée. */
 export function openCuisineIa(prompt?: string) {
   window.dispatchEvent(new CustomEvent(OPEN_EVENT, { detail: { prompt } }));
+}
+/** Ouvre FLUX, le créateur de site de l’assistant. */
+export function openFlux() {
+  window.dispatchEvent(new CustomEvent(OPEN_EVENT, { detail: { mode: "flux" } }));
 }
 
 const starters = [
@@ -168,6 +175,7 @@ export function CuisineIa({
   onNavigate,
   launcher = true,
   docked = false,
+  voiceAssistant = true,
 }: {
   restaurant: string;
   /** Exécute une action confirmée (le poste passe son `act`, qui rafraîchit l’écran). */
@@ -176,8 +184,12 @@ export function CuisineIa({
   launcher?: boolean;
   /** Une barre fixe occupe le bas de l’écran (administration). */
   docked?: boolean;
+  /** STUDIO VOICE (gestion du restaurant) disponible ; sinon seul FLUX est proposé. */
+  voiceAssistant?: boolean;
 }) {
   const [open, setOpen] = useState(false);
+  const [mode, setModeState] = useState<Mode>(voiceAssistant ? "voice" : "flux");
+  const setMode = (next: Mode) => setModeState(voiceAssistant ? next : "flux");
   const [view, setView] = useState<"chat" | "credits" | "settings">("chat");
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
@@ -238,8 +250,9 @@ export function CuisineIa({
     setState(null);
   }, [restaurant]);
   useEffect(() => {
-    if (open && !state) void refresh();
-  }, [open, state, refresh]);
+    if (open && !state && voiceAssistant) void refresh();
+  }, [open, state, refresh, voiceAssistant]);
+  const [fluxBalance, setFluxBalance] = useState<number | null>(null);
   useEffect(() => {
     list.current?.scrollTo({ top: list.current.scrollHeight, behavior: "smooth" });
   }, [messages, busy, interim]);
@@ -475,13 +488,16 @@ export function CuisineIa({
     const onOpen = (e: Event) => {
       setOpen(true);
       setView("chat");
-      const prompt = (e as CustomEvent<{ prompt?: string }>).detail?.prompt;
+      const detail = (e as CustomEvent<{ prompt?: string; mode?: Mode }>).detail;
+      setMode(detail?.mode ?? (voiceAssistant ? "voice" : "flux"));
+      const prompt = detail?.mode === "flux" ? undefined : detail?.prompt;
       if (prompt) void send(prompt);
       else setTimeout(() => field.current?.focus(), 50);
     };
     window.addEventListener(OPEN_EVENT, onOpen);
     return () => window.removeEventListener(OPEN_EVENT, onOpen);
-  }, [send]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [send, voiceAssistant]);
   useEffect(() => {
     if (!open) stopVoice();
      
@@ -500,26 +516,29 @@ export function CuisineIa({
     setNotice("Demande envoyée. Les crédits sont ajoutés dès réception du paiement.");
   }
 
-  const low = state && state.balance < state.lowBalance;
+  const low = mode === "voice" && state && state.balance < state.lowBalance;
+  const balance = mode === "flux" ? (fluxBalance ?? state?.balance) : state?.balance;
 
   return (
     <>
       {launcher && !open && (
-        <button data-tour="ia-button" className={`cia-launcher ${docked ? "docked" : ""}`} onClick={() => openCuisineIa()} aria-label="Ouvrir STUDIO VOICE">
-          <Sparkles size={20} aria-hidden />
-          <span>STUDIO VOICE</span>
+        <button data-tour="ia-button" className={`cia-launcher ${docked ? "docked" : ""}`} onClick={() => (voiceAssistant ? openCuisineIa() : openFlux())} aria-label={voiceAssistant ? "Ouvrir STUDIO VOICE" : "Ouvrir FLUX"}>
+          {voiceAssistant ? <Sparkles size={20} aria-hidden /> : <Wand2 size={20} aria-hidden />}
+          <span>{voiceAssistant ? "STUDIO VOICE" : "FLUX"}</span>
         </button>
       )}
       {open && (
         <section className="cia-panel" role="dialog" aria-label="STUDIO VOICE">
           <header className="cia-head">
             <span className="cia-mark" aria-hidden>
-              <Sparkles size={18} />
+              {mode === "flux" ? <Wand2 size={18} /> : <Sparkles size={18} />}
             </span>
             <div className="cia-title">
-              <strong>STUDIO VOICE</strong>
+              <strong>{mode === "flux" ? "FLUX" : "STUDIO VOICE"}</strong>
               <small>
-                {voice
+                {mode === "flux"
+                  ? "Créateur de site"
+                  : voice
                   ? listening
                     ? "Je vous écoute…"
                     : speaking
@@ -535,22 +554,37 @@ export function CuisineIa({
             <button
               className={`cia-credits ${low ? "low" : ""}`}
               onClick={() => {
+                if (!voiceAssistant) return;
                 if (view !== "credits") void refresh();
                 setView(view === "credits" ? "chat" : "credits");
               }}
               aria-label="Mes crédits STUDIO VOICE"
             >
-              <Coins size={14} aria-hidden /> {state ? state.balance.toLocaleString("fr-FR") : "…"}
+              <Coins size={14} aria-hidden /> {balance !== undefined && balance !== null ? balance.toLocaleString("fr-FR") : "…"}
             </button>
-            <button className="cia-icon" onClick={() => { stopVoice(); setView(view === "settings" ? "chat" : "settings"); }} aria-label="Paramètres de STUDIO VOICE" aria-pressed={view === "settings"}>
-              <Settings size={18} />
-            </button>
+            {voiceAssistant && mode === "voice" && (
+              <button className="cia-icon" onClick={() => { stopVoice(); setView(view === "settings" ? "chat" : "settings"); }} aria-label="Paramètres de STUDIO VOICE" aria-pressed={view === "settings"}>
+                <Settings size={18} />
+              </button>
+            )}
             <button className="cia-icon" onClick={() => setOpen(false)} aria-label="Fermer STUDIO VOICE">
               <X size={18} />
             </button>
           </header>
+          {voiceAssistant && (
+            <nav className="cia-modes" aria-label="Modules de l’assistant">
+              <button aria-pressed={mode === "voice"} onClick={() => { setMode("voice"); }}>
+                <Sparkles size={14} aria-hidden /> Gestion
+              </button>
+              <button aria-pressed={mode === "flux"} onClick={() => { stopVoice(); setView("chat"); setMode("flux"); }}>
+                <Wand2 size={14} aria-hidden /> FLUX · Mon site
+              </button>
+            </nav>
+          )}
 
-          {view === "settings" ? (
+          {mode === "flux" && view === "chat" ? (
+            <FluxView restaurant={restaurant} onBalance={setFluxBalance} />
+          ) : view === "settings" ? (
             <div className="cia-body cia-settings">
               <h2>Paramètres de STUDIO VOICE</h2>
               <p>Personnalisez la voix de synthèse. Vos choix sont conservés dans ce navigateur et s’appliquent à vos prochaines réponses vocales.</p>
@@ -767,7 +801,7 @@ export function CuisineIa({
             </div>
           )}
 
-          {view === "chat" && (
+          {view === "chat" && mode === "voice" && (
             <form
               className="cia-input"
               onSubmit={(e) => {

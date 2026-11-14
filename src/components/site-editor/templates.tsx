@@ -8,7 +8,9 @@ import {
   LayoutTemplate,
   PenLine,
   Search,
+  Wand2,
 } from "lucide-react";
+import { openFlux } from "../assistant/cuisine-ia";
 import { siteTemplates, type SiteTemplate } from "@/features/cms/templates";
 import { fonts } from "@/features/cms/theme";
 import { Button } from "../ui/button";
@@ -97,6 +99,20 @@ export function SiteHome({
         <h1>Mon site web</h1>
         <p>Que souhaitez-vous faire aujourd’hui ?</p>
       </header>
+      <button className="site-flux-banner" onClick={() => openFlux()}>
+        <span className="site-flux-icon" aria-hidden="true">
+          <Wand2 size={22} />
+        </span>
+        <span className="site-flux-text">
+          <strong>Créer mon site avec FLUX</strong>
+          <span>
+            Décrivez votre activité en une phrase, à l’écrit ou à l’oral : couleurs, textes, fond et base e-commerce sont posés pour vous.
+          </span>
+        </span>
+        <span className="site-choice-cta">
+          Essayer <ArrowRight size={17} />
+        </span>
+      </button>
       <div className="site-home-choices">
         <button className="site-choice site-choice-shop" onClick={shop}>
           <span className="site-choice-art site-choice-fan" aria-hidden="true">

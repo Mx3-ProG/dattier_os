@@ -977,6 +977,7 @@
 .studio-editor-heading h1 { font-family: var(--appearance-font, Georgia, serif); font-weight: 400; letter-spacing: -1.4px; font-size: max(var(--appearance-min-text, 0px), calc((clamp(30px, 3.2vw, 46px)) * var(--appearance-text-scale, 1))); line-height: 1.15; margin: 12px 0; color: var(--appearance-ink, #283b32); }
 .studio-editor-heading { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 10px; }
 .studio-editor-heading h1 { font-size: max(var(--appearance-min-text, 0px), calc((30px) * var(--appearance-text-scale, 1))); }
+.studio-editor-heading-actions { display: flex; flex-wrap: wrap; gap: 8px; justify-content: flex-end; }
 .web-studio-workspace .site-topbar { top: 76px; border: 1px solid var(--appearance-line, #e3e6dc); box-shadow: none; }
 .web-studio-workspace .site-tabs, .web-studio-workspace .site-devices { background: var(--appearance-bg, #f1f3eb); border-color: var(--appearance-line, #e1e6da); }
 .web-studio-workspace .site-tabs button, .web-studio-workspace .site-devices button { color: var(--appearance-muted, #61715d); }

@@ -197,3 +197,35 @@
   --appearance-muted: initial;
   --appearance-link: initial;
 }
+
+/* Accès à FLUX, le créateur de site de l’assistant. */
+.site-flux-banner {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  width: 100%;
+  margin: 0 0 18px;
+  padding: 16px 20px;
+  border: 1px solid var(--appearance-line, #e2ddd2);
+  border-radius: 18px;
+  background: linear-gradient(120deg, var(--appearance-surface, #f4efe6), var(--appearance-bg, #fffaf2));
+  color: var(--appearance-ink, #283b32);
+  text-align: left;
+  cursor: pointer;
+}
+.site-flux-banner:hover { box-shadow: 0 10px 28px rgba(40, 59, 50, 0.12); }
+.site-flux-icon {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 46px;
+  height: 46px;
+  border-radius: 14px;
+  background: var(--appearance-accent, #344d3e);
+  color: #fff;
+}
+.site-flux-text { display: grid; flex: 1; gap: 3px; min-width: 0; }
+.site-flux-text span { color: var(--appearance-muted, #595f55); }
+@media (max-width: 640px) {
+  .site-flux-banner { flex-wrap: wrap; }
+}

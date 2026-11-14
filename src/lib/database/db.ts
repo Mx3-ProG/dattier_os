@@ -84,6 +84,9 @@ export async function getDb(): Promise<Database> {
         await db.transaction(async (tx) => {
           await tx.exec(migration);
           await applyMigrations(tx);
+          // Une migration peut couper les déclencheurs pour la transaction
+          // (130 : replica). Les données d’exemple en ont besoin.
+          await tx.exec("SET LOCAL session_replication_role = origin");
           await seed(tx);
         });
       } else await migrate(db);
