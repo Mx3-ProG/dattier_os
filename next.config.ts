@@ -1,6 +1,12 @@
 import type { NextConfig } from "next";
 const config: NextConfig = {
   serverExternalPackages: ["@electric-sql/pglite", "pg"],
+  // Démo publique : l’instantané et les migrations sont lus au démarrage de chaque fonction.
+  ...(process.env.ATACUISINE_PUBLIC_DEMO === "true" && {
+    outputFileTracingIncludes: {
+      "/**": ["./database/demo-snapshot/**", "./database/migrations/**"],
+    },
+  }),
   // Keep the bound origin for internal rewrites from restaurant domains.
   skipProxyUrlNormalize: true,
   // proxy.ts tronque les corps à 10 Mo par défaut ; l'éditeur accepte les vidéos jusqu'à 100 Mo.

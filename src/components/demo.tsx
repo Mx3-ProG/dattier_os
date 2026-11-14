@@ -6,7 +6,7 @@ import { useCallback, useEffect, useState } from "react";
 import { ArrowUpRight, RefreshCw, Store } from "lucide-react";
 import type { Actor } from "@/infrastructure/auth/session";
 import { roleLabels } from "@/core/permissions";
-export function Demo({ returnTo = "/dashboard" }: { returnTo?: string }) {
+export function Demo({ returnTo = "/dashboard", shared = false }: { returnTo?: string; shared?: boolean }) {
   const router = useRouter();
   const [profiles, setProfiles] = useState<Actor[]>([]),
     [error, setError] = useState(""),
@@ -54,7 +54,9 @@ export function Demo({ returnTo = "/dashboard" }: { returnTo?: string }) {
       <p>
         Choisissez un profil et découvrez le quotidien d’une équipe connectée.
         <br />
-        Les profils partagent les mêmes données, conservées à chaque visite.
+        {shared
+          ? "Les données sont déjà en place : explorez, testez, rien ne casse. La démo revient régulièrement à son état d’origine."
+          : "Les profils partagent les mêmes données, conservées à chaque visite."}
       </p>
       <p>Les add-ons payants sont ouverts à l’essai dans cette démo. Leurs prix restent visibles dans la boutique.</p>
       {loading && <p role="status">Chargement des profils de démonstration…</p>}

@@ -90,7 +90,14 @@ const faq = [
   ],
 ];
 
-export function GuidePage({ demo }: { demo: boolean }) {
+export function GuidePage({
+  demoHref,
+  demoSiteHref,
+}: {
+  /** Choix du profil de démo : /demo en local, la démo publique en production. */
+  demoHref?: string;
+  demoSiteHref?: string;
+}) {
   const toc = [
     { id: "bien-demarrer", label: "Bien démarrer, pas à pas" },
     { id: "comprendre", label: "Comprendre STUDIO S" },
@@ -143,9 +150,9 @@ export function GuidePage({ demo }: { demo: boolean }) {
             <Link className="landing-btn primary" href={tour("all")}>
               <Play size={17} aria-hidden /> Lancer la visite interactive
             </Link>
-            {demo && (
-              <Link className="landing-btn outline" href="/demo">
-                Choisir un profil de démonstration
+            {demoHref && (
+              <Link className="landing-btn outline" href={demoHref}>
+                Explorer la démo, avec ses données
               </Link>
             )}
           </div>
@@ -557,9 +564,16 @@ export function GuidePage({ demo }: { demo: boolean }) {
                 La visite interactive vous guide sur les vrais écrans, adaptée à
                 votre rôle. Vous pouvez agir vous-même à chaque étape.
               </p>
-              <Link className="landing-btn primary" href={tour("all")}>
-                <Play size={17} aria-hidden /> Lancer la visite interactive
-              </Link>
+              <div className="guide-hero-actions">
+                <Link className="landing-btn primary" href={tour("all")}>
+                  <Play size={17} aria-hidden /> Lancer la visite interactive
+                </Link>
+                {demoHref && (
+                  <Link className="landing-btn outline" href={demoHref}>
+                    Explorer la démo, avec ses données
+                  </Link>
+                )}
+              </div>
             </section>
           </div>
         </div>
@@ -571,8 +585,8 @@ export function GuidePage({ demo }: { demo: boolean }) {
         </span>
         <nav aria-label="Liens utiles">
           <Link href="/">Accueil</Link>
-          {demo && <Link href="/demo">Démonstration</Link>}
-          {demo && <Link href="/site-demo">Exemple de site de commerce</Link>}
+          {demoHref && <Link href={demoHref}>Démonstration</Link>}
+          {demoSiteHref && <Link href={demoSiteHref}>Exemple de site de commerce</Link>}
           <Link href="/platform">Espace client</Link>
           <LegalLinks />
         </nav>

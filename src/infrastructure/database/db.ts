@@ -38,8 +38,26 @@ export async function assertLeastPrivilege(db: PostgresDatabase, label: string) 
   }
 }
 const globalDb = globalThis as unknown as { atacuisineDb?: Promise<Database>; demoAddonGrantsVersion?: number };
+/** Démo publique (ex. demo.studio-os.digital) : instantané chargé en mémoire, remis à zéro à chaque démarrage. */
+export function publicDemoEnabled() {
+  return (
+    process.env.ATACUISINE_DEMO === "true" &&
+    process.env.ATACUISINE_PUBLIC_DEMO === "true"
+  );
+}
 export function demoEnabled() {
-  return process.env.ATACUISINE_DEMO === "true" && !process.env.VERCEL;
+  return (
+    process.env.ATACUISINE_DEMO === "true" &&
+    (!process.env.VERCEL || publicDemoEnabled())
+  );
+}
+export const DEMO_SNAPSHOT = "database/demo-snapshot/studio-demo.tar.gz";
+async function openPublicDemo() {
+  // Aucun fichier écrit : chaque instance repart de l’instantané, les modifications restent en mémoire.
+  const snapshot = await readFile(path.join(process.cwd(), DEMO_SNAPSHOT));
+  const db = new PGlite({ loadDataDir: new Blob([snapshot]) });
+  await migrate(db);
+  return new DemoDatabase(db);
 }
 export function productionEnabled() {
   return process.env.ATACUISINE_DEMO !== "true" && !!process.env.DATABASE_URL;
@@ -61,6 +79,11 @@ export async function getDb(): Promise<Database> {
     throw new Error(
       "Mode local désactivé. Configurer une authentification de production avant publication.",
     );
+  if (!globalDb.atacuisineDb && publicDemoEnabled())
+    globalDb.atacuisineDb = openPublicDemo().catch((error) => {
+      globalDb.atacuisineDb = undefined;
+      throw error;
+    });
   if (!globalDb.atacuisineDb)
     globalDb.atacuisineDb = (async () => {
       const dir = process.env.ATACUISINE_DATA_DIR || ".data/atacuisine-demo";
@@ -95,7 +118,7 @@ export async function getDb(): Promise<Database> {
   const db = await globalDb.atacuisineDb;
   // Sans fermeture propre, la base peut ne plus redémarrer (voir demo-shutdown.ts).
   // Enregistré ici, une fois par processus, y compris dans un serveur déjà lancé.
-  closeOnShutdown(() => db.close());
+  if (!publicDemoEnabled()) closeOnShutdown(() => db.close());
   await migrate(db);
   if (globalDb.demoAddonGrantsVersion !== 1) {
     await db.transaction(grantDemoAddons);

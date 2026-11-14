@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import { demoEnabled } from "@/infrastructure/database/db";
+import { demoEnabled, publicDemoEnabled } from "@/infrastructure/database/db";
 import { Demo } from "@/components/demo";
 import { safeReturnTo } from "@/infrastructure/auth/oidc";
 export const dynamic = "force-dynamic";
@@ -10,5 +10,5 @@ export default async function Page({
 }) {
   if (!demoEnabled()) notFound();
   const { returnTo } = await searchParams;
-  return <Demo returnTo={typeof returnTo === "string" ? safeReturnTo(returnTo) : undefined} />;
+  return <Demo shared={publicDemoEnabled()} returnTo={typeof returnTo === "string" ? safeReturnTo(returnTo) : undefined} />;
 }
