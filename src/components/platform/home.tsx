@@ -123,6 +123,10 @@ export function PlatformHome() {
       });
       const d = await r.json();
       if (!r.ok) throw new Error(d.error?.message || "Opération impossible.");
+      if (d.accepted && d.restaurant) {
+        router.push(`/dashboard?restaurant=${encodeURIComponent(d.restaurant)}`);
+        return;
+      }
       await load();
       setName("");
       setToken("");

@@ -177,6 +177,13 @@ export type Promo = {
   expired: boolean;
 };
 export type Snapshot = {
+  /** Code PIN du personnel et visibilité choisie par l’administrateur (migration 200). */
+  staff?: {
+    pinRequired: boolean;
+    hasPin: boolean;
+    operators: { id: string; name: string }[];
+    hidden: string[];
+  };
   activeModules?: { floor: boolean; "table-booking": boolean };
   /** Modules disponibles (app.module_available) ; prioritaire pour la navigation. */
   modules?: string[];

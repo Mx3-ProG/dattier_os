@@ -12,6 +12,7 @@ import { can, roleLabels, type Role } from "@/lib/permissions";
 import { availableRestaurantModules, type RestaurantModuleId } from "@/features/platform/admin-navigation";
 import { industries, industryLabels, trades, type Industry } from "@/features/onboarding/catalog";
 import { RestaurantAdminShell } from "./restaurant-admin-shell";
+import { TeamAccess, type TeamStaff } from "@/components/team/team-access";
 type Member = { id: string; name: string; email: string; role: string };
 type ShopOrder = {
   order_id: string;
@@ -148,6 +149,12 @@ export function RestaurantHub({
       if (d.token)
         setInvite(`${location.origin}/platform?invitation=${d.token}`);
       if (d.record) setMessage(`DNS TXT : ${d.record} → ${d.value}`);
+      else if (d.token)
+        setMessage(
+          d.emailed
+            ? "Invitation envoyée par e-mail. Le lien reste aussi disponible ci-dessous."
+            : "Invitation créée : transmettez le lien ci-dessous (aucun e-mail n’a pu être envoyé).",
+        );
       else setMessage("Modification enregistrée.");
       setRefreshVersion((value) => value + 1);
     } catch (e) {
@@ -274,7 +281,7 @@ export function RestaurantHub({
                     ))}
                   </fieldset>
                   <button disabled={busy || !roles.length}>
-                    Créer le lien d’invitation
+                    Envoyer l’invitation
                   </button>
                 </form>
                 {invite && (
@@ -283,8 +290,9 @@ export function RestaurantHub({
                   </p>
                 )}
                 <p>
-                  Le destinataire devra se connecter avec cette adresse
-                  vérifiée. Le lien expire après sept jours.
+                  Le destinataire reçoit le lien par e-mail et doit se connecter
+                  (ou créer son compte) avec cette adresse. À son arrivée, il crée
+                  son code PIN personnel. Le lien expire après sept jours.
                 </p>
               </section>
               <section>
@@ -349,6 +357,14 @@ export function RestaurantHub({
                   );
                 })}
               </section>
+              <TeamAccess
+                restaurant={restaurant}
+                members={members}
+                staff={data?.staff as TeamStaff | undefined}
+                isAdmin={userRoles.includes("OWNER")}
+                busy={busy}
+                perform={perform}
+              />
             </>
           )}
           {tab === "domains" && (

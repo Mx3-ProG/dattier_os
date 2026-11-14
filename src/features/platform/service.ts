@@ -1,5 +1,8 @@
 import { randomUUID, randomBytes, createHash } from "node:crypto";
 import { z } from "zod";
+import { staffSchemaReady } from "@/features/team/pins";
+import { sendPlatformEmail } from "@/features/messaging/service";
+import { appOrigin } from "@/lib/auth/oidc";
 import { rows, one, type DB } from "@/lib/database/db";
 import { scope, type Actor } from "@/lib/auth/session";
 import { roles } from "@/lib/permissions";
@@ -170,6 +173,7 @@ export async function platformPerform(db: DB, user: Actor, raw: unknown) {
     await db.query("UPDATE organizations SET created_by=$2,creation_key=$3,first_restaurant_id=$4,discovery_source=$5,discovery_detail=$6,onboarding_answers=$7::jsonb WHERE id=$1",
       [org,user.id,a.requestKey,r,a.discovery.source,a.discovery.detail,JSON.stringify(a.answers)]);
     await saveActivity(db,r,a.activity,a.answers);
+    await requireStaffPins(db,r);
     await installFreeTradeTools(db,r,a.activity.industry);
     const trial = await one<{ trial_ends_at: string }>(
       db,
@@ -186,10 +190,13 @@ export async function platformPerform(db: DB, user: Actor, raw: unknown) {
     return { cancelled: true };
   }
   if (a.action === "accept") {
-    await db.query("SELECT app.accept_invitation($1)", [
-      createHash("sha256").update(a.token).digest("hex"),
-    ]);
-    return { accepted: true };
+    const hashed = createHash("sha256").update(a.token).digest("hex");
+    await db.query("SELECT app.accept_invitation($1)", [hashed]);
+    // L’invité arrive directement dans l’établissement, où il crée son code PIN.
+    const restaurant = (await staffSchemaReady(db))
+      ? (await one<{ id: string | null }>(db, "SELECT app.accepted_invitation_restaurant($1) AS id", [hashed])).id
+      : null;
+    return { accepted: true, restaurant };
   }
   if (a.action === "restaurant") {
     await one(
@@ -215,6 +222,7 @@ export async function platformPerform(db: DB, user: Actor, raw: unknown) {
       r,
     ]);
     await saveActivity(db,r,a.activity,{});
+    await requireStaffPins(db,r);
     await installFreeTradeTools(db,r,a.activity.industry);
     return { restaurant: r };
   }
@@ -279,7 +287,15 @@ export async function platformPerform(db: DB, user: Actor, raw: unknown) {
       ],
     );
     await log(db, a.restaurant, user.id, "Invitation créée", iid);
-    return { token };
+    // Envoi automatique du lien ; l’administrateur garde le lien à copier si l’envoi échoue.
+    const place = await one<{ name: string }>(db, "SELECT name FROM restaurants WHERE id=$1", [a.restaurant]);
+    const link = `${appOrigin()}/platform?invitation=${token}`;
+    const emailed = await sendPlatformEmail(
+      a.email.toLowerCase(),
+      `Invitation à rejoindre l’équipe de ${place.name}`,
+      `Bonjour,\n\n${user.name || "Un administrateur"} vous invite à rejoindre l’équipe de ${place.name} sur STUDIO OS.\n\nOuvrez ce lien et connectez-vous (ou créez votre compte) avec cette adresse e-mail :\n${link}\n\nÀ votre arrivée, vous créerez votre code PIN personnel : il sert à valider vos prises de commande et vos encaissements.\n\nCe lien expire dans sept jours.`,
+    ).catch(() => false);
+    return { token, emailed };
   }
   if (a.action === "membership") {
     if (a.profile === user.id)
@@ -393,4 +409,10 @@ export async function referralProgram(db: DB, organization: string) {
       [organization],
     ),
   };
+}
+
+/** Nouveaux établissements : chaque membre valide ses étapes sensibles avec son code PIN. */
+async function requireStaffPins(db: DB, restaurant: string) {
+  if (await staffSchemaReady(db))
+    await db.query("UPDATE restaurants SET staff_pin_required=true WHERE id=$1", [restaurant]);
 }

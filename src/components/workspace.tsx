@@ -48,8 +48,11 @@ import {
   ShieldCheck,
   GraduationCap,
   QrCode,
+  KeyRound,
 } from "lucide-react";
 import { roleLabels } from "@/lib/permissions";
+import { PinPrompt, PinSetup } from "./team/staff-pin";
+import { pinStepLabel, requiresPin } from "@/features/team/steps";
 import type { Snapshot } from "@/lib/types";
 import { Dining, Kds, OrderList } from "./operations";
 import { AddonsCenter } from "./addons-center";
@@ -162,7 +165,13 @@ export function Workspace() {
     [notifications, setNotifications] = useState(false),
     [guide, setGuide] = useState(false),
     [dockSheet, setDockSheet] = useState(""),
-    [updated, setUpdated] = useState("");
+    [updated, setUpdated] = useState(""),
+    [changingPin, setChangingPin] = useState(false),
+    [pinRequest, setPinRequest] = useState<{
+      action: Record<string, unknown>;
+      resolve: (value: unknown) => void;
+      reject: (reason: Error) => void;
+    } | null>(null);
   const cursor = useRef(0);
   useEffect(() => {
     const query = new URLSearchParams(window.location.search);
@@ -215,19 +224,27 @@ export function Workspace() {
       clearInterval(fallback);
     };
   }, [load, restaurant]);
+  async function post(action: Record<string, unknown>) {
+    const r = await fetch("/api/v1/action", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ ...action, restaurant }),
+    });
+    const d = await r.json();
+    if (!r.ok) throw new Error(d.error);
+    return d.result;
+  }
   async function act(action: Record<string, unknown>) {
+    // Étape sensible : la personne qui la réalise s’identifie avec son code PIN.
+    if (data?.staff?.pinRequired && requiresPin(action) && !action.pin)
+      return new Promise((resolve, reject) =>
+        setPinRequest({ action, resolve, reject }),
+      );
     try {
-      const r = await fetch("/api/v1/action", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...action, restaurant }),
-      });
-      const d = await r.json();
-      if (!r.ok) throw new Error(d.error);
+      const result = await post(action);
       setError("");
       await load();
-      return d.result as unknown;
-      return d.result;
+      return result;
     } catch (e) {
       setError((e as Error).message);
       throw e;
@@ -243,7 +260,7 @@ export function Workspace() {
           uninstalledAddons: data.uninstalledAddons,
           activeModules: data.activeModules,
           modules: data.modules,
-        }), data.restaurant.industry, restaurantOnlyNavigation, data.moduleDisplay).map((entry) =>
+        }).filter((entry) => !data.staff?.hidden.includes(entry.id)), data.restaurant.industry, restaurantOnlyNavigation, data.moduleDisplay).map((entry) =>
             entry.id === "trade-tools" && data.restaurant.industry !== "restaurant"
               ? { ...entry, name: "Mon métier" } : entry),
       )
@@ -284,8 +301,42 @@ export function Workspace() {
         <Link href="/platform">Mes restaurants et connexion</Link>
       </main>
     );
+  if ((data.staff?.pinRequired && !data.staff.hasPin) || changingPin)
+    return (
+      <AppearanceScope userId={data.user.id} className="staff-pin-scope">
+        <PinSetup
+          restaurant={restaurant}
+          restaurantName={data.restaurant.name}
+          userName={data.user.name}
+          change={changingPin}
+          onCancel={changingPin ? () => setChangingPin(false) : undefined}
+          onDone={() => {
+            setChangingPin(false);
+            void load();
+          }}
+        />
+      </AppearanceScope>
+    );
   return (
     <AppearanceScope userId={data.user.id} className="workspace">
+      {pinRequest && (
+        <PinPrompt
+          title={pinStepLabel(pinRequest.action)}
+          operators={data.staff?.operators ?? []}
+          defaultOperator={data.user.id}
+          onCancel={() => {
+            pinRequest.reject(new Error("Validation par code PIN annulée."));
+            setPinRequest(null);
+          }}
+          onSubmit={async (pin) => {
+            const result = await post({ ...pinRequest.action, pin });
+            setPinRequest(null);
+            setError("");
+            pinRequest.resolve(result);
+            await load();
+          }}
+        />
+      )}
       <LoadingScreenSync restaurant={restaurant} />
       <aside className={`sidebar ${mobile ? "open" : ""}`}>
         <Link href="/dashboard" className="brand">
@@ -359,6 +410,11 @@ export function Workspace() {
           </div>
           <ChevronDown size={16} />
         </Link>
+        {data.staff?.hasPin && data.staff.pinRequired && (
+          <button className="sidebar-pin-link" onClick={() => setChangingPin(true)}>
+            <KeyRound size={15} /> Changer mon code PIN
+          </button>
+        )}
       </aside>
       {mobile && (
         <button

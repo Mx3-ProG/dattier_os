@@ -23,6 +23,7 @@ import { snapshot, menu } from "@/lib/snapshot";
 import {
   actionSchema,
   perform,
+  pinStep,
   requestReservation,
   reservationSchema,
 } from "@/lib/actions";
@@ -34,6 +35,7 @@ import {
   dayQuery,
 } from "@/features/reservations/service";
 import { seed } from "@/lib/database/seed";
+import { pinInput, verifyOperator } from "@/features/team/pins";
 import { requireRestaurantIndustry } from "@/features/onboarding/access";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -175,9 +177,18 @@ async function handlePost(req: NextRequest) {
     }
     const restaurant = tenant(body.restaurant);
     const data = actionSchema.parse(body);
+    // Le PIN est vérifié dans sa propre transaction : un échec doit rester compté.
+    const operator = pinStep(data)
+      ? await verifyOperator(
+          (fn) => db.transaction(fn),
+          restaurant,
+          user,
+          body.pin === undefined ? undefined : pinInput.parse(body.pin),
+        )
+      : undefined;
     const result = await db.transaction(async (tx) => {
       await requireRestaurantIndustry(tx,restaurant);
-      return perform(tx, restaurant, await scope(tx, user, restaurant), data);
+      return perform(tx, restaurant, await scope(tx, user, restaurant), data, operator);
     });
     return NextResponse.json({ ok: true, result });
   } catch (e) {
