@@ -3,6 +3,8 @@ import { SignJWT, jwtVerify, createRemoteJWKSet } from "jose";
 import { cookies } from "next/headers";
 import { getDb } from "../database/db";
 import { withDatabaseContext } from "../database/context";
+import { isSuperAdminEmail } from "./superadmin";
+import type { Role } from "@/core/permissions";
 const cookieName = "atacuisine_identity";
 function secret() {
   const s = process.env.SESSION_SECRET;
@@ -158,14 +160,28 @@ export async function establishIdentity(
     "oidc:" + createHash("sha256").update(`${issuer}\0${sub}`).digest("hex");
   const name = rawName.slice(0, 100) || "Utilisateur",
     email = rawEmail.toLowerCase().slice(0, 150);
+  const isSuper = isSuperAdminEmail(email);
   await withDatabaseContext({ userId: id }, async () => {
-    await (
-      await getDb()
-    ).query("SELECT app.ensure_profile($1,$2,$3)", [id, name, email]);
+    const db = await getDb();
+    await db.query("SELECT app.ensure_profile($1,$2,$3)", [id, name, email]);
+    if (isSuper) {
+      await db.query(
+        "UPDATE profiles SET role='SUPER_ADMIN', status='active' WHERE id=$1",
+        [id],
+      );
+      await db.query(
+        "INSERT INTO platform_admins(profile_id) VALUES($1) ON CONFLICT DO NOTHING",
+        [id],
+      );
+    }
   });
+  const role: Role = isSuper ? "SUPER_ADMIN" : "WAITER";
   (await cookies()).set(
     cookieName,
-    await signed({ sub: id, name, email, issuedAtMs: Date.now() }, "12h"),
+    await signed(
+      { sub: id, name, email, role, issuedAtMs: Date.now() },
+      "12h",
+    ),
     { ...cookieOptions, maxAge: 43200 },
   );
   return id;
@@ -183,12 +199,17 @@ export async function oidcActor() {
       algorithms: ["HS256"],
     });
     if (!payload.sub) throw new Error();
+    const isSuper = isSuperAdminEmail(String(payload.email));
+    const role: Role = isSuper
+      ? "SUPER_ADMIN"
+      : ((payload.role as Role) || "WAITER");
     return {
       id: payload.sub,
       name: String(payload.name),
       email: String(payload.email),
       authIssuedAt: Number(payload.issuedAtMs || Number(payload.iat) * 1000),
-      role: "WAITER" as const,
+      role,
+      roles: isSuper ? (["SUPER_ADMIN", "OWNER"] as Role[]) : [role],
     };
   } catch {
     throw new Error("Connexion expirée.");

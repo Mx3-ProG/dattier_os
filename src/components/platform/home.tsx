@@ -16,6 +16,7 @@ import "./access.css";
 type Overview = {
   user: { id: string; name: string };
   platformAdmin?: boolean;
+  isSuperAdmin?: boolean;
   billingReady?: boolean;
   organizations: {
     id: string;
@@ -141,6 +142,7 @@ export function PlatformHome() {
       restaurants={data?.restaurants || []}
       canCreate={canCreate}
       platformAdmin={data?.platformAdmin}
+      isSuperAdmin={data?.isSuperAdmin}
     >
       <main className="platform restaurant-workspace-content account-home-content">
         <header className="account-page-heading">

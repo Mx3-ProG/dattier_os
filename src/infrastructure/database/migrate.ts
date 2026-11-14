@@ -103,6 +103,7 @@ const migrations: [number, string][] = [
   [172, "172_seo_platform_sites_addon.sql"],
   [173, "173_directory_opt_in.sql"],
   [174, "174_directory_module_available.sql"],
+  [175, "175_super_admin_access.sql"],
 ];
 /** Applies every additive migration not yet recorded, inside the caller's transaction. */
 export async function applyMigrations(tx: DB) {

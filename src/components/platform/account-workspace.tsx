@@ -15,6 +15,7 @@ import {
   LogOut,
   ArrowUpRight,
   Package,
+  ShieldAlert,
 } from "lucide-react";
 import { clearLoadingConfigs } from "@/components/loading-screens/tenant-loader";
 export function AccountWorkspace({
@@ -98,10 +99,14 @@ export function AccountWorkspace({
             ))}
           {platformAdmin && (
             <>
-              <span className="nav-group">ADMINISTRATION</span>
+              <span className="nav-group">ADMINISTRATION MONOLITHE</span>
+              <Link className="restaurant-nav-link" href="/platform/admin">
+                <ShieldAlert size={18} />
+                <span>Super Admin</span>
+              </Link>
               <Link className="restaurant-nav-link" href="/platform/boutique">
                 <Package size={18} />
-                Boutique d’add-ons
+                <span>Boutique d’add-ons</span>
               </Link>
             </>
           )}

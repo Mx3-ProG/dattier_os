@@ -3,6 +3,7 @@ import { cookies } from "next/headers";
 import { getDb, demoEnabled, publicDemoEnabled, one, rows, type DB } from "../database/db";
 import type { Role } from "@/core/permissions";
 import { appOrigin, oidcActor } from "./oidc";
+import { isSuperAdminEmail } from "./superadmin";
 export type Actor = {
   id: string;
   name: string;
@@ -72,7 +73,15 @@ export async function actor(): Promise<Actor> {
   if (!demoEnabled()) {
     const user = await oidcActor();
     await bindActor(user.id, hash(`${user.id}:${user.authIssuedAt}`));
-    return user;
+    const isSuper =
+      user.role === "SUPER_ADMIN" ||
+      isSuperAdminEmail(user.email) ||
+      user.roles?.includes("SUPER_ADMIN");
+    return {
+      ...user,
+      role: isSuper ? "SUPER_ADMIN" : user.role,
+      roles: isSuper ? ["SUPER_ADMIN", "OWNER"] : (user.roles ?? [user.role]),
+    };
   }
   const token = (await cookies()).get("atacuisine_session")?.value;
   if (!token) throw new Error("Connexion requise.");
@@ -81,7 +90,16 @@ export async function actor(): Promise<Actor> {
     if (!session) throw new Error("Connexion requise.");
     const user = await one<Actor>(await getDb(), "SELECT * FROM profiles WHERE id=$1", [session.profileId]);
     await bindActor(user.id, hash(token));
-    return { ...user, authIssuedAt: session.issuedAt };
+    const isSuper =
+      user.role === "SUPER_ADMIN" ||
+      isSuperAdminEmail(user.email) ||
+      user.roles?.includes("SUPER_ADMIN");
+    return {
+      ...user,
+      role: isSuper ? "SUPER_ADMIN" : user.role,
+      roles: isSuper ? ["SUPER_ADMIN", "OWNER"] : (user.roles ?? [user.role]),
+      authIssuedAt: session.issuedAt,
+    };
   }
   const user = await one<Actor & { auth_issued_at: number }>(
     await getDb(),
@@ -89,9 +107,29 @@ export async function actor(): Promise<Actor> {
     [hash(token)],
   );
   await bindActor(user.id, hash(token));
-  return { ...user, authIssuedAt: user.auth_issued_at };
+  const isSuper =
+    user.role === "SUPER_ADMIN" ||
+    isSuperAdminEmail(user.email) ||
+    user.roles?.includes("SUPER_ADMIN");
+  return {
+    ...user,
+    role: isSuper ? "SUPER_ADMIN" : user.role,
+    roles: isSuper ? ["SUPER_ADMIN", "OWNER"] : (user.roles ?? [user.role]),
+    authIssuedAt: user.auth_issued_at,
+  };
 }
 export async function scope(db: DB, user: Actor, r: string) {
+  const isSuper =
+    user.role === "SUPER_ADMIN" ||
+    isSuperAdminEmail(user.email) ||
+    user.roles?.includes("SUPER_ADMIN");
+  if (isSuper) {
+    return {
+      ...user,
+      role: "SUPER_ADMIN" as Role,
+      roles: ["SUPER_ADMIN", "OWNER"] as Role[],
+    };
+  }
   await requirePlan(db, r, 39);
   const revoked = await rows<{ not_before: string }>(
     db,

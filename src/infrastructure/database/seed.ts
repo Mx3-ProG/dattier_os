@@ -21,33 +21,39 @@ export async function seed(db: DB) {
       'invoices','attendance','client-invoices','payroll','offline-conflicts','connections','qr','loyalty','domain'
     ]) AS a(id) WHERE r.id IN ('bernay','atelier') ON CONFLICT DO NOTHING`);
   const people = [
-    ["slimane", "Slimane", "SUPER_ADMIN"],
-    ["nadia", "Nadia", "OWNER"],
-    ["lina", "Lina", "MANAGER"],
-    ["sarah", "Sarah", "WAITER"],
-    ["karim", "Karim", "CHEF"],
-    ["youssef", "Youssef", "BARTENDER"],
-    ["amine", "Amine", "STOCK_MANAGER"],
-    ["ines", "Inès", "PURCHASING"],
-    ["leila", "Leïla", "ACCOUNTANT"],
+    ["mat75_superadmin", "Mathieu (Super Admin)", "SUPER_ADMIN", "mat75.deff@gmail.com"],
+    ["slimane", "Slimane", "SUPER_ADMIN", "slimane@example.test"],
+    ["nadia", "Nadia", "OWNER", "nadia@example.test"],
+    ["lina", "Lina", "MANAGER", "lina@example.test"],
+    ["sarah", "Sarah", "WAITER", "sarah@example.test"],
+    ["karim", "Karim", "CHEF", "karim@example.test"],
+    ["youssef", "Youssef", "BARTENDER", "youssef@example.test"],
+    ["amine", "Amine", "STOCK_MANAGER", "amine@example.test"],
+    ["ines", "Inès", "PURCHASING", "ines@example.test"],
+    ["leila", "Leïla", "ACCOUNTANT", "leila@example.test"],
   ];
-  for (const [id, name, role] of people) {
-    await db.query("INSERT INTO profiles(id,name,role) VALUES ($1,$2,$3)", [
-      id,
-      name,
-      role,
-    ]);
+  for (const [id, name, role, email] of people) {
+    await db.query(
+      "INSERT INTO profiles(id,name,role,email) VALUES ($1,$2,$3,$4) ON CONFLICT(id) DO UPDATE SET name=excluded.name, role=excluded.role, email=excluded.email",
+      [id, name, role, email || ""],
+    );
+    if (role === "SUPER_ADMIN") {
+      await db.query(
+        "INSERT INTO platform_admins(profile_id) VALUES($1) ON CONFLICT DO NOTHING",
+        [id],
+      );
+    }
     for (const r of role === "OWNER" || role === "SUPER_ADMIN"
       ? ["bernay", "atelier"]
       : ["bernay"])
-      await db.query("INSERT INTO memberships VALUES ($1,$2,$3)", [
+      await db.query("INSERT INTO memberships VALUES ($1,$2,$3) ON CONFLICT DO NOTHING", [
         id,
         r,
         role,
       ]);
   }
   await db.query(
-    "INSERT INTO organization_memberships VALUES('legacy','nadia','OWNER'),('legacy','slimane','OWNER') ON CONFLICT DO NOTHING",
+    "INSERT INTO organization_memberships VALUES('legacy','nadia','OWNER'),('legacy','slimane','OWNER'),('legacy','mat75_superadmin','OWNER') ON CONFLICT DO NOTHING",
   );
   const ingredients: [string, string, string, number, number, number][] = [
     ["semoule", "Semoule", "g", 40000, 2000, 0.0018],

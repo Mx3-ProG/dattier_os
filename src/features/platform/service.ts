@@ -2,6 +2,7 @@ import { randomUUID, randomBytes, createHash } from "node:crypto";
 import { z } from "zod";
 import { rows, one, type DB } from "@/infrastructure/database/db";
 import { scope, type Actor } from "@/infrastructure/auth/session";
+import { isSuperAdminEmail } from "@/infrastructure/auth/superadmin";
 import { roles } from "@/core/permissions";
 import { log } from "@/features/orders/service";
 import { planBillingReady } from "./plan-billing";
@@ -114,32 +115,47 @@ export async function initializeRestaurant(db: DB, r: string) {
   );
 }
 export async function overview(db: DB, user: Actor) {
-  return {
-    user,
-    billingReady: planBillingReady(),
-    draft: (await rows<{ draft: unknown }>(db, "SELECT draft FROM onboarding_drafts WHERE profile_id=$1", [user.id]))[0]?.draft ?? null,
-    platformAdmin: (
+  const isSuper = isSuperAdminEmail(user.email);
+  const platformAdmin =
+    isSuper ||
+    (
       await one<{ allowed: boolean }>(
         db,
         "SELECT app.is_platform_admin($1) AS allowed",
         [user.id],
       )
-    ).allowed,
-    organizations: await rows(
-      db,
-      "SELECT o.*,m.role,p.*,t.trial_ends_at,t.cancelled_at,t.trial_active,s.referral_code,s.referrals,s.paying_referrals,s.activated_total,s.activated_month,s.credits,creator.name AS creator_name,creator.email AS creator_email,creator.job_title AS creator_job_title,creator.work_phone AS creator_work_phone,b.status AS billing_status,b.current_period_end AS billing_period_end,b.cancel_at_period_end AS billing_cancelling,(b.stripe_customer IS NOT NULL) AS billing_customer FROM organizations o JOIN organization_memberships m ON m.organization_id=o.id LEFT JOIN profiles creator ON creator.id=o.created_by CROSS JOIN LATERAL app.organization_plan(o.id) p LEFT JOIN LATERAL app.organization_trial(o.id) t ON true LEFT JOIN LATERAL app.plan_billing_context(o.id) b ON true LEFT JOIN LATERAL app.referral_summary(o.id) s ON true WHERE m.profile_id=$1 ORDER BY o.name",
-      [user.id],
-    ),
-    restaurants: await rows(
-      db,
-      "SELECT DISTINCT r.*,app.restaurant_plan(r.id) AS plan,COALESCE((SELECT array_agg(rm.role::text) FROM memberships rm WHERE rm.restaurant_id=r.id AND rm.profile_id=$1),(SELECT ARRAY['OWNER']::text[] WHERE EXISTS(SELECT 1 FROM organization_memberships omx WHERE omx.organization_id=r.organization_id AND omx.profile_id=$1 AND omx.role IN ('OWNER','ADMIN')))) AS user_roles FROM restaurants r LEFT JOIN memberships m ON m.restaurant_id=r.id LEFT JOIN organization_memberships om ON om.organization_id=r.organization_id WHERE r.archived_at IS NULL AND (m.profile_id=$1 OR (om.profile_id=$1 AND om.role IN ('OWNER','ADMIN'))) ORDER BY r.name",
-      [user.id],
-    ),
+    ).allowed;
+  return {
+    user,
+    billingReady: planBillingReady(),
+    draft: (await rows<{ draft: unknown }>(db, "SELECT draft FROM onboarding_drafts WHERE profile_id=$1", [user.id]))[0]?.draft ?? null,
+    platformAdmin,
+    isSuperAdmin: isSuper,
+    organizations: isSuper
+      ? await rows(
+          db,
+          "SELECT o.*,'OWNER' as role,p.*,t.trial_ends_at,t.cancelled_at,t.trial_active,s.referral_code,s.referrals,s.paying_referrals,s.activated_total,s.activated_month,s.credits,creator.name AS creator_name,creator.email AS creator_email,creator.job_title AS creator_job_title,creator.work_phone AS creator_work_phone,b.status AS billing_status,b.current_period_end AS billing_period_end,b.cancel_at_period_end AS billing_cancelling,(b.stripe_customer IS NOT NULL) AS billing_customer FROM organizations o LEFT JOIN profiles creator ON creator.id=o.created_by CROSS JOIN LATERAL app.organization_plan(o.id) p LEFT JOIN LATERAL app.organization_trial(o.id) t ON true LEFT JOIN LATERAL app.plan_billing_context(o.id) b ON true LEFT JOIN LATERAL app.referral_summary(o.id) s ON true ORDER BY o.name",
+        )
+      : await rows(
+          db,
+          "SELECT o.*,m.role,p.*,t.trial_ends_at,t.cancelled_at,t.trial_active,s.referral_code,s.referrals,s.paying_referrals,s.activated_total,s.activated_month,s.credits,creator.name AS creator_name,creator.email AS creator_email,creator.job_title AS creator_job_title,creator.work_phone AS creator_work_phone,b.status AS billing_status,b.current_period_end AS billing_period_end,b.cancel_at_period_end AS billing_cancelling,(b.stripe_customer IS NOT NULL) AS billing_customer FROM organizations o JOIN organization_memberships m ON m.organization_id=o.id LEFT JOIN profiles creator ON creator.id=o.created_by CROSS JOIN LATERAL app.organization_plan(o.id) p LEFT JOIN LATERAL app.organization_trial(o.id) t ON true LEFT JOIN LATERAL app.plan_billing_context(o.id) b ON true LEFT JOIN LATERAL app.referral_summary(o.id) s ON true WHERE m.profile_id=$1 ORDER BY o.name",
+          [user.id],
+        ),
+    restaurants: isSuper
+      ? await rows(
+          db,
+          "SELECT DISTINCT r.*,app.restaurant_plan(r.id) AS plan,ARRAY['SUPER_ADMIN','OWNER']::text[] AS user_roles FROM restaurants r WHERE r.archived_at IS NULL ORDER BY r.name",
+        )
+      : await rows(
+          db,
+          "SELECT DISTINCT r.*,app.restaurant_plan(r.id) AS plan,COALESCE((SELECT array_agg(rm.role::text) FROM memberships rm WHERE rm.restaurant_id=r.id AND rm.profile_id=$1),(SELECT ARRAY['OWNER']::text[] WHERE EXISTS(SELECT 1 FROM organization_memberships omx WHERE omx.organization_id=r.organization_id AND omx.profile_id=$1 AND omx.role IN ('OWNER','ADMIN')))) AS user_roles FROM restaurants r LEFT JOIN memberships m ON m.restaurant_id=r.id LEFT JOIN organization_memberships om ON om.organization_id=r.organization_id WHERE r.archived_at IS NULL AND (m.profile_id=$1 OR (om.profile_id=$1 AND om.role IN ('OWNER','ADMIN'))) ORDER BY r.name",
+          [user.id],
+        ),
   };
 }
 export async function assertAdmin(db: DB, user: Actor, r: string) {
   const u = await scope(db, user, r);
-  if (!(u.roles || [u.role]).includes("OWNER"))
+  if (!(u.roles || [u.role]).some((role) => role === "OWNER" || role === "SUPER_ADMIN"))
     throw new Error("Administration non autorisée.");
   return u;
 }
