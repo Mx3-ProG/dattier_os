@@ -548,6 +548,13 @@
   background: var(--appearance-surface, #fff);
   color: var(--appearance-link, var(--l-green));
 }
+.guide-end .guide-hero-actions {
+  margin-top: 0;
+}
+.guide-end .landing-btn.outline {
+  color: #fff;
+  border-color: rgb(255 255 255 / 0.6);
+}
 
 .guide-flow:not(.stock) li:nth-child(3n)::after {
   display: none;

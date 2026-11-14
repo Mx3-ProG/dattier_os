@@ -4,7 +4,7 @@ import { recordFailure } from "@/features/ops-security/http";
 import { NextRequest, NextResponse } from "next/server";
 import { ZodError } from "zod";
 import { actor, type Actor } from "@/infrastructure/auth/session";
-import { getDb, demoEnabled, type DB } from "@/infrastructure/database/db";
+import { getDb, demoEnabled, publicDemoEnabled, type DB } from "@/infrastructure/database/db";
 import { withDatabaseContext } from "@/infrastructure/database/context";
 import { log } from "@/features/orders/service";
 import { appOrigin } from "@/infrastructure/auth/oidc";
@@ -37,10 +37,13 @@ export async function assertOrigin(req: NextRequest) {
   const origin = req.headers.get("origin");
   if (!origin) throw new Error("Origine non autorisée.");
   if (demoEnabled()) {
-    if (
-      new URL(origin).host !== req.headers.get("host") ||
-      !["localhost", "127.0.0.1", "[::1]"].includes(new URL(origin).hostname)
-    )
+    const url = new URL(origin);
+    // Démo publique : même origine, en HTTPS (sous-domaine démo ou alias Vercel).
+    const sameHost = url.host === req.headers.get("host");
+    const allowed = publicDemoEnabled()
+      ? url.protocol === "https:" || ["localhost", "127.0.0.1", "[::1]"].includes(url.hostname)
+      : ["localhost", "127.0.0.1", "[::1]"].includes(url.hostname);
+    if (!sameHost || !allowed)
       throw new Error("Origine non autorisée.");
   } else if (origin !== appOrigin()) {
     const { rows } = await (

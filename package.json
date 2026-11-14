@@ -16,6 +16,7 @@
     "payments:review": "node --import tsx scripts/payments-review.ts",
     "ai:credits": "node --import tsx scripts/ai-credits.ts",
     "db:migrate": "node --import tsx scripts/migrate.ts",
+    "demo:snapshot": "node --import tsx scripts/demo-snapshot.ts",
     "worker": "node --import tsx scripts/worker.ts",
     "setup:env": "node --import tsx scripts/setup-env.ts",
     "test:postgres": "node --import tsx scripts/verify-postgres.ts",

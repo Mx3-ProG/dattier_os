@@ -1,6 +1,6 @@
-import { createHash, randomBytes } from "node:crypto";
+import { createHash, createHmac, randomBytes, timingSafeEqual } from "node:crypto";
 import { cookies } from "next/headers";
-import { getDb, demoEnabled, one, rows, type DB } from "../database/db";
+import { getDb, demoEnabled, publicDemoEnabled, one, rows, type DB } from "../database/db";
 import type { Role } from "@/core/permissions";
 import { appOrigin, oidcActor } from "./oidc";
 export type Actor = {
@@ -23,17 +23,42 @@ async function bindActor(userId: string, tokenHash: string) {
   return mod.bindActor(userId, tokenHash);
 }
 
+/* Démo publique : plusieurs instances, chacune avec sa base en mémoire.
+   La session tient donc dans un cookie signé plutôt que dans la table sessions. */
+const DEMO_TTL_MS = 12 * 3600 * 1000;
+function demoSign(payload: string) {
+  const key = process.env.SESSION_SECRET;
+  if (!key || key.length < 32)
+    throw new Error("SESSION_SECRET (32 caractères minimum) est requis pour la démo publique.");
+  return createHmac("sha256", key).update(`demo:${payload}`).digest("base64url");
+}
+function demoToken(profileId: string, issuedAt: number) {
+  const payload = `${Buffer.from(profileId).toString("base64url")}.${issuedAt}`;
+  return `pd.${payload}.${demoSign(payload)}`;
+}
+function readDemoToken(token: string) {
+  const [prefix, id, issued, sig] = token.split(".");
+  if (prefix !== "pd" || !id || !issued || !sig) return null;
+  const expected = Buffer.from(demoSign(`${id}.${issued}`));
+  const given = Buffer.from(sig);
+  if (expected.length !== given.length || !timingSafeEqual(expected, given)) return null;
+  const issuedAt = Number(issued);
+  if (!Number.isFinite(issuedAt) || Date.now() - issuedAt > DEMO_TTL_MS) return null;
+  return { profileId: Buffer.from(id, "base64url").toString(), issuedAt };
+}
 export async function login(id: string) {
   if (!demoEnabled()) throw new Error("Connexion de démonstration désactivée.");
   const db = await getDb();
   const profile = await one<Actor>(db, "SELECT * FROM profiles WHERE id=$1", [
     id,
   ]);
-  const token = randomBytes(32).toString("hex");
-  await db.query(
-    "INSERT INTO sessions VALUES($1,$2,now()+interval '12 hours')",
-    [hash(token), profile.id],
-  );
+  let token = randomBytes(32).toString("hex");
+  if (publicDemoEnabled()) token = demoToken(profile.id, Date.now());
+  else
+    await db.query(
+      "INSERT INTO sessions VALUES($1,$2,now()+interval '12 hours')",
+      [hash(token), profile.id],
+    );
   (await cookies()).set("atacuisine_session", token, {
     httpOnly: true,
     sameSite: "strict",
@@ -51,6 +76,13 @@ export async function actor(): Promise<Actor> {
   }
   const token = (await cookies()).get("atacuisine_session")?.value;
   if (!token) throw new Error("Connexion requise.");
+  if (publicDemoEnabled()) {
+    const session = readDemoToken(token);
+    if (!session) throw new Error("Connexion requise.");
+    const user = await one<Actor>(await getDb(), "SELECT * FROM profiles WHERE id=$1", [session.profileId]);
+    await bindActor(user.id, hash(token));
+    return { ...user, authIssuedAt: session.issuedAt };
+  }
   const user = await one<Actor & { auth_issued_at: number }>(
     await getDb(),
     "SELECT p.*,(extract(epoch FROM (s.expires_at-interval '12 hours'))*1000)::float AS auth_issued_at FROM profiles p JOIN sessions s ON s.profile_id=p.id WHERE s.token=$1 AND s.expires_at>now()",

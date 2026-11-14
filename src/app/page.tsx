@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { demoEnabled } from "@/infrastructure/database/db";
+import { demoLinks } from "@/infrastructure/database/demo-links";
 import { Landing } from "@/components/landing";
 import "./landing.css";
 import "./legal.css";
@@ -17,7 +18,7 @@ export default function Page() {
   return (
     <Landing
       demo={demo}
-      demoHref={demo ? "/demo" : process.env.ATACUISINE_PUBLIC_DEMO_URL}
+      demoHref={demoLinks().demoHref}
     />
   );
 }
