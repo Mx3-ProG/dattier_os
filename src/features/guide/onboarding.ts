@@ -1,4 +1,4 @@
-/* Parcours « Bien démarrer » : on prend le restaurateur par la main, du compte
+/* Parcours « Bien démarrer » : on prend le commerçant par la main, du compte
    à la première table placée. Plus les parcours SEO et hors ligne. Assemblés
    avec les autres dans content.ts. */
 import type { Chapter } from "./content";
@@ -23,22 +23,22 @@ export const account: Chapter = {
       link: { label: "Revoir la création de compte", href: "/guide#account" },
     },
     {
-      title: "Organisation, restaurants, équipe",
-      body: "Votre organisation regroupe vos restaurants. Chaque restaurant a ses propres données (carte, tables, stocks, site) et sa propre équipe. Vos collaborateurs n’achètent rien : vous les invitez, ils créent leur compte avec l’adresse invitée.",
+      title: "Organisation, commerces, équipe",
+      body: "Votre organisation regroupe vos commerces. Chaque commerce a ses propres données (catalogue, stocks, site, modules activés) et sa propre équipe. Vos collaborateurs n’achètent rien : vous les invitez, ils créent leur compte avec l’adresse invitée.",
     },
     {
       target: '[data-tour="restaurant-switch"]',
-      title: "Le restaurant affiché",
-      body: "Tout ce que vous faites s’applique au restaurant choisi ici. Si vous en gérez plusieurs, changez-en à tout moment.",
+      title: "Le commerce affiché",
+      body: "Tout ce que vous faites s’applique au commerce choisi ici. Si vous en gérez plusieurs, changez-en à tout moment.",
     },
     {
       target: '[data-tour="profile"]',
       title: "Votre profil",
-      body: "Votre nom et votre rôle. C’est aussi la porte de l’administration du restaurant : équipe, boutique, site, SEO, stocks et sécurité. Nous y passerons ensemble dans quelques minutes.",
+      body: "Votre nom et votre rôle. C’est aussi la porte de l’administration de votre commerce : équipe, boutique, site, SEO, stocks et sécurité. Nous y passerons ensemble dans quelques minutes.",
     },
   ],
   guide: {
-    lead: "Avant d’entrer dans le poste de travail, il faut un compte, une organisation et un premier restaurant. Tout se fait en ligne, en quelques minutes.",
+    lead: "Avant d’entrer dans le poste de travail, il faut un compte, une organisation et un premier commerce. Tout se fait en ligne, en quelques minutes.",
     sections: [
       {
         title: "Créer un compte",
@@ -52,7 +52,7 @@ export const account: Chapter = {
       },
       {
         title: "Rejoindre une équipe existante",
-        text: "Un collaborateur ne crée pas d’organisation : il reçoit un lien d’invitation, crée son compte avec l’adresse invitée, puis accepte l’invitation depuis « Mes restaurants ». Ses rôles ont été choisis par la personne qui l’a invité.",
+        text: "Un collaborateur ne crée pas d’organisation : il reçoit un lien d’invitation, crée son compte avec l’adresse invitée, puis accepte l’invitation depuis « Mes établissements ». Ses rôles ont été choisis par la personne qui l’a invité.",
       },
       {
         title: "En démonstration",
@@ -75,7 +75,7 @@ export const appearance: Chapter = {
     {
       target: ".appearance-trigger",
       title: "Votre espace, à votre goût",
-      body: "Avant de commencer, mettez-vous à l’aise. Ces réglages ne concernent que vous : chaque membre de l’équipe a les siens, et ils vous suivent dans tous vos restaurants.",
+      body: "Avant de commencer, mettez-vous à l’aise. Ces réglages ne concernent que vous : chaque membre de l’équipe a les siens, et ils vous suivent dans tous vos commerces.",
       action: "Cliquez sur « Personnaliser mon espace ».",
       autoClick: true,
       fallback:
@@ -95,7 +95,7 @@ export const appearance: Chapter = {
     {
       target: ".appearance-color",
       title: "Ou votre propre couleur",
-      body: "Choisissez exactement la teinte de votre restaurant avec le sélecteur de couleur.",
+      body: "Choisissez exactement la teinte de votre commerce avec le sélecteur de couleur.",
     },
     {
       target: ".appearance-font",
@@ -128,7 +128,7 @@ export const appearance: Chapter = {
     },
   ],
   guide: {
-    lead: "Chaque membre de l’équipe personnalise son propre espace. Les réglages sont enregistrés sur son profil et le suivent dans tous ses restaurants et sur tous ses appareils.",
+    lead: "Chaque membre de l’équipe personnalise son propre espace. Les réglages sont enregistrés sur son profil et le suivent dans tous ses commerces et sur tous ses appareils.",
     sections: [
       {
         title: "Pas à pas",
@@ -162,13 +162,13 @@ export const setup: Chapter = {
   permission: ["settings"],
   starter: true,
   summary:
-    "Le nom, l’adresse, le téléphone et l’objectif du jour de votre restaurant.",
+    "Le nom, l’adresse, le téléphone et l’objectif du jour de votre commerce.",
   minutes: 2,
   steps: [
     {
       module: "settings",
       target: ".two-grid .card",
-      title: "La fiche de votre restaurant",
+      title: "La fiche de votre commerce",
       body: "Ces informations apparaissent sur votre site, vos tickets et vos messages aux clients. Prenez une minute pour les vérifier.",
       fallback:
         "Les informations de l’établissement sont modifiables par le propriétaire.",
@@ -203,7 +203,7 @@ export const setup: Chapter = {
       module: "settings",
       target: ".two-grid .card:last-child",
       title: "Vos autres établissements",
-      body: "Selon votre offre, vous pouvez ajouter d’autres restaurants. Chacun démarre vide, avec ses propres données.",
+      body: "Selon votre offre, vous pouvez ajouter d’autres commerces. Chacun démarre vide, avec ses propres données.",
     },
   ],
   guide: {
@@ -242,14 +242,14 @@ export const invite: Chapter = {
   steps: [
     {
       title: "Direction l’administration",
-      body: "L’équipe se gère dans l’administration du restaurant. Cliquez sur « Suivant » : la visite vous y emmène et continue là-bas.",
+      body: "L’équipe se gère dans l’administration de votre commerce. Cliquez sur « Suivant » : la visite vous y emmène et continue là-bas.",
     },
     {
       page: "admin:team",
       target: ".platform-admin-content section",
       text: "Inviter un collaborateur",
       title: "Inviter un collaborateur",
-      body: "Une invitation par personne, pour ce restaurant. Elle n’engage aucun frais pour le collaborateur.",
+      body: "Une invitation par personne, pour ce commerce. Elle n’engage aucun frais pour le collaborateur.",
     },
     {
       page: "admin:team",
@@ -291,12 +291,12 @@ export const invite: Chapter = {
     },
   ],
   guide: {
-    lead: "Vos collaborateurs rejoignent votre restaurant sur invitation. Vous choisissez leurs rôles ; ils ne voient que ce dont ils ont besoin.",
+    lead: "Vos collaborateurs rejoignent votre commerce sur invitation. Vous choisissez leurs rôles ; ils ne voient que ce dont ils ont besoin.",
     sections: [
       {
         title: "Inviter un collaborateur",
         steps: [
-          "Ouvrez l’administration du restaurant (clic sur votre profil) › Équipe.",
+          "Ouvrez l’administration de votre commerce (clic sur votre profil) › Équipe.",
           "Saisissez l’adresse e-mail du collaborateur.",
           "Cochez ses rôles dans cet établissement.",
           "Cliquez sur « Créer le lien d’invitation » et transmettez le lien.",
@@ -371,7 +371,7 @@ export const ingredients: Chapter = {
       {
         title: "Pas à pas",
         steps: [
-          "Administration du restaurant › Stocks et achats › « Créer un ingrédient ».",
+          "Administration du commerce › Stocks et achats › « Créer un ingrédient ».",
           "Saisissez le nom de l’ingrédient.",
           "Choisissez son unité : grammes, millilitres ou unités.",
           "Cliquez sur « Créer » ; recommencez pour chaque ingrédient.",
@@ -478,7 +478,7 @@ export const seo: Chapter = {
   steps: [
     {
       title: "Être trouvé sur Google et par les IA",
-      body: "Le SEO, c’est ce qui fait apparaître votre restaurant quand quelqu’un cherche « couscous Bernay » sur Google ou demande conseil à un assistant IA. STUDIO OS analyse votre site et vous dit quoi améliorer. La visite vous emmène dans l’administration, onglet SEO.",
+      body: "Le SEO, c’est ce qui fait apparaître votre commerce quand quelqu’un cherche votre activité dans votre ville sur Google ou demande conseil à un assistant IA. STUDIO OS analyse votre site et vous dit quoi améliorer. La visite vous emmène dans l’administration, onglet SEO.",
     },
     {
       page: "admin:seo",
@@ -529,7 +529,7 @@ export const seo: Chapter = {
       {
         title: "Lancer une analyse",
         steps: [
-          "Administration du restaurant › SEO et visibilité IA.",
+          "Administration du commerce › SEO et visibilité IA.",
           "Cliquez sur « Lancer l’analyse maintenant ».",
           "Lisez la dernière analyse : contrôles réussis, à surveiller, en échec.",
           "Traitez les recommandations, de la plus importante à la moins urgente.",
@@ -540,7 +540,7 @@ export const seo: Chapter = {
         title: "Comprendre les résultats",
         points: [
           "Visibilité organique : votre présence dans les moteurs de recherche.",
-          "Visibilité IA : ce que les assistants IA disent de votre restaurant.",
+          "Visibilité IA : ce que les assistants IA disent de votre commerce.",
           "Historique : l’évolution de vos analyses dans le temps.",
           "Le titre, la description et l’image de partage se règlent dans Mon site web, partie identité et référencement.",
         ],

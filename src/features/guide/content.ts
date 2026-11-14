@@ -504,7 +504,7 @@ const core: Chapter[] = [
           ],
         },
       ],
-      tip: "Exemple : 2 couscous à 22 € et 2 thés à 3,50 € donnent un règlement déclaré de 51 €.",
+      tip: "Exemple : 2 articles à 22 € et 2 articles à 3,50 € donnent un règlement déclaré de 51 €.",
     },
   },
   {
@@ -525,7 +525,7 @@ const core: Chapter[] = [
       {
         module: "reservations",
         target: ".card.table-scroll",
-        title: "Les prochaines tablées",
+        title: "Les prochaines réservations",
         body: "Toutes les demandes, avec le client, le créneau, le nombre de couverts, la table et le statut. Une demande reste provisoire tant que vous ne l’avez pas confirmée.",
       },
       {
@@ -1139,12 +1139,12 @@ export const glossary: { term: string; definition: string }[] = [
   {
     term: "Établissement (structure)",
     definition:
-      "Une boutique, un salon, un atelier ou un restaurant, avec son catalogue, ses stocks, son équipe et son site. Ses données sont cloisonnées.",
+      "Une boutique, un salon, un atelier, un restaurant ou tout autre commerce, avec son catalogue, ses stocks, son équipe et son site. Ses données sont cloisonnées.",
   },
   {
     term: "Session de table",
     definition:
-      "L’ensemble des commandes d’une même tablée, réglées en une seule déclaration.",
+      "L’ensemble des commandes d’un même client ou d’une même table, réglées en une seule déclaration.",
   },
   {
     term: "Poste (station)",

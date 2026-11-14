@@ -1,8 +1,22 @@
 # Studio OS
 
-OS open source pour les restaurateurs : commandes, salle, cuisine, bar, stocks, achats, équipes, clients, fidélité, boutique et sites par établissement.
+Le logiciel de gestion des commerçants : commandes, catalogue, stock, équipe, finance, clients, site internet et boutique en ligne, dans un seul outil. Restauration, beauté, commerce de détail, BTP, services : chaque commerce n’active que les modules utiles à son activité.
 
-**AGPL-3.0-only** · France en premier · installation auto-hébergeable. Une organisation peut gérer plusieurs restaurants et plusieurs rôles par utilisateur. L’offre hébergée propose trois forfaits au niveau de l’organisation. Voir [la gestion du pilote](docs/platform/BILLING.md).
+**Version 1.0.0** · **AGPL-3.0-only** · France en premier · installation auto-hébergeable.
+
+## V1 lancée le 14 novembre 2026
+
+Studio OS 1.0.0 est officiellement lancé. Depuis le **samedi 14 novembre 2026**, la V1 est opérationnelle et fonctionnelle en production. Elle fait gagner un temps réel au quotidien : une information saisie une fois est à jour partout, sans ressaisie entre plusieurs logiciels. Une mise à jour importante sort ensuite tous les 6 mois. [Versions et calendrier](docs/RELEASES.md) · [Journal des versions](CHANGELOG.md).
+
+## Un monolithe modulaire
+
+Une seule application et une seule base de données, découpées en modules indépendants :
+
+- un **core** toujours présent : comptes, commerces, équipe et rôles, droits, abonnement, sécurité ;
+- des **modules compris** dans l’abonnement (commandes, réservations, catalogue, stock simple, finance, site internet…), dont certains sont désactivables ;
+- des **add-ons** à ajouter ou retirer à tout moment, commerce par commerce, selon votre activité et vos besoins : plan de salle, recettes, fournisseurs, paie, comptabilité, fidélité, CRM, mode hors ligne, assistant IA…
+
+Retirer un module ne supprime pas ses données. Une organisation peut gérer plusieurs commerces ; chacun a ses propres modules et ses données cloisonnées par PostgreSQL (RLS). L’offre hébergée coûte 39 € TTC par mois et par établissement, avec 7 jours d’essai. [Comprendre le monolithe modulaire](docs/MONOLITHE-MODULAIRE.md) · [Core et modules, détail technique](docs/platform/CORE-ET-MODULES.md) · [Facturation](docs/platform/BILLING.md).
 
 ## Essayer localement
 
@@ -12,15 +26,16 @@ npm ci
 npm run dev
 ```
 
-La démonstration est sur `/demo`, le poste de travail sur `/dashboard`, le guide d’utilisation complet sur `/guide`. Dans le poste, le bouton « Guide » ouvre la visite interactive (15 parcours adaptés au rôle, contenu partagé avec `/guide` dans `src/features/guide/content.ts`) ; `/dashboard?tour=all` ou `?tour=<parcours>` la lance directement. Les données sont fictives et conservées dans un dossier explicitement nommé `demo`. Un seul processus peut ouvrir ce dossier. [Guide de la démonstration](docs/LOCAL_DEMO.md).
+La démonstration est sur `/demo`, le poste de travail sur `/dashboard`, le guide d’utilisation complet sur `/guide`. Dans le poste, le bouton « Guide » ouvre la visite interactive (parcours adaptés au rôle et au métier, contenu partagé avec `/guide` dans `src/features/guide/content.ts`) ; `/dashboard?tour=all` ou `?tour=<parcours>` la lance directement. Les données sont fictives et conservées dans un dossier explicitement nommé `demo`. Un seul processus peut ouvrir ce dossier. [Guide de la démonstration](docs/LOCAL_DEMO.md).
 
 ## Nouvelle plateforme
 
-- `/platform` : organisations et établissements, création guidée et accès aux modules.
-- `/restaurant/<id>` : équipe, boutique, avis, site, domaines, achats, inventaires et journal.
-- `/r/<id>` : vitrine, commande, réservations et espace client du restaurant.
+- `/platform` : organisations et commerces, création guidée, boutique d’add-ons et accès aux modules.
+- `/restaurant/<id>` : administration d’un commerce (équipe, boutique, avis, site, domaines, achats, inventaires et journal). Le nom de route est historique : il désigne tout type de commerce.
+- `/r/<id>` : vitrine, commande, réservations et espace client du commerce.
 - `/offline?restaurant=<id>` : appareils, quotas de stock et tickets conservés sur chaque appareil.
 - `/source` : accès au code de la version distribuée.
+- `/guide` : guide d’utilisation et point d’entrée de la visite guidée.
 
 L’authentification de production utilise OIDC/Keycloak. Les identités clients sont rattachées séparément à chaque organisation. Les profils de démonstration ne sont pas utilisables en production.
 
@@ -34,7 +49,7 @@ docker compose --env-file .env.production up --build -d
 
 [Installation et exploitation](docs/platform/SELF_HOSTING.md) · [Architecture et API](docs/platform/ARCHITECTURE.md) · [Reprise Donuts](docs/platform/FEATURE_MATRIX.md) · [Migration et import](docs/platform/MIGRATION.md).
 
-La composition fournie est une installation sur un seul hôte. Elle n’est pas une topologie haute disponibilité pour 500 restaurants. Les migrations utilisent un rôle dédié ; l’application refuse une connexion propriétaire ou dotée de BYPASSRLS. PostgreSQL, identité et stockage ne sont pas exposés directement sur Internet.
+La composition fournie est une installation sur un seul hôte. Elle n’est pas une topologie haute disponibilité pour 500 commerces. Les migrations utilisent un rôle dédié ; l’application refuse une connexion propriétaire ou dotée de BYPASSRLS. PostgreSQL, identité et stockage ne sont pas exposés directement sur Internet.
 
 ## Vérifier
 
@@ -49,15 +64,15 @@ Les scénarios PostgreSQL réels et de charge utilisent exclusivement des bases 
 
 ## État et limites
 
-Les parcours locaux et les contrôles SQL sont vérifiables ; leur présence ne vaut pas lancement commercial. Caisse, paie, comptabilité et livraison ne sont pas raccordées à des comptes prestataires. Le paiement en ligne est développé mais fermé sans clé Stripe, et n’a été vérifié qu’avec Stripe simulé ([détails](docs/platform/ONLINE_PAYMENTS.md)). Les exports de ventes/pointages sont des données à rapprocher, sans prétention de conformité comptable ou de paie.
+Caisse, paie, comptabilité et livraison ne sont pas raccordées à des comptes prestataires. Le paiement en ligne est développé mais fermé sans clé Stripe, et n’a été vérifié qu’avec Stripe simulé ([détails](docs/platform/ONLINE_PAYMENTS.md)). Les exports de ventes/pointages sont des données à rapprocher, sans prétention de conformité comptable ou de paie.
 
 Le mode hors ligne fonctionne par appareils indépendants : aucun transfert automatique de ticket pendant une coupure. Quotas et opérations locales doivent être réconciliés avant de retirer un appareil. Un navigateur effacé peut perdre ses opérations non synchronisées.
 
-[État détaillé](docs/platform/IMPLEMENTATION_STATUS.md) · [Hypothèses de coûts](docs/platform/COSTS.md) · [Contribuer](CONTRIBUTING.md) · [Sécurité](SECURITY.md) · [Notices tierces](THIRD_PARTY_NOTICES.md).
+[Versions et calendrier](docs/RELEASES.md) · [Journal des versions](CHANGELOG.md) · [Monolithe modulaire](docs/MONOLITHE-MODULAIRE.md) · [État détaillé](docs/platform/IMPLEMENTATION_STATUS.md) · [Hypothèses de coûts](docs/platform/COSTS.md) · [Contribuer](CONTRIBUTING.md) · [Sécurité](SECURITY.md) · [Notices tierces](THIRD_PARTY_NOTICES.md).
 
 ### Studio du site et sécurité
 
-Après connexion, « Mon site web » ouvre l’éditeur complet repris des Temps des Donuts. Il permet d’ajouter des sections et pages, de personnaliser Ma story, l’identité, les polices et le référencement, puis de prévisualiser, publier et restaurer une version. « Sécurité opérationnelle » ouvre le journal, les incidents, corrections et archives, avec accès limité au restaurant courant. Voir [l’état détaillé](docs/platform/IMPLEMENTATION_STATUS.md).
+Après connexion, « Mon site web » ouvre l’éditeur complet repris des Temps des Donuts. Il permet d’ajouter des sections et pages, de personnaliser Ma story, l’identité, les polices et le référencement, puis de prévisualiser, publier et restaurer une version. « Sécurité opérationnelle » ouvre le journal, les incidents, corrections et archives, avec accès limité au commerce courant. Voir [l’état détaillé](docs/platform/IMPLEMENTATION_STATUS.md).
 
 ### Démo publique
 
