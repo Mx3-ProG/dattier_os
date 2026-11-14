@@ -10,6 +10,7 @@ import { Pool } from "pg";
 import { authenticated } from "./http";
 import { basePlan } from "./pricing";
 import { subscriptionTrial } from "./billing-rules";
+import { activePromotion, promotionCodeId } from "./promotion";
 import { appOrigin } from "@/infrastructure/auth/oidc";
 import { one, type DB } from "@/infrastructure/database/db";
 import { assertSameMode, resolveMonthlyPrice, saasAutomaticTax, saasReady, saasStripe, saasWebhookSecret } from "@/features/billing/stripe-saas";
@@ -90,7 +91,7 @@ export async function planCheckout(organization: string) {
   const origin = appOrigin();
   const metadata = { studio_plan_org: organization };
   const automaticTax = saasAutomaticTax();
-  const session = await stripe.checkout.sessions.create({
+  const params = (promotion: boolean): Stripe.Checkout.SessionCreateParams => ({
     mode: "subscription",
     line_items: [{ price: price.id, quantity: 1 }],
     ...(context.stripe_customer
@@ -102,12 +103,26 @@ export async function planCheckout(organization: string) {
     allowed_payment_method_types: ["card"],
     // The card is always registered, even when the first charge waits for the trial end.
     payment_method_collection: "always",
-    allow_promotion_codes: true,
+    // Stripe refuse `discounts` et `allow_promotion_codes` ensemble.
+    ...(promotion ? { discounts: [{ promotion_code: promotionCodeId() }] } : { allow_promotion_codes: true }),
     ...(automaticTax ? { automatic_tax: { enabled: true } } : {}),
     locale: "fr",
     success_url: `${origin}/abonnement/retour?session_id={CHECKOUT_SESSION_ID}`,
     cancel_url: `${origin}/platform?abonnement=annule`,
-  }, {idempotencyKey:`studio-plan:${organization}:${previousSession||"first"}`});
+  });
+  const key = `studio-plan:${organization}:${previousSession||"first"}`;
+  let session: Stripe.Checkout.Session;
+  try {
+    // Pendant l'offre, le code Black Friday est déjà appliqué sur la page de paiement.
+    session = activePromotion()
+      ? await stripe.checkout.sessions.create(params(true), { idempotencyKey: `${key}:promo` })
+      : await stripe.checkout.sessions.create(params(false), { idempotencyKey: key });
+  } catch (error) {
+    if (!activePromotion()) throw error;
+    // Code expiré, désactivé ou d'un autre mode Stripe : le client peut toujours le saisir.
+    console.error("[billing] Code promo non appliqué", error instanceof Error ? error.message : error);
+    session = await stripe.checkout.sessions.create(params(false), { idempotencyKey: key });
+  }
   await authenticated(undefined, (db) =>
     db.query("SELECT app.plan_record_session($1,$2,$3)", [
       organization,
