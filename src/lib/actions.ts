@@ -35,7 +35,8 @@ import { messageSchema, messageCustomer } from "@/features/messaging/service";
 import { randomUUID as uuid } from "node:crypto";
 import { z } from "zod";
 import { rows, one, type DB } from "./database/db";
-import type { Actor } from "./auth/session";
+import { scope, type Actor } from "./auth/session";
+import { pinRequired, recordStaffActivity, staffSchemaReady, type StaffKind } from "@/features/team/pins";
 import {
   can,
   requirePermission,
@@ -209,11 +210,60 @@ export const actionSchema = z.discriminatedUnion("action", [
   }),
   z.object({ action: z.literal("addRestaurant"), name: text }),
 ]);
+type Action = z.infer<typeof actionSchema>;
+/** Étapes qu’un membre valide avec son code PIN quand l’établissement l’exige. */
+export function pinStep(a: Action): StaffKind | null {
+  if (a.action === "order") return a.data.channel === "staff" ? "order" : null;
+  if (a.action === "pay") return "payment";
+  if (a.action === "item") return a.status === "cancelled" ? "cancel_item" : null;
+  if (a.action === "confirmOrder") return a.accept ? "confirm_order" : "decline_order";
+  return null;
+}
+/**
+ * `operator` est la personne identifiée par son PIN (vérifié avant, cf. verifyOperator) :
+ * l’étape lui est attribuée et ses propres droits s’appliquent, même sur l’appareil d’un autre.
+ */
 export async function perform(
   db: DB,
   r: string,
   user: Actor,
-  a: z.infer<typeof actionSchema>,
+  a: Action,
+  operator?: { id: string; name: string },
+) {
+  const step = pinStep(a);
+  if (!step) return run(db, r, user, a);
+  const ready = await staffSchemaReady(db);
+  if (!operator && ready && (await pinRequired(db, r)))
+    throw new Error("Code PIN requis pour valider cette étape.");
+  const doer = operator
+    ? await scope(db, { id: operator.id, name: operator.name, role: "WAITER", authIssuedAt: Date.now() }, r)
+    : user;
+  const result = await run(db, r, doer, a);
+  // Journal « qui fait quoi » : alimenté même sans PIN exigé (le compte connecté fait foi).
+  if (ready)
+    await recordStaffActivity(db, r, {
+      profile: doer.id,
+      device: user.id,
+      kind: step,
+      object: a.action === "order" ? (typeof result === "string" ? result : null) : "id" in a ? String(a.id) : null,
+      amount:
+        a.action === "pay" && result && typeof result === "object" && "amount" in result
+          ? Number(result.amount)
+          : null,
+      detail:
+        a.action === "order"
+          ? `${a.data.items.reduce((n, i) => n + i.quantity, 0)} article(s)`
+          : a.action === "pay"
+            ? { card: "Carte", cash: "Espèces", other: "Autre moyen" }[a.method]
+            : "",
+    });
+  return result;
+}
+async function run(
+  db: DB,
+  r: string,
+  user: Actor,
+  a: Action,
 ) {
   if (["issuePromo","cancelPromo","customer","loyalty","engagementSettings",
        "flashPromotion","stopFlashPromotion"].includes(a.action) ||

@@ -432,7 +432,7 @@ export async function pay(
     throw new Error(
       "Utilisez le règlement de la boutique pour cette commande.",
     );
-  if (order.status === "paid") return;
+  if (order.status === "paid") return { amount: 0 };
   if (order.status !== "active") throw new Error("Commande non réglable.");
   const items = await rows<{ status: string; price: number; quantity: number }>(
     db,
@@ -496,4 +496,5 @@ export async function pay(
     `Règlement déclaré : ${net / 100} EUR · ${method} · remise ${(reward?.discount ?? 0) / 100} EUR`,
     orderId,
   );
+  return { amount: net };
 }

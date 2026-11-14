@@ -3,6 +3,8 @@ import { createReward, rewardSchema } from "@/features/loyalty/service";
 import { offlinePerform } from "@/features/offline/service";
 import { securityAction } from "./security";
 import { z } from "zod";
+import { resetPin, staffSchemaReady } from "@/features/team/pins";
+import { saveVisibility, teamVisibility, visibilitySchema } from "@/features/team/visibility";
 import { rows, one, type DB } from "@/lib/database/db";
 import { scope, type Actor } from "@/lib/auth/session";
 import { requirePermission } from "@/lib/permissions";
@@ -62,6 +64,8 @@ export async function adminState(
         "SELECT id,email,roles,expires_at,accepted_at FROM invitations WHERE restaurant_id=$1 ORDER BY expires_at DESC LIMIT 100",
         [r],
       ),
+      // Codes PIN (sans les empreintes) et entrées masquées par membre.
+      staff: await teamVisibility(db, r),
     };
   }
   if (module === "loyalty") {
@@ -160,8 +164,23 @@ export async function adminPerform(
   if (module === "seo") return seoPerform(db, r, user, raw);
   if (module === "team") {
     const input = z
-      .object({ action: z.enum(["invite", "membership"]) })
+      .object({ action: z.enum(["invite", "membership", "floorLayout", "pinRequired", "resetPin", "visibility"]) })
       .parse(raw);
+    if (["pinRequired", "resetPin", "visibility"].includes(input.action)) {
+      const admin = await one<{ allowed: boolean }>(db, "SELECT coalesce(app.restaurant_admin($1),false) AS allowed", [r]);
+      if (!admin.allowed) throw new Error("Seul un administrateur de l’établissement peut modifier ce réglage.");
+      if (input.action === "visibility") return saveVisibility(db, r, user, visibilitySchema.parse(raw));
+      if (input.action === "resetPin") {
+        const a = z.object({ profile: z.string().min(1).max(100) }).parse(raw);
+        await resetPin(db, r, user, a.profile);
+        return { updated: true };
+      }
+      const a = z.object({ required: z.boolean() }).parse(raw);
+      if (!(await staffSchemaReady(db))) throw new Error("Réglage indisponible : mise à jour de la base en attente.");
+      await db.query("UPDATE restaurants SET staff_pin_required=$2 WHERE id=$1", [r, a.required]);
+      await log(db, r, user.id, a.required ? "Validation par code PIN activée" : "Validation par code PIN désactivée", r);
+      return { updated: true };
+    }
     return platformPerform(db, user, {
       ...(raw as object),
       action: input.action,

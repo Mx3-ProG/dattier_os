@@ -2,7 +2,8 @@ import { requirePlan } from "@/features/platform/entitlements";
 import { createHash, randomBytes } from "node:crypto";
 import { cookies } from "next/headers";
 import { getDb, demoEnabled, one, rows, type DB } from "../database/db";
-import type { Role } from "../permissions";
+import { restrictRoles, type Role } from "../permissions";
+import { memberDenied } from "@/features/team/restrictions";
 import { bindActor } from "@/features/ops-security/context";
 import { appOrigin, oidcActor } from "./oidc";
 export type Actor = {
@@ -84,9 +85,12 @@ export async function scope(db: DB, user: Actor, r: string) {
       return { ...user, role: "OWNER" as Role, roles: ["OWNER"] as Role[] };
     throw new Error("Établissement non autorisé.");
   }
+  const roles = memberships.map((m) => m.role);
+  // L’administrateur peut retirer des droits à un membre ; jamais à un propriétaire.
+  const denied = roles.includes("OWNER") || roles.includes("SUPER_ADMIN") ? [] : await memberDenied(db, r, user.id);
   return {
     ...user,
     role: memberships[0].role,
-    roles: memberships.map((m) => m.role),
+    roles: restrictRoles(roles, denied),
   };
 }

@@ -88,6 +88,13 @@ async function sendEmail(
   return d.id ?? null;
 }
 
+/** E-mail transactionnel de la plateforme (invitation d’équipe…). Faux quand aucun fournisseur n’est branché. */
+export async function sendPlatformEmail(to: string, subject: string, text: string) {
+  if (!messagingProviders().email) return false;
+  await sendEmail(to, subject, text, process.env.EMAIL_FROM!);
+  return true;
+}
+
 async function sendSms(to: string, body: string) {
   const sid = process.env.TWILIO_ACCOUNT_SID!;
   const r = await fetch(

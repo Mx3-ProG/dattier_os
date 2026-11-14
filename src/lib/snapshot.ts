@@ -30,6 +30,9 @@ export async function menu(
     [r],
   );
 }
+import { staffState } from "@/features/team/pins";
+import { memberHidden } from "@/features/team/visibility";
+import { unrestricted } from "@/features/team/entries";
 export async function snapshot(
   db: DB,
   user: Actor,
@@ -85,6 +88,11 @@ export async function snapshot(
   for (const order of orders)
     order.items = items.filter((i) => i.order_id === order.id);
   return {
+    // Code PIN de la personne connectée, membres qui peuvent valider et entrées masquées par l’admin.
+    staff: {
+      ...(await staffState(db, r, user)),
+      hidden: unrestricted(user.roles ?? [user.role]) ? [] : await memberHidden(db, r, user.id),
+    },
     activeModules,
     // Décision commerciale unique (app.module_available) : la navigation ne lit plus que ce champ.
     modules: await availableModules(db, r),
