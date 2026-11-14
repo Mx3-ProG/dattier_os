@@ -392,3 +392,47 @@
 .access-link:disabled { opacity: .6; cursor: wait; }
 .access-error { color: #a1271b; font-weight: 650; }
 .access-fine { font-size: .9em; opacity: .8; }
+.access-field { display: grid; gap: .4rem; font-weight: 650; }
+.access-password { position: relative; display: flex; align-items: center; }
+.access-form .access-password input { padding-right: 3rem; }
+.access-eye {
+  position: absolute;
+  right: .35rem;
+  display: inline-grid;
+  place-items: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  padding: 0;
+  border: 0;
+  border-radius: .45rem;
+  background: none;
+  color: inherit;
+  opacity: .75;
+  cursor: pointer;
+}
+.access-eye:hover { opacity: 1; }
+.access-eye:focus-visible { outline: 2px solid var(--appearance-accent, #18372d); outline-offset: 1px; opacity: 1; }
+.access-rules {
+  display: grid;
+  gap: .3rem;
+  margin: -.4rem 0 0;
+  padding: 0;
+  list-style: none;
+  font-size: .9em;
+}
+.access-rules li { display: flex; align-items: center; gap: .45rem; color: #8a3a2f; }
+.access-rules li.ok { color: #1f6b45; }
+.access-rules svg { flex: none; }
+.access-hint { min-height: 1.2em; margin: -.6rem 0 0; font-size: .9em; }
+.access-shell .sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+.access-keychain { margin: -.5rem 0 0; font-weight: 400; opacity: .8; }

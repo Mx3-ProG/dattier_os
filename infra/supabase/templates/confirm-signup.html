@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="light only" />
+    <title>Confirmez votre adresse e-mail</title>
+  </head>
+  <body style="margin:0;padding:0;background:#f4efe4;font-family:Helvetica,Arial,sans-serif;color:#17140d;">
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f4efe4;padding:32px 16px;">
+      <tr>
+        <td align="center">
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:520px;background:#fffdf5;border-radius:16px;padding:36px 32px;">
+            <tr>
+              <td style="font-size:13px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#18372d;">STUDIO OS</td>
+            </tr>
+            <tr>
+              <td style="padding-top:18px;font-family:Georgia,serif;font-size:28px;line-height:1.2;">Confirmez votre adresse e-mail</td>
+            </tr>
+            <tr>
+              <td style="padding-top:16px;font-size:16px;line-height:1.6;">
+                Bonjour,<br />
+                Vous venez de créer votre compte STUDIO OS avec l’adresse <strong>{{ .Email }}</strong>.
+                Pour l’activer, confirmez qu’elle vous appartient&nbsp;:
+              </td>
+            </tr>
+            <tr>
+              <td align="left" style="padding:28px 0;">
+                <a href="{{ .ConfirmationURL }}"
+                   style="display:inline-block;padding:14px 26px;border-radius:999px;background:#18372d;color:#fffdf5;font-size:16px;font-weight:700;text-decoration:none;">
+                  Confirmer mon adresse
+                </a>
+              </td>
+            </tr>
+            <tr>
+              <td style="font-size:14px;line-height:1.6;color:#4d4a42;">
+                Le bouton ne fonctionne pas&nbsp;? Copiez ce lien dans votre navigateur&nbsp;:<br />
+                <a href="{{ .ConfirmationURL }}" style="color:#18372d;word-break:break-all;">{{ .ConfirmationURL }}</a>
+              </td>
+            </tr>
+            <tr>
+              <td style="padding-top:24px;font-size:13px;line-height:1.6;color:#6b675c;">
+                Ce lien est personnel et expire rapidement. Si vous n’êtes pas à l’origine de cette inscription,
+                ignorez simplement cet e-mail&nbsp;: aucun compte ne sera activé.
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
+  </body>
+</html>
