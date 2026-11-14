@@ -236,14 +236,18 @@
   z-index: 3000;
   display: grid;
   place-items: center;
+  /* Colonne bornée à l’écran : sinon la piste prend les 480 px de la fenêtre. */
+  grid-template-columns: minmax(0, 480px);
+  justify-content: center;
   padding: 16px;
   background: #14201a8c;
   backdrop-filter: blur(3px);
   animation: tour-fade 0.2s ease-out;
 }
 .tour-welcome {
-  width: 480px;
-  max-width: 100%;
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 480px;
   background: var(--appearance-surface, #fdfbf6);
   border-radius: 20px;
   padding: 30px;

@@ -365,10 +365,10 @@ export function GuidePage({
                   <Wand2 aria-hidden />
                   <h3>Il agit pour vous</h3>
                   <p>
-                    Dans un restaurant, par exemple : « Commande table 4 : deux couscous et un thé ». La
-                    commande est prête, vous confirmez, elle part en cuisine et
-                    au bar. Puis « encaisse la table 4 en espèces », « libère la
-                    table 4 ».
+                    Par exemple : « Nouvelle commande : deux coffrets cadeaux
+                    pour Mme Martin ». La commande est prête, vous confirmez,
+                    elle part en préparation. Puis « encaisse la commande de
+                    Mme Martin en espèces ».
                   </p>
                 </article>
                 <article>
