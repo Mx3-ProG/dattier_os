@@ -90,6 +90,9 @@ const faq = [
   ],
 ];
 
+/** La démo s’ouvre dans un nouvel onglet : la page d’origine reste ouverte. */
+const newTab = { target: "_blank", rel: "noopener" } as const;
+
 export function GuidePage({
   demoHref,
   demoSiteHref,
@@ -151,7 +154,7 @@ export function GuidePage({
               <Play size={17} aria-hidden /> Lancer la visite interactive
             </Link>
             {demoHref && (
-              <Link className="landing-btn outline" href={demoHref}>
+              <Link className="landing-btn outline" href={demoHref} {...newTab}>
                 Explorer la démo, avec ses données
               </Link>
             )}
@@ -569,7 +572,7 @@ export function GuidePage({
                   <Play size={17} aria-hidden /> Lancer la visite interactive
                 </Link>
                 {demoHref && (
-                  <Link className="landing-btn outline" href={demoHref}>
+                  <Link className="landing-btn outline" href={demoHref} {...newTab}>
                     Explorer la démo, avec ses données
                   </Link>
                 )}
@@ -585,8 +588,8 @@ export function GuidePage({
         </span>
         <nav aria-label="Liens utiles">
           <Link href="/">Accueil</Link>
-          {demoHref && <Link href={demoHref}>Démonstration</Link>}
-          {demoSiteHref && <Link href={demoSiteHref}>Exemple de site de commerce</Link>}
+          {demoHref && <Link href={demoHref} {...newTab}>Démonstration</Link>}
+          {demoSiteHref && <Link href={demoSiteHref} {...newTab}>Exemple de site de commerce</Link>}
           <Link href="/platform">Espace client</Link>
           <LegalLinks />
         </nav>

@@ -140,6 +140,9 @@ const faq = [
   }
 ];
 
+/** La démo s’ouvre dans un nouvel onglet : la page d’origine reste ouverte. */
+const newTab = { target: "_blank", rel: "noopener" } as const;
+
 function Cta({ demoHref, inverse }: { demoHref?: string; inverse?: boolean }) {
   return (
     <div className="landing-cta">
@@ -149,7 +152,7 @@ function Cta({ demoHref, inverse }: { demoHref?: string; inverse?: boolean }) {
       >
         Essayer gratuitement 7 jours <ArrowUpRight size={16} aria-hidden />
       </Link>
-      <Link className="landing-btn outline" href={demoHref || "/guide"}>
+      <Link className="landing-btn outline" href={demoHref || "/guide"} {...(demoHref && newTab)}>
         {demoHref ? "Me projeter dans la démo" : "Découvrir comment ça marche"}
       </Link>
     </div>
@@ -553,7 +556,7 @@ export function Landing({
             </p>
           </div>
           <div className="landing-proof-grid">
-            <Link href={demoHref || "/guide#service"}>
+            <Link href={demoHref || "/guide#service"} {...(demoHref && newTab)}>
               <LayoutGrid size={24} aria-hidden />
               <h3>
                 {demoHref
@@ -790,7 +793,7 @@ export function Landing({
           <Store size={18} aria-hidden /> STUDIO S
         </span>
         <nav aria-label="Liens utiles">
-          {demoHref && <Link href={demoHref}>Démonstration</Link>}
+          {demoHref && <Link href={demoHref} {...newTab}>Démonstration</Link>}
           {demo && <Link href="/site-demo">Exemple de site de commerce</Link>}
           <Link href="/guide">Comment ça marche</Link>
           <Link href="/guide#evolutions">Évolutions et maintenance</Link>
