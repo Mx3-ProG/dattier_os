@@ -29,6 +29,7 @@ import {
   Undo2,
   FileText,
   Palette,
+  Wand2,
 } from "lucide-react";
 import { Button } from "../ui/button";
 import { Modal } from "../forms";
@@ -67,6 +68,8 @@ import { applySiteTemplate } from "@/features/cms/templates";
 import { uploadMedia, mediaSize, mediaAccept } from "./media-upload";
 import { insertDroppedMedia } from "@/features/cms/media-drop";
 import { StudioGuide } from "./guide";
+import { FLUX_APPLIED_EVENT } from "../assistant/flux";
+import { openFlux } from "../assistant/cuisine-ia";
 import type { PreviewMessage } from "../cms-site/store";
 
 type EditorState = {
@@ -209,6 +212,18 @@ export function SiteEditor({
       .catch((e) => setError(e.message));
   }, [loadMeta, UNSAVED_KEY]);
   useEffect(loadEditor, [loadEditor]);
+  // FLUX vient d’enregistrer un nouveau brouillon : on le recharge (l’historique local n’a plus de sens).
+  useEffect(() => {
+    const reload = () => {
+      past.current = [];
+      future.current = [];
+      setDepth({ undo: 0, redo: 0 });
+      setNotice("FLUX a construit votre site : le brouillon a été rechargé.");
+      loadEditor();
+    };
+    window.addEventListener(FLUX_APPLIED_EVENT, reload);
+    return () => window.removeEventListener(FLUX_APPLIED_EVENT, reload);
+  }, [loadEditor]);
   const commit = useCallback((next: SiteConfig, key?: string) => {
     const prev = configRef.current;
     if (!prev) return;
@@ -699,10 +714,16 @@ export function SiteEditor({
           <span className="shop-eyebrow">VOTRE ATELIER DE CRÉATION</span>
           <h1>Personnaliser mon site</h1>
         </div>
-        <Button variant="secondary" onClick={() => setView("shop")}>
-          <Layers size={16} />
-          Boutique de modèles
-        </Button>
+        <div className="studio-editor-heading-actions">
+          <Button onClick={() => openFlux()}>
+            <Wand2 size={16} />
+            Créer avec FLUX
+          </Button>
+          <Button variant="secondary" onClick={() => setView("shop")}>
+            <Layers size={16} />
+            Boutique de modèles
+          </Button>
+        </div>
       </div>
       <details className="studio-media-bar" aria-busy={mediaBusy}>
         <summary>

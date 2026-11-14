@@ -208,4 +208,7 @@ $repair$;
 
 DROP FUNCTION pg_temp.repair_text(text);
 
+-- Les migrations suivantes de la même transaction ont besoin des déclencheurs.
+SET LOCAL session_replication_role = origin;
+
 INSERT INTO schema_versions(version) VALUES(130) ON CONFLICT DO NOTHING;
