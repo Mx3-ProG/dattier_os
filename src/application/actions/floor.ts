@@ -1,15 +1,7 @@
 import { rows, one, type DB } from "../../infrastructure/database/db";
 import type { Actor } from "../../infrastructure/auth/session";
 import { can, requirePermission } from "@/core/permissions";
-import {
-  saveTable,
-  moveTable,
-  rotateTable,
-  tableLifecycle,
-  saveZone,
-  moveZone,
-  deleteZone,
-} from "@/features/floor/service";
+import { saveTable, moveTable, rotateTable, tableLifecycle, saveZone, moveZone, deleteZone } from "@/features/floor/service";
 import { moduleEnabled, requireModule } from "@/features/modules/access";
 import { observeStaffFloor } from "@/features/floor/capabilities";
 import { awardBookingPoints } from "@/features/commerce/engagement";

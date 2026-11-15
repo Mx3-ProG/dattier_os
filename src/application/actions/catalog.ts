@@ -1,9 +1,6 @@
 import { one, type DB } from "../../infrastructure/database/db";
 import type { Actor } from "../../infrastructure/auth/session";
-import {
-  createProduct,
-  lifecycle,
-} from "@/features/catalog/service";
+import { createProduct, lifecycle } from "@/features/catalog/service";
 import { requirePermission } from "@/core/permissions";
 import { actionSchema } from "./schema";
 

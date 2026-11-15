@@ -18,6 +18,8 @@ import { tableBookingNavigation } from "@/features/reservations/navigation";
 import {
   stocksNavigation,
   recipesNavigation,
+  productsNavigation,
+  servicesNavigation,
 } from "@/features/inventory/navigation";
 import {
   suppliersNavigation,
@@ -63,6 +65,8 @@ export const workspaceNavigation = createNavigation([
   ...tradeToolNavigation,
   stocksNavigation,
   recipesNavigation,
+  productsNavigation,
+  servicesNavigation,
   suppliersNavigation,
   deliveriesNavigation,
   teamNavigation,

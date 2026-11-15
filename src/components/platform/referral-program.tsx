@@ -14,12 +14,8 @@ import {
   Share2,
   Trophy,
 } from "lucide-react";
-import {
-  levels,
-  monthlyChallenge,
-  referralLevel,
-  type PaidPlan,
-} from "@/features/platform/referrals";
+import { levels, monthlyChallenge, referralLevel } from "@/features/platform/referrals";
+import { type PaidPlan } from "@/features/platform/public";
 import { CopyLink, GoalGauge, LevelBadge, goalOf, useReferralLink } from "./referral-panel";
 import "./platform.css";
 import "./access.css";

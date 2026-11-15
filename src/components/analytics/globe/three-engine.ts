@@ -2,15 +2,8 @@ import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import { geoContains, geoEquirectangular, geoGraticule10, geoPath } from "d3-geo";
 import { countryGeo } from "@/features/analytics/country-geo";
-import {
-  clusterCell,
-  clusterPoints,
-  latLngToVector,
-  vectorToLatLng,
-  angularDistance,
-  type GlobeCluster,
-  type GlobePoint,
-} from "@/features/analytics/cluster";
+import { clusterCell, clusterPoints, latLngToVector, vectorToLatLng, angularDistance } from "@/features/analytics/cluster";
+import { type GlobeCluster, type GlobePoint } from "@/features/analytics/public";
 import { loadWorldFeatures } from "./assets";
 import type { GlobeEngineFactory, GlobeHandle } from "./types";
 

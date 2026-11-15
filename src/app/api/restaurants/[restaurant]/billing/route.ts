@@ -1,17 +1,7 @@
 import { NextRequest } from "next/server";
 import { withRequestContext } from "@/features/ops-security/context";
-import {
-  assertOrigin,
-  authenticated,
-  failure,
-  json,
-  readBody,
-} from "@/features/platform/http";
-import {
-  billingAction,
-  billingActionSchema,
-  billingState,
-} from "@/features/billing/service";
+import { assertOrigin, authenticated, failure, json, readBody } from "@/features/platform/http";
+import { billingAction, billingActionSchema, billingState } from "@/features/billing/service";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";

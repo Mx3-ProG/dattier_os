@@ -1,8 +1,13 @@
+import type { Section } from "./schema";
 
 /**
  * Contenu pré-rempli pour chaque modèle : textes, images et vidéos qui font
  * vivre le template. Appliqué par `applySiteTemplate` en plus du thème et de
  * la composition. Les champs absents conservent le contenu par défaut.
+ *
+ * Chaque modèle a sa propre voix : une brasserie ne parle pas comme une
+ * école. Les textes mêlent récit (l'histoire, le geste, le lieu) et vente
+ * (la promesse, la preuve, l'appel).
  *
  * Photos et vidéos : Pexels License (usage commercial libre).
  * Sources listées dans `public/cms/assets-credits.json`.
@@ -91,9 +96,9 @@ export const templateContent: Record<string, TemplateContent> = {
   /* ── Restauration ─────────────────────────────────────────────────────── */
   bistrot: {
     hero: {
-      kicker: "BIENVENUE AU BISTROT",
-      title: "Le goût des *bons moments.*",
-      lead: "Une table en bois, une carte du jour et le parfum du café : le bistrot comme on l’aime, sans chichi, avec du cœur.",
+      kicker: "DEPUIS 1998, LE MÊME ZINC",
+      title: "Le bistrot d’en face, *en mieux.*",
+      lead: "Une ardoise écrite au crayon chaque matin, un cassoulet qui mijote et un café serré : ici, on vient pour le plat du jour et on reste pour le verre.",
       badges: [
         { icon: "bag", label: "Sur place ou à emporter" },
         { icon: "clock", label: "Service continu" },
@@ -107,41 +112,41 @@ export const templateContent: Record<string, TemplateContent> = {
       secondary: { label: "Réserver une table", href: "/reservations" },
     },
     about: {
-      image: { src: "/cms/bistrot/about.jpg", alt: "Assiette du jour au bistrot" },
+      image: { src: "/cms/bistrot/about.jpg", alt: "Assiette du jour servie au comptoir" },
       artCaption: "LE ZINC.\nLA CARTE DU JOUR.",
-      kicker: "NOTRE MAISON",
-      title: "Un petit lieu.\n*Une grande dose\nde bonne humeur.*",
+      kicker: "NOTRE FAÇON DE FAIRE",
+      title: "Le plat du jour,\n*écrit au crayon.*",
       paragraphs: [
-        "Ici, on cuisine comme à la maison : des produits de saison, des recettes de famille et le sourire en plus.",
-        "Le midi, c’est le plat du jour et l’ambiance du comptoir. Le soir, on ralentit, on partage, on trinque.",
+        "Le matin, on passe au marché, on choisit les produits, on écrit la carte au crayon sur l’ardoise. Ce qui manque, on ne le cuisine pas.",
+        "Les classiques ne bougent jamais : l’œufs Mayonnaise, le steak-frites, la crème brûlée. Les suggestions, si. C’est comme ça qu’un bistrot reste un bistrot.",
       ],
       cta: { label: "Réserver ma place", href: "/reservations" },
     },
     marquee: {
-      items: ["LE GOÛT DU PARTAGE", "CARTE DU JOUR", "ZINC ET CONVIVIALITÉ", "LE GOÛT DU PARTAGE"],
+      items: ["CARTE DU JOUR", "PRODUITS DE SAISON", "SERVICE CONTINU", "CAFÉ SERRÉ"],
     },
     featuredProducts: {
-      kicker: "LA CARTE DU JOUR",
-      title: "Ce qu’on prépare\n*aujourd’hui.*",
-      aside: "Chaque plat est écrit au crayon,\nchaque matin, selon l’arrivage.",
+      kicker: "CE QU’ON PRÉPARE AUJOURD’HUI",
+      title: "L’ardoise\n*du jour.*",
+      aside: "Une poignée de plats, changés au rythme du marché et de l’humeur du chef.",
       note: "Carte et prix de démonstration.",
       limit: 6,
       allLink: { label: "Toute la carte", href: "/carte" },
     },
     reviews: {
-      kicker: "ILS REVIENNENT",
-      title: "Les habitués\n*en parlent.*",
-      text: "Repérez la fiche officielle de votre bistrot pour laisser un avis ou lire ceux des autres.",
+      kicker: "CE QUE LES HABITUÉS EN DISENT",
+      title: "Ils reviennent\n*pour l’assiette.*",
+      text: "La meilleure façon de juger un bistrot, c’est de lire ce que les clients racontent après leur deuxième visite.",
       rateLabel: "Nous noter sur Google",
       viewLabel: "Voir les avis Google",
       sheetLabel: "Voir la fiche Google",
       cardCaption: "Avis vérifiés sur Google",
     },
     visit: {
-      kicker: "ON SE RETROUVE ?",
-      title: "Votre prochain\n*happy place.*",
+      kicker: "QUAND VENIR",
+      title: "Midi sharp,\n*soir détendu.*",
       hoursTitle: "Ouvert tous les jours",
-      hoursNote: "Service midi et soir · à confirmer",
+      hoursNote: "Service de 12h à 14h30, puis de 19h à 22h30 · à confirmer",
       cta: { label: "Choisir mon créneau", href: "/reservations" },
       burger: true,
       burgerOpen: "Toutes les saveurs.",
@@ -150,13 +155,13 @@ export const templateContent: Record<string, TemplateContent> = {
     },
     map: {
       kicker: "NOUS TROUVER",
-      title: "Au coin de la rue, c’est là.",
+      title: "Au bout du comptoir, côté rue.",
       buttonLabel: "Ouvrir l’itinéraire",
     },
     gallery: {
       kicker: "EN IMAGES",
-      title: "Les couleurs du bistrot",
-      intro: "Quelques images de la maison pour donner envie avant même de pousser la porte.",
+      title: "L’intérieur du bistrot",
+      intro: "Le zinc, les banquettes de cuir et la lumière de fin de journée.",
       images: [
         { src: "/cms/bistrot/gallery1.jpg", alt: "Salle et comptoir du bistrot" },
         { src: "/cms/bistrot/gallery2.jpg", alt: "Table dressée au bistrot" },
@@ -164,21 +169,21 @@ export const templateContent: Record<string, TemplateContent> = {
     },
     video: {
       kicker: "EN VIDÉO",
-      title: "Le bistrot *en mouvement*",
-      caption: "Quelques secondes pour sentir l’ambiance avant votre première venue.",
+      title: "L’ardoise *prend vie*",
+      caption: "Une journée à la carte, de l’ardoise au service.",
       source: { kind: "file", src: "/cms/bistrot/video.mp4", poster: "/cms/bistrot/hero.jpg" },
     },
   },
 
   jardin: {
     hero: {
-      kicker: "CUISINE VÉGÉTALE",
-      title: "Une cuisine *pleine de vie.*",
-      lead: "Des légumes de saison, des assaisonnements maison et des assiettes colorées qui donnent envie de recommencer.",
+      kicker: "LE POTAGER EN PLEINE VILLE",
+      title: "On cuisine ce qui pousse *à côté.*",
+      lead: "Des légumes cueillis le matin dans nos Jardins, des casseroles qui CUISINENT le midi : la saison, sans détour ni transport.",
       badges: [
-        { icon: "sparkles", label: "Produits de saison" },
+        { icon: "sparkles", label: "Cueilli du matin" },
         { icon: "bag", label: "Sur place ou à emporter" },
-        { icon: "wallet", label: "Menu déjeuner à 15 €" },
+        { icon: "wallet", label: "Déjeuner à 15 €" },
       ],
       image: { src: "/cms/jardin/hero.jpg", alt: "Légumes frais de saison en cuisine végétale" },
       sticker: false,
@@ -187,41 +192,41 @@ export const templateContent: Record<string, TemplateContent> = {
       secondary: { label: "Notre histoire", href: "/histoire" },
     },
     about: {
-      image: { src: "/cms/jardin/about.jpg", alt: "Assiette végétarienne colorée" },
+      image: { src: "/cms/jardin/about.jpg", alt: "Assiette végétale colorée" },
       artCaption: "DU JARDIN\nÀ L’ASSIETTE.",
       kicker: "NOTRE APPROCHE",
-      title: "Le végétal,\n*sans compromis.*",
+      title: "La saison\n*sans intermédiaire.*",
       paragraphs: [
-        "Nous choisissons chez des maraîchers de la région, en circuit court, et cuisine tout sur place, chaque jour.",
-        "La carte suit les saisons : des assiettes colorées, généreuses, et toujours une option végétale pour tout le monde.",
+        "Trois maraîchers à moins de dix kilomètres, une cueillette chaque matin, et rien ne dort en chambre froide. Ce qui est dans l’assiette a moins de vingt-quatre heures.",
+        "La carte suit le calendrier : le chou-fleur de novembre disparaît en mars, la fraise revient en juin. Les végétariens n’ont pas à se passer, ils ont à choisir.",
       ],
       cta: { label: "Découvrir la carte", href: "/carte" },
     },
     marquee: {
-      items: ["LE VÉGÉTAL EST DE SAISON", "CIRCUIT COURT", "Cuisine du marché", "LE VÉGÉTAL EST DE SAISON"],
+      items: ["CUEILLI DU MATIN", "CIRCUIT COURT", "CUISINE VÉGÉTALE", "DEPUIS LA PARCELLE"],
     },
     featuredProducts: {
-      kicker: "LA CARTE VÉGÉTALE",
-      title: "Ce qu’on cueille\n*et cuisine.*",
-      aside: "Des assiettes complètes, végétales ou non,\nservies avec du pain maison.",
+      kicker: "LA CARTE DU POTAGER",
+      title: "Ce que le jardin\n*nous a donné.*",
+      aside: "Des assiettes complètes, végétales ou non, toujours accompagnées de pain maison.",
       note: "Carte et prix de démonstration.",
       limit: 6,
       allLink: { label: "Toute la carte", href: "/carte" },
     },
     reviews: {
-      kicker: "VOS MOTS DOUCES",
-      title: "La table *approuve.*",
-      text: "Votre retour nous aide à ajuster les assiettes, les assaisonnements et les suggestions.",
+      kicker: "CE QUE LA TABLE EN PENSE",
+      title: "On a parfois\n*bon appétit.*",
+      text: "Les avis de nos clients sur les légumes, les assaisonnements et la façon de dresser les assiettes.",
       rateLabel: "Nous noter sur Google",
       viewLabel: "Voir les avis Google",
       sheetLabel: "Voir la fiche Google",
       cardCaption: "Avis vérifiés sur Google",
     },
     visit: {
-      kicker: "PASSEZ VOUS",
-      title: "Un jardin,\n*au cœur de la ville.*",
+      kicker: "OUVERT QUAND IL FAIT BON",
+      title: "Une serre,\n*de la ville.*",
       hoursTitle: "Du mardi au samedi",
-      hoursNote: "Déjeuner 12h–14h · dîner 19h–22h",
+      hoursNote: "Déjeuner 12h–14h, dîner 19h–22h · à confirmer",
       cta: { label: "Réserver une table", href: "/reservations" },
       burger: false,
       burgerOpen: "",
@@ -235,8 +240,8 @@ export const templateContent: Record<string, TemplateContent> = {
     },
     gallery: {
       kicker: "EN IMAGES",
-      title: "Les couleurs du jardin",
-      intro: "Herbes, légumes et lumière : l’année de la saison en images.",
+      title: "Le jardin en photos",
+      intro: "Les planches, les cagettes et la lumière à travers les feuilles.",
       images: [
         { src: "/cms/jardin/gallery1.jpg", alt: "Étal de légumes frais" },
         { src: "/cms/jardin/gallery2.jpg", alt: "Feuillage du jardin" },
@@ -244,17 +249,17 @@ export const templateContent: Record<string, TemplateContent> = {
     },
     video: {
       kicker: "EN VIDÉO",
-      title: "Le jardin *en mouvement*",
-      caption: "De la planche au marché à l’assiette, sans détour.",
+      title: "De la planche\n*à l’assiette*",
+      caption: "La cueillette du matin et la cuisine qui suit, en une minute.",
       source: { kind: "file", src: "/cms/jardin/video.mp4", poster: "/cms/jardin/hero.jpg" },
     },
   },
 
   comptoir: {
     hero: {
-      kicker: "STREET FOOD · À EMPORTER",
-      title: "Une faim. *Une vraie envie.*",
-      lead: "Commande en deux minutes, paiement au comptoir, et une cuisine qui ne traîne pas : la street food comme on l’aime.",
+      kicker: "COMMANDEZ, C’EST PRÊT",
+      title: "Deux minutes de commande.\n*Dix minutes d’attente.*",
+      lead: "Pas de serveur, pas de carte à lire : on choisit, on paye, on récupère. Le goût, lui, ne négocie pas.",
       badges: [
         { icon: "bag", label: "Commande en ligne" },
         { icon: "clock", label: "Prêt en 10 minutes" },
@@ -270,38 +275,38 @@ export const templateContent: Record<string, TemplateContent> = {
       image: { src: "/cms/comptoir/about.jpg", alt: "Street food préparée au comptoir" },
       artCaption: "LA STREET.\nÀ LA COUPE.",
       kicker: "LA FAÇON COMTOIR",
-      title: "Rapide, franc,\n*sans détour.*",
+      title: "On prépare\n*devant vous.*",
       paragraphs: [
-        "On prépare à la minute, devant vous. Pas de serveur, pas d’attente : vous commandez, vous récupérez, vous mangez.",
-        "Les classiques sont invariants, les suggestions changent chaque semaine selon l’humeur du comptoir.",
+        "La commande part au gril, la sauce est montée à la minute, et vous voyez votre plat monter. C’est du spectacle, mais surtout de la fraîcheur.",
+        "Les classiques ne changent pas, les suggestions tournent chaque semaine. Un plat du mois peut disparaître sans brutally, c’est la règle.",
       ],
       cta: { label: "Je commande", href: "/commander#start" },
     },
     marquee: {
-      items: ["COMMANDE EN 2 MINUTES", "PRÊT EN 10 MINUTES", "SANS ATTENTE", "COMMANDE EN 2 MINUTES"],
+      items: ["COMMANDE EN 2 MINUTES", "PRÊT EN 10 MINUTES", "CUISSON AU GRIL", "SANS ATTENTE"],
     },
     featuredProducts: {
-      kicker: "LES INCONTOURNABLES",
+      kicker: "LES PLUS COMMANDÉS",
       title: "Ce que tout le monde\n*commande.*",
-      aside: "Les plats les plus commandés,\nprêts en quelques minutes.",
+      aside: "Les plats les plus demandés, prêts en quelques minutes.",
       note: "Carte et prix de démonstration.",
       limit: 6,
       allLink: { label: "Voir la carte complète", href: "/carte" },
     },
     reviews: {
-      kicker: "ILS ONT COMMANDÉ",
-      title: "La preuve\n*en bouche.*",
-      text: "Vos avis nous servent à ajuster les assaisonnements et à faire remonter les plats du comptoir.",
+      kicker: "CE QUE LA RUE EN DIT",
+      title: "Ils ont fait\n*la queue.*",
+      text: "Les avis de nos clients sur les portions, les prix et la vitesse du service.",
       rateLabel: "Nous noter sur Google",
       viewLabel: "Voir les avis Google",
       sheetLabel: "Voir la fiche Google",
       cardCaption: "Avis vérifiés sur Google",
     },
     visit: {
-      kicker: "RETROUVEZ-NOUS",
+      kicker: "QUAND OUVRIR",
       title: "Le comptoir\n*vous attend.*",
       hoursTitle: "Ouvert 7j/7",
-      hoursNote: "Service continu de 11h à 23h",
+      hoursNote: "Service continu de 11h à 23h · à confirmer",
       cta: { label: "Commander à emporter", href: "/commander" },
       burger: true,
       burgerOpen: "Toutes les saveurs.",
@@ -316,7 +321,7 @@ export const templateContent: Record<string, TemplateContent> = {
     gallery: {
       kicker: "EN IMAGES",
       title: "Le comptoir en action",
-      intro: "La cuisine, la file, les assiettes : l’envie avant la première bouchée.",
+      intro: "La file, la plancha et l’assiette qui part.",
       images: [
         { src: "/cms/comptoir/gallery1.jpg", alt: "Service au comptoir" },
         { src: "/cms/comptoir/gallery2.jpg", alt: "Préparation d’un plat" },
@@ -324,17 +329,17 @@ export const templateContent: Record<string, TemplateContent> = {
     },
     video: {
       kicker: "EN VIDÉO",
-      title: "Derrière le *comptoir*",
-      caption: "L’assemblage en 30 secondes, comme un chef-d’œuvre éphémère.",
+      title: "Trente secondes\n*de cuisine.*",
+      caption: "L’assemblage d’une commande, du gril à la main qui l’emporte.",
       source: { kind: "file", src: "/cms/comptoir/video.mp4", poster: "/cms/comptoir/hero.jpg" },
     },
   },
 
   pause: {
     hero: {
-      kicker: "CAFÉ · PÂTISSERIE",
-      title: "Votre pause *préférée.*",
-      lead: "Un café bien fait, une viennoiserie tout juste sortie du four, et un coin où l’on peut rester plus longtemps que prévu.",
+      kicker: "OUVERT DE 7H30 À 19H",
+      title: "On a pris son temps.\n*Vous aussi.*",
+      lead: "Un café qui tire droit, une viennoiserie encore tiède et un coin où l’on peut rester plus longtemps que prévu.",
       badges: [
         { icon: "clock", label: "Ouvert dès 7h30" },
         { icon: "sparkles", label: "Viennoiseries du matin" },
@@ -350,38 +355,38 @@ export const templateContent: Record<string, TemplateContent> = {
       image: { src: "/cms/pause/about.jpg", alt: "Pâtisserie maison au café" },
       artCaption: "LE CAFÉ.\nLA VITRINE.",
       kicker: "LE CÔTÉ DOUX",
-      title: "Douceur, calme,\n*et du goût.*",
+      title: "Rien n’est pressé,\n*même le café.*",
       paragraphs: [
-        "Le café est torréfié pour nous, la viennoiserie est façonnée chaque matin, et rien n’est pressé dans la salle.",
-        "Un espace de travail le matin, une pause l’après-midi, un goûter en famille le week-end.",
+        "Le grain est torréfié pour nous et moulu le matin même. La viennoiserie est façonnée à la main, et le pain part au fournil avant l’ouverture.",
+        "Le matin, on travaille ici. L’après-midi, on lit ici. Le week-end, on reste longtemps avec la famille.",
       ],
       cta: { label: "Réserver une table", href: "/reservations" },
     },
     marquee: {
-      items: ["CAFÉ FRAIS DU MATIN", "VIENNOISERIE CHAQUE JOUR", "ESPACE DE TRAVAIL", "CAFÉ FRAIS DU MATIN"],
+      items: ["CAFÉ FRAIS DU MATIN", "VIENNOISERIE FAÇONNÉE À LA MAIN", "ESPACE DE TRAVAIL", "OUVERT 7J/7"],
     },
     featuredProducts: {
       kicker: "LA VITRINE DU JOUR",
-      title: "Douceurs\n*du matin.*",
-      aside: "Pâtisseries, viennoiseries et sandwichs\npréparés chaque jour.",
-      note: "Carte et prix de démonstration.",
+      title: "Ce qui sort\n*chaque matin.*",
+      aside: "Pains, viennoiseries, tartes et sandwichs, préparés avant l’ouverture.",
+      note: "Produits et prix de démonstration.",
       limit: 6,
       allLink: { label: "Voir la vitrine", href: "/carte" },
     },
     reviews: {
-      kicker: "VOS PRÉFÉRENCES",
-      title: "Vos lugares\n*préférés.*",
-      text: "Dites-nous ce que vous préférez : on ajustera la vitrine et les suggestions de la semaine.",
+      kicker: "VOS HABITUDES",
+      title: "Votre place\n*est gardée.*",
+      text: "Les avis de nos clients sur le café, la viennoiserie et l’ambiance de la salle.",
       rateLabel: "Nous noter sur Google",
       viewLabel: "Voir les avis Google",
       sheetLabel: "Voir la fiche Google",
       cardCaption: "Avis vérifiés sur Google",
     },
     visit: {
-      kicker: "REJOIGNEZ-NOUS",
-      title: "On est là,\n*du matin au soir.*",
+      kicker: "QUAND PASSER",
+      title: "Du matin\n*au soir.*",
       hoursTitle: "Ouvert tous les jours",
-      hoursNote: "De 7h30 à 19h · week-end jusqu’à 18h",
+      hoursNote: "De 7h30 à 19h, week-end jusqu’à 18h · à confirmer",
       cta: { label: "Réserver une table", href: "/reservations" },
       burger: false,
       burgerOpen: "",
@@ -395,8 +400,8 @@ export const templateContent: Record<string, TemplateContent> = {
     },
     gallery: {
       kicker: "EN IMAGES",
-      title: "L’intérieur du café",
-      intro: "La salle, la vitrine, la lumière d’après-midi.",
+      title: "La salle et la vitrine",
+      intro: "Le bois, la lumière de l’après-midi et les plateaux qui sortent.",
       images: [
         { src: "/cms/pause/gallery1.jpg", alt: "Salle du café" },
         { src: "/cms/pause/gallery2.jpg", alt: "Vitrine de pâtisseries" },
@@ -404,17 +409,17 @@ export const templateContent: Record<string, TemplateContent> = {
     },
     video: {
       kicker: "EN VIDÉO",
-      title: "La vitrine *en mouvement*",
-      caption: "Le four ouvert, les viennoiseries qui dorent, la salle qui se réveille.",
+      title: "Le four\n*s’ouvre.*",
+      caption: "Le tour du fournil avant l’ouverture, en une minute.",
       source: { kind: "file", src: "/cms/pause/video.mp4", poster: "/cms/pause/hero.jpg" },
     },
   },
 
   signature: {
     hero: {
-      kicker: "RESTAURANT GASTRONOMIQUE",
-      title: "L’émotion *à votre table.*",
-      lead: "Une carte courte, des produits d’exception et le temps qu’il faut : ici, on dîne, on ne se presse pas.",
+      kicker: "CARTE COURTE, GRANDS PRODUITS",
+      title: "Trois ingrédients.\n*Pas un de plus.*",
+      lead: "Un chef qui écrit sa carte chaque semaine, des producteurs qu’il connaît par leur prénom et une salle où l’on prend le temps.",
       badges: [
         { icon: "star", label: "Menu dégustation" },
         { icon: "clock", label: "Réservation conseillée" },
@@ -429,29 +434,29 @@ export const templateContent: Record<string, TemplateContent> = {
     about: {
       image: { src: "/cms/signature/about.jpg", alt: "Assiette gastronomique dressée" },
       artCaption: "LE GESTE.\nLE PRODUIT.",
-      kicker: "NOTRE DEMARCHE",
-      title: "Peu d’ingrédients.\n*Beaucoup de justesse.*",
+      kicker: "NOTRE DÉMARCHE",
+      title: "Peu de choses,\n*mieux choisies.*",
       paragraphs: [
-        "Nous choisissons trois ou quatre producteurs et nous laissé conter le reste. Chaque assiette est un équilibre, pas un empilement.",
-        "Le dressage vient d’ici, le produit vient de là, et l’on ne retient que ce qui compte vraiment.",
+        "Le chef ne garde que ce qui mérite sa place : trois ou quatre producteurs, une technique qu’il maîtrise, et le droit de changer d’avis chaque lundi.",
+        "Le dressage vient d’ici, le produit vient de là. On ne cherche pas l’effet, on cherche l’équilibre.",
       ],
       cta: { label: "Réserver une table", href: "/reservations" },
     },
     marquee: {
-      items: ["CARTE COURTE", "PRODUITS D’EXCEPTION", "SOMMELLERIE", "CARTE COURTE"],
+      items: ["CARTE COURTE", "PRODUITS D’EXCEPTION", "SOMMELLERIE AU VERRE", "MENU ÉCRIT CHAQUE SEMAINE"],
     },
     featuredProducts: {
-      kicker: "LA CARTE DU MOMENT",
-      title: "Ce que la cuisine\n*propose ce soir.*",
-      aside: "Une carte qui suit le marché\net l’inspiration du chef.",
+      kicker: "LA CARTE DE CE SOIR",
+      title: "Ce que le chef\n*propose ce soir.*",
+      aside: "Une carte qui suit le marché, servie en séquence ou à la carte.",
       note: "Carte et prix de démonstration.",
       limit: 6,
       allLink: { label: "Voir la carte", href: "/carte" },
     },
     reviews: {
       kicker: "LA CRITIQUE",
-      title: "Ils ont écrit\n*sur nous.*",
-      text: "Les critiques et les avis de nos clients, tous réunis, pour se faire une idée avant de venir.",
+      title: "Ils en ont parlé\n*longtemps.*",
+      text: "Les critiques et les avis de nos clients sur le menu, le service et l atmosphère de la salle.",
       rateLabel: "Nous noter sur Google",
       viewLabel: "Voir les avis Google",
       sheetLabel: "Voir la fiche Google",
@@ -459,9 +464,9 @@ export const templateContent: Record<string, TemplateContent> = {
     },
     visit: {
       kicker: "NOUS TROUVEZ",
-      title: "Au calme,\n*au centre.*",
+      title: "Une porte discrète,\n*une salle sombre.*",
       hoursTitle: "Du mardi au samedi",
-      hoursNote: "Service à partir de 19h · à confirmer",
+      hoursNote: "Service à partir de 19h, une seule prise · à confirmer",
       cta: { label: "Choisir mon créneau", href: "/reservations" },
       burger: false,
       burgerOpen: "",
@@ -475,8 +480,8 @@ export const templateContent: Record<string, TemplateContent> = {
     },
     gallery: {
       kicker: "EN IMAGES",
-      title: "La maison en images",
-      intro: "La salle, le dressage, les produits : l’univers de la maison.",
+      title: "La maison, la salle, l’assiette",
+      intro: "Le dressage, le produit et la lumière basse de la salle.",
       images: [
         { src: "/cms/signature/gallery1.jpg", alt: "Dressage d’une assiette" },
         { src: "/cms/signature/gallery2.jpg", alt: "Salle du restaurant" },
@@ -484,17 +489,17 @@ export const templateContent: Record<string, TemplateContent> = {
     },
     video: {
       kicker: "EN VIDÉO",
-      title: "La cuisine *en mouvement*",
-      caption: "Le geste du chef, filmé au plus près de la passe.",
+      title: "Le geste\n*en gros plan.*",
+      caption: "Le travail du chef, filmé au plus près de la passe.",
       source: { kind: "file", src: "/cms/signature/video.mp4", poster: "/cms/signature/hero.jpg" },
     },
   },
 
   riviera: {
     hero: {
-      kicker: "CUISINE MÉDITERRANÉENNE",
-      title: "Le soleil *se partage.*",
-      lead: "Poissons du jour, légumes grillés et tables qui débordent : la Méditerranée comme on la vit, à l’heure du déjeuner.",
+      kicker: "FACE AU PORT, DEPUIS 1986",
+      title: "Le poisson arrive\n*le matin, part le midi.*",
+      lead: "Arrivage du jour, vegetables grillées au feu de bois et des tables qui débordent sur le quai : la Méditerranée, à deux pas de l’eau.",
       badges: [
         { icon: "pin", label: "Face au port" },
         { icon: "bag", label: "À emporter aussi" },
@@ -510,27 +515,27 @@ export const templateContent: Record<string, TemplateContent> = {
       image: { src: "/cms/riviera/about.jpg", alt: "Poisson grillé et légumes du marché" },
       artCaption: "LE LARGE.\nLE SOLEIL.",
       kicker: "DE LA PÊCHE À L’ASSIETTE",
-      title: "Le produit du matin,\n*le midi même.*",
+      title: "Le marché decides,\n*la cuisine exécute.*",
       paragraphs: [
-        "Le poisson arrive au port le matin et part en cuisine le jour même. Les légumes viennent du marché de la place.",
-        "La cuisine est simple, l-oilive et les herbes font le reste, comme sur les tables que nous aimons.",
+        "Le pêcheur dépose la boite à cinq heures, le chef choisit ce qui part au feu. Les légumes viennent de la place, à trois rues.",
+        "La cuisine est simple : huile d’olive, herbes fraîches, gril. Le reste n’est que du bon sens.",
       ],
       cta: { label: "Réserver en terrasse", href: "/reservations" },
     },
     marquee: {
-      items: ["PÊCHE DU JOUR", "LÉGUMES GRILLÉS", "FACE AU PORT", "PÊCHE DU JOUR"],
+      items: ["PÊCHE DU JOUR", "LÉGUMES GRILLÉS AU FEU DE BOIS", "FACE AU PORT", "TABLE D’HIVERGE EN TERRASSE"],
     },
     featuredProducts: {
       kicker: "LA CARTE DU PORT",
       title: "Ce que la mer\n*et le marché.*",
-      aside: "Les arrivages du jour,\nles légumes de la place.",
+      aside: "Les arrivages du matin et les légumes de la place, grillés à la commande.",
       note: "Carte et prix de démonstration.",
       limit: 6,
       allLink: { label: "Toute la carte", href: "/carte" },
     },
     reviews: {
       kicker: "VOS VACANCES",
-      title: "Vos-plus beaux\n*vacances.*",
+      title: "Le genre d’endroit\n*qui reste en tête.*",
       text: "Les avis de nos clients sur la table, la vue et l’accueil : tout ce qu’il faut avant de réserver.",
       rateLabel: "Nous noter sur Google",
       viewLabel: "Voir les avis Google",
@@ -539,9 +544,9 @@ export const templateContent: Record<string, TemplateContent> = {
     },
     visit: {
       kicker: "LA TERRASSE",
-      title: "Face au port,\n*on vous attend.*",
+      title: "Assis face au port,\n*le meilleur moment.*",
       hoursTitle: "Ouvert tous les jours",
-      hoursNote: "Déjeuner 12h–14h30 · dîner 19h–22h",
+      hoursNote: "Déjeuner 12h–14h30, dîner 19h–22h · à confirmer",
       cta: { label: "Choisir mon créneau", href: "/reservations" },
       burger: false,
       burgerOpen: "",
@@ -556,7 +561,7 @@ export const templateContent: Record<string, TemplateContent> = {
     gallery: {
       kicker: "EN IMAGES",
       title: "L’escapade en images",
-      intro: "La terrasse, les assiettes, la lumière de fin de journée.",
+      intro: "La terrasse, les assiettes et la lumière de fin de journée.",
       images: [
         { src: "/cms/riviera/gallery1.jpg", alt: "Terrasse face au port" },
         { src: "/cms/riviera/gallery2.jpg", alt: "Assiette méditerranéenne" },
@@ -564,17 +569,17 @@ export const templateContent: Record<string, TemplateContent> = {
     },
     video: {
       kicker: "EN VIDÉO",
-      title: "La table *en mouvement*",
-      caption: "Le service en terrasse, le temps d’une saison.",
+      title: "La table *prend vie*",
+      caption: "Le service en terrasse et la lumière d’une saison entière.",
       source: { kind: "file", src: "/cms/riviera/video.mp4", poster: "/cms/riviera/hero.jpg" },
     },
   },
 
   atelier: {
     hero: {
-      kicker: "TABLE CRÉATIVE",
-      title: "Le goût *du détail.*",
-      lead: "Une cuisine nette, une salle épurée et des assiettes qui commencent par la matière. Tout est calculé, rien n’est en trop.",
+      kicker: "CUISINE DE SAISON, DRESSAGE NET",
+      title: "Rien de trop.\n*Tout est là.*",
+      lead: "Un produit brut, une cuisson précise et une assiette qui dit exactement ce qu’elle contient. Rien pour masquer, tout pour assurer la place.",
       badges: [
         { icon: "sparkles", label: "Cuisine de saison" },
         { icon: "clock", label: "Réservation en ligne" },
@@ -592,18 +597,18 @@ export const templateContent: Record<string, TemplateContent> = {
       kicker: "NOTRE FAÇON DE FAIRE",
       title: "La technique\n*à nu.*",
       paragraphs: [
-        "Pas de.jeton, pas de décor superflu : ce qui est dans l’assiette doit avoir une raison d’être.",
-        "On travaille le produit brut, la cuisson précise et l’assaisonnement juste. Le reste, c’est de la retenue.",
+        "Pas de jeton, pas de décor superflu : ce qui est dans l’assiette doit avoir une raison d’être. Le produit brut, la cuisson juste, l’assaisonnement mesuré.",
+        "Le dressage est un travail d’alignement, pas d’empilement. Ce qui ne sert pas l’assiette sort de l’assiette.",
       ],
       cta: { label: "Réserver une place", href: "/reservations" },
     },
     marquee: {
-      items: ["PRODUIT BRUT", "CUISSON PRÉCISE", "SANS DÉCOR SUPERFLU", "PRODUIT BRUT"],
+      items: ["PRODUIT BRUT", "CUISSON PRÉCISE", "AUCUN DÉCOR SUPERFLU", "ASSIETTE JUSTE"],
     },
     featuredProducts: {
       kicker: "LE MENU DU JOUR",
       title: "Trois assiettes,\n*une seule idée.*",
-      aside: "Un menu unique, changé selon\nl’inspiration et le marché.",
+      aside: "Un menu unique, changé selon l’inspiration et le marché.",
       note: "Carte et prix de démonstration.",
       limit: 6,
       allLink: { label: "Voir le menu", href: "/carte" },
@@ -611,7 +616,7 @@ export const templateContent: Record<string, TemplateContent> = {
     reviews: {
       kicker: "CE QU’ON EN DIT",
       title: "La précision\n*remarquée.*",
-      text: "Les avis de nos clients sur la cuisine, la salle et l’expérience : la meilleure façon de nous connaître.",
+      text: "Les avis de nos clients sur la cuisine, la salle et l’expérience : ce qui compte vraiment.",
       rateLabel: "Nous noter sur Google",
       viewLabel: "Voir les avis Google",
       sheetLabel: "Voir la fiche Google",
@@ -619,9 +624,9 @@ export const templateContent: Record<string, TemplateContent> = {
     },
     visit: {
       kicker: "LA SALLE",
-      title: "Une adresse,\n*un calme.*",
+      title: "Une adresse calme,\n*une table pour deux.*",
       hoursTitle: "Du mardi au samedi",
-      hoursNote: "Service à partir de 19h · à confirmer",
+      hoursNote: "Service à partir de 19h, un seul menu · à confirmer",
       cta: { label: "Choisir mon créneau", href: "/reservations" },
       burger: false,
       burgerOpen: "",
@@ -635,7 +640,7 @@ export const templateContent: Record<string, TemplateContent> = {
     },
     gallery: {
       kicker: "EN IMAGES",
-      title: "L’atelier en images",
+      title: "L’atelier en photos",
       intro: "Le travail du produit, la ligne de l’assiette, la lumière de la salle.",
       images: [
         { src: "/cms/atelier/gallery1.jpg", alt: "Détail du dressage" },
@@ -644,7 +649,7 @@ export const templateContent: Record<string, TemplateContent> = {
     },
     video: {
       kicker: "EN VIDÉO",
-      title: "La technique *en mouvement*",
+      title: "La technique\n*à nu*",
       caption: "Le geste du métier, filmé sans emphase.",
       source: { kind: "file", src: "/cms/atelier/video.mp4", poster: "/cms/atelier/hero.jpg" },
     },
@@ -652,9 +657,9 @@ export const templateContent: Record<string, TemplateContent> = {
 
   escale: {
     hero: {
-      kicker: "CUISINES DU MONDE",
-      title: "Le voyage *commence ici.*",
-      lead: "Une carte qui change de continent chaque mois : des recettes d’ici, d’ailleurs, et les produits qui vont avec.",
+      kicker: "NOTRE CARTE VOYAGE",
+      title: "Ce mois-ci, on part\n*au Mexique.*",
+      lead: "Une carte qui change de continent, des produits achetés chez le producteur et des recettes qu’on a apprises sur place.",
       badges: [
         { icon: "pin", label: "Voyage mensuel" },
         { icon: "sparkles", label: "Recettes d’ailleurs" },
@@ -663,7 +668,7 @@ export const templateContent: Record<string, TemplateContent> = {
       image: { src: "/cms/escale/hero.jpg", alt: "Table chargée d’épices et de plats du monde" },
       sticker: false,
       floatingText: "Ce mois-ci :\nla route d’Orient.",
-      primary: { label: "Découvrir la carte", href: "/carte" },
+      primary: { label: "Découvrir la carte du mois", href: "/carte" },
       secondary: { label: "Réserver une table", href: "/reservations" },
     },
     about: {
@@ -678,19 +683,19 @@ export const templateContent: Record<string, TemplateContent> = {
       cta: { label: "Voir le pays du mois", href: "/carte" },
     },
     marquee: {
-      items: ["UN PAYS PAR MOIS", "PRODUITS AUTHENTIQUES", "ESCALE APRÈS ESCALE", "UN PAYS PAR MOIS"],
+      items: ["UN PAYS PAR MOIS", "PRODUITS AUTHENTIQUES", "RECETTES VÉCUES", "ESCALE APRÈS ESCALE"],
     },
     featuredProducts: {
       kicker: "L’ESCALE DU MOMENT",
       title: "Ce qui vient\n*d’ailleurs.*",
-      aside: "Les plats de la cuisine du mois,\nprêts à être partagés.",
+      aside: "Les plats de la cuisine du mois,Electronic à partager.",
       note: "Carte et prix de démonstration.",
       limit: 6,
       allLink: { label: "Toute la carte", href: "/carte" },
     },
     reviews: {
       kicker: "LES VOYAGEURS",
-      title: "Ils sont\n*partis.*",
+      title: "Ils sont\n*partis avec nous.*",
       text: "Vos avis nous disent si le voyage vous a plu, et quelle escale vous aimeriez voir ensuite.",
       rateLabel: "Nous noter sur Google",
       viewLabel: "Voir les avis Google",
@@ -699,9 +704,9 @@ export const templateContent: Record<string, TemplateContent> = {
     },
     visit: {
       kicker: "OÙ NOUS TROUVER",
-      title: "Poussez la porte,\n*on vous expliquera.*",
+      title: "Poussez la porte,\n*on vous raconte.*",
       hoursTitle: "Ouvert tous les jours",
-      hoursNote: "Midi et soir · à confirmer",
+      hoursNote: "Midi et soir, tous les jours · à confirmer",
       cta: { label: "Réserver une table", href: "/reservations" },
       burger: true,
       burgerOpen: "Toutes les saveurs.",
@@ -724,18 +729,17 @@ export const templateContent: Record<string, TemplateContent> = {
     },
     video: {
       kicker: "EN VIDÉO",
-      title: "L’escale *en mouvement*",
+      title: "L’escale\n*commence ici*",
       caption: "Le marché, la cuisine, la table : l’escale en une minute.",
       source: { kind: "file", src: "/cms/escale/video.mp4", poster: "/cms/escale/hero.jpg" },
     },
   },
 
-  /* ── Nouveaux métiers ─────────────────────────────────────────────────── */
   pizzeria: {
     hero: {
-      kicker: "PIZZERIA · TRATTORIA",
-      title: "Le goût de *l’Italie.*",
-      lead: "Farine italienne, tomate de San Marzano, mozzarella de Bufala : la pizza comme en Italie, avec les produits de chez nous.",
+      kicker: "FEU DE BOIS, FARINE ITALIENNE",
+      title: "La pâte met deux jours.\n*La pizza, quatre-vingt-dix secondes.*",
+      lead: "San Marzano, mozzarella de Bufala et un four qui ne s’éteint jamais avant la fermeture : la pizza comme à Naples, avec nos produits.",
       badges: [
         { icon: "clock", label: "Feu de bois" },
         { icon: "bag", label: "À emporter" },
@@ -751,28 +755,28 @@ export const templateContent: Record<string, TemplateContent> = {
       image: { src: "/cms/pizzeria/about.jpg", alt: "Pizzaiolo formant la pâte" },
       artCaption: "LA FARINE.\nLE FEU.",
       kicker: "NOTRE FOUR",
-      title: "La pâte,\n*le feu, le temps.*",
+      title: "Tout se joue\n*à la fournil.*",
       paragraphs: [
-        "La pâte est pétrie la veille, la mozzarella fond sur place, et le four ne s’éteint jamais avant la fermeture.",
+        "La pâte est pétrie la veille et laissée au froid 48 heures. La mozzarella fond sur place, les tomates arrivent entières et sont pressées devant vous.",
         "Les tomates romaines et le basilic frais arrivent en fin de service, comme à Rome. Le reste, c’est notre façon.",
       ],
       cta: { label: "Commander", href: "/commander#start" },
     },
     marquee: {
-      items: ["FEU DE BOIS", "PÂTE FERMENTÉE 48 H", "SAN MARZANO", "FEU DE BOIS"],
+      items: ["FEU DE BOIS", "PÂTE FERMENTÉE 48 H", "SAN MARZANO", "MOZZARELLA DI BUFALA"],
     },
     featuredProducts: {
       kicker: "NOS PIZZAS",
-      title: "Cinq	classiques,\n*une hazaña.*",
-      aside: "Les pizzas du jour et la pizza\nblanche de la maison.",
+      title: "Cinq classiques,\n*une part de plus.*",
+      aside: "Les pizzas du jour et la pizza bianca de la maison, cuites à la commande.",
       note: "Carte et prix de démonstration.",
       limit: 6,
       allLink: { label: "Toute la carte", href: "/carte" },
     },
     reviews: {
       kicker: "LE VERDICT",
-      title: "Ils ont noté\n*la croûte.*",
-      text: "Les avis de nos clients sur la pâte, la cuisson et le service : le meilleur indicateur pour choisir votre prochaine.",
+      title: "Ils ont jugé\n*la croûte.*",
+      text: "Les avis de nos clients sur la pâte, la cuisson et le temps de livraison : le meilleur indicateur pour choisir la vôtre.",
       rateLabel: "Nous noter sur Google",
       viewLabel: "Voir les avis Google",
       sheetLabel: "Voir la fiche Google",
@@ -780,7 +784,7 @@ export const templateContent: Record<string, TemplateContent> = {
     },
     visit: {
       kicker: "À TABLE",
-      title: "La salle*bouge*.",
+      title: "La salle bouge,\n*la pizza aussi.*",
       hoursTitle: "Du mardi au dimanche",
       hoursNote: "Service de 18h à 22h30 · à confirmer",
       cta: { label: "Réserver une table", href: "/reservations" },
@@ -797,15 +801,15 @@ export const templateContent: Record<string, TemplateContent> = {
     gallery: {
       kicker: "EN IMAGES",
       title: "Le four et la salle",
-      intro: "La pâte qui lève, le four qui ronronne, la salle pleine.",
+      intro: "La pâte qui lève, le feu qui ronronne, la salle pleine.",
       images: [
         { src: "/cms/pizzeria/gallery1.jpg", alt: "Four à bois" },
-        { src: "/cms/pizzeria/gallery2.jpg", alt: "Pizza discontinuation" },
+        { src: "/cms/pizzeria/gallery2.jpg", alt: "Pizza servie" },
       ],
     },
     video: {
       kicker: "EN VIDÉO",
-      title: "Le feu *en mouvement*",
+      title: "Au feu\n*de bois*",
       caption: "La pizza au four, du geste à l’assiette.",
       source: { kind: "file", src: "/cms/pizzeria/video.mp4", poster: "/cms/pizzeria/hero.jpg" },
     },
@@ -813,9 +817,9 @@ export const templateContent: Record<string, TemplateContent> = {
 
   sushi: {
     hero: {
-      kicker: "CUISINE JAPONAISE",
-      title: "La précision *à votre table.*",
-      lead: "Le riz à la température exacte, le poisson du jour, un geste en deux secondes : ici, chaque assiette est une partition d’exactitude.",
+      kicker: "LE RIZ D’ABORD",
+      title: "Tout se joue\n*sur le riz.*",
+      lead: "Cuit au saké, salé juste, un peu de glace et pas un grain de trop. Une pièce, deux secondes, et le silence autour.",
       badges: [
         { icon: "sparkles", label: "Poisson du jour" },
         { icon: "clock", label: "Sur place uniquement" },
@@ -833,18 +837,18 @@ export const templateContent: Record<string, TemplateContent> = {
       kicker: "NOTRE FAÇON",
       title: "Trois gestes,\n*rien de plus.*",
       paragraphs: [
-        "Le riz est cuit au saké et à l’acidité de yuzu, la pièce est montée à la main, la lame est aiguisée chaque matin.",
-        "Nous servons peu de convives pour rester au plus près du produit et de la saison.",
+        "Le riz est cuit au saké et à l’acidité de yuzu, la pièce est montée à la main, la lame est aiguisée chaque matin avant l’ouverture.",
+        "Douze couverts par service, pas un de plus : c’est la condition pour rester au plus près du produit et de la saison.",
       ],
       cta: { label: "Réserver une place", href: "/reservations" },
     },
     marquee: {
-      items: ["RIS CUIT AU SAKÉ", "POISSON DU JOUR", "SERVICE SOIGNÉ", "RIS CUIT AU SAKÉ"],
+      items: ["RIS CUIT AU SAKÉ", "POISSON DU JOUR", "DOUZE COUVERTS PAR SERVICE", "LAME AIGUISÉE CHAQUE MATIN"],
     },
     featuredProducts: {
       kicker: "LA CARTE",
       title: "Nos pièces\n*du jour.*",
-      aside: "Nigiri, maki, sashimi et le\nmenu omakase du soir.",
+      aside: "Nigiri, maki, sashimi et le menu omakase du soir.",
       note: "Carte et prix de démonstration.",
       limit: 6,
       allLink: { label: "Voir la carte", href: "/carte" },
@@ -862,7 +866,7 @@ export const templateContent: Record<string, TemplateContent> = {
       kicker: "LA PLACE",
       title: "Douze couverts,\n*une seule adresse.*",
       hoursTitle: "Du mardi au samedi",
-      hoursNote: "Deux services par soir · à confirmer",
+      hoursNote: "Deux services par soir, 19h et 21h · à confirmer",
       cta: { label: "Choisir mon créneau", href: "/reservations" },
       burger: false,
       burgerOpen: "",
@@ -885,17 +889,17 @@ export const templateContent: Record<string, TemplateContent> = {
     },
     video: {
       kicker: "EN VIDÉO",
-      title: "Le geste *en mouvement*",
-      caption: "Une pièce montée en deux secondes.",
+      title: "Deux secondes\n*pour une pièce.*",
+      caption: "Le geste du chef, filmé sans musique et sans commentaire.",
       source: { kind: "file", src: "/cms/sushi/video.mp4", poster: "/cms/sushi/hero.jpg" },
     },
   },
 
   coiffeur: {
     hero: {
-      kicker: "COIFFURE & BEAUTÉ",
-      title: "Votre style, *révélé.*",
-      lead: "Un diagnostic honnête, une coupe qui vous ressemble et des conseils que vous pourrez appliquer chez vous.",
+      kicker: "DIAGNOSTIC OFFERT, SANS ENGAGEMENT",
+      title: "On ne coupe pas vos cheveux.\n*On les comprend.*",
+      lead: "Un diagnostic honnête, une coupe qui tient six mois et des conseils que vous appliquez chez vous, entre deux rendez-vous.",
       badges: [
         { icon: "clock", label: "Rendez-vous en ligne" },
         { icon: "star", label: "Coiffeurs qualifiés" },
@@ -911,28 +915,28 @@ export const templateContent: Record<string, TemplateContent> = {
       image: { src: "/cms/coiffeur/about.jpg", alt: "Coiffeur arbeit sur une cliente" },
       artCaption: "LE DIAGNOSTIC.\nLA COUPE.",
       kicker: "LE SALON",
-      title: "On écoute,\n*puis on coupe.*",
+      title: "On écoute\n*avant de couper.*",
       paragraphs: [
-        "Chaque rendez-vous commence par un diagnostic : votre cheveux, vos habitudes, le temps que vous avez devant vous.",
-        "Ensuite seulement on coupe. Et on vous explique comment tenir la coupe entre deux visites.",
+        "Chaque rendez-vous commence par un diagnostic : vos cheveux, vos habitudes, le temps que vous avez devant vous. On ne propose jamais plus que ce que vous pouvez Tenir.",
+        "Ensuite on coupe, et on vous explique comment tenir la coupe jusqu’au prochain rendez-vous.",
       ],
       cta: { label: "Prendre rendez-vous", href: "/reservations" },
     },
     marquee: {
-      items: ["DIAGNOSTIC OFFERT", "COIFFEURS QUALIFIÉS", "CONSEILS À LA SORTIE", "DIAGNOSTIC OFFERT"],
+      items: ["DIAGNOSTIC OFFERT", "COIFFEURS QUALIFIÉS", "CONSEILS TENABLES À LA MAISON", "RDV EN LIGNE"],
     },
     featuredProducts: {
       kicker: "NOS PRESTATIONS",
-      title: "Les soins,\n*les prix, la durée.*",
-      aside: "Coupe, couleur, soin : chaque\nprestation est annoncée claire.",
+      title: "Coupe, couleur, soin :\n*le prix est écrit.*",
+      aside: "Chaque prestation est annoncée claire, avec sa durée et son tarif.",
       note: "Prestations et prix de démonstration.",
       limit: 6,
       allLink: { label: "Voir toutes les prestations", href: "/carte" },
     },
     reviews: {
-      kicker: "VOS MOTS",
+      kicker: "LE MOT DE LA FIN",
       title: "Ils racontent\n*la coupe.*",
-      text: "Avis vérifiés de nos clients sur le résultat, l’accueil et la tenue de la coiffure.",
+      text: "Les avis de nos clients sur le résultat, l’accueil et la tenue de la coiffure dans le temps.",
       rateLabel: "Nous noter sur Google",
       viewLabel: "Voir les avis Google",
       sheetLabel: "Voir la fiche Google",
@@ -940,7 +944,7 @@ export const templateContent: Record<string, TemplateContent> = {
     },
     visit: {
       kicker: "LE SALON",
-      title: "On vous attend,\n*stylish.*",
+      title: "Poussez la porte,\n*on s’occupe de vous.*",
       hoursTitle: "Du mardi au samedi",
       hoursNote: "09h–19h sans pause le samedi · à confirmer",
       cta: { label: "Choisir mon créneau", href: "/reservations" },
@@ -957,7 +961,7 @@ export const templateContent: Record<string, TemplateContent> = {
     gallery: {
       kicker: "EN IMAGES",
       title: "Le salon en images",
-      intro: "Les fauteuils, le miroir, l’ambiance du lieu.",
+      intro: "Les fauteuils, le miroir et l’ambiance du lieu.",
       images: [
         { src: "/cms/coiffeur/gallery1.jpg", alt: "Fauteuil du salon" },
         { src: "/cms/coiffeur/gallery2.jpg", alt: "Résultat d’une coiffure" },
@@ -965,17 +969,17 @@ export const templateContent: Record<string, TemplateContent> = {
     },
     video: {
       kicker: "EN VIDÉO",
-      title: "Le salon *en mouvement*",
-      caption: "Le travail du coiffeur, filmé en gros plan.",
+      title: "Le travail\n*en gros plan.*",
+      caption: "Le geste du coiffeur, filmé sans commentaire.",
       source: { kind: "file", src: "/cms/coiffeur/video.mp4", poster: "/cms/coiffeur/hero.jpg" },
     },
   },
 
   loft: {
     hero: {
-      kicker: "IMMOBILIER · ARCHITECTURE",
-      title: "L’espace *qui vous ressemble.*",
-      lead: "Des biens rares, des volumes clairs et beaucoup de lumière : découvrez des lieux qui auront une histoire.",
+      kicker: "IMMOBILIER, SANS VISITE IMPOSÉE",
+      title: "Des lieux qu’on visitera\n*deux fois.*",
+      lead: "Des volumes clairs, de la lumière et un état du lieu irréprochable : on ne liste que ce qu’on a visité et aimé.",
       badges: [
         { icon: "pin", label: "Visites sur rendez-vous" },
         { icon: "clock", label: "Dossiers suivis en ligne" },
@@ -991,20 +995,20 @@ export const templateContent: Record<string, TemplateContent> = {
       image: { src: "/cms/loft/about.jpg", alt: "Intérieur d’appartement rénové" },
       artCaption: "LA LUMIÈRE.\nLE VOLUME.",
       kicker: "NOTRE APPROCHE",
-      title: "Des lieux\n*choisis, pas listés.*",
+      title: "On visite\n*avant de vendre.*",
       paragraphs: [
-        "Nous ne listons que des biens que nous avons visités et aimés : la lumière, les volumes, l’état du lieu.",
-        "Ensuite, on vous écoute. Vos usages, vos envies, vos délais : on ne vous propose que ce qui colle.",
+        "Chaque bien est vu, mesuré et photographié par nous : l’orientation, la lumière à différentes heures, l’état réel des finitions.",
+        "Ensuite on vous écoute. Vos usages, vos envies, vos délais : on ne vous propose que ce qui colle.",
       ],
       cta: { label: "Parler de votre projet", href: "/contact" },
     },
     marquee: {
-      items: ["BIENS VISITÉS ET VALIDÉS", "ESTIMATION OFFERTE", "VISITES SUR RENDEZ-VOUS", "BIENS VISITÉS ET VALIDÉS"],
+      items: ["BIENS VISITÉS ET VALIDÉS", "ESTIMATION OFFERTE", "VISITES SUR RENDEZ-VOUS", "PHOTOGRAPHIES RÉELLES"],
     },
     featuredProducts: {
       kicker: "NOS BIENS",
       title: "Les adresses\n*en lumière.*",
-      aside: "Lofts, appartements et locaux\nà découvrir sur rendez-vous.",
+      aside: "Lofts, appartements et locaux à découvrir sur rendez-vous.",
       note: "Biens et prix de démonstration.",
       limit: 6,
       allLink: { label: "Voir tous les biens", href: "/carte" },
@@ -1020,9 +1024,9 @@ export const templateContent: Record<string, TemplateContent> = {
     },
     visit: {
       kicker: "SUR PLACE",
-      title: "Un bien,\n*ça se visite.*",
+      title: "Un bien se visite,\n*il ne s’explique pas.*",
       hoursTitle: "Du lundi au samedi",
-      hoursNote: "Visites sur rendez-vous · à confirmer",
+      hoursNote: "Visites sur rendez-vous, du lundi au samedi · à confirmer",
       cta: { label: "Planifier une visite", href: "/reservations" },
       burger: false,
       burgerOpen: "",
@@ -1045,17 +1049,17 @@ export const templateContent: Record<string, TemplateContent> = {
     },
     video: {
       kicker: "EN VIDÉO",
-      title: "Le bien *en mouvement*",
-      caption: "Une visite, comme si on y était.",
+      title: "La visite\n*filmée*",
+      caption: "Une visite, comme si vous y étiez.",
       source: { kind: "file", src: "/cms/loft/video.mp4", poster: "/cms/loft/hero.jpg" },
     },
   },
 
   chantier: {
     hero: {
-      kicker: "BTP · CONSTRUCTION",
-      title: "On bâtit *ensemble.*",
-      lead: "Des fondations solides, des délais tenus et un chantier où le client sait toujours où il en est.",
+      kicker: "DEVIS EN 48 H, GARANTIE DÉCENNALE",
+      title: "Un chantier, *un seul interlocuteur.*",
+      lead: "De la première réunion à la réception, la même personne suit votre projet : pas de relais, pas de mauvaise surprise en cours de route.",
       badges: [
         { icon: "clock", label: "Devis en 48 h" },
         { icon: "wallet", label: "Travaux garantis" },
@@ -1071,20 +1075,20 @@ export const templateContent: Record<string, TemplateContent> = {
       image: { src: "/cms/chantier/about.jpg", alt: "Ouvrier sur un chantier" },
       artCaption: "LE CHANTIER.\nLA MÉTHODE.",
       kicker: "NOTRE MÉTHODE",
-      title: "Un chantier,\n*un interlocuteur.*",
+      title: "Le chantier ne vit\n*que d’un plan.*",
       paragraphs: [
-        "Un seul chef de chantier suit votre projet de la première réunion à la réception : pas de relais, pas de mauvaise surprise.",
-        "Les sous-traitants sont nos habits, nos fournisseurs sont vérifiés, et chaque avancement est photo à l’appui.",
+        "Un chef de chantier unique suit votre projet de la première réunion à la réception : c’est lui qui répond, qui propose et qui réceptionne.",
+        "Nos sous-traitants sont nos habits, nos fournisseurs sont vérifiés, et chaque avancement est documenté en photo.",
       ],
       cta: { label: "Parler de mon projet", href: "/contact" },
     },
     marquee: {
-      items: ["DEVIS EN 48 H", "CHEF DE CHANTIER UNIQUE", "GARANTIE DÉCENNALE", "DEVIS EN 48 H"],
+      items: ["DEVIS EN 48 H", "UN SEUL CHEF DE CHANTIER", "GARANTIE DÉCENNALE", "AVANCEMENT PHOTOGRAPHIÉ"],
     },
     featuredProducts: {
       kicker: "NOS PRESTATIONS",
       title: "Ce que nous\n*savons faire.*",
-      aside: "Rénovation, neuf, entretien :\nles lots détaillés et chiffrés.",
+      aside: "Rénovation, neuf, entretien : les lots détaillés, chiffrés et datés.",
       note: "Prestations et prix de démonstration.",
       limit: 6,
       allLink: { label: "Voir toutes les prestations", href: "/carte" },
@@ -1092,7 +1096,7 @@ export const templateContent: Record<string, TemplateContent> = {
     reviews: {
       kicker: "NOS CHANTIERS",
       title: "Ils ont vu\n*le résultat.*",
-      text: "Les avis de nos clients sur le suivi, les délais et la qualité des travaux.",
+      text: "Les avis de nos clients sur le suivi, les délais tenus et la qualité des travaux.",
       rateLabel: "Nous noter sur Google",
       viewLabel: "Voir les avis Google",
       sheetLabel: "Voir la fiche Google",
@@ -1102,7 +1106,7 @@ export const templateContent: Record<string, TemplateContent> = {
       kicker: "SUR CHANTIER",
       title: "Venez voir\n*nos chantiers.*",
       hoursTitle: "Du lundi au vendredi",
-      hoursNote: "Visites sur rendez-vous · à confirmer",
+      hoursNote: "Visites de chantier sur rendez-vous · à confirmer",
       cta: { label: "Demander un rendez-vous", href: "/contact" },
       burger: false,
       burgerOpen: "",
@@ -1111,7 +1115,7 @@ export const templateContent: Record<string, TemplateContent> = {
     },
     map: {
       kicker: "NOUS TROUVER",
-      title: "Au dépôt ou directement sur le chantier.",
+      title: "Au dépôt, ou directement sur le chantier.",
       buttonLabel: "Ouvrir l’itinéraire",
     },
     gallery: {
@@ -1125,17 +1129,17 @@ export const templateContent: Record<string, TemplateContent> = {
     },
     video: {
       kicker: "EN VIDÉO",
-      title: "Le chantier *en mouvement*",
-      caption: "Une journée de chantier, en accéléré.",
+      title: "Une journée\n*de chantier*",
+      caption: "Le chantier en accéléré, du matin à la fermeture.",
       source: { kind: "file", src: "/cms/chantier/video.mp4", poster: "/cms/chantier/hero.jpg" },
     },
   },
 
   racing: {
     hero: {
-      kicker: "AUTOMOBILE · PERFORMANCE",
-      title: "Passez *à la vitesse supérieure.*",
-      lead: "Préparation, entretien et performance : chaque machine est suivie par des gens qui connaissent le bruit du moteur.",
+      kicker: "DIAGNOSTIC EN 24 H, DEVIS ÉCRIT",
+      title: "On n’y touche pas\n*avant votre accord.*",
+      lead: "Diagnostic complet, devis écrit, pièces d’origine ou équivalence certifiée : votre machine est entre des mains qui connaissent le bruit d’un moteur.",
       badges: [
         { icon: "star", label: "Atelier spécialisé" },
         { icon: "clock", label: "Diagnostic en 24 h" },
@@ -1153,18 +1157,18 @@ export const templateContent: Record<string, TemplateContent> = {
       kicker: "L’ATELIER",
       title: "On ne bricole\n*pas votre machine.*",
       paragraphs: [
-        "Chaque intervention commence par un diagnostic complet et un devis écrit. On n’y touche pas avant votre accord.",
-        "Puis on travaille avec les pièces d’origine ou équivalence certifiée, et on documente chaque étape.",
+        "Chaque intervention commence par un diagnostic complet et un devis écrit. Rien n’est touché avant votre accord, et chaque étape est documentée.",
+        "Le réglage, la préparation circuit et le travail moteur se font ici, avec les outillages qui vont avec.",
       ],
       cta: { label: "Prendre rendez-vous", href: "/reservations" },
     },
     marquee: {
-      items: ["DIAGNOSTIC EN 24 H", "DEVIS ÉCRIT AVANT", "PIÈCES CERTIFIÉES", "DIAGNOSTIC EN 24 H"],
+      items: ["DIAGNOSTIC EN 24 H", "DEVIS ÉCRIT AVANT", "PIÈCES D’ORIGINE OU CERTIFIÉES", "PRÉPARATION CIRCUIT"],
     },
     featuredProducts: {
       kicker: "NOS PRESTATIONS",
-      title: "L’entretien,\n*la préparation, la tune.*",
-      aside: "Révision, préparation circuit\net travail moteur.",
+      title: "Entretien, préparation,\n*tune.*",
+      aside: "Révision, préparation circuit et travail moteur : de la révision complète à la retouche de carrosserie.",
       note: "Prestations et prix de démonstration.",
       limit: 6,
       allLink: { label: "Voir toutes les prestations", href: "/carte" },
@@ -1172,7 +1176,7 @@ export const templateContent: Record<string, TemplateContent> = {
     reviews: {
       kicker: "LE PILOTE",
       title: "Ils sont\n*revenus au dépôt.*",
-      text: "Les avis de nos clients sur la précision du travail, les délais et la transparence des prix.",
+      text: "Les avis de nos clients sur la précision du travail, les délais tenus et la transparence des prix.",
       rateLabel: "Nous noter sur Google",
       viewLabel: "Voir les avis Google",
       sheetLabel: "Voir la fiche Google",
@@ -1182,7 +1186,7 @@ export const templateContent: Record<string, TemplateContent> = {
       kicker: "L’ATELIER",
       title: "Poussez la porte,\n*on regarde la machine.*",
       hoursTitle: "Du lundi au vendredi",
-      hoursNote: "08h–18h, samedi sur rendez-vous",
+      hoursNote: "08h–18h, samedi sur rendez-vous · à confirmer",
       cta: { label: "Choisir mon créneau", href: "/reservations" },
       burger: false,
       burgerOpen: "",
@@ -1196,8 +1200,8 @@ export const templateContent: Record<string, TemplateContent> = {
     },
     gallery: {
       kicker: "EN IMAGES",
-      title: "L’atelier en images",
-      intro: "Les machines, l’outillage, les traces de travail.",
+      title: "Le dépôt en photos",
+      intro: "Les machines, l’outillage et les traces de travail.",
       images: [
         { src: "/cms/racing/gallery1.jpg", alt: "Voiture préparée" },
         { src: "/cms/racing/gallery2.jpg", alt: "Détail moteur" },
@@ -1205,7 +1209,7 @@ export const templateContent: Record<string, TemplateContent> = {
     },
     video: {
       kicker: "EN VIDÉO",
-      title: "La machine *en mouvement*",
+      title: "Le son\n*d’un moteur*",
       caption: "Le son d’un moteur qu’on connaît par cœur.",
       source: { kind: "file", src: "/cms/racing/video.mp4", poster: "/cms/racing/hero.jpg" },
     },
@@ -1213,12 +1217,12 @@ export const templateContent: Record<string, TemplateContent> = {
 
   manuscrit: {
     hero: {
-      kicker: "BLOG · ÉDITORIAL",
-      title: "Les mots *qui comptent.*",
-      lead: "Des textes publiés quand ils ont quelque chose à dire, et rien d’autre. Un rythme tranquille, des idées qui restent.",
+      kicker: "UN ARTICLE PAR SEMAINE, SANS PUBLICITÉ",
+      title: "On publie quand\n*c’est prêt.*",
+      lead: "Des textes qui prennent le temps, une lettre chaque vendredi et pas une seule bannière pour masquer le temps de lecture.",
       badges: [
         { icon: "sparkles", label: "Un article par semaine" },
-        { icon: "clock", label: "Newsletter chaque vendredi" },
+        { icon: "clock", label: "Lettre chaque vendredi" },
         { icon: "bag", label: "Sans publicité" },
       ],
       image: { src: "/cms/manuscrit/hero.jpg", alt: "Bureau d’écriture avec carnet ouvert" },
@@ -1233,18 +1237,18 @@ export const templateContent: Record<string, TemplateContent> = {
       kicker: "LE BLOG",
       title: "Écrire,\n*puis relire.*",
       paragraphs: [
-        "Chaque article part d’une idée simple, passe par trois réécritures et s’arrête quand il ne reste rien à couper.",
-        "Nous ne publions pas pour remplir un calendrier. Si l’article n’est pas prêt, il attend.",
+        "Chaque article part d’une idée simple, passe par trois réécritures et s’arrête quand il ne reste rien à couper. On ne publie pas pour remplir un calendrier.",
+        "Si le texte n’est pas prêt, il attend la semaine suivante. Nos lecteurs le savent : c’est pour ça qu’ils reviennent.",
       ],
       cta: { label: "Lire le dernier article", href: "/carte" },
     },
     marquee: {
-      items: ["UN ARTICLE PAR SEMAINE", "SANS PUBLICITÉ", "LETTRE DU VENDREDI", "UN ARTICLE PAR SEMAINE"],
+      items: ["UN ARTICLE PAR SEMAINE", "SANS PUBLICITÉ", "LETTRE DU VENDREDI", "TROIS RÉÉCRITURES"],
     },
     featuredProducts: {
       kicker: "À LA UNE",
       title: "Les textes\n*du moment.*",
-      aside: "Les derniers articles,\nclassés par date de lecture.",
+      aside: "Les derniers articles, classés par date de publication.",
       note: "Articles de démonstration.",
       limit: 6,
       allLink: { label: "Tous les articles", href: "/carte" },
@@ -1252,7 +1256,7 @@ export const templateContent: Record<string, TemplateContent> = {
     reviews: {
       kicker: "VOS MOTS",
       title: "Ils l’ont lu,\n*ils en parlent.*",
-      text: "Les réactions de nos lecteurs sur les textes, les sujets et laclrarté du propos.",
+      text: "Les réactions de nos lecteurs sur les sujets, la clarté du propos et le temps qu’on leur laisse.",
       rateLabel: "Laisser un avis",
       viewLabel: "Voir les avis",
       sheetLabel: "Voir la fiche",
@@ -1260,9 +1264,9 @@ export const templateContent: Record<string, TemplateContent> = {
     },
     visit: {
       kicker: "NOUS ÉCRIVONS",
-      title: "Une question,\n*un sujet ?*",
+      title: "Une question,\n*un sujet à traiter ?*",
       hoursTitle: "Réponse sous 48 h",
-      hoursNote: "Du lundi au vendredi",
+      hoursNote: "Du lundi au vendredi, on répond",
       cta: { label: "Écrire à la rédaction", href: "/contact" },
       burger: false,
       burgerOpen: "",
@@ -1276,8 +1280,8 @@ export const templateContent: Record<string, TemplateContent> = {
     },
     gallery: {
       kicker: "EN IMAGES",
-      title: "L’atelier en images",
-      intro: "Le bureau, les carnets, les marginalia.",
+      title: "La rédaction en photos",
+      intro: "Le bureau, les carnets, les marges.",
       images: [
         { src: "/cms/manuscrit/gallery1.jpg", alt: "Carnets de travail" },
         { src: "/cms/manuscrit/gallery2.jpg", alt: "Bureau d’écriture" },
@@ -1285,7 +1289,7 @@ export const templateContent: Record<string, TemplateContent> = {
     },
     video: {
       kicker: "EN VIDÉO",
-      title: "L’écriture *en mouvement*",
+      title: "L’écriture\n*au travail*",
       caption: "Une minute dans le métier de lire et d’écrire.",
       source: { kind: "file", src: "/cms/manuscrit/video.mp4", poster: "/cms/manuscrit/hero.jpg" },
     },
@@ -1296,14 +1300,14 @@ export const templateContent: Record<string, TemplateContent> = {
       articles: [
         {
           title: "Écrire moins, écrire mieux",
-          excerpt: "Ce que la rélecture nous apprend sur la clarté d’un texte — et pourquoi la vitesse n’est jamais le bon rythme.",
+          excerpt: "Ce que la relecture nous apprend sur la clarté d’un texte — et pourquoi la vitesse n’est jamais le bon rythme.",
           image: { src: "/cms/manuscrit/gallery1.jpg", alt: "Carnet de réécriture" },
           date: "6 novembre 2026",
           href: "/carte",
         },
         {
           title: "Le goût des choses simples",
-          excerpt: "Pourquoi les sujets les plusstedt ordinaires demandent les descriptions les plus justes.",
+          excerpt: "Pourquoi les sujets les plus ordinaires demandent les descriptions les plus justes.",
           image: { src: "/cms/manuscrit/hero.jpg", alt: "Bureau d’écriture" },
           date: "30 octobre 2026",
           href: "/carte",
@@ -1321,15 +1325,15 @@ export const templateContent: Record<string, TemplateContent> = {
 
   assurance: {
     hero: {
-      kicker: "ASSURANCE · SÉCURITÉ",
-      title: "Votre sécurité, *notre engagement.*",
-      lead: "Un contrat clair, un conseiller joignable et des déclarations traitées en 48 heures : la sécurité sans jargon.",
+      kicker: "CONSEILLER DÉDIÉ, DÉCLARATION EN 48 H",
+      title: "Un contrat qu’on\n*peut vous expliquer.*",
+      lead: "Un conseiller qui connaît votre dossier, des garanties en français courant et une déclaration traitée en 48 heures, sans jargon ni mauvaise surprise.",
       badges: [
         { icon: "clock", label: "Déclaration en 48 h" },
         { icon: "star", label: "Conseiller dédié" },
         { icon: "wallet", label: "Sans engagement" },
       ],
-      image: { src: "/cms/assurance/hero.jpg", alt: "Conseiller en assurance welcoming un client" },
+      image: { src: "/cms/assurance/hero.jpg", alt: "Conseiller en assurance accueillant un client" },
       sticker: false,
       floatingText: "On est là,\njustement.",
       primary: { label: "Demander un devis", href: "/contact" },
@@ -1339,20 +1343,20 @@ export const templateContent: Record<string, TemplateContent> = {
       image: { src: "/cms/assurance/about.jpg", alt: "Échange commercial dans un bureau" },
       artCaption: "LA CONFIANCE.\nLE CONTRAT.",
       kicker: "NOTRE MÉTHODE",
-      title: "Un conseiller,\n*pas un standard.*",
+      title: "Une personne,\n*pas un standard.*",
       paragraphs: [
-        "Vous êtes suivi par une personne : elle connaît votre dossier, votre activité et vos risques réels.",
-        "Les garanties sont expliquées en français courant, sans petites lignes ni surprises à la déclaration.",
+        "Vous êtes suivi par un conseiller qui connaît votre dossier, votre activité et vos risques réels. Pas de standard, pas de formulaire à remplir trois fois.",
+        "Les garanties sont expliquées en français courant, clause par clause, avant que vous ne signiez quoi que ce soit.",
       ],
       cta: { label: "Parler à un conseiller", href: "/contact" },
     },
     marquee: {
-      items: ["CONSEILLER DÉDIÉ", "DÉCLARATION EN 48 H", "SANS JURIDION", "CONSEILLER DÉDIÉ"],
+      items: ["CONSEILLER DÉDIÉ", "DÉCLARATION EN 48 H", "CONTRAT EXPLICABLE", "SANS SURPRISE"],
     },
     featuredProducts: {
       kicker: "NOS GARANTIES",
       title: "Les formules,\n*sans surprise.*",
-      aside: "Habitation, commerce, flotte :\nles garanties détaillées et tarifées.",
+      aside: "Habitation, commerce, flotte : les garanties détaillées, tarifées et comparables.",
       note: "Garanties et prix de démonstration.",
       limit: 6,
       allLink: { label: "Voir toutes les garanties", href: "/carte" },
@@ -1360,7 +1364,7 @@ export const templateContent: Record<string, TemplateContent> = {
     reviews: {
       kicker: "NOS CLIENTS",
       title: "Ils sont\n*rassurés.*",
-      text: "Les avis de nos clients sur la réactivité, la clarté du contrat et la qualité du suivi.",
+      text: "Les avis de nos clients sur la réactivité, la clarté du contrat et la qualité de l’accompagnement.",
       rateLabel: "Nous noter sur Google",
       viewLabel: "Voir les avis Google",
       sheetLabel: "Voir la fiche Google",
@@ -1370,7 +1374,7 @@ export const templateContent: Record<string, TemplateContent> = {
       kicker: "NOUS RENCONTRER",
       title: "Un café,\n*une explication.*",
       hoursTitle: "Du lundi au vendredi",
-      hoursNote: "09h–18h, sur rendez-vous",
+      hoursNote: "09h–18h, sur rendez-vous · à confirmer",
       cta: { label: "Prendre rendez-vous", href: "/reservations" },
       burger: false,
       burgerOpen: "",
@@ -1385,7 +1389,7 @@ export const templateContent: Record<string, TemplateContent> = {
     gallery: {
       kicker: "EN IMAGES",
       title: "Notre bureau en images",
-      intro: "L’accueil, l’équipe, le temps que l’on prend.",
+      intro: "L’accueil, l’équipe et le temps que l’on prend.",
       images: [
         { src: "/cms/assurance/gallery1.jpg", alt: "Accueil du bureau" },
         { src: "/cms/assurance/gallery2.jpg", alt: "Échange avec un conseiller" },
@@ -1393,7 +1397,7 @@ export const templateContent: Record<string, TemplateContent> = {
     },
     video: {
       kicker: "EN VIDÉO",
-      title: "La confiance *en mouvement*",
+      title: "Quand\n*un sinistre* arrive",
       caption: "Ce que nous faisons quand un sinistre survient.",
       source: { kind: "file", src: "/cms/assurance/video.mp4", poster: "/cms/assurance/hero.jpg" },
     },
@@ -1401,9 +1405,9 @@ export const templateContent: Record<string, TemplateContent> = {
 
   patisserie: {
     hero: {
-      kicker: "PÂTISSERIE · BOULANGERIE",
-      title: "Le sucré *qui fait sourire.*",
-      lead: "Beurre AOP, chocolat noir, fruits de saison : des pâtisseries qui se comprennent en une bouchée.",
+      kicker: "PÉTRI LE MATIN, BEURRE AOP",
+      title: "On pétrit à cinq heures.\n*Vous arrivez à neuf.*",
+      lead: "Du pain, des viennoiseries et des entremets faits maison chaque matin, avec un beurre AOP et des fruits de saison. Rien n’est décongelé.",
       badges: [
         { icon: "clock", label: "Cuisson du matin" },
         { icon: "bag", label: "Commande en ligne" },
@@ -1417,30 +1421,30 @@ export const templateContent: Record<string, TemplateContent> = {
     },
     about: {
       image: { src: "/cms/patisserie/about.jpg", alt: "Pâtissier glaçant un entremets" },
-      artCaption: "LE FOUR.\nLE GOUT.",
+      artCaption: "LE FOUR.\nLE GOÛT.",
       kicker: "LA BOULANGERIE",
       title: "Tout commence\n*au fournil.*",
       paragraphs: [
-        "Le pain est pétri et cuit sur place, chaque matin. Les viennoiseries suivent, puis les entremets de la saison.",
-        "Nous travaillons avec une courte liste de producteurs, et rien n’est industriel. Même les couleurs des vitrines sont choisies.",
+        "Le pain est pétri et cuit sur place, chaque matin. Les viennoiseries suivent, puis les entremets de la saison, montés à la main.",
+        "Nous travaillons avec une courte liste de producteurs et rien n’est industriel. Même les couleurs des vitrines sont choisies.",
       ],
       cta: { label: "Voir la vitrine du jour", href: "/carte" },
     },
     marquee: {
-      items: ["PÉTRI LE MATIN", "BEURRE AOP", "SANS ADDITIF", "PÉTRI LE MATIN"],
+      items: ["PÉTRI LE MATIN", "BEURRE AOP", "AUCUN ADDITIF", "ENTREMETS DE SAISON"],
     },
     featuredProducts: {
       kicker: "LA VITRINE",
       title: "Ce qui sort\n*du four.*",
-      aside: "Pains, viennoiseries et entremets\nrenouvelés chaque jour.",
+      aside: "Pains, viennoiseries et entremets renouvelés chaque matin.",
       note: "Produits et prix de démonstration.",
       limit: 6,
-      allLink: { label: "Voir toute la vitrine", href: "/carte" },
+      allLink: { label: "Toute la vitrine", href: "/carte" },
     },
     reviews: {
       kicker: "VOS PRÉFÉRENCES",
       title: "Vous avez\n*vos favoris.*",
-      text: "Les avis de nos clients sur la fraîcheur, le goût et la présentation.",
+      text: "Les avis de nos clients sur la fraîcheur, le goût et la présentation en vitrine.",
       rateLabel: "Nous noter sur Google",
       viewLabel: "Voir les avis Google",
       sheetLabel: "Voir la fiche Google",
@@ -1465,7 +1469,7 @@ export const templateContent: Record<string, TemplateContent> = {
     gallery: {
       kicker: "EN IMAGES",
       title: "La vitrine en images",
-      intro: "Les formes, les finitions, la lumière du matin.",
+      intro: "Les formes, les finitions et la lumière du matin.",
       images: [
         { src: "/cms/patisserie/gallery1.jpg", alt: "Entremets de la maison" },
         { src: "/cms/patisserie/gallery2.jpg", alt: "Pain et viennoiseries" },
@@ -1473,17 +1477,17 @@ export const templateContent: Record<string, TemplateContent> = {
     },
     video: {
       kicker: "EN VIDÉO",
-      title: "Le fournil *en mouvement*",
-      caption: "Pétrissage, tourage, four : la journée en accéléré.",
+      title: "Cinq heures\n*le matin*",
+      caption: "Pétrissage, tourage, four : la matinée en accéléré.",
       source: { kind: "file", src: "/cms/patisserie/video.mp4", poster: "/cms/patisserie/hero.jpg" },
     },
   },
 
   streetfood: {
     hero: {
-      kicker: "STREET FOOD · FOOD TRUCK",
-      title: "La faim *n’attend pas.*",
-      lead: "Le truck garé sur la place, la file qui sent bon et la commande prise en trente secondes : ici, on mange debout et bien.",
+      kicker: "SUR LA PLACE, TOUS LES SOIRS",
+      title: "Le truck bouge.\n*La recette reste.*",
+      lead: "On se gare sur la place, on allume le gril et on cuisine à la minute devant la file. Vous mangez debout, et bien.",
       badges: [
         { icon: "pin", label: "Sur la place, tous les soirs" },
         { icon: "clock", label: "Prêt en 8 minutes" },
@@ -1501,18 +1505,18 @@ export const templateContent: Record<string, TemplateContent> = {
       kicker: "LE TRUCK",
       title: "Une cuisine\n*qui roule.*",
       paragraphs: [
-        "Le camion change de place chaque semaine, mais la recette ne bouge pas : produits frais, cuisson à la minute.",
-        "On ouvre à 18h, on ferme quand la file est vidée. Il reste rarement beaucoup de monde dans les assiettes.",
+        "Le camion change de place chaque semaine, mais la recette ne bouge pas : produits frais, cuisson à la minute, sauce maison.",
+        "On ouvre à 18h et on ferme quand la file est vidée. Il reste rarement beaucoup dans les assiettes.",
       ],
       cta: { label: "Voir la carte du truck", href: "/carte" },
     },
     marquee: {
-      items: ["CUISSON À LA MINUTE", "TOUS LES SOIRS", "PAIEMENT SANS CONTACT", "CUISSON À LA MINUTE"],
+      items: ["CUISSON À LA MINUTE", "TOUS LES SOIRS", "SAUCES MAISON", "PAIEMENT SANS CONTACT"],
     },
     featuredProducts: {
       kicker: "CE QUI MIJOTE",
       title: "Ce soir,\n*on sert.*",
-      aside: "La carte du truck,\ncourte et franche.",
+      aside: "La carte du truck : courte, franche, sans lecture interminable.",
       note: "Produits et prix de démonstration.",
       limit: 6,
       allLink: { label: "Voir toute la carte", href: "/carte" },
@@ -1530,7 +1534,7 @@ export const templateContent: Record<string, TemplateContent> = {
       kicker: "OÙ TROUVER LE TRUCK",
       title: "On bouge,\n*la carte aussi.*",
       hoursTitle: "Du mercredi au dimanche",
-      hoursNote: "18h–23h, selon la place · à confirmer",
+      hoursNote: "18h–23h, selon la place du jour · à confirmer",
       cta: { label: "Voir la place du jour", href: "/contact" },
       burger: true,
       burgerOpen: "Toutes les saveurs.",
@@ -1545,7 +1549,7 @@ export const templateContent: Record<string, TemplateContent> = {
     gallery: {
       kicker: "EN IMAGES",
       title: "La nuit en images",
-      intro: "Les néons, la file, la vapeur au-dessus des assiettes.",
+      intro: "Les néons, la file et la vapeur au-dessus des assiettes.",
       images: [
         { src: "/cms/streetfood/gallery1.jpg", alt: "Néon du food truck" },
         { src: "/cms/streetfood/gallery2.jpg", alt: "Assiette de nuit" },
@@ -1553,7 +1557,7 @@ export const templateContent: Record<string, TemplateContent> = {
     },
     video: {
       kicker: "EN VIDÉO",
-      title: "Le truck *en mouvement*",
+      title: "Le truck\n*tourne*",
       caption: "Le service, la file, la nuit : l’énergie du truck.",
       source: { kind: "file", src: "/cms/streetfood/video.mp4", poster: "/cms/streetfood/hero.jpg" },
     },
@@ -1561,9 +1565,9 @@ export const templateContent: Record<string, TemplateContent> = {
 
   compta: {
     hero: {
-      kicker: "COMPTABILITÉ · GESTION",
-      title: "Vos chiffres, *notre métier.*",
-      lead: "Comptabilité, déclarations, bilans : un cabinet accessible, des délais tenus et des explanations sans jargon.",
+      kicker: "FORFAIT CLAIR, DÉLAIS TENUS",
+      title: "Un bilan qu’on\n*comprend.*",
+      lead: "Comptabilité, déclarations, paie : chaque poste est commenté, chaque échéance est tenue, et vous savez toujours où vous en êtes.",
       badges: [
         { icon: "clock", label: "Réponse sous 24 h" },
         { icon: "wallet", label: "Forfait clair" },
@@ -1581,18 +1585,18 @@ export const templateContent: Record<string, TemplateContent> = {
       kicker: "LE CABINET",
       title: "Comprendre\n*ses comptes.*",
       paragraphs: [
-        "Un bilan ne sert à rien si on ne sait pas le lire. Nous commentons chaque poste et vous disons ce qu’il faut surveiller.",
-        "Déclarations, paie, TVA, comptes annuels : le calendrier est tenu, et un coup de fil ne coûte pas de plus cher.",
+        "Un bilan ne sert à rien si on ne sait pas le lire. Nous commentons chaque poste et vous disons précisément ce qu’il faut surveiller.",
+        "Déclarations, paie, TVA, comptes annuels : le calendrier est tenu, et un appel de plus ne coûte rien de plus.",
       ],
       cta: { label: "Demander un devis", href: "/contact" },
     },
     marquee: {
-      items: ["DÉLAIS TENUS", "FORFAIT CLAIR", "CONSEIL INCLUS", "DÉLAIS TENUS"],
+      items: ["FORFAIT CLAIR", "DÉLAIS TENUS", "CONSEIL INCLUS", "POSTES COMMENTÉS"],
     },
     featuredProducts: {
       kicker: "NOS MISSIONS",
       title: "Ce que nous\n*gérons.*",
-      aside: "Comptabilité, déclarations, paie :\nle périmètre, le prix, le délai.",
+      aside: "Comptabilité, déclarations, paie : le périmètre, le prix et le délai, écrits.",
       note: "Prestations et prix de démonstration.",
       limit: 6,
       allLink: { label: "Voir toutes les prestations", href: "/carte" },
@@ -1610,7 +1614,7 @@ export const templateContent: Record<string, TemplateContent> = {
       kicker: "LE CABINET",
       title: "On se voit,\n*on récapitule.*",
       hoursTitle: "Du lundi au vendredi",
-      hoursNote: "09h–18h, sur rendez-vous",
+      hoursNote: "09h–18h, sur rendez-vous · à confirmer",
       cta: { label: "Prendre rendez-vous", href: "/reservations" },
       burger: false,
       burgerOpen: "",
@@ -1625,7 +1629,7 @@ export const templateContent: Record<string, TemplateContent> = {
     gallery: {
       kicker: "EN IMAGES",
       title: "Le cabinet en images",
-      intro: "Le bureau, les dossiers, la machine à café qui fait tourner la compta.",
+      intro: "Le bureau, les dossiers et la machine à café qui fait tourner la compta.",
       images: [
         { src: "/cms/compta/gallery1.jpg", alt: "Bureau du cabinet" },
         { src: "/cms/compta/gallery2.jpg", alt: "Documents comptables" },
@@ -1633,7 +1637,7 @@ export const templateContent: Record<string, TemplateContent> = {
     },
     video: {
       kicker: "EN VIDÉO",
-      title: "Le métier *en mouvement*",
+      title: "La journée\n*de clôture*",
       caption: "Une journée de clôture, en accéléré.",
       source: { kind: "file", src: "/cms/compta/video.mp4", poster: "/cms/compta/hero.jpg" },
     },
@@ -1641,9 +1645,9 @@ export const templateContent: Record<string, TemplateContent> = {
 
   ecole: {
     hero: {
-      kicker: "FORMATION · ÉDUCATION",
-      title: "Apprendre *avec plaisir.*",
-      lead: "Des groupes limités, des formateurs qui font leur métier, et des programmes qui valent le coup d’un usage réel.",
+      kicker: "GROUPES LIMITÉS À 12 PERSONNES",
+      title: "Douze personnes.\n*Vos mains sur le sujet.*",
+      lead: "Des ateliers où chacun manipule, pose ses questions et repart avec quelque chose de utilisable le lendemain. Pas de cours magistral.",
       badges: [
         { icon: "sparkles", label: "Groupes de 12 maximum" },
         { icon: "clock", label: "Sessions toute l’année" },
@@ -1667,12 +1671,12 @@ export const templateContent: Record<string, TemplateContent> = {
       cta: { label: "Voir les formations", href: "/carte" },
     },
     marquee: {
-      items: ["GROUPES LIMITÉS À 12", "FORMATEURS DU TERRAIN", "CAS PRATIQUES", "GROUPES LIMITÉS À 12"],
+      items: ["GROUPES LIMITÉS À 12", "FORMATEURS DU TERRAIN", "CAS PRATIQUES", "SESSIONS TOUTE L’ANNÉE"],
     },
     featuredProducts: {
       kicker: "NOS FORMATIONS",
       title: "Les parcours,\n*la durée, le prix.*",
-      aside: "Chaque programme détaillé,\navec ses modalités d’inscription.",
+      aside: "Chaque programme détaillé, avec ses modalités d’inscription et son niveau.",
       note: "Formations et prix de démonstration.",
       limit: 6,
       allLink: { label: "Voir toutes les formations", href: "/carte" },
@@ -1688,9 +1692,9 @@ export const templateContent: Record<string, TemplateContent> = {
     },
     visit: {
       kicker: "NOS LOCAUX",
-      title: "Une salle,\n*des postes.*",
+      title: "Une salle,\n*des postes de travail.*",
       hoursTitle: "Du lundi au samedi",
-      hoursNote: "Sessions de 9h à 18h · à confirmer",
+      hoursNote: "Sessions de 9h à 18h, du lundi au samedi · à confirmer",
       cta: { label: "S’inscrire à une session", href: "/reservations" },
       burger: false,
       burgerOpen: "",
@@ -1705,7 +1709,7 @@ export const templateContent: Record<string, TemplateContent> = {
     gallery: {
       kicker: "EN IMAGES",
       title: "La vie de l’école",
-      intro: "Les ateliers, les projets, les questions qui restent.",
+      intro: "Les ateliers, les projets présentés et les questions qui restent.",
       images: [
         { src: "/cms/ecole/gallery1.jpg", alt: "Atelier en cours" },
         { src: "/cms/ecole/gallery2.jpg", alt: "Projet présenté" },
@@ -1713,20 +1717,21 @@ export const templateContent: Record<string, TemplateContent> = {
     },
     video: {
       kicker: "EN VIDÉO",
-      title: "L’école *en mouvement*",
+      title: "L’atelier\n*en un éclair*",
       caption: "Une session d’atelier, en accéléré.",
       source: { kind: "file", src: "/cms/ecole/video.mp4", poster: "/cms/ecole/hero.jpg" },
     },
   },
 
+  /* ── Fine dining ──────────────────────────────────────────────────────── */
   gastronomique: {
     hero: {
-      kicker: "GASTRONOMIE · FINE DINING",
-      title: "L’art *de la table.*",
-      lead: "Un menu qui se construit autour d’un produit, un service qui ne s’encombre pas : la grande cuisine sans le protocole lourd.",
+      kicker: "MENU UNIQUE, UN SEUL SERVICE",
+      title: "Un menu,\n*une seule soirée.*",
+      lead: "Le chef compose selon le marché du jour, on le déroule en sept services, et le sommelier propose un accord sans vous forcer la main.",
       badges: [
         { icon: "star", label: "Menu dégustation" },
-        { icon: "clock", label: "Dîner de 19h30" },
+        { icon: "clock", label: "Dîner à 19h30" },
         { icon: "sparkles", label: "Accord mets et vins" },
       ],
       image: { src: "/cms/gastronomique/hero.jpg", alt: "Assiette de fine dining dressée" },
@@ -1739,28 +1744,28 @@ export const templateContent: Record<string, TemplateContent> = {
       image: { src: "/cms/gastronomique/about.jpg", alt: "Chef dressant une assiette" },
       artCaption: "LE MENU.\nLE SERVICE.",
       kicker: "LE MENU",
-      title: "Un menu,\n*une seule soirée.*",
+      title: "Sept services,\n*une seule ligne.*",
       paragraphs: [
-        "Le chef compose un menu unique, adapté au marché du jour. On le déroule en sept services, sans option à choisir.",
-        "Le sommelier propose un accord en fonction de vos plats, ou une seule coupe à l’aveugle pour découvrir.",
+        "Le chef compose un menu unique, adapté au marché du jour. Pas de choix à faire, pas d’attente : on déroule, et chaque service s’enchaîne.",
+        "Le sommelier propose un accord en fonction de vos ports, ou une seule coupe à l’aveugle pour découvrir.",
       ],
       cta: { label: "Réserver une table", href: "/reservations" },
     },
     marquee: {
-      items: ["MENU UNIQUE", "SEPT SERVICES", "ACCORD VINS", "MENU UNIQUE"],
+      items: ["SEPT SERVICES", "ACCORD VINS PROPOSÉ", "UN SEUL SERVICE PAR SOIR", "MENU ÉCRIT LE LUNDI"],
     },
     featuredProducts: {
-      kicker: "LE MENU",
+      kicker: "LE MENU DU SOIR",
       title: "Les services\n*de la soirée.*",
-      aside: "Entrées, plats, desserts :\nce que vous goûtez ce soir.",
+      aside: "Entrées, plats, desserts : ce que vous goûtez ce soir, dans l’ordre.",
       note: "Menu et prix de démonstration.",
       limit: 6,
       allLink: { label: "Voir le menu complet", href: "/carte" },
     },
     reviews: {
-      kicker: "LA PRESSE",
-      title: "On a parlé\n*de nous.*",
-      text: "Les critiques et les avis de nos clients sur le menu, le service et l’ambiance de la salle.",
+      kicker: "LA PRESSE ET LES CLIENTS",
+      title: "On a parlé\n*longtemps après.*",
+      text: "Les critiques et les avis de nos clients sur le menu, le rythme du service et l’ambiance de la salle.",
       rateLabel: "Nous noter sur Google",
       viewLabel: "Voir les avis Google",
       sheetLabel: "Voir la fiche Google",
@@ -1770,7 +1775,7 @@ export const templateContent: Record<string, TemplateContent> = {
       kicker: "LA SALLE",
       title: "Vingt-deux couverts,\n*une seule prise.*",
       hoursTitle: "Du mercredi au samedi",
-      hoursNote: "Un seul service à 19h30 · à confirmer",
+      hoursNote: "Un seul service à 19h30, tous les soirs · à confirmer",
       cta: { label: "Choisir mon créneau", href: "/reservations" },
       burger: false,
       burgerOpen: "",
@@ -1785,7 +1790,7 @@ export const templateContent: Record<string, TemplateContent> = {
     gallery: {
       kicker: "EN IMAGES",
       title: "La maison en images",
-      intro: "La salle, le menu, le service de la salle.",
+      intro: "La salle, le menu, le service en salle.",
       images: [
         { src: "/cms/gastronomique/gallery1.jpg", alt: "Salle du restaurant" },
         { src: "/cms/gastronomique/gallery2.jpg", alt: "Service à table" },
@@ -1793,23 +1798,23 @@ export const templateContent: Record<string, TemplateContent> = {
     },
     video: {
       kicker: "EN VIDÉO",
-      title: "Le service *en mouvement*",
-      caption: "Une soirée, du premier verre au dernier dessert.",
+      title: "Une soirée\n*de bout en bout*",
+      caption: "Du premier verre au dernier dessert.",
       source: { kind: "file", src: "/cms/gastronomique/video.mp4", poster: "/cms/gastronomique/hero.jpg" },
     },
   },
 
   baravin: {
     hero: {
-      kicker: "BAR À VINS · TAPAS",
-      title: "Le temps *se partage.*",
-      lead: "Une carte courte de vins natures, des tapas à partager et une salle où l’on reste plus longtemps que prévu.",
+      kicker: "LISTE COURTE, VINS AU VERRE",
+      title: "Un verre,\n*puis on reste.*",
+      lead: "Trente références choisies pour leur buvabilité, des tapas à partager et une salle où l’on ne regarde pas l’heure en partant.",
       badges: [
         { icon: "star", label: "Vins au verre" },
         { icon: "bag", label: "Tapas à partager" },
         { icon: "clock", label: "Sans réservation" },
       ],
-      image: { src: "/cms/baravin/hero.jpg", alt: "Bar à vins avec-Assiettes de tapas" },
+      image: { src: "/cms/baravin/hero.jpg", alt: "Bar à vins avec assiettes de tapas" },
       sticker: false,
       floatingText: "Un verre,\npuis on reste.",
       primary: { label: "Voir la carte des vins", href: "/carte" },
@@ -1819,20 +1824,20 @@ export const templateContent: Record<string, TemplateContent> = {
       image: { src: "/cms/baravin/about.jpg", alt: "Bouteilles de vin dans une cave" },
       artCaption: "LA CAVE.\nLE VERRE.",
       kicker: "NOS VINS",
-      title: "Petite liste,\n*grande exigence.*",
+      title: "Trente références,\n*et c’est tout.*",
       paragraphs: [
-        "Trente références, renouvelées régulièrement, choisies pour leur buvabilité autant que pour leur singularité.",
+        "Une liste courte, renouvelée régulièrement, choisie pour leur buvabilité autant que pour leur singularité. Si une bouteille ne fait plus son effet, elle sort.",
         "Le sommelier est là pour parler vin, mais aussi pour dire simplement ce qui ira avec votre table.",
       ],
       cta: { label: "Voir la carte", href: "/carte" },
     },
     marquee: {
-      items: ["VINS AU VERRE", "TAPAS À PARTAGER", "LISTE COURTE", "VINS AU VERRE"],
+      items: ["VINS AU VERRE", "TAPAS À PARTAGER", "LISTE COURTE", "SANS RÉSERVATION"],
     },
     featuredProducts: {
-      kicker: "LA CARTE",
+      kicker: "LA CARTE DU BAR",
       title: "Ce qu’on\n*ouvre ce soir.*",
-      aside: "Les vins natures, les bulles,\net ce qui accompagne.",
+      aside: "Les vins natures, les bulles et ce qui accompagne le verre.",
       note: "Carte et prix de démonstration.",
       limit: 6,
       allLink: { label: "Toute la carte", href: "/carte" },
@@ -1848,7 +1853,7 @@ export const templateContent: Record<string, TemplateContent> = {
     },
     visit: {
       kicker: "LA SALLE",
-      title: "On est là,\n*du mardi au samedi.*",
+      title: "Du mardi au samedi,\n*après le boulot.*",
       hoursTitle: "Du mardi au samedi",
       hoursNote: "18h–1h du matin · à confirmer",
       cta: { label: "Réserver une table", href: "/reservations" },
@@ -1865,7 +1870,7 @@ export const templateContent: Record<string, TemplateContent> = {
     gallery: {
       kicker: "EN IMAGES",
       title: "La cave en images",
-      intro: "Les bouteilles, le zinc, les assiettes à partager.",
+      intro: "Les bouteilles, le zinc et les assiettes à partager.",
       images: [
         { src: "/cms/baravin/gallery1.jpg", alt: "Cave à vin" },
         { src: "/cms/baravin/gallery2.jpg", alt: "Tapas à partager" },
@@ -1873,7 +1878,7 @@ export const templateContent: Record<string, TemplateContent> = {
     },
     video: {
       kicker: "EN VIDÉO",
-      title: "Le verre *en mouvement*",
+      title: "Le service\n*du bar*",
       caption: "Le service du bar, filmé de près.",
       source: { kind: "file", src: "/cms/baravin/video.mp4", poster: "/cms/baravin/hero.jpg" },
     },
@@ -1881,9 +1886,9 @@ export const templateContent: Record<string, TemplateContent> = {
 
   brunch: {
     hero: {
-      kicker: "BRUNCH · CAFÉ MODERNE",
-      title: "Le matin *qui fait du bien.*",
-      lead: "Des œufs, du pain, du café de spécialité et des assises qui ne pressent personne : le week-end commence ici.",
+      kicker: "DE 9H À 17H, SANS LIMITATION DE TEMPS",
+      title: "Le matin\n*prend son temps.*",
+      lead: "Œufs coulants, pancakes, bowls et pain beurré : tout est préparé à la commande, et l’assiette arrive quand vous êtes prêts.",
       badges: [
         { icon: "clock", label: "Tous les jours, 9h–17h" },
         { icon: "sparkles", label: "Café de spécialité" },
@@ -1901,18 +1906,18 @@ export const templateContent: Record<string, TemplateContent> = {
       kicker: "LE BRUNCH",
       title: "Long, lent,\n*et copieux.*",
       paragraphs: [
-        "On sert le brunch de 9h à 17h, sans limite de temps : les plats arrivent quand vous êtes prêts.",
+        "On sert le brunch de 9h à 17h, sans limite de temps : les plats arrivent quand vous êtes prêts, et la table reste la vôtre.",
         "Le café vient d’un torréfacteur de quartier, le pain est bake le matin même, et les assiettes sont généreuses.",
       ],
       cta: { label: "Réserver une table", href: "/reservations" },
     },
     marquee: {
-      items: ["SANS LIMITATION DE TEMPS", "CAFÉ DE SPÉCIALITÉ", "PAIN DU MATIN", "SANS LIMITATION DE TEMPS"],
+      items: ["SANS LIMITATION DE TEMPS", "CAFÉ DE SPÉCIALITÉ", "PAIN DU MATIN", "TOUS LES JOURS"],
     },
     featuredProducts: {
       kicker: "LA CARTE",
       title: "Ce qu’on\n*propose le matin.*",
-      aside: "Œufs, pancakes, bowls et pain\nbeurré, toute la journée.",
+      aside: "Œufs, pancakes, bowls et pain beurré, toute la journée.",
       note: "Produits et prix de démonstration.",
       limit: 6,
       allLink: { label: "Toute la carte", href: "/carte" },
@@ -1945,7 +1950,7 @@ export const templateContent: Record<string, TemplateContent> = {
     gallery: {
       kicker: "EN IMAGES",
       title: "Le matin en images",
-      intro: "La salle, la lumière, les assiettes du dimanche.",
+      intro: "La salle, la lumière et les assiettes du dimanche.",
       images: [
         { src: "/cms/brunch/gallery1.jpg", alt: "Salle lumineuse" },
         { src: "/cms/brunch/gallery2.jpg", alt: "Assiette de brunch" },
@@ -1953,7 +1958,7 @@ export const templateContent: Record<string, TemplateContent> = {
     },
     video: {
       kicker: "EN VIDÉO",
-      title: "Le matin *en mouvement*",
+      title: "Le matin\n*ça se passe*",
       caption: "La cuisine du brunch, en temps réel.",
       source: { kind: "file", src: "/cms/brunch/video.mp4", poster: "/cms/brunch/hero.jpg" },
     },
@@ -1961,9 +1966,9 @@ export const templateContent: Record<string, TemplateContent> = {
 
   burger: {
     hero: {
-      kicker: "BURGER · FAST CASUAL",
-      title: "Une faim. *Une vraie.*",
-      lead: "Bœuf haché sur place, bun brioché, sauce maison : un burger qui se commande vite et se mange encore mieux.",
+      kicker: "BŒUF HACHÉ SUR PLACE, PAIN BRIOCHÉ",
+      title: "Six burgers.\n*Pas un de plus.*",
+      lead: "Bœuf haché chaque matin, pain brioché du fournil voisin, sauce maison : la commande se prend en trente secondes et se mange tout de suite.",
       badges: [
         { icon: "clock", label: "Prêt en 6 minutes" },
         { icon: "bag", label: "À emporter" },
@@ -1978,28 +1983,28 @@ export const templateContent: Record<string, TemplateContent> = {
     about: {
       image: { src: "/cms/burger/about.jpg", alt: "Bœuf haché grillé au restaurant" },
       artCaption: "LE BŒUF.\nLE PAIN.",
-      kicker: "LE BISTRO",
+      kicker: "LE FAIT-MAISON",
       title: "On hache,\n*on grille, on sert.*",
       paragraphs: [
-        "Le bœuf est haché chaque matin et grillé à la commande, jamais قبل. Le pain brioché arrive du fournil voisin chaque matin.",
-        "Les sauces sont faites maison, la pomme de terre est frite sur place, et le menu reste lisible.",
+        "Le bœuf est haché chaque matin et grillé à la commande, jamais avant. Le pain brioché arrive du fournil voisin, encore tiède.",
+        "Les sauces sont faites maison, la pomme de terre est frite sur place, et le menu reste lisible : six burgers, une poignée de variantes, rien d’autre.",
       ],
       cta: { label: "Commander", href: "/commander#start" },
     },
     marquee: {
-      items: ["BŒUF HACHÉ SUR PLACE", "PAIN BRIOCHÉ DU FOURNIL", "SAUCES MAISON", "BŒUF HACHÉ SUR PLACE"],
+      items: ["BŒUF HACHÉ SUR PLACE", "PAIN BRIOCHÉ DU FOURNIL", "SAUCES MAISON", "PRÊT EN 6 MINUTES"],
     },
     featuredProducts: {
       kicker: "NOS BURGERS",
-      title: "Six burgers,\n*pas un de plus.*",
-      aside: "Les classiques et le burger\ndu mois, sans menus interminables.",
+      title: "Six burgers,\n*et c’est tout.*",
+      aside: "Les classiques et le burger du mois, sans menus interminables.",
       note: "Produits et prix de démonstration.",
       limit: 6,
       allLink: { label: "Voir toute la carte", href: "/carte" },
     },
     reviews: {
       kicker: "LE VOTE",
-      title: "Ils ont fandom\n*leur préféré.*",
+      title: "Ils ont leur\n*préféré.*",
       text: "Les avis de nos clients sur la cuisson, les sauces et la texture du pain.",
       rateLabel: "Nous noter sur Google",
       viewLabel: "Voir les avis Google",
@@ -2033,7 +2038,7 @@ export const templateContent: Record<string, TemplateContent> = {
     },
     video: {
       kicker: "EN VIDÉO",
-      title: "La plancha *en mouvement*",
+      title: "La plancha\n*qui crache*",
       caption: "Le bruit, la fumée, le flip : six minutes de cuisine.",
       source: { kind: "file", src: "/cms/burger/video.mp4", poster: "/cms/burger/hero.jpg" },
     },

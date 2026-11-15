@@ -1,13 +1,8 @@
 "use client";
 import { useEffect, useSyncExternalStore } from "react";
 import { UtensilsLoader } from "@/components/brand/utensils";
-import {
-  isLoadingCacheKey,
-  loadingCacheKey,
-  parseLoadingCache,
-  restaurantFromLocation,
-  type LoadingScreenConfig,
-} from "@/features/addons/loading-screens";
+import { isLoadingCacheKey, loadingCacheKey, parseLoadingCache, restaurantFromLocation } from "@/features/addons/loading-screens";
+import { type LoadingScreenConfig } from "@/features/addons/public";
 import { LoadingScreenView, preloadLoadingScreen } from "./engine";
 import "./engine.css";
 

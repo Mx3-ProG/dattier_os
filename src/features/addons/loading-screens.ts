@@ -1,5 +1,6 @@
 import { z } from "zod";
-import { themedVisuals, type ThemedVisualId } from "@/features/cms/themed-visuals";
+import { themedVisuals } from "@/features/cms/themed-visuals";
+import { type ThemedVisualId } from "@/features/cms/public";
 
 /**
  * Moteur commun des écrans de chargement : ce module ne dépend ni du serveur

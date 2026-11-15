@@ -1,4 +1,4 @@
-import type { GlobeCluster, GlobePoint } from "@/features/analytics/cluster";
+import type { GlobeCluster, GlobePoint } from "@/features/analytics/public";
 
 /**
  * Contrat entre le tableau de bord et le rendu 3D. Pour brancher un autre globe (votre dossier de

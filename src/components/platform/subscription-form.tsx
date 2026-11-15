@@ -2,7 +2,9 @@
 import { useEffect, useState, type FormEvent } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { industries, industryLabels, trades, discoverySources, discoveryLabels, workflowChoices, workflowLabels, relevantCapabilities, type Industry } from "@/features/onboarding/catalog";
+import { industries } from "@/core/tenant/business";
+import { industryLabels, trades, discoverySources, discoveryLabels, workflowChoices, workflowLabels, relevantCapabilities } from "@/features/onboarding/catalog";
+import { type Industry } from "@/features/onboarding/public";
 import "./onboarding.css";
 
 type Draft = {

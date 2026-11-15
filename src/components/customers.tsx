@@ -11,7 +11,7 @@ import {
   contactsOf,
   type SendResult,
 } from "./customer-message";
-import type { Channel } from "@/features/messaging/contact";
+import type { Channel } from "@/features/messaging/public";
 const when = (iso: string) =>
   new Date(iso).toLocaleString("fr-FR", {
     day: "2-digit",

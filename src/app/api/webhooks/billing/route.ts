@@ -1,10 +1,6 @@
 import { NextRequest } from "next/server";
 import { json } from "@/features/platform/http";
-import {
-  planWebhookEvent,
-  reconcilePlanSubscription,
-  subscriptionOf,
-} from "@/features/platform/plan-billing";
+import { planWebhookEvent, reconcilePlanSubscription, subscriptionOf } from "@/features/platform/plan-billing";
 import { addonEventTypes, handleAddonEvent } from "@/features/addons/webhook";
 
 export const runtime = "nodejs";

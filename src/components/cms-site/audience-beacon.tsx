@@ -1,13 +1,7 @@
 "use client";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef } from "react";
-import {
-  audienceChoice,
-  audienceExclusionKey,
-  consentChangedEvent,
-  consentStorageKey,
-  mayCollect,
-} from "@/features/analytics/consent";
+import { audienceChoice, audienceExclusionKey, consentChangedEvent, consentStorageKey, mayCollect } from "@/features/analytics/consent";
 import { useTenantSite } from "./context";
 
 const endpoint = "/api/analytics/collect";

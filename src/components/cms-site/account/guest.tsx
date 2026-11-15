@@ -7,10 +7,8 @@
  * Composant séparé pour rester lisible et testable sans le reste du compte.
  */
 import { Gift, Sparkles } from "lucide-react";
-import {
-  accountSpaceGuestCopy,
-  type AccountSpaceId,
-} from "@/features/cms/account-space";
+import { accountSpaceGuestCopy } from "@/features/cms/account-space";
+import { type AccountSpaceId } from "@/features/cms/public";
 
 export function AccountGuestHero({ space }: { space: AccountSpaceId }) {
   const copy = accountSpaceGuestCopy[space];

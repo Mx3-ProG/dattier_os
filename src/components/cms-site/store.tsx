@@ -45,7 +45,7 @@ import type {
   Settings,
   ShopOrder,
   PublicReview,
-} from "@/features/commerce/schema";
+} from "@/features/commerce/public";
 import { preparation } from "@/features/commerce/schema";
 import { Modal } from "../forms";
 import { prepLabels } from "@/features/commerce/client";
@@ -65,14 +65,13 @@ import {
   ReservationSection,
   ServicesSection,
 } from "../site/addon-sections";
-import { effectiveSiteBackground, effectiveSiteDecoration, emptySiteAddons, isAddonSection, sectionAvailable, type SiteAddonData } from "@/features/cms/site-addons";
+import { effectiveSiteBackground, effectiveSiteDecoration, emptySiteAddons, isAddonSection, sectionAvailable } from "@/features/cms/site-addons";
+import { type SiteAddonData } from "@/features/cms/public";
 import { siteBackgrounds, siteBackgroundStyle } from "@/features/cms/site-backgrounds";
-import {
-  siteConfigSchema,
-  type Section,
-  type SiteConfig,
-} from "@/features/cms/schema";
-import { rich, type PlaceholderContext } from "@/features/cms/text";
+import { siteConfigSchema } from "@/features/cms/schema";
+import { type Section, type SiteConfig } from "@/features/cms/public";
+import { rich } from "@/features/cms/text";
+import { type PlaceholderContext } from "@/features/cms/public";
 import { themeCss } from "@/features/cms/theme";
 import { bookingFirst } from "@/features/cms/defaults";
 import {

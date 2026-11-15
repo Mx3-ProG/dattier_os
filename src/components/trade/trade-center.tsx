@@ -1,8 +1,10 @@
 "use client";
 import { useCallback, useEffect, useRef, useState, type FormEvent } from "react";
 import { Button } from "@/components/ui/button";
-import { tradeTool, type TradeEntity, type TradeField, type TradeTool } from "@/features/trade/definitions";
-import { quoteTotals, shippingQuote, vatRates, type QuoteLine } from "@/features/trade/model";
+import { tradeTool } from "@/features/trade/definitions";
+import { type TradeEntity, type TradeField, type TradeTool } from "@/features/trade/public";
+import { quoteTotals, shippingQuote, vatRates } from "@/features/trade/model";
+import { type QuoteLine } from "@/features/trade/public";
 import "./trade.css";
 
 type Tone = "good" | "warn" | "bad" | "neutral";

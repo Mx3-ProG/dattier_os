@@ -9,7 +9,7 @@ import {
 } from "react";
 import { Moon, Sun } from "lucide-react";
 import { themeVariables } from "@/features/appearance/theme";
-import type { Theme } from "@/features/cms/schema";
+import type { Theme } from "@/features/cms/public";
 import "./public-appearance.css";
 export type PublicMode = "system" | "light" | "dark";
 const InitialMode = createContext<PublicMode>("system");

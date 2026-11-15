@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
 import Image from "next/image";
-import type { SiteDocument } from "@/features/site/model";
+import type { SiteDocument } from "@/features/site/public";
 import { useRouter } from "next/navigation";
 import { useState, useEffect, useCallback } from "react";
 import type {
@@ -10,7 +10,7 @@ import type {
   ShopOrder,
   CustomerAccount,
   PublicReview,
-} from "@/features/commerce/schema";
+} from "@/features/commerce/public";
 import { Booking } from "@/components/public/booking";
 import "./platform.css";
 type Line = { menu: string; quantity: number; choices: string[]; note: string };

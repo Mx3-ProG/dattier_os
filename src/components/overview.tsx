@@ -1,10 +1,6 @@
 "use client";
-import {
-  availablePilotageWidgets,
-  defaultHiddenPilotageWidgets,
-  type PilotageSource,
-  type PilotageWidgetId,
-} from "@/features/pilotage/catalog";
+import { availablePilotageWidgets, defaultHiddenPilotageWidgets } from "@/features/pilotage/catalog";
+import { type PilotageSource, type PilotageWidgetId } from "@/features/pilotage/public";
 import { usePilotagePreferences } from "@/features/pilotage/use-preferences";
 import { useMemo } from "react";
 import { activityPresentation } from "@/features/appearance/categories";

@@ -13,7 +13,7 @@ import type {
   CardEffectId,
   TemplateEffects,
   TitleEffectId,
-} from "@/features/cms/effects";
+} from "@/features/cms/public";
 import ShinyText from "../reactbits/ShinyText/ShinyText";
 import GradientText from "../reactbits/GradientText/GradientText";
 import GlareHover from "../reactbits/GlareHover/GlareHover";

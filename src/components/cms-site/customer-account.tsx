@@ -17,7 +17,7 @@ import {
   Zap,
   type LucideIcon,
 } from "lucide-react";
-import type { ShopOrder } from "@/features/commerce/schema";
+import type { ShopOrder } from "@/features/commerce/public";
 import { money } from "@/domain/shared/units";
 import { CustomerAuth } from "./customer-auth";
 import { Modal } from "../forms";
@@ -34,13 +34,8 @@ import { CustomerQrSheet, QrPill } from "./account/qr-sheet";
 import { SpacePanel, SpaceProgress } from "./account/space";
 import { AccountGuestHero, AccountInvitation } from "./account/guest";
 import type { FollowKind } from "./account/follow-button";
-import {
-  accountSpaceLabels,
-  accountTabs,
-  followKindsBySpace,
-  type AccountSpaceId,
-  type AccountTabId,
-} from "@/features/cms/account-space";
+import { accountSpaceLabels, accountTabs, followKindsBySpace } from "@/features/cms/account-space";
+import { type AccountSpaceId, type AccountTabId } from "@/features/cms/public";
 
 const reviewSuggestions = [
   "J’ai vraiment aimé cette commande, tout était délicieux !",

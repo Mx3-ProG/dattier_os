@@ -1,19 +1,7 @@
-import type { Presentation } from "@/features/cms/schema";
+import type { Presentation } from "@/features/cms/public";
 import { siteTemplates } from "@/features/cms/templates";
-import {
-  badgeEffectIds,
-  buttonEffectIds,
-  cardEffectIds,
-  effectDescriptions,
-  effectIsPremium,
-  effectLabels,
-  titleEffectIds,
-  type BadgeEffectId,
-  type ButtonEffectId,
-  type CardEffectId,
-  type EffectId,
-  type TitleEffectId,
-} from "@/features/cms/effects";
+import { badgeEffectIds, buttonEffectIds, cardEffectIds, effectDescriptions, effectIsPremium, effectLabels, titleEffectIds } from "@/features/cms/effects";
+import { type BadgeEffectId, type ButtonEffectId, type CardEffectId, type EffectId, type TitleEffectId } from "@/features/cms/public";
 import { useTenantSite } from "../cms-site/context";
 
 /** Une liste d'effets proposés pour un emplacement du modèle. */

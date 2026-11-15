@@ -5,7 +5,7 @@ import type {
   Check,
   CheckArea,
   CheckStatus,
-} from "@/features/seo/audit";
+} from "@/features/seo/public";
 
 type Audit = {
   id: string;

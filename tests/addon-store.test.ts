@@ -390,7 +390,7 @@ test("administration : réservée à la plateforme, prix sans code, retrait sans
     await db.query("SELECT app.addon_install_free('bernay','magic-loader')");
 
     await db.exec("RESET ROLE");
-    await db.query("INSERT INTO platform_admins VALUES('slimane')");
+    await db.query("INSERT INTO platform_admins VALUES('slimane') ON CONFLICT DO NOTHING");
     await db.query("SELECT set_config('app.user_id','slimane',false),set_config('app.restaurant_id','',false)");
     await db.exec("SET ROLE atacuisine_app");
     const product = {

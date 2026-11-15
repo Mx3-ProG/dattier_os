@@ -6,7 +6,7 @@ import type {
   FinanceDashboard,
   Metric,
   PeriodQuery,
-} from "@/features/finance/dashboard";
+} from "@/features/finance/public";
 
 export type FinanceIntent =
   | "cash"

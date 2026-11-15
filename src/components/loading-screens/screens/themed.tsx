@@ -1,4 +1,5 @@
-import { themedVisuals, type ThemedVisualId } from "@/features/cms/themed-visuals";
+import { themedVisuals } from "@/features/cms/themed-visuals";
+import { type ThemedVisualId } from "@/features/cms/public";
 import "./themed.css";
 
 /** Un seul lot léger partagé par les 24 animations espace et nature. */

@@ -15,12 +15,12 @@ export type Actor = {
 const hash = (s: string) => createHash("sha256").update(s).digest("hex");
 
 async function requirePlan(db: DB, restaurant: string, minimum: number) {
-  const mod = await import("@/features/platform/entitlements");
+  const mod = await import("@/features/platform/public");
   return mod.requirePlan(db, restaurant, minimum as 39);
 }
 
 async function bindActor(userId: string, tokenHash: string) {
-  const mod = await import("@/features/ops-security/context");
+  const mod = await import("@/features/ops-security/public");
   return mod.bindActor(userId, tokenHash);
 }
 

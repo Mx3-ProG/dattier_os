@@ -1,5 +1,6 @@
 import { BlackFridayBanner } from "@/components/auth/black-friday-banner";
-import { plans, additionalRestaurantPrice } from "@/features/platform/pricing";
+import { plans } from "@/features/platform/pricing";
+import { additionalRestaurantPrice } from "@/features/platform/referrals";
 import { addonCatalog } from "@/features/addons/catalog";
 import Link from "next/link";
 import { LegalLinks } from "@/components/legal/legal-page";

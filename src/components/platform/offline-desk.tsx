@@ -1,14 +1,8 @@
 "use client";
 import Link from "next/link";
 import { useState, useEffect, useCallback } from "react";
-import {
-  localState,
-  updateLocal,
-  queueOrder,
-  available,
-  type LocalState,
-  type Quota,
-} from "@/features/offline/client";
+import { localState, updateLocal, queueOrder, available } from "@/features/offline/client";
+import { type LocalState, type Quota } from "@/features/offline/public";
 import "./platform.css";
 export function OfflineDesk() {
   const [restaurant, setRestaurant] = useState(""),

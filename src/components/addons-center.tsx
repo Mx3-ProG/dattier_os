@@ -1,22 +1,9 @@
 "use client";
 import { useState, useEffect } from "react";
 import dynamic from "next/dynamic";
-import {
-  addonCollections,
-  addonDetails,
-  addonDestination,
-  addonPriceCents,
-  monthlyAddonIds,
-} from "@/features/addons/catalog";
-import {
-  defaultStoreFilters,
-  featuresVisible,
-  installedAddonCount,
-  pilotageCategoryId,
-  pilotageMonthlyAddonIds,
-  featuresCategoryId,
-  type StoreState,
-} from "@/features/addons/store-catalog";
+import { addonCollections, addonDetails, addonDestination, addonPriceCents, monthlyAddonIds } from "@/features/addons/catalog";
+import { defaultStoreFilters, featuresVisible, installedAddonCount, pilotageCategoryId, pilotageMonthlyAddonIds, featuresCategoryId } from "@/features/addons/store-catalog";
+import { type StoreState } from "@/features/addons/public";
 
 import { Button } from "./ui/button";
 

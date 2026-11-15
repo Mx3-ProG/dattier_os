@@ -11,26 +11,15 @@ import {
   AlertTriangle,
   XCircle,
   RefreshCw,
-  Search,
   ExternalLink,
   Lock,
   Unlock,
-  Radio,
   FileText,
-  Server,
   Layers,
   HelpCircle,
   Wrench,
 } from "lucide-react";
-import type {
-  SuperAdminDashboardData,
-  ComponentHealth,
-  UserItem,
-  SiteItem,
-  SecurityIncidentItem,
-  AuditLogItem,
-  SecurityLogItem,
-} from "@/features/admin/service";
+import type { SuperAdminDashboardData } from "@/features/admin/public";
 import "./admin.css";
 
 export function SuperAdminDashboard() {
@@ -39,7 +28,7 @@ export function SuperAdminDashboard() {
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<
-    "overview" | "users" | "sites" | "security" | "logs"
+    "overview" | "users" | "sites" | "security" | "logs" | "modules"
   >("overview");
 
   // Filtering states
@@ -49,12 +38,24 @@ export function SuperAdminDashboard() {
   const [logSearch, setLogSearch] = useState("");
   const [actionNotice, setActionNotice] = useState<string | null>(null);
 
+  // Pagination states
+  const [usersPage, setUsersPage] = useState(1);
+  const [sitesPage, setSitesPage] = useState(1);
+  const [logsPage, setLogsPage] = useState(1);
+  const pageSize = 25;
+
   const fetchDashboard = useCallback(async (isRefresh = false) => {
     if (isRefresh) setRefreshing(true);
     else setLoading(true);
     setError(null);
     try {
-      const res = await fetch("/api/platform/admin");
+      const params = new URLSearchParams({
+        usersPage: String(usersPage),
+        sitesPage: String(sitesPage),
+        logsPage: String(logsPage),
+        pageSize: String(pageSize),
+      });
+      const res = await fetch(`/api/platform/admin?${params.toString()}`);
       if (!res.ok) {
         const errJson = await res.json().catch(() => ({}));
         throw new Error(errJson.error?.message || `Erreur HTTP ${res.status}`);
@@ -71,7 +72,7 @@ export function SuperAdminDashboard() {
       setLoading(false);
       setRefreshing(false);
     }
-  }, []);
+  }, [usersPage, sitesPage, logsPage, pageSize]);
 
   useEffect(() => {
     void fetchDashboard();
@@ -126,7 +127,7 @@ export function SuperAdminDashboard() {
 
   if (!data) return null;
 
-  const { metrics, subsystems, users, sites, incidents, auditLogs, securityLogs } = data;
+  const { metrics, subsystems, moduleChecks, users, sites, incidents, auditLogs, securityLogs, pagination } = data;
 
   // Filtered users
   const filteredUsers = users.filter((u) => {
@@ -344,7 +345,7 @@ export function SuperAdminDashboard() {
         <div className="admin-section-head">
           <h2>
             <Layers size={20} />
-            État des Services Monolithe (Ce qui fonctionne & Points d'attention)
+            État des Services Monolithe (Ce qui fonctionne &amp; Points d&apos;attention)
           </h2>
           <small className="superadmin-subtitle">
             Dernière vérification : {new Date(data.timestamp).toLocaleTimeString("fr-FR")}
@@ -393,7 +394,7 @@ export function SuperAdminDashboard() {
           onClick={() => setActiveTab("overview")}
         >
           <Activity size={16} />
-          <span>Vue d'ensemble</span>
+          <span>Vue d&apos;ensemble</span>
         </button>
         <button
           className={`admin-tab-btn ${activeTab === "users" ? "active" : ""}`}
@@ -425,6 +426,16 @@ export function SuperAdminDashboard() {
               {incidents.length}
             </span>
           )}
+        </button>
+        <button
+          className={`admin-tab-btn ${activeTab === "modules" ? "active" : ""}`}
+          onClick={() => setActiveTab("modules")}
+        >
+          <Layers size={16} />
+          <span>Modules & Cohérence</span>
+          <span className="tab-badge">
+            {moduleChecks.filter((m) => m.status !== "ok").length}
+          </span>
         </button>
         <button
           className={`admin-tab-btn ${activeTab === "logs" ? "active" : ""}`}
@@ -598,6 +609,17 @@ export function SuperAdminDashboard() {
               </tbody>
             </table>
           </div>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: "12px" }}>
+            <button className="btn-admin btn-admin-sm" disabled={usersPage <= 1} onClick={() => setUsersPage((p) => Math.max(1, p - 1))}>
+              ← Précédent
+            </button>
+            <span style={{ fontSize: "13px", color: "#64748b" }}>
+              Page {pagination.users.page} / {pagination.users.totalPages} ({pagination.users.total} utilisateur(s))
+            </span>
+            <button className="btn-admin btn-admin-sm" disabled={usersPage >= pagination.users.totalPages} onClick={() => setUsersPage((p) => p + 1)}>
+              Suivant →
+            </button>
+          </div>
         </div>
       )}
 
@@ -664,6 +686,17 @@ export function SuperAdminDashboard() {
               </tbody>
             </table>
           </div>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: "12px" }}>
+            <button className="btn-admin btn-admin-sm" disabled={sitesPage <= 1} onClick={() => setSitesPage((p) => Math.max(1, p - 1))}>
+              ← Précédent
+            </button>
+            <span style={{ fontSize: "13px", color: "#64748b" }}>
+              Page {pagination.sites.page} / {pagination.sites.totalPages} ({pagination.sites.total} site(s))
+            </span>
+            <button className="btn-admin btn-admin-sm" disabled={sitesPage >= pagination.sites.totalPages} onClick={() => setSitesPage((p) => p + 1)}>
+              Suivant →
+            </button>
+          </div>
         </div>
       )}
 
@@ -715,6 +748,55 @@ export function SuperAdminDashboard() {
                 ))}
               </div>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* ─── TAB 4b: Modules & Cohérence ─── */}
+      {activeTab === "modules" && (
+        <div style={{ display: "grid", gap: "20px" }}>
+          <div className="admin-section">
+            <div className="admin-section-head">
+              <h2>
+                <Layers size={20} />
+                Communication inter-modules & intégrité des données
+              </h2>
+              <span className="superadmin-subtitle">
+                {moduleChecks.filter((m) => m.status === "ok").length}/{moduleChecks.length} contrôles conformes
+              </span>
+            </div>
+
+            <div className="subsystems-grid">
+              {moduleChecks.map((mc) => {
+                const pillClass =
+                  mc.status === "ok"
+                    ? "status-ok"
+                    : mc.status === "degraded"
+                      ? "status-degraded"
+                      : "status-incident";
+                return (
+                  <div key={mc.id} className="subsystem-card">
+                    <div className="subsystem-top">
+                      <span className="subsystem-name">{mc.name}</span>
+                      <span className={`admin-status-pill ${pillClass}`}>
+                        {mc.status === "ok" ? (
+                          <CheckCircle2 size={13} />
+                        ) : mc.status === "degraded" ? (
+                          <AlertTriangle size={13} />
+                        ) : (
+                          <XCircle size={13} />
+                        )}
+                        {mc.status.toUpperCase()}
+                      </span>
+                    </div>
+                    <p className="subsystem-msg">{mc.message}</p>
+                    {mc.count !== undefined && mc.count > 0 && (
+                      <small className="superadmin-subtitle">Écarts : {mc.count}</small>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
           </div>
         </div>
       )}
@@ -788,6 +870,17 @@ export function SuperAdminDashboard() {
                 );
               })
             )}
+          </div>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: "12px" }}>
+            <button className="btn-admin btn-admin-sm" disabled={logsPage <= 1} onClick={() => setLogsPage((p) => Math.max(1, p - 1))}>
+              ← Précédent
+            </button>
+            <span style={{ fontSize: "13px", color: "#64748b" }}>
+              Page {pagination.logs.page} / {pagination.logs.totalPages} ({pagination.logs.total} log(s))
+            </span>
+            <button className="btn-admin btn-admin-sm" disabled={logsPage >= pagination.logs.totalPages} onClick={() => setLogsPage((p) => p + 1)}>
+              Suivant →
+            </button>
           </div>
         </div>
       )}

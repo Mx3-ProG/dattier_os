@@ -26,11 +26,8 @@ import {
   X,
 } from "lucide-react";
 import { roleLabels } from "@/core/permissions";
-import {
-  availableRestaurantModules,
-  restaurantModuleHref,
-  type RestaurantModuleId,
-} from "@/features/platform/admin-navigation";
+import { availableRestaurantModules, restaurantModuleHref } from "@/features/platform/admin-navigation";
+import { type RestaurantModuleId } from "@/features/platform/public";
 const openCuisineIa = (prompt?: string) => {
   import("../assistant/cuisine-ia")
     .then((m) => m.openCuisineIa(prompt))
@@ -39,13 +36,8 @@ const openCuisineIa = (prompt?: string) => {
     });
 };
 import type { Snapshot } from "@/shared/types";
-import {
-  chapterAllowed,
-  chapterRoles,
-  chapters as allChapters,
-  type Chapter,
-  type TourStep,
-} from "@/features/guide/content";
+import { chapterAllowed, chapterRoles, chapters as allChapters } from "@/features/guide/content";
+import { type Chapter, type TourStep } from "@/features/guide/public";
 import { adaptTexts } from "@/core/tenant/vocabulary";
 import type { Industry } from "@/core/tenant/business";
 import { chapterIcons } from "./icons";

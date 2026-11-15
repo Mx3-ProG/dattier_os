@@ -1,4 +1,4 @@
-import type { SiteConfig } from "@/features/cms/schema";
+import type { SiteConfig } from "@/features/cms/public";
 
 /** Internal request header naming the restaurant site being rendered (set by src/proxy.ts only). */
 export const SITE_HEADER = "x-atacuisine-site";

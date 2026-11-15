@@ -18,7 +18,8 @@ import {
   welcomeCredits,
 } from "@/domain/assistant/pricing";
 import { reflex } from "./reflex";
-import { financeDashboard, type PeriodQuery } from "@/features/finance/dashboard";
+import { financeDashboard } from "@/features/finance/dashboard";
+import { type PeriodQuery } from "@/features/finance/public";
 import { financeIntent, financeReply, periodIn, previousMonth } from "./finance";
 import { assistantContext, type AssistantContext, type AssistantReply } from "./types";
 

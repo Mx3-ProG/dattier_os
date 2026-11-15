@@ -1,13 +1,6 @@
 import { withRequestContext } from "@/features/ops-security/context";
 import { NextRequest } from "next/server";
-import {
-  authenticated,
-  assertOrigin,
-  readBody,
-  json,
-  failure,
-  rateLimit,
-} from "@/features/platform/http";
+import { authenticated, assertOrigin, readBody, json, failure, rateLimit } from "@/features/platform/http";
 import { adminState, adminPerform } from "@/features/platform/admin";
 type Context = { params: Promise<{ restaurant: string; module: string }> };
 async function routeGET(req: NextRequest, c: Context) {

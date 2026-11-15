@@ -1,25 +1,23 @@
 import { withRequestContext } from "@/features/ops-security/context";
 import { NextRequest } from "next/server";
-import {
-  authenticated,
-  assertOrigin,
-  readBody,
-  json,
-  failure,
-} from "@/features/platform/http";
-import {
-  getSuperAdminDashboard,
-  performSuperAdminAction,
-} from "@/features/admin/service";
+import { authenticated, assertOrigin, readBody, json, failure } from "@/features/platform/http";
+import { getSuperAdminDashboard, performSuperAdminAction } from "@/features/admin/service";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-async function routeGET() {
+async function routeGET(req: NextRequest) {
   try {
+    const url = new URL(req.url);
+    const opts = {
+      usersPage: Number(url.searchParams.get("usersPage") || "1"),
+      sitesPage: Number(url.searchParams.get("sitesPage") || "1"),
+      logsPage: Number(url.searchParams.get("logsPage") || "1"),
+      pageSize: Number(url.searchParams.get("pageSize") || "25"),
+    };
     return json(
       await authenticated(undefined, async (db, user) => {
-        return getSuperAdminDashboard(db, user);
+        return getSuperAdminDashboard(db, user, opts);
       }),
     );
   } catch (e) {

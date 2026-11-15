@@ -2,11 +2,8 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { ArrowUpRight, Check, Copy, Crown, Gift, Medal, Trophy } from "lucide-react";
-import {
-  referralLevel,
-  referralPricing,
-  type PaidPlan,
-} from "@/features/platform/referrals";
+import { referralLevel, referralPricing } from "@/features/platform/referrals";
+import { type PaidPlan } from "@/features/platform/public";
 
 /** Absolute referral link, computed after mount so server and client markup match. */
 export function useReferralLink(code: string) {

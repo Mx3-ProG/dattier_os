@@ -10,7 +10,8 @@ import {
   Search,
   Sparkles,
 } from "lucide-react";
-import { siteTemplates, type SiteTemplate } from "@/features/cms/templates";
+import { siteTemplates } from "@/features/cms/templates";
+import { type SiteTemplate } from "@/features/cms/public";
 import { templateContent } from "@/features/cms/template-content";
 import { effectLabels } from "@/features/cms/effects";
 import { fonts } from "@/features/cms/theme";

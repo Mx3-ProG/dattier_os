@@ -1,11 +1,7 @@
 import { z } from "zod";
 import { productSchema } from "@/features/catalog/service";
 import { promoSchema } from "@/features/loyalty/service";
-import {
-  engagementSettingsSchema,
-  flashSchema,
-  stopFlashSchema,
-} from "@/features/commerce/engagement";
+import { engagementSettingsSchema, flashSchema, stopFlashSchema } from "@/features/commerce/engagement";
 import { tableSchema, zoneSchemas } from "@/features/floor/service";
 import { messageSchema } from "@/features/messaging/service";
 import { orderSchema } from "@/features/orders/service";

@@ -7,7 +7,9 @@ import { roles } from "@/core/permissions";
 import { log } from "@/features/orders/service";
 import { planBillingReady } from "./plan-billing";
 import { setLayoutAccess } from "@/features/floor/service";
-import { industries, trades, freeTradeTools, discoverySources, workflowChoices, type Industry } from "@/features/onboarding/catalog";
+import { industries } from "@/core/tenant/business";
+import { trades, freeTradeTools, discoverySources, workflowChoices } from "@/features/onboarding/catalog";
+import { type Industry } from "@/features/onboarding/public";
 const text = z.string().trim().min(2).max(150),
   id = z.string().min(1).max(150);
 const industry = z.enum(industries);

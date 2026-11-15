@@ -115,6 +115,6 @@ export async function perform(
 export {
   reservationSchema,
   requestReservation,
-} from "@/features/reservations/service";
+} from "@/features/reservations/public";
 
 export { actionSchema } from "./actions/schema";

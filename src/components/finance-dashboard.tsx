@@ -12,7 +12,7 @@ import {
 import type {
   FinanceDashboard as Data,
   Metric,
-} from "@/features/finance/dashboard";
+} from "@/features/finance/public";
 import { money } from "@/domain/shared/units";
 import { Button } from "./ui/button";
 

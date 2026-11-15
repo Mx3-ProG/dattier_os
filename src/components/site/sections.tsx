@@ -3,10 +3,11 @@
 import { useTenantSite, TenantLink as Link } from "../cms-site/context";
 import { useState, type ReactNode } from "react";
 import { ArrowUpRight, Play } from "lucide-react";
-import type { SectionOf } from "@/features/cms/schema";
-import { rich, type PlaceholderContext } from "@/features/cms/text";
+import type { SectionOf } from "@/features/cms/public";
+import { rich } from "@/features/cms/text";
+import { type PlaceholderContext } from "@/features/cms/public";
 import { FollowButton } from "../cms-site/account/follow-button";
-import type { Settings } from "@/features/commerce/schema";
+import type { Settings } from "@/features/commerce/public";
 
 /**
  * Sections added by the CMS. They only use the storefront's existing classes

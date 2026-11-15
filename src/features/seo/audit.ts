@@ -1,7 +1,7 @@
 import { rows, type DB } from "@/infrastructure/database/db";
-import type { SiteConfig, FontId } from "@/features/cms/schema";
-import type { Product, Settings } from "@/features/commerce/schema";
-import type { PlaceholderContext } from "@/features/cms/text";
+import type { SiteConfig, FontId } from "@/features/cms/public";
+import type { Product, Settings } from "@/features/commerce/public";
+import type { PlaceholderContext } from "@/features/cms/public";
 import { website } from "@/features/cms/service";
 import { commerce } from "@/features/commerce/service";
 import { indexablePages, publicPages } from "./sitemap";

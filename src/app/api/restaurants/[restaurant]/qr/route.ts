@@ -1,12 +1,6 @@
 import { NextRequest } from "next/server";
 import { withRequestContext } from "@/features/ops-security/context";
-import {
-  assertOrigin,
-  authenticated,
-  failure,
-  json,
-  readBody,
-} from "@/features/platform/http";
+import { assertOrigin, authenticated, failure, json, readBody } from "@/features/platform/http";
 import { scope } from "@/infrastructure/auth/session";
 import { rows } from "@/infrastructure/database/db";
 import { qrAction, qrActionSchema, qrPortfolio } from "@/features/qr/service";

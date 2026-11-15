@@ -1,8 +1,5 @@
 "use client";
-import {
-  activityPresentation,
-  activityCategories,
-} from "@/features/appearance/categories";
+import { activityPresentation, activityCategories } from "@/features/appearance/categories";
 import { CategoryBadge } from "./appearance/category-badge";
 import { Recipes } from "./recipes";
 import { Catalog } from "./catalog";
@@ -640,7 +637,8 @@ export function Management({
       </>
     );
   if (module === "customers") body = <Customers data={data} act={act} />;
-  if (module === "menu") body = <Catalog data={data} act={act} />;
+  if (module === "menu" || module === "products") body = <Catalog data={data} act={act} />;
+  if (module === "services") body = <ServicesCatalog />;
   if (module === "recipes")
     body = <Recipes data={data} act={act} query={query} />;
   if (module === "activity")
@@ -865,6 +863,47 @@ export function Management({
             onSubmit={async (v) => {
               await editor.submit(v);
               setEditor(null);
+            }}
+          />
+        </Modal>
+      )}
+    </>
+  );
+}
+
+export function ServicesCatalog() {
+  const [items, setItems] = useState<{ id: string; name: string; price: string; description: string }[]>([]);
+  const [open, setOpen] = useState(false);
+  return (
+    <>
+      <div className="section-heading">
+        <h2>Services</h2>
+        <Button onClick={() => setOpen(true)}>Ajouter un service</Button>
+      </div>
+      {items.length === 0 && <p className="empty">Aucun service enregistré.</p>}
+      <div className="three-grid">
+        {items.map((s) => (
+          <article className="card" key={s.id}>
+            <h3>{s.name}</h3>
+            <b>{s.price}</b>
+            <p className="muted">{s.description}</p>
+          </article>
+        ))}
+      </div>
+      {open && (
+        <Modal title="Ajouter un service" close={() => setOpen(false)}>
+          <Form
+            fields={[
+              { name: "name", label: "Nom du service" },
+              { name: "price", label: "Prix (€)", type: "number", min: 0, step: "0.01" },
+              { name: "description", label: "Description", required: false },
+            ]}
+            onSubmit={async (v) => {
+              setItems((prev) => [
+                ...prev,
+                { id: crypto.randomUUID(), name: v.name, price: v.price, description: v.description || "" },
+              ]);
+              setOpen(false);
             }}
           />
         </Modal>

@@ -1,4 +1,4 @@
-import type { SiteDecorationId } from "@/features/cms/site-addons";
+import type { SiteDecorationId } from "@/features/cms/public";
 import { isThemedVisual, themedVisuals } from "@/features/cms/themed-visuals";
 import type { CSSProperties } from "react";
 import "./site-decoration.css";

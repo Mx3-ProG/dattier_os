@@ -1,5 +1,6 @@
-import type { SiteConfig } from "@/features/cms/schema";
-import { plain, type PlaceholderContext } from "@/features/cms/text";
+import type { SiteConfig } from "@/features/cms/public";
+import { plain } from "@/features/cms/text";
+import { type PlaceholderContext } from "@/features/cms/public";
 
 /**
  * Title and description actually served for a page. Same rule as the Studio

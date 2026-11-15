@@ -6,11 +6,7 @@ import { withDatabaseContext } from "@/infrastructure/database/context";
 import { getDb, one } from "@/infrastructure/database/db";
 import { json } from "@/features/platform/http";
 import { getPaymentProvider } from "@/features/payments/provider";
-import {
-  isHandled,
-  minimalEvent,
-  queueEvent,
-} from "@/features/payments/service";
+import { isHandled, minimalEvent, queueEvent } from "@/features/payments/service";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";

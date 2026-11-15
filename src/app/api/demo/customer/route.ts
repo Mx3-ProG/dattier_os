@@ -5,12 +5,7 @@ import { getDb, demoEnabled, one } from "@/infrastructure/database/db";
 import { login } from "@/infrastructure/auth/session";
 import { customerForActor } from "@/features/commerce/account";
 import { seedDemoEngagement } from "@/features/commerce/engagement-demo";
-import {
-  assertOrigin,
-  readBody,
-  json,
-  failure,
-} from "@/features/platform/http";
+import { assertOrigin, readBody, json, failure } from "@/features/platform/http";
 async function routePOST(req: NextRequest) {
   try {
     if (!demoEnabled())

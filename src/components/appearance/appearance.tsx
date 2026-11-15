@@ -11,19 +11,11 @@ import {
   type CSSProperties,
   type ReactNode,
 } from "react";
-import {
-  appearanceCacheKey,
-  appearanceSchema,
-  defaultAppearance,
-  palettes,
-  themeVariables,
-  type Appearance,
-} from "@/features/appearance/theme";
+import { appearanceCacheKey, appearanceSchema, defaultAppearance, palettes, themeVariables } from "@/features/appearance/theme";
+import { type Appearance } from "@/features/appearance/public";
 import "./appearance.css";
-import {
-  activityCategories,
-  type ActivityCategory,
-} from "@/features/appearance/categories";
+import { activityCategories } from "@/features/appearance/categories";
+import { type ActivityCategory } from "@/features/appearance/public";
 import { usePathname } from "next/navigation";
 
 const Context = createContext<{

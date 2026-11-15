@@ -18,6 +18,16 @@ export async function moduleAvailable(db: DB, business: BusinessId, module: Modu
 }
 
 /** Modules disponibles pour un commerce, dans l'ordre du manifeste. Une seule requête. */
+/** Lève si le module n'est pas disponible pour le commerce (gating façade). */
+export async function requireModuleAvailable(
+  db: DB,
+  business: BusinessId,
+  module: ModuleId,
+): Promise<void> {
+  if (!(await moduleAvailable(db, business, module)))
+    throw new Error(`Module ${module} indisponible pour cet établissement.`);
+}
+
 export async function availableModules(db: DB, business: BusinessId): Promise<ModuleId[]> {
   const { rows } = await db.query<{ module: string }>(
     "SELECT m AS module FROM unnest($2::text[]) WITH ORDINALITY AS t(m,n) WHERE app.module_available($1::text,m) IS TRUE ORDER BY n",

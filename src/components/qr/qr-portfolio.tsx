@@ -1,7 +1,7 @@
 "use client";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Plus, Printer, QrCode, RefreshCw, ScanLine, Search, Trash2 } from "lucide-react";
-import type { PortfolioCode, QrGroup } from "@/features/qr/service";
+import type { PortfolioCode, QrGroup } from "@/features/qr/public";
 import { Button } from "../ui/button";
 import { Form, Modal } from "../forms";
 import { printQrSheet, QrActions, QrImage, qrUrl } from "./qr";

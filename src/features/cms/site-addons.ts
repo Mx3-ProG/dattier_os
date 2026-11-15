@@ -1,4 +1,4 @@
-import type { LoadingRendererId } from "@/features/addons/loading-screens";
+import type { LoadingRendererId } from "@/features/addons/public";
 import { isSiteBackground, type SiteBackgroundId } from "./site-backgrounds";
 import { themedVisuals, themedVisualIds } from "./themed-visuals";
 

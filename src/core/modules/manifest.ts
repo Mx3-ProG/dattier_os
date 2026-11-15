@@ -100,6 +100,8 @@ export const moduleManifest = [
   { id: "kitchen", label: "Cuisine", family: "operations", offer: "included-optional", requires: ["orders"], enhancedBy: [], navigation: ["kitchen"], industries: [], legacy: { kind: "license", product: "ops-kitchen" } },
   { id: "bar", label: "Bar", family: "operations", offer: "included-optional", requires: ["orders"], enhancedBy: [], navigation: ["bar"], industries: [], legacy: { kind: "license", product: "ops-bar" } },
   { id: "recipes", label: "Recettes", family: "gestion", offer: "addon-monthly", requires: ["catalog"], enhancedBy: ["deliveries"], navigation: ["recipes"], industries: [], legacy: always },
+  { id: "products", label: "Produits", family: "gestion", offer: "included", requires: [], enhancedBy: [], navigation: ["products"], industries: [], legacy: always },
+  { id: "services", label: "Services", family: "gestion", offer: "included", requires: [], enhancedBy: [], navigation: ["services"], industries: [], legacy: always },
   { id: "suppliers", label: "Fournisseurs", family: "gestion", offer: "addon-monthly", requires: [], enhancedBy: [], navigation: ["suppliers"], industries: [], legacy: always },
   { id: "deliveries", label: "Réceptions et lots", family: "gestion", offer: "addon-monthly", requires: ["suppliers"], enhancedBy: [], navigation: ["deliveries"], industries: [], legacy: always },
   { id: "attendance", label: "Présences et pointage", family: "equipe", offer: "addon-monthly", requires: ["team"], enhancedBy: [], navigation: ["attendance", "hr"], industries: [], legacy: addon("attendance") },

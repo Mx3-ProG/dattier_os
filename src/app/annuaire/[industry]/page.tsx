@@ -1,7 +1,8 @@
 import { notFound } from "next/navigation";
 import { getDb } from "@/infrastructure/database/db";
 import { withDatabaseContext } from "@/infrastructure/database/context";
-import { publicDirectory, type DirectoryEntry } from "@/features/seo/directory";
+import { publicDirectory } from "@/features/seo/directory";
+import { type DirectoryEntry } from "@/features/seo/public";
 import { industries, isIndustry } from "@/core/tenant/business";
 
 export const dynamic = "force-dynamic";

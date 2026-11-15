@@ -26,11 +26,8 @@ import {
 import type { LucideIcon } from "lucide-react";
 import { useEffect, useState, type ReactNode } from "react";
 import { can, roleLabels, type Role } from "@/core/permissions";
-import {
-  availableRestaurantModules,
-  restaurantModuleHref,
-  type RestaurantModuleId,
-} from "@/features/platform/admin-navigation";
+import { availableRestaurantModules, restaurantModuleHref } from "@/features/platform/admin-navigation";
+import { type RestaurantModuleId } from "@/features/platform/public";
 import dynamic from "next/dynamic";
 const CuisineIa = dynamic(
   () =>
@@ -40,7 +37,7 @@ const CuisineIa = dynamic(
   { ssr: false },
 );
 import { AdminTutorial } from "@/components/tutorial/tour";
-import type { Industry } from "@/features/onboarding/catalog";
+import type { Industry } from "@/features/onboarding/public";
 import "./platform.css";
 import { adaptText } from "@/core/tenant/vocabulary";
 

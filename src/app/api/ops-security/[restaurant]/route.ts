@@ -1,24 +1,8 @@
 import { withRequestContext } from "@/features/ops-security/context";
 import { NextRequest } from "next/server";
-import {
-  authenticated,
-  assertOrigin,
-  readBody,
-  json,
-  failure,
-} from "@/features/platform/http";
+import { authenticated, assertOrigin, readBody, json, failure } from "@/features/platform/http";
 import { nestedDatabase } from "@/infrastructure/database/nested";
-import {
-  securityScope,
-  overview,
-  listEvents,
-  listIncidents,
-  listRemediations,
-  listArchives,
-  exportArchive,
-  diagnose,
-  securityAction,
-} from "@/features/ops-security/service";
+import { securityScope, overview, listEvents, listIncidents, listRemediations, listArchives, exportArchive, diagnose, securityAction } from "@/features/ops-security/service";
 type Context = { params: Promise<{ restaurant: string }> };
 async function routeGET(req: NextRequest, c: Context) {
   try {

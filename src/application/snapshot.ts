@@ -1,9 +1,6 @@
 import { observeStaffFloor } from "@/features/floor/capabilities";
 import { restaurantPlan } from "@/features/platform/entitlements";
-import {
-  messagingProviders,
-  recentMessages,
-} from "@/features/messaging/service";
+import { messagingProviders, recentMessages } from "@/features/messaging/service";
 import { registerPresence } from "@/features/ops-security/presence";
 import { type DB, rows, one, demoEnabled } from "../infrastructure/database/db";
 import { type Actor, scope } from "../infrastructure/auth/session";
@@ -13,10 +10,7 @@ import { moduleEnabled } from "@/features/modules/access";
 import { availableModules } from "@/features/modules/availability";
 import { tableQuota } from "@/features/floor/service";
 import type { Snapshot, Restaurant, Order, Item } from "../shared/types";
-import {
-  adminFlashPromotions,
-  engagementSettings,
-} from "@/features/commerce/engagement";
+import { adminFlashPromotions, engagementSettings } from "@/features/commerce/engagement";
 import { menu, trialStatus } from "./snapshot/queries";
 import { tradePilotage } from "@/features/trade/service";
 

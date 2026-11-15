@@ -3,7 +3,7 @@ import { SiteEditor } from "./index";
 import { TenantSiteProvider } from "../cms-site/context";
 import type { Role } from "@/core/permissions";
 import { BusinessAdminShell } from "@/components/platform/restaurant-admin-shell";
-import type { Industry } from "@/features/onboarding/catalog";
+import type { Industry } from "@/features/onboarding/public";
 
 export function WebsiteStudio({
   restaurant,

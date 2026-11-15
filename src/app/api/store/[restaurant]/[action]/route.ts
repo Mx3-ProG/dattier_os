@@ -1,11 +1,4 @@
-import {
-  availability,
-  calendar,
-  calendarQuery,
-  dayQuery,
-  requestReservation,
-  reservationSchema,
-} from "@/features/reservations/service";
+import { availability, calendar, calendarQuery, dayQuery, requestReservation, reservationSchema } from "@/features/reservations/service";
 import { requirePlan, requirePaidAddon } from "@/features/platform/entitlements";
 import { withRequestContext } from "@/features/ops-security/context";
 import { logout } from "@/infrastructure/auth/oidc";
@@ -15,25 +8,10 @@ import { getDb, type DB } from "@/infrastructure/database/db";
 import { withDatabaseContext } from "@/infrastructure/database/context";
 import { actor, type Actor } from "@/infrastructure/auth/session";
 import { commerce } from "@/features/commerce/service";
-import {
-  customerForActor,
-  followItem,
-  unfollowItem,
-} from "@/features/commerce/account";
-import {
-  attachCustomerReferral,
-  ensureReferralCode,
-  joinLoyalty,
-  referralInvitation,
-} from "@/features/commerce/engagement";
+import { customerForActor, followItem, unfollowItem } from "@/features/commerce/account";
+import { attachCustomerReferral, ensureReferralCode, joinLoyalty, referralInvitation } from "@/features/commerce/engagement";
 import { publicSite } from "@/features/site/service";
-import {
-  json,
-  failure,
-  readBody,
-  assertOrigin,
-  rateLimit,
-} from "@/features/platform/http";
+import { json, failure, readBody, assertOrigin, rateLimit } from "@/features/platform/http";
 import { createHash } from "node:crypto";
 import { ensureQr, labelFor } from "@/features/qr/service";
 import { onlineReady } from "@/features/payments/config";

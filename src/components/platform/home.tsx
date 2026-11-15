@@ -1,7 +1,8 @@
 "use client";
 import { UtensilsLoader } from "@/components/brand/utensils";
-import { type Plan } from "@/features/platform/pricing";
-import { referralPricing, type PaidPlan } from "@/features/platform/referrals";
+import { type Plan } from "@/features/platform/public";
+import { referralPricing } from "@/features/platform/referrals";
+import { type PaidPlan } from "@/features/platform/public";
 import { AccountWorkspace } from "./account-workspace";
 import { BillingAccount } from "./billing-account";
 import { ReferralPanel } from "./referral-panel";
@@ -10,7 +11,9 @@ import { useRouter } from "next/navigation";
 import { useState, useEffect, useCallback } from "react";
 import { ArrowUpRight, Building2, Plus } from "lucide-react";
 import { can, type Role } from "@/core/permissions";
-import { industries, industryLabels, trades, discoveryLabels, type Industry } from "@/features/onboarding/catalog";
+import { industries } from "@/core/tenant/business";
+import { industryLabels, trades, discoveryLabels } from "@/features/onboarding/catalog";
+import { type Industry } from "@/features/onboarding/public";
 import "./platform.css";
 import "./access.css";
 type Overview = {

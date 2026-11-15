@@ -4,27 +4,10 @@ import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { LoadingScreenView } from "@/components/loading-screens/engine";
 import { storeLoadingConfig } from "@/components/loading-screens/tenant-loader";
-import {
-  defaultLoadingSettings,
-  isLoadingRenderer,
-  loadingRenderers,
-  type LoadingRendererDefinition,
-  type LoadingScreenConfig,
-  type LoadingSettingsInput,
-} from "@/features/addons/loading-screens";
-import {
-  compatibilityLabels,
-  categoryCounts,
-  featuresCategoryId,
-  filterProducts,
-  formatPrice,
-  isOwned,
-  isInstalled,
-  productAction,
-  type StoreFilters,
-  type StoreProduct,
-  type StoreState,
-} from "@/features/addons/store-catalog";
+import { defaultLoadingSettings, isLoadingRenderer, loadingRenderers } from "@/features/addons/loading-screens";
+import { type LoadingRendererDefinition, type LoadingScreenConfig, type LoadingSettingsInput } from "@/features/addons/public";
+import { compatibilityLabels, categoryCounts, featuresCategoryId, filterProducts, formatPrice, isOwned, isInstalled, productAction } from "@/features/addons/store-catalog";
+import { type StoreFilters, type StoreProduct, type StoreState } from "@/features/addons/public";
 import { analyticsKind } from "@/features/analytics/modules";
 import { tradeKind, tradeTool } from "@/features/trade/definitions";
 import { SiteNotFound } from "@/components/cms-site/site-not-found";

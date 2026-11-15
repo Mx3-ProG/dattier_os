@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useState, useCallback } from "react";
-import type { billingAccount, billingInvoices } from "@/features/platform/billing-account";
+import type { billingAccount, billingInvoices } from "@/features/platform/public";
 
 type State = Awaited<ReturnType<typeof billingAccount>>;
 type Invoice = Awaited<ReturnType<typeof billingInvoices>>["invoices"][number];

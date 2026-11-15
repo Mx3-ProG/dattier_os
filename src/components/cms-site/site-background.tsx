@@ -1,6 +1,7 @@
 "use client";
 import { useEffect } from "react";
-import { siteBackgrounds, siteBackgroundStyle, type SiteBackgroundId } from "@/features/cms/site-backgrounds";
+import { siteBackgrounds, siteBackgroundStyle } from "@/features/cms/site-backgrounds";
+import { type SiteBackgroundId } from "@/features/cms/public";
 import "./site-background.css";
 
 /** Aperçu fidèle au fond public, sans image externe. */

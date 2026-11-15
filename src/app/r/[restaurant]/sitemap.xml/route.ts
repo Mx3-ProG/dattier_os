@@ -8,12 +8,7 @@ import { seoFacts, platformUrl } from "@/features/seo/server";
 import { siteUrls } from "@/features/seo/urls";
 import { menu } from "@/application/snapshot";
 import { productPath } from "@/domain/shared/product-pages";
-import {
-  indexablePages,
-  renderSitemap,
-  sitemapEntries,
-  SITEMAP_MAX_URLS,
-} from "@/features/seo/sitemap";
+import { indexablePages, renderSitemap, sitemapEntries, SITEMAP_MAX_URLS } from "@/features/seo/sitemap";
 export const dynamic = "force-dynamic";
 export async function GET(
   req: NextRequest,

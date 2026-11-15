@@ -4,9 +4,11 @@ import { LoadingScreenView } from "@/components/loading-screens/engine";
 import { SiteNotFound } from "@/components/cms-site/site-not-found";
 import { SiteDecoration } from "@/components/cms-site/site-decoration";
 import { SiteBackgroundPreview } from "@/components/cms-site/site-background";
-import { isLoadingRenderer, loadingRenderers, type LoadingRendererDefinition } from "@/features/addons/loading-screens";
-import type { SiteConfig } from "@/features/cms/schema";
-import { effectiveNotFound, effectiveSiteBackground, effectiveSiteDecoration, effectiveSiteLoader, notFoundDefaults, type SiteAddonData } from "@/features/cms/site-addons";
+import { isLoadingRenderer, loadingRenderers } from "@/features/addons/loading-screens";
+import { type LoadingRendererDefinition } from "@/features/addons/public";
+import type { SiteConfig } from "@/features/cms/public";
+import { effectiveNotFound, effectiveSiteBackground, effectiveSiteDecoration, effectiveSiteLoader, notFoundDefaults } from "@/features/cms/site-addons";
+import { type SiteAddonData } from "@/features/cms/public";
 
 type Update = (mutate: (c: SiteConfig) => void, key?: string) => void;
 

@@ -1,10 +1,10 @@
-import type { CustomerMessage } from "@/features/messaging/service";
+import type { CustomerMessage } from "@/features/messaging/public";
 import type { ProductPageFields } from "@/domain/shared/product-pages";
 import type { Actor } from "../infrastructure/auth/session";
 export type Restaurant = {
   id: string;
   name: string;
-  industry?: import("@/features/onboarding/catalog").Industry;
+  industry?: import("@/features/onboarding/public").Industry;
   trade?: string;
   trade_detail?: string;
   address: string;
@@ -183,10 +183,10 @@ export type Snapshot = {
   addons?: string[];
   licenses?: string[];
   uninstalledAddons?: string[];
-  plan: import("@/features/platform/pricing").Plan;
+  plan: import("@/features/platform/public").Plan;
   /** Free trial of the organization, read for the end-of-trial reminder. */
   /** Chiffres des outils métier repris par la vue d’ensemble. */
-  tradePilotage?: import("@/features/trade/service").TradePilotage;
+  tradePilotage?: import("@/features/trade/public").TradePilotage;
   trial?: {
     organization: string;
     owner: boolean;
@@ -200,11 +200,11 @@ export type Snapshot = {
   promos: Promo[];
   /** Gamification settings of the customer account (Clients & fidélité). */
   engagement:
-    import("@/features/commerce/engagement-rules").EngagementSettings | null;
+    import("@/features/commerce/public").EngagementSettings | null;
   /** Current and upcoming flash promotions (La carte). */
   flashPromotions: Awaited<
     ReturnType<
-      typeof import("@/features/commerce/engagement").adminFlashPromotions
+      typeof import("@/features/commerce/public").adminFlashPromotions
     >
   >;
   checkoutCustomers: { id: string; name: string }[];

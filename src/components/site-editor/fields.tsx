@@ -13,7 +13,7 @@ import {
 import { MediaDropzone } from "./media-upload";
 import { Button } from "../ui/button";
 import { Modal } from "../forms";
-import type { FieldDef } from "@/features/cms/registry";
+import type { FieldDef } from "@/features/cms/public";
 import { isSafeHref } from "@/features/cms/text";
 
 /** Images shipped with the template, usable without uploading anything. */

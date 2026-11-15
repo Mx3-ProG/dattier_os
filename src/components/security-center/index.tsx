@@ -15,22 +15,8 @@ import {
 import { dateTime } from "@/domain/shared/units";
 import { Button } from "../ui/button";
 import { Modal } from "../forms";
-import {
-  modules,
-  remediationLabels,
-  resolutionLabels,
-  resolutionStatuses,
-  severities,
-  severityLabels,
-  severityName,
-  type ArchiveRow,
-  type Diagnosis,
-  type Metric,
-  type Remediation,
-  type SecurityEvent,
-  type SecurityIncident,
-  type SecurityOverview,
-} from "@/features/ops-security/model";
+import { modules, remediationLabels, resolutionLabels, resolutionStatuses, severities, severityLabels, severityName } from "@/features/ops-security/model";
+import { type ArchiveRow, type Diagnosis, type Metric, type Remediation, type SecurityEvent, type SecurityIncident, type SecurityOverview } from "@/features/ops-security/public";
 
 type Tab = "overview" | "journal" | "incidents" | "corrections" | "archives";
 const tabs: [Tab, string][] = [

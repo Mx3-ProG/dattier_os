@@ -1,16 +1,10 @@
 import { withRequestContext } from "@/features/ops-security/context";
 import { NextRequest } from "next/server";
 import { revalidatePath } from "next/cache";
-import {
-  authenticated,
-  assertOrigin,
-  readBody,
-  json,
-  failure,
-} from "@/features/platform/http";
+import { authenticated, assertOrigin, readBody, json, failure } from "@/features/platform/http";
 import { website } from "@/features/cms/service";
 import { invalidateSiteCache } from "@/infrastructure/cache/site-cache";
-import { limits } from "@/features/cms/media";
+import { limits } from "@/features/cms/media-optimizer";
 type Context = { params: Promise<{ restaurant: string }> };
 async function routeGET(req: NextRequest, c: Context) {
   try {

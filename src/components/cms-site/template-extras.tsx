@@ -1,6 +1,6 @@
 "use client";
 import { useState } from "react";
-import type { Presentation } from "@/features/cms/schema";
+import type { Presentation } from "@/features/cms/public";
 import { TenantLink as Link, useTenantSite } from "./context";
 
 export function TemplateExtras({

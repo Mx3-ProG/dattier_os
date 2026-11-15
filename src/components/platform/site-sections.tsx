@@ -1,6 +1,6 @@
 "use client";
 import { useState } from "react";
-import type { SiteSection } from "@/features/site/model";
+import type { SiteSection } from "@/features/site/public";
 export function SiteSections({
   restaurant,
   sections,

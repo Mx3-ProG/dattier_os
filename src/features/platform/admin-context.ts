@@ -1,7 +1,7 @@
 import { authenticated } from "@/features/platform/http";
 import { restaurantPlan } from "@/features/platform/entitlements";
 import { scope } from "@/infrastructure/auth/session";
-import type { Industry } from "@/features/onboarding/catalog";
+import type { Industry } from "@/features/onboarding/public";
 
 export async function restaurantAdminContext(restaurant: string) {
   return authenticated(restaurant, async (db, user) => {

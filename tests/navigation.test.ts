@@ -37,7 +37,7 @@ const arranged = [
   legacy.find((entry) => entry.id === "addons")!,
 ];
 test("navigation preserves existing entries and moves addons to the final Configuration group", () => {
-  assert.equal(legacy.length, 29);
+  assert.equal(legacy.length, 31);
   assert.deepEqual(
     workspaceNavigation.list().map(({ id, name, group, icon, permission }) => ({
       id,

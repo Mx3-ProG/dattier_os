@@ -9,13 +9,8 @@
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import { BarChart3, Cookie, Megaphone, ShieldCheck, X } from "lucide-react";
-import {
-  consentMaxAgeMs,
-  platformConsentEvent,
-  platformConsentKey,
-  readPlatformConsent,
-  type PlatformConsent,
-} from "@/features/legal/consent";
+import { consentMaxAgeMs, platformConsentEvent, platformConsentKey, readPlatformConsent } from "@/features/legal/consent";
+import { type PlatformConsent } from "@/features/legal/public";
 
 const openEvent = "studio:cookie-settings";
 

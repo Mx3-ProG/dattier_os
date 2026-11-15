@@ -23,6 +23,7 @@
     "test:isolation": "node --import tsx scripts/verify-tenant-isolation.ts",
     "test:load": "node --import tsx scripts/load-platform.ts",
     "layers:check": "node --import tsx scripts/check-layers.ts",
+    "modules:check": "node --import tsx scripts/check-module-boundaries.ts",
     "template:new": "node --import tsx scripts/new-template.ts",
     "assets:fetch": "node --import tsx scripts/fetch-template-assets.ts"
   },

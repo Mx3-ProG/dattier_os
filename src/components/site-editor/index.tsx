@@ -35,33 +35,16 @@ import { Modal } from "../forms";
 import { Field, ImageField } from "./fields";
 import { SeoIdentityFields } from "./seo-identity";
 import { SiteAddonIdentity } from "./site-addons-panel";
-import { addonSectionAddons, addonNames, emptySiteAddons, isAddonSection, type SiteAddonData } from "@/features/cms/site-addons";
-import {
-  registry,
-  addableTypes,
-  pageKindLabels,
-  pageRoute,
-  sectionLabel,
-  systemBlockLabels,
-} from "@/features/cms/registry";
-import {
-  contrastChecks,
-  slugError,
-  stable,
-  type CmsSettings,
-} from "@/features/cms/rules";
+import { addonSectionAddons, addonNames, emptySiteAddons, isAddonSection } from "@/features/cms/site-addons";
+import { type SiteAddonData } from "@/features/cms/public";
+import { registry, addableTypes, pageKindLabels, pageRoute, sectionLabel, systemBlockLabels } from "@/features/cms/registry";
+import { contrastChecks, slugError, stable } from "@/features/cms/rules";
+import { type CmsSettings } from "@/features/cms/public";
 import { fonts } from "@/features/cms/theme";
-import {
-  fontIds,
-  type Section,
-  type SectionType,
-  type SiteConfig,
-} from "@/features/cms/schema";
-import {
-  placeholderKeys,
-  plain,
-  type PlaceholderContext,
-} from "@/features/cms/text";
+import { fontIds } from "@/features/cms/schema";
+import { type Section, type SectionType, type SiteConfig } from "@/features/cms/public";
+import { placeholderKeys, plain } from "@/features/cms/text";
+import { type PlaceholderContext } from "@/features/cms/public";
 import { SiteHome, TemplatesPanel } from "./templates";
 import { applySiteTemplate } from "@/features/cms/templates";
 import { uploadMedia, mediaSize, mediaAccept } from "./media-upload";

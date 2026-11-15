@@ -1,25 +1,15 @@
 import { createHash, randomBytes, randomUUID } from "node:crypto";
 import { z } from "zod";
-import { processPayment } from "@/features/finance/books";
+import { emitSync } from "@/features/events/bus";
 import { enqueue } from "@/features/platform/jobs";
 import { minimumOnlineAmount, onlineReady } from "@/features/payments/config";
 import { one, rows, type DB } from "@/infrastructure/database/db";
 import { customerFollows } from "./account";
 import { menu } from "@/application/snapshot";
-import {
-  createOrder,
-  reserve,
-  log,
-  changeItem,
-  completeSettledOrder,
-  notify,
-} from "@/features/orders/service";
+import { createOrder, reserve, log, changeItem, completeSettledOrder, notify } from "@/features/orders/service";
 import { requirePermission } from "@/core/permissions";
 import type { Actor } from "@/infrastructure/auth/session";
-import {
-  recordCheckoutPromo,
-  redeemCheckoutPromo,
-} from "@/features/loyalty/service";
+import { recordCheckoutPromo, redeemCheckoutPromo } from "@/features/loyalty/service";
 import {
   accountEngagement,
   awardOrderPoints,
@@ -540,7 +530,7 @@ export function commerce(SHOP: string) {
       [id],
     );
     await completeSettledOrder(db, id);
-    if (o.total > 0) await processPayment(db, SHOP, declaration);
+    if (o.total > 0) await emitSync(db, SHOP, "payment.declared", { declaration });
     await log(db, SHOP, user.id, "Encaissement comptoir déclaré", id);
     await awardOrderPoints(db, SHOP, id);
   }
@@ -572,7 +562,7 @@ export function commerce(SHOP: string) {
       "UPDATE shop_orders SET payment_status='paid' WHERE order_id=$1",
       [id],
     );
-    await processPayment(db, SHOP, declaration);
+    await emitSync(db, SHOP, "payment.declared", { declaration });
     await log(db, SHOP, null, "Paiement en ligne confirmé par Stripe", id);
     await notify(db, SHOP, `Nouvelle commande payée en ligne · n° ${o.number}`);
     await awardOrderPoints(db, SHOP, id);

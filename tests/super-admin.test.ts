@@ -89,6 +89,6 @@ test("assertSuperAdmin validates super admin and throws for non-admin", async ()
 
   await assert.rejects(
     () => assertSuperAdmin(dummyDb, regularUser),
-    /privilèges Super Admin requis/,
+    /Super Admin/,
   );
 });

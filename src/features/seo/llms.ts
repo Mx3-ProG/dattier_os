@@ -1,6 +1,7 @@
-import type { SiteConfig } from "@/features/cms/schema";
-import type { Product, Settings } from "@/features/commerce/schema";
-import { plain, type PlaceholderContext } from "@/features/cms/text";
+import type { SiteConfig } from "@/features/cms/public";
+import type { Product, Settings } from "@/features/commerce/public";
+import { plain } from "@/features/cms/text";
+import { type PlaceholderContext } from "@/features/cms/public";
 import { indexablePages } from "./sitemap";
 import { pageUrl } from "./urls";
 import { siteLocale } from "./locale";

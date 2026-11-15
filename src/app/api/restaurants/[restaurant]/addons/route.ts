@@ -1,5 +1,7 @@
 import { NextRequest } from "next/server";
-import { addonState, addonCheckout, cancelAddon, monthlyAddonIds, type MonthlyAddonId } from "@/features/addons/service";
+import { addonState, addonCheckout, cancelAddon } from "@/features/addons/service";
+import { monthlyAddonIds } from "@/features/addons/catalog";
+import { type MonthlyAddonId } from "@/features/addons/public";
 import { assertOrigin, json, failure } from "@/features/platform/http";
 export const runtime="nodejs";
 type Context={params:Promise<{restaurant:string}>};

@@ -3,11 +3,13 @@ import { useState } from "react";
 import { ArrowUpRight, Check } from "lucide-react";
 import { SiteLink } from "./sections";
 import { useTenantSite } from "../cms-site/context";
-import type { SectionOf } from "@/features/cms/schema";
-import { rich, type PlaceholderContext } from "@/features/cms/text";
+import type { SectionOf } from "@/features/cms/public";
+import { rich } from "@/features/cms/text";
+import { type PlaceholderContext } from "@/features/cms/public";
 import { allergenList } from "@/features/trade/definitions";
 import { parseAllergens } from "@/features/trade/model";
-import { postcodeZone, type SiteAddonData } from "@/features/cms/site-addons";
+import { postcodeZone } from "@/features/cms/site-addons";
+import { type SiteAddonData } from "@/features/cms/public";
 import "./addon-sections.css";
 
 type Common = { ctx: PlaceholderContext; attrs: Record<string, string> };

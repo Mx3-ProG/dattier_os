@@ -10,6 +10,8 @@ import {
   scanSecurity,
 } from "../src/features/platform/security-jobs";
 import { runSeoAudit } from "../src/features/seo/audit";
+import "../src/features/events/registry";
+import { dispatch } from "../src/features/events/public";
 import { transcodeMedia } from "../src/features/cms/media-jobs";
 import { claimFor, TENANT_CAP } from "../src/features/platform/worker-groups";
 import {
@@ -92,6 +94,12 @@ async function execute(job: Job) {
               String(job.payload.trigger || "automatique").slice(0, 60),
             );
           });
+        } else if (job.kind === "event") {
+          await dispatch(
+            db,
+            job.restaurant_id,
+            job.payload as Record<string, unknown>,
+          );
         } else if (job.kind === "media_transcode") {
           await transcodeMedia(
             (fn) =>

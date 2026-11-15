@@ -25,6 +25,7 @@ export function AccountWorkspace({
   restaurants,
   canCreate,
   platformAdmin = false,
+  isSuperAdmin = false,
 }: {
   children: ReactNode;
   userId?: string;
@@ -32,6 +33,7 @@ export function AccountWorkspace({
   restaurants: { id: string; name: string; plan: number }[];
   canCreate: boolean;
   platformAdmin?: boolean;
+  isSuperAdmin?: boolean;
 }) {
   const [mobile, setMobile] = useState(false);
   const first = restaurants.find((r) => r.plan > 0);
@@ -97,13 +99,18 @@ export function AccountWorkspace({
                 <span>{r.name}</span>
               </Link>
             ))}
-          {platformAdmin && (
+          {isSuperAdmin && (
             <>
               <span className="nav-group">ADMINISTRATION MONOLITHE</span>
               <Link className="restaurant-nav-link" href="/platform/admin">
                 <ShieldAlert size={18} />
                 <span>Super Admin</span>
               </Link>
+            </>
+          )}
+          {platformAdmin && (
+            <>
+              <span className="nav-group">ADMINISTRATION MONOLITHE</span>
               <Link className="restaurant-nav-link" href="/platform/boutique">
                 <Package size={18} />
                 <span>Boutique d’add-ons</span>

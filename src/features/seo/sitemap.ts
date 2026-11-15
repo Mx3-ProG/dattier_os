@@ -1,4 +1,4 @@
-import type { SiteConfig } from "@/features/cms/schema";
+import type { SiteConfig } from "@/features/cms/public";
 import { pageUrl } from "./urls";
 
 /** Sitemap protocol limit per file. */
