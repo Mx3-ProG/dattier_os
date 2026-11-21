@@ -16,6 +16,7 @@ export const industries = [
   "retail",
   "construction",
   "services",
+  "home_assistance",
   "other",
 ] as const;
 export type Industry = (typeof industries)[number];

@@ -10,3 +10,4 @@
  */
 import "@/features/orders/events";
 import "@/features/finance/events";
+import "@/features/home-assistance/events";

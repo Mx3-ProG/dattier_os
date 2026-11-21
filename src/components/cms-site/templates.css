@@ -62,6 +62,48 @@
 .donut-site[data-template="racing"] .donut-hero-art { border-radius: 0; margin: 0; border: 2px solid #dc2626; }
 .donut-site[data-template="racing"] .donut-hero h1 { text-transform: uppercase; font-style: italic; letter-spacing: -.02em; }
 .donut-site[data-template="racing"] .donut-button { border-radius: 0; background: #dc2626; }
+.donut-site[data-template="collection"] .donut-header { position: sticky; top: 0; z-index: 40; background: #f9f8f4; border-bottom: 1px solid #102d1e22; }
+.donut-site[data-template="collection"] .donut-header nav { gap: clamp(12px,1.5vw,24px); font-size: 12px; text-transform: uppercase; letter-spacing: .04em; }
+.donut-site[data-template="collection"] .donut-nav-actions { gap: 12px; }
+.donut-site[data-template="collection"] .donut-hero { position: relative; display: grid; grid-template-columns: 1fr; min-height: min(720px, 78vh); background: #102d1e; color: white; isolation: isolate; }
+.donut-site[data-template="collection"] .donut-hero-art { position: absolute; inset: 0; z-index: -1; margin: 0; min-height: 100%; border-radius: 0; opacity: .8; }
+.donut-site[data-template="collection"] .donut-hero-art::after { content: ""; position: absolute; inset: 0; background: linear-gradient(90deg, #07180ed9 0%, #07180e66 58%, transparent 100%); }
+.donut-site[data-template="collection"] .donut-hero-copy { align-self: center; max-width: 920px; padding: clamp(48px, 7vw, 112px); }
+.donut-site[data-template="collection"] .donut-hero h1 { color: white; font-size: clamp(48px, 6.4vw, 92px); font-weight: 800; line-height: 1.04; text-transform: uppercase; letter-spacing: -.04em; }
+.donut-site[data-template="collection"] .donut-lead { color: #f4f4ee; }
+.donut-site[data-template="collection"] .donut-button { border-radius: 0; background: #102d1e; }
+.donut-site[data-template="collection"] .donut-product-image { border-radius: 0; }
+.donut-site[data-template="collection"] .donut-product { border-radius: 0; }
+.donut-site[data-template="collection"] .donut-section-title h2 { text-transform: uppercase; letter-spacing: -.035em; }
+.donut-site[data-template="collection"] .collection-filters { display: flex; flex-wrap: wrap; align-items: end; gap: 16px; margin: 24px 0; padding: 24px; background: #eef0eb; }
+.donut-site[data-template="collection"] .collection-filters label { display: grid; gap: 8px; min-width: 190px; flex: 1; font-size: 13px; font-weight: 700; }
+.donut-site[data-template="collection"] .collection-filters :is(input,select) { width: 100%; min-height: 44px; padding: 10px 12px; border: 1px solid #102d1e55; border-radius: 0; background: white; color: #132219; }
+.donut-site[data-template="collection"] .collection-filters [role="status"] { padding-bottom: 12px; font-size: 13px; white-space: nowrap; }
+.donut-site[data-template="collection"] .collection-contact-fallback .donut-button { display: inline-flex; width: auto; }
+.donut-site[data-template="collection"] .collection-vehicle-grid { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 22px; }
+.donut-site[data-template="collection"] .collection-vehicle-card { background: #fff; border: 1px solid #102d1e22; }
+.donut-site[data-template="collection"] .collection-vehicle-card button { display: block; width: 100%; padding: 0; border: 0; background: transparent; color: #132219; text-align: left; cursor: pointer; }
+.donut-site[data-template="collection"] .collection-vehicle-card img { display: block; width: 100%; aspect-ratio: 1.5; object-fit: cover; }
+.donut-site[data-template="collection"] .collection-vehicle-body { display: grid; gap: 12px; padding: 18px; }
+.donut-site[data-template="collection"] .collection-vehicle-body small { font-weight: 800; text-transform: uppercase; letter-spacing: .15em; }
+.donut-site[data-template="collection"] .collection-vehicle-body strong { font-size: clamp(19px,2vw,28px); text-transform: uppercase; line-height: 1.12; }
+.donut-site[data-template="collection"] .collection-vehicle-facts { display: flex; flex-wrap: wrap; align-items: center; gap: 7px; font-size: 13px; }
+.donut-site[data-template="collection"] .collection-vehicle-facts > * { padding: 7px 10px; background: #f1f2ef; border-radius: 18px; }
+.donut-site[data-template="collection"] .collection-vehicle-facts b { background: #102d1e; color: white; }
+.donut-site[data-template="collection"] .collection-vehicle-discover { font-weight: 800; text-transform: uppercase; letter-spacing: .08em; }
+.donut-site[data-template="collection"] .collection-empty { padding: 48px 24px; text-align: center; }
+.donut-site[data-template="collection"] .collection-back { border: 0; background: transparent; font-weight: 700; cursor: pointer; margin-bottom: 28px; }
+.donut-site[data-template="collection"] .collection-detail-grid { display: grid; grid-template-columns: 1.3fr 1fr; gap: clamp(24px,5vw,80px); }
+.donut-site[data-template="collection"] .collection-detail-main { display: block; width: 100%; aspect-ratio: 1.3; object-fit: cover; }
+.donut-site[data-template="collection"] .collection-detail-thumbs { display: flex; gap: 8px; overflow-x: auto; margin-top: 8px; }
+.donut-site[data-template="collection"] .collection-detail-thumbs button { flex: 0 0 90px; padding: 0; border: 2px solid transparent; cursor: pointer; }
+.donut-site[data-template="collection"] .collection-detail-thumbs button[aria-pressed="true"] { border-color: #102d1e; }
+.donut-site[data-template="collection"] .collection-detail-thumbs img { width: 100%; aspect-ratio: 1.3; object-fit: cover; }
+.donut-site[data-template="collection"] .collection-detail-copy h1 { font-size: clamp(42px,5vw,76px); text-transform: uppercase; line-height: 1; }
+.donut-site[data-template="collection"] .collection-detail-price { display: block; margin: 30px 0; font-size: 30px; }
+.donut-site[data-template="collection"] .collection-detail-copy dl > div { display: flex; justify-content: space-between; gap: 16px; padding: 12px 0; border-bottom: 1px solid #102d1e33; }
+.donut-site[data-template="collection"] .collection-detail-copy dd { font-weight: 700; }
+.donut-site[data-template="collection"] .collection-detail-copy > p { white-space: pre-line; }
 .donut-site[data-template="manuscrit"] .donut-hero { grid-template-columns: 1fr; text-align: center; }
 .donut-site[data-template="manuscrit"] .donut-hero-copy { padding: 60px 24px 24px; max-width: 720px; margin-inline: auto; }
 .donut-site[data-template="manuscrit"] .donut-hero h1 { font-family: Georgia, serif; font-weight: 400; font-style: italic; }
@@ -137,6 +179,12 @@
   .donut-site[data-template="brunch"] .donut-hero-art { border-radius: 120px 120px 0 0; }
   .donut-site[data-template="burger"] .donut-hero-art { min-height: 320px; }
   .donut-site[data-template] .donut-hero h1 { font-size: clamp(42px, 10vw, 72px); }
+  .donut-site[data-template="collection"] .donut-hero { min-height: 620px; }
+  .donut-site[data-template="collection"] .donut-hero-art { position: absolute; inset: 0; min-height: 100%; width: 100%; margin: 0; }
+  .donut-site[data-template="collection"] .donut-hero-copy { position: relative; z-index: 1; align-self: end; padding: 36px 24px 48px; }
+  .donut-site[data-template="collection"] .donut-hero h1 { font-size: clamp(42px, 10vw, 68px); }
+  .donut-site[data-template="collection"] .collection-vehicle-grid { grid-template-columns: minmax(0,1fr); }
+  .donut-site[data-template="collection"] .collection-detail-grid { grid-template-columns: minmax(0,1fr); }
   .template-action-bar { gap: 12px; padding: 10px 12px; font-size: 12px; }
 }
 
@@ -658,3 +706,73 @@ body:has(.donut-site.is-cms-preview) > .demo-purchase-link { display: none; }
     display: none;
   }
 }
+
+/* Le Temps des Donuts — vitrine de diner et cartes du menu. */
+.donut-site[data-template="temps-des-donuts"] {
+  --diner-pink: #ff2394;
+  --diner-blue: #26c6f1;
+  --diner-ink: #211b22;
+}
+[data-template="temps-des-donuts"] .donuts-chapter { scroll-margin-top: 88px; }
+[data-template="temps-des-donuts"] .donut-header { border-bottom: 2px solid var(--diner-ink); }
+[data-template="temps-des-donuts"] .donut-mobile-menu { background: var(--diner-blue); border: 2px solid var(--diner-ink); border-radius: 50%; }
+[data-template="temps-des-donuts"] .donut-hero-art,
+[data-template="temps-des-donuts"] .site-plan,
+[data-template="temps-des-donuts"] .donut-button {
+  border: 2px solid var(--diner-ink); border-radius: 14px; box-shadow: 4px 5px 0 var(--diner-ink);
+}
+[data-template="temps-des-donuts"] .donut-hero-art { margin: clamp(16px,4vw,56px); min-height: 200px; }
+[data-template="temps-des-donuts"] .donut-button { border-radius: 100px; }
+[data-template="temps-des-donuts"] .site-pricing-grid { counter-reset: card; grid-template-columns: repeat(auto-fit,minmax(min(100%,230px),1fr)); gap: 20px; }
+[data-template="temps-des-donuts"] .site-plan { position: relative; counter-increment: card; padding: 28px 20px; background: var(--diner-pink); color: var(--diner-ink); }
+[data-template="temps-des-donuts"] .site-plan:nth-child(2) { background: var(--diner-ink); color: white; }
+[data-template="temps-des-donuts"] .site-plan:nth-child(3) { background: var(--diner-blue); }
+[data-template="temps-des-donuts"] .site-plan:nth-child(4) { background: #fff5fb; }
+[data-template="temps-des-donuts"] .site-plan::after { content: counter(card,decimal-leading-zero); position: absolute; top: -10px; right: 14px; padding: 6px; background: var(--diner-ink); color: white; border-radius: 50%; font: bold 13px/1.5 system-ui; }
+[data-template="temps-des-donuts"] .site-plan ul { display: flex; gap: 6px; flex-wrap: wrap; padding: 0; list-style: none; }
+[data-template="temps-des-donuts"] .site-plan li { border: 1px solid; border-radius: 22px; padding: 3px 9px; background: white; color: var(--diner-ink); }
+[data-template="temps-des-donuts"] .site-plan-price strong { font-size: 1.1rem; color: inherit; }
+[data-template="temps-des-donuts"] #donuts-marquee { padding-block: 6px; background: repeating-conic-gradient(#201721 0 25%,white 0 50%) 0/16px 16px; }
+@media (prefers-reduced-motion: no-preference) {
+  @supports (animation-timeline: view()) {
+    [data-template="temps-des-donuts"][data-motion="true"] :is(.site-plan,.donuts-chapter:not(:first-child) h2) {
+      animation: diner-arrive linear both; animation-timeline: view(); animation-range: entry 0% entry 95%;
+    }
+  }
+}
+@keyframes diner-arrive { from { opacity: .35; transform: translateY(22px) rotate(-1deg); } }
+
+/* Shared page furniture inherits the selected template on every tenant route. */
+:where(.donut-site[data-template]) {
+  --page-rule: 1px solid var(--pink);
+  --page-radius: 4px;
+  --page-depth: none;
+}
+.donut-site[data-template="bistrot"] { --page-rule: 4px double var(--pink); --page-radius: 2px; }
+.donut-site[data-template="jardin"] { --page-radius: 32px 8px 32px 8px; }
+.donut-site[data-template="comptoir"] { --page-radius: 0; --page-depth: 4px 4px 0 var(--site-ink); }
+.donut-site[data-template="pause"] { --page-radius: 26px; }
+.donut-site[data-template="signature"] { --page-radius: 0; --page-rule: 1px solid var(--site-ink); }
+.donut-site[data-template="riviera"] { --page-rule: 5px double var(--pink); --page-radius: 28px 28px 4px 4px; }
+.donut-site[data-template="atelier"] { --page-rule: 3px solid var(--site-ink); --page-radius: 0; }
+.donut-site[data-template="escale"] { --page-radius: 4px 32px 4px 4px; }
+.donut-site[data-template="pizzeria"] { --page-radius: 14px; --page-rule: 3px double var(--pink); }
+.donut-site[data-template="sushi"] { --page-radius: 0; --page-rule: 2px solid var(--pink); }
+.donut-site[data-template="coiffeur"] { --page-radius: 36px 36px 6px 6px; }
+.donut-site[data-template="loft"] { --page-radius: 1px; --page-depth: 0 8px 20px #0001; }
+.donut-site[data-template="chantier"] { --page-rule: 4px solid var(--pink); --page-radius: 0; }
+.donut-site[data-template="racing"] { --page-rule: 3px solid var(--pink); --page-radius: 0 16px; }
+.donut-site[data-template="collection"] { --page-radius: 2px; --page-rule: 1px solid color-mix(in srgb,var(--pink) 40%,transparent); }
+.donut-site[data-template="manuscrit"] { --page-rule: 3px double var(--site-ink); --page-radius: 0; }
+.donut-site[data-template="assurance"] { --page-radius: 12px; --page-depth: 0 4px 16px #0001; }
+.donut-site[data-template="patisserie"] { --page-radius: 24px 24px 12px 12px; }
+.donut-site[data-template="streetfood"] { --page-rule: 2px solid var(--site-ink); --page-depth: 5px 5px var(--pink); }
+.donut-site[data-template="compta"] { --page-rule: 2px solid var(--pink); --page-radius: 6px; }
+.donut-site[data-template="ecole"] { --page-radius: 16px; --page-depth: 0 4px var(--pink); }
+.donut-site[data-template="gastronomique"] { --page-rule: 3px double var(--pink); --page-radius: 0; }
+.donut-site[data-template="baravin"] { --page-rule: 4px double var(--pink); --page-radius: 16px 16px 3px 3px; }
+.donut-site[data-template="brunch"] { --page-radius: 24px; --page-depth: 0 4px 18px #0001; }
+.donut-site[data-template="burger"] { --page-rule: 3px solid var(--site-ink); --page-radius: 10px; --page-depth: 3px 3px var(--pink); }
+.donut-site[data-template]:not([data-template="temps-des-donuts"]) .donut-header {border-bottom:var(--page-rule);background:var(--public-surface,var(--cream))}
+.donut-site[data-template]:not([data-template="temps-des-donuts"]) .donut-footer {border-top:var(--page-rule);background:color-mix(in srgb,var(--pink) 46%,#141414);color:white}
+.donut-site[data-template]:not([data-template="temps-des-donuts"]) :is(.site-gallery button,.donut-hours,.donut-google-card,.modal-page) {border:var(--page-rule);border-radius:var(--page-radius);box-shadow:var(--page-depth)}

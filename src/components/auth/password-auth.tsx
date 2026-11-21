@@ -132,6 +132,20 @@ export function PasswordAuth({
           password,
         });
         if (!data.access_token) throw new Error("Connexion refusée.");
+        // Double authentification : envoi d'un code à six chiffres par e-mail.
+        try {
+          const r = await fetch("/auth/2fa/start", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ accessToken: data.access_token, returnTo }),
+          });
+          if (r.ok) {
+            window.location.assign(`/connexion/verification?${new URLSearchParams({ returnTo })}`);
+            return;
+          }
+        } catch {
+          // Service indisponible : on conserve la connexion directe.
+        }
         await openSession(data.access_token, returnTo);
         return;
       }

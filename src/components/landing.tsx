@@ -153,8 +153,8 @@ function Cta({ demoHref, inverse }: { demoHref?: string; inverse?: boolean }) {
       >
         Essayer gratuitement 7 jours <ArrowUpRight size={16} aria-hidden />
       </Link>
-      <Link className="landing-btn outline" href={demoHref || "/guide"} {...(demoHref && newTab)}>
-        {demoHref ? "Me projeter dans la démo" : "Découvrir comment ça marche"}
+      <Link className="landing-btn outline" href={demoHref || "/guide"}>
+        {demoHref ? "Découvrir comment ça marche" : "Lire le guide"}
       </Link>
     </div>
   );
@@ -184,6 +184,7 @@ export function Landing({
 
           <a href="#offres">Offres</a>
           <a href="#equipe">Studio ATS</a>
+          {demoHref && <Link href={demoHref}>Démo</Link>}
           <Link href="/guide">Guide</Link>
         </nav>
         <Link className="landing-btn primary small" href="/platform">
@@ -557,7 +558,7 @@ export function Landing({
             </p>
           </div>
           <div className="landing-proof-grid">
-            <Link href={demoHref || "/guide#service"} {...(demoHref && newTab)}>
+            <Link href={demoHref || "/guide#service"}>
               <LayoutGrid size={24} aria-hidden />
               <h3>
                 {demoHref
@@ -796,7 +797,7 @@ export function Landing({
         <nav aria-label="Liens utiles">
           {demoHref && <Link href={demoHref} {...newTab}>Démonstration</Link>}
           {demo && <Link href="/site-demo">Exemple de site de commerce</Link>}
-          <Link href="/guide">Comment ça marche</Link>
+          <Link href="/guide">Guide d’utilisation</Link>
           <Link href="/guide#evolutions">Évolutions et maintenance</Link>
           <a
             href="https://www.studio-ats.com"

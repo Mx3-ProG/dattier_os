@@ -247,7 +247,7 @@ export function Field({ def, value, disabled, onChange }: FieldProps) {
       return (
         <ListField
           def={def}
-          value={value as string[]}
+          value={(value as string[] | undefined) ?? []}
           disabled={disabled}
           onChange={onChange}
         />

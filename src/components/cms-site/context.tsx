@@ -14,6 +14,7 @@ const Context = createContext<{
   restaurant: string;
   demo: boolean;
   platformOrigin: string;
+  showcase?: string;
   preview: boolean;
   shopEnabled: boolean;
   audience: AudienceMode | null;
@@ -30,6 +31,7 @@ export function TenantSiteProvider({
   restaurant,
   demo = false,
   platformOrigin = "",
+  showcase,
   preview = false,
   shopEnabled = true,
   audience = null,
@@ -39,6 +41,7 @@ export function TenantSiteProvider({
   restaurant: string;
   demo?: boolean;
   platformOrigin?: string;
+  showcase?: string;
   preview?: boolean;
   shopEnabled?: boolean;
   audience?: AudienceMode | null;
@@ -47,8 +50,8 @@ export function TenantSiteProvider({
   children?: ReactNode;
 }) {
   const value = useMemo(
-    () => ({ restaurant, demo, platformOrigin, preview, shopEnabled, audience, industry }),
-    [restaurant, demo, platformOrigin, preview, shopEnabled, audience, industry],
+    () => ({ restaurant, demo, platformOrigin, showcase, preview, shopEnabled, audience, industry }),
+    [restaurant, demo, platformOrigin, showcase, preview, shopEnabled, audience, industry],
   );
   return <Context.Provider value={value}>{children}</Context.Provider>;
 }
@@ -80,6 +83,12 @@ export function useTenantSite() {
       if (["/demo", "/dashboard", "/platform"].includes(path))
         return `${context.platformOrigin}/commerce/${context.restaurant}`;
       if (path === "/source") return `${context.platformOrigin}/source`;
+      if (context.showcase) {
+        const target = new URL(path,"https://preview.invalid");
+        const query = target.searchParams;
+        if (target.pathname !== "/") query.set("page",target.pathname.slice(1));
+        return context.showcase + (query.size ? "?"+query.toString() : "") + target.hash;
+      }
       return base + (path === "/" ? "" : path);
     }
     async function request(input: string, init?: RequestInit) {

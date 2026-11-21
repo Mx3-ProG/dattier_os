@@ -8,6 +8,7 @@ import { getDb, demoEnabled, one } from "@/infrastructure/database/db";
 import { withDatabaseContext } from "@/infrastructure/database/context";
 import { actor } from "@/infrastructure/auth/session";
 import { website } from "@/features/cms/service";
+import type { SiteConfig } from "@/features/cms/schema";
 import { plain } from "@/features/cms/text";
 import { commerce } from "@/features/commerce/service";
 import { seoFacts, platformUrl } from "@/features/seo/server";
@@ -39,7 +40,7 @@ const loadSite = cache(
     const preview = mode === "draft" || /^version:[a-f0-9-]{36}$/.test(mode);
     const cacheable = !preview && mode === "" && !demoEnabled();
     if (cacheable) {
-      const cached = getSiteCache(restaurant, host, mode, demoEnabled());
+      const cached = getSiteCache(restaurant, host, raw, demoEnabled());
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       if (cached) return cached as any;
     }
@@ -81,7 +82,9 @@ const loadSite = cache(
             "SELECT app.addon_installed($1,'pipeline-crm') AS enabled", [restaurant])).enabled;
           const route = raw === "account" ? "compte" : raw;
           const isProduct = /^produits\/[^/]+$/.test(route);
-          const key = isProduct ? "carte" : route || "home";
+          const isCollectionVehicle = /^vehicules\/[a-z0-9-]{3,60}$/.test(route) && config.theme.presentation?.layout === "collection";
+          if (isCollectionVehicle && !config.collectionVehicles?.some((vehicle: NonNullable<SiteConfig["collectionVehicles"]>[number]) => vehicle.id === route.slice("vehicules/".length))) notFound();
+          const key = isProduct || isCollectionVehicle ? "carte" : route || "home";
           const facts = await seoFacts(db, restaurant);
           const urls = siteUrls({
             restaurant,
@@ -117,6 +120,7 @@ const loadSite = cache(
               )
             : undefined;
           if (isProduct && !product) notFound();
+          if (isProduct && config.theme.presentation?.layout === "collection") notFound();
           const result = {
             product,
             siteAddons: await cms.siteAddons(db),
@@ -148,7 +152,7 @@ const loadSite = cache(
                 ).rows[0]?.mode ?? null,
           };
           if (cacheable) {
-            setSiteCache(restaurant, host, mode, demoEnabled(), result);
+            setSiteCache(restaurant, host, raw, demoEnabled(), result);
           }
           return result;
         }),
@@ -170,24 +174,31 @@ async function load(props: Props) {
 export async function generateMetadata(props: Props): Promise<Metadata> {
   const { config, context, key, preview, urls, product, websiteInstalled, archived, suspended } = await load(props),
     page = config.pages[key];
+  const { page: routeParts } = await props.params;
+  const vehicleId = routeParts?.length === 2 && routeParts[0] === "vehicules" ? routeParts[1] : "";
+  const vehicle = config.theme.presentation?.layout === "collection" ? config.collectionVehicles?.find((item: NonNullable<SiteConfig["collectionVehicles"]>[number]) => item.id === vehicleId) : undefined;
   const title = product
     ? product.seo_title || `${product.name} · ${context.name}`
+    : vehicle ? `${vehicle.brand} ${vehicle.model} · ${context.name}`
     : effectiveTitle(config, key, context);
   const description = product
     ? product.seo_description ||
       product.description.slice(0, 200) ||
       `Découvrez ${product.name} à la carte de ${context.name}.`
+    : vehicle ? vehicle.description.slice(0, 170)
     : effectiveDescription(config, key, context);
   const origin = new URL(urls.canonicalBase).origin;
   const image = absoluteMedia(
     origin,
     product?.images[0] ||
+      vehicle?.images[0]?.src ||
       page.seo.ogImage ||
       config.seo.ogImage ||
       config.branding.logo.src,
   );
   const canonical = product
     ? urls.canonicalBase + productPath(product.id)
+    : vehicle ? `${urls.canonicalBase}/vehicules/${vehicle.id}`
     : pageUrl(urls.canonicalBase, key);
   const locale = siteLocale(config);
   const indexable = isIndexable({
@@ -241,7 +252,7 @@ export default async function Page(props: Props) {
       ? categorie
       : "Tout";
   const jsonLd =
-    data.preview || data.product
+    data.preview || data.product || data.config.theme.presentation?.layout === "collection"
       ? null
       : buildJsonLd({
           pageKey: data.key,

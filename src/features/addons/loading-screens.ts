@@ -150,7 +150,7 @@ export function parseLoadingCache(raw: string | null, restaurant: string): Loadi
 export function restaurantFromLocation(pathname: string, search: string): string | null {
   const query = new URLSearchParams(search).get("restaurant");
   if (query) return query;
-  const match = /^\/restaurant\/([^/]+)/.exec(pathname);
+  const match = /^\/(?:restaurant|commerce)\/([^/]+)/.exec(pathname);
   if (!match) return null;
   try {
     return decodeURIComponent(match[1]);

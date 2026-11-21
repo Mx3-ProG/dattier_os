@@ -73,8 +73,10 @@ export const presentationSchema = z.object({
     "loft",
     "chantier",
     "racing",
+    "collection",
     "manuscrit",
     "assurance",
+    "temps-des-donuts",
     "patisserie",
     "streetfood",
     "compta",
@@ -170,6 +172,7 @@ export const sectionProps = {
     burgerHint: text(120),
   }),
   reviews: z.object({
+    highlights: z.array(text(120)).max(6).optional(),
     kicker: text(80),
     title: text(160),
     text: text(600),
@@ -178,7 +181,7 @@ export const sectionProps = {
     sheetLabel: text(60),
     cardCaption: text(80),
   }),
-  map: z.object({ kicker: text(80), title: text(160), buttonLabel: text(60) }),
+  map: z.object({ kicker: text(80), title: text(160), buttonLabel: text(60), contactKicker: text(80).optional(), contactTitle: text(160).optional(), contactText: text(600).optional(), emailLabel: text(80).optional() }),
   gallery: z.object({
     kicker: text(80),
     title: text(160),
@@ -234,6 +237,7 @@ export const sectionProps = {
       .max(20),
   }),
   cta: z.object({
+    kicker: text(80).optional(),
     title: text(160),
     text: text(400),
     link: linkSchema,
@@ -586,6 +590,7 @@ export type Business = z.infer<typeof businessSchema>;
 
 export const siteConfigSchema = z.object({
   schemaVersion: z.literal(SCHEMA_VERSION),
+  compositionLayout: presentationSchema.shape.layout.nullable().optional(),
   branding: z.object({
     publicName: text(80),
     brandLines: text(80),
@@ -626,6 +631,19 @@ export const siteConfigSchema = z.object({
   }),
   /** Business identity used for structured data. Every field is optional. */
   business: businessSchema.optional(),
+  /** Vehicle inventory for the Collection template, independent from the restaurant menu. */
+  collectionVehicles: z.array(z.object({
+    id: z.string().regex(/^[a-z0-9-]{3,60}$/),
+    brand: text(80),
+    model: text(160),
+    priceCents: z.number().int().min(0).max(2000000000),
+    year: z.number().int().min(1900).max(2100),
+    mileageKm: z.number().int().min(0).max(2000000),
+    location: text(120),
+    description: text(5000),
+    images: z.array(imageSchema).min(1).max(30),
+    status: z.enum(["available", "sold"]),
+  })).max(200).optional(),
   header: z.object({
     navMenu: text(40),
     navUniverse: text(40),

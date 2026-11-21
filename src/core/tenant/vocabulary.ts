@@ -27,6 +27,7 @@ const establishment: Record<Industry, [string, string]> = {
   retail: ["commerce", "commerces"],
   construction: ["établissement", "établissements"],
   services: ["établissement", "établissements"],
+  home_assistance: ["service", "services"],
   other: ["commerce", "commerces"],
 };
 

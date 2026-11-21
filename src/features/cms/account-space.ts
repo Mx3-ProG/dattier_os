@@ -119,6 +119,7 @@ export const spaceByTemplate: Record<string, AccountSpaceId> = {
   chantier: "services",
   loft: "services",
   racing: "services",
+  collection: "commerce",
   assurance: "services",
   compta: "services",
   // Cuisinera

@@ -27,6 +27,7 @@ const icons: Partial<Record<TradeToolId, NavigationIcon>> = {
   "customer-segments": "Users",
   "loyalty-campaigns": "Heart",
   "conversion-insights": "Activity",
+  "home-operations": "ClipboardCheck",
 };
 
 /**

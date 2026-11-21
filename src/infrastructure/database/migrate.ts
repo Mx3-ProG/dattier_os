@@ -105,6 +105,14 @@ const migrations: [number, string][] = [
   [174, "174_directory_module_available.sql"],
   [175, "175_super_admin_access.sql"],
   [176, "176_products_services_modules.sql"],
+  [177, "177_two_factor_auth.sql"],
+  [178, "178_two_factor_rls.sql"],
+  [179, "179_home_assistance_industry.sql"],
+  [180, "180_home_assistance_domain.sql"],
+  [181, "181_home_operations_catalog.sql"],
+  [182, "182_home_assistance_scheduling.sql"],
+  [183, "183_home_worker_reports.sql"],
+  [184, "184_home_customer_booking.sql"],
 ];
 /** Applies every additive migration not yet recorded, inside the caller's transaction. */
 export async function applyMigrations(tx: DB) {

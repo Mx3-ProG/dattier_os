@@ -10,6 +10,7 @@ import { siteConfigSchema } from "../src/features/cms/schema";
 import { createElement } from "react";
 import { renderToString } from "react-dom/server";
 import { TenantSiteProvider } from "../src/components/cms-site/context";
+import { CollectionCatalog, CollectionVehicleDetails } from "../src/components/cms-site/collection-catalog";
 import { PresentationFields } from "../src/components/site-editor/presentation-fields";
 import {
   effectIsPremium,
@@ -34,7 +35,7 @@ test("all templates preserve identity, legal and protected pages", () => {
     assert.deepEqual(result.branding, original.branding);
     assert.deepEqual(result.legal, original.legal);
     for (const [key, page] of Object.entries(original.pages)) {
-      if (key !== "home") assert.deepEqual(result.pages[key], page);
+      if (key !== "home" && template.id !== "collection" && !["galerie","histoire","contact","avis"].includes(key)) assert.deepEqual(result.pages[key], page);
     }
     assert.ok(
       contrastChecks(result.theme).every((c) => c.ratio >= c.min),
@@ -45,6 +46,40 @@ test("all templates preserve identity, legal and protected pages", () => {
       original.pages,
     );
   }
+});
+
+test("La Collection installe ses pages sans doublons et conserve les pages protégées", () => {
+  const template = siteTemplates.find((item) => item.id === "collection")!;
+  const first = applySiteTemplate(defaultConfig(), template, true);
+  const second = applySiteTemplate(first, template, true);
+  for (const key of ["deja-vendues", "services", "pourquoi-nous", "garantie"]) {
+    assert.equal(first.pages[key]?.kind, "custom");
+    assert.ok(first.pages[key].sections.length > 0);
+  }
+  assert.equal(second.pages.contact.sections.filter((s) => s.id === "collection-contact-intro").length, 1);
+  for (const key of ["checkout", "suivi", "compte", "mentions-legales", "confidentialite"]) {
+    assert.deepEqual(first.pages[key], defaultConfig().pages[key]);
+  }
+  assert.doesNotThrow(() => checkInvariants(second));
+  second.collectionVehicles = [{ id: "coupe-exemple", brand: "Marque exemple", model: "Coupé", priceCents: 12990000, year: 2023, mileageKm: 18400, location: "Showroom", description: "Fiche de démonstration.", images: [{ src: "/cms/racing/gallery1.jpg", alt: "Automobile de démonstration" }], status: "available" }];
+  assert.equal(siteConfigSchema.parse(second).collectionVehicles?.[0].priceCents, 12990000);
+  second.collectionVehicles[0].status = "sold";
+  assert.equal(siteConfigSchema.parse(second).collectionVehicles?.[0].status, "sold");
+  second.collectionVehicles.push({ ...second.collectionVehicles[0] });
+  assert.throws(() => checkInvariants(second), /identifiant/);
+});
+
+test("l’inventaire automobile sépare les disponibles des vendues et rend leurs fiches", () => {
+  const vehicle = { id: "coupe-exemple", brand: "Marque exemple", model: "Coupé", priceCents: 12990000, year: 2023, mileageKm: 18400, location: "Showroom", description: "Fiche de démonstration.", images: [{ src: "/cms/racing/gallery1.jpg", alt: "Automobile de démonstration" }], status: "available" as const };
+  const sold = { ...vehicle, id: "coupe-vendue", model: "Coupé vendu", status: "sold" as const };
+  const availableHtml = renderToString(createElement(CollectionCatalog, { vehicles: [vehicle, sold], status: "available", open: () => {} }));
+  const soldHtml = renderToString(createElement(CollectionCatalog, { vehicles: [vehicle, sold], status: "sold", open: () => {} }));
+  assert.match(availableHtml, /Coupé/);
+  assert.doesNotMatch(availableHtml, /Coupé vendu/);
+  assert.match(soldHtml, /Coupé vendu/);
+  const detailHtml = renderToString(createElement(TenantSiteProvider, { restaurant: "atelier" }, createElement(CollectionVehicleDetails, { vehicle, back: () => {} })));
+  assert.match(detailHtml, /18.?400/);
+  assert.match(detailHtml, /Se renseigner sur ce véhicule/);
 });
 
 test("templates have distinct compositions and premium-only defaults", () => {
@@ -61,9 +96,9 @@ test("templates have distinct compositions and premium-only defaults", () => {
       applySiteTemplate(defaultConfig(), template, true),
     );
     const p = result.theme.presentation!;
-    assert.equal(p.stickyHeader, template.premium);
-    assert.equal(p.motion, template.premium);
-    assert.equal(p.surprise, template.premium);
+    assert.equal(p.stickyHeader, template.premium || template.id === "temps-des-donuts");
+    assert.equal(p.motion, template.premium || template.id === "temps-des-donuts");
+    assert.equal(p.surprise, template.premium || template.id === "temps-des-donuts");
     assert.equal(p.stickyAction !== "none", template.premium);
     assert.equal(p.layout, template.id);
     const hero = result.pages.home.sections.find((s) => s.type === "hero");
@@ -246,5 +281,46 @@ test("every template ships a playable video and a gallery with photos", () => {
         video.props.source.src.endsWith(".mp4"),
       `${template.id}: video has no local file`,
     );
+  }
+});
+
+
+test("GTA Like prépare la galerie et préserve les modifications des pages du commerçant", () => {
+  const template = siteTemplates.find(t=>t.id==="temps-des-donuts")!;
+  const config = defaultConfig();
+  const gallery = config.pages.galerie.sections[0];
+  assert.ok(gallery.type === "gallery");
+  gallery.props.title = "Nos réalisations";
+  const result = applySiteTemplate(config,template,true);
+  const section = result.pages.galerie.sections[0];
+  assert.ok(section.type==="gallery");
+  assert.equal(section.props.title,"Nos réalisations");
+  assert.ok(section.props.images.length>0);
+  assert.deepEqual(applySiteTemplate(result,template,true).pages.galerie,result.pages.galerie);
+});
+
+
+test("les compositions de toutes les galeries évoluent avec le modèle et gardent les légendes personnalisées", () => {
+  let config = defaultConfig();
+  for (const template of siteTemplates) {
+    config = applySiteTemplate(config,template,true);
+    const gallery = config.pages.galerie.sections.find(s => s.type === "gallery");
+    assert.ok(gallery?.type === "gallery" && gallery.props.images.length, template.id);
+    if (template !== siteTemplates[0]) assert.equal(gallery.props.title,"Photos du commerçant");
+    gallery.props.title = "Photos du commerçant";
+  }
+});
+
+test("chaque transition entre modèles donne les pages du modèle choisi", () => {
+  const catalogue = siteTemplates.map(template => ({
+    template,
+    config: applySiteTemplate(defaultConfig(), template, true),
+  }));
+  for (const source of catalogue) {
+    for (const target of catalogue) {
+      const styled = applySiteTemplate(source.config, target.template, false);
+      const switched = applySiteTemplate(styled, target.template, true);
+      assert.deepEqual(switched.pages, target.config.pages, source.template.id + " → " + target.template.id);
+    }
   }
 });

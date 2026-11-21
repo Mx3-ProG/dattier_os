@@ -1,9 +1,10 @@
-import { defaultTheme } from "./defaults";
+import { defaultConfig, defaultTheme } from "./defaults";
 import { templateContent } from "./template-content";
+import { applyCollectionPages } from "./collection-pages";
 import type { TemplateEffects } from "./effects";
 import { registry } from "./registry";
 import { isAddonSection } from "./site-addons";
-import type { Section } from "./schema";
+import type { Page, Section } from "./schema";
 import type { FontId, SiteConfig, Theme, Presentation } from "./schema";
 
 export type SiteTemplate = {
@@ -69,14 +70,14 @@ const template = (
     presentation: {
       layout: id as Presentation["layout"],
       effects,
-      stickyHeader: premium,
+      stickyHeader: premium || id === "temps-des-donuts",
       stickyAction: premium
         ? id === "signature" || id === "atelier"
           ? "reserve"
           : "order"
         : "none",
-      motion: premium,
-      surprise: premium,
+      motion: premium || id === "temps-des-donuts",
+      surprise: premium || id === "temps-des-donuts",
     },
     colors: {
       ...defaultTheme.colors,
@@ -84,8 +85,8 @@ const template = (
       primaryDark: primary,
       buttonBg: primary,
       background,
-      accent: background,
-      secondary: primary,
+      accent: id === "temps-des-donuts" ? "#36c8f0" : background,
+      secondary: id === "temps-des-donuts" ? "#ff198f" : primary,
       text: textColor,
       muted: mutedColor,
       buttonText: buttonTextColor,
@@ -282,6 +283,21 @@ export const siteTemplates: SiteTemplate[] = [
     "#a1a1aa",
   ),
   template(
+    "collection",
+    "La Collection",
+    "Automobile d’exception",
+    "Une vitrine automobile éditoriale : image panoramique, collection au premier plan et services sur mesure.",
+    false,
+    "#102d1e",
+    "#f9f8f4",
+    "inter",
+    "Des automobiles *qui marquent les esprits.*",
+    ["hero", "featuredProducts", "about", "reviews", "gallery", "video", "visit", "map"],
+    { title: "none", button: "glare", card: "sheen", badge: "none" },
+    "#132219",
+    "#57645a",
+  ),
+  template(
     "manuscrit",
     "Le Manuscrit",
     "Blog & éditorial",
@@ -417,17 +433,19 @@ export const siteTemplates: SiteTemplate[] = [
     ["hero", "marquee", "featuredProducts", "video", "visit", "about", "reviews", "map"],
     { title: "shine", button: "none", card: "streak", badge: "gradient" },
   ),
+  template(
+    "temps-des-donuts", "GTA Like", "Diner & donuts",
+    "Un diner de Bernay en rose et cyan, une carte illustrée et des rubriques à parcourir sur une seule page.",
+    false, "#a90059", "#fff3fa", "fraunces", "Le temps des donuts",
+    ["hero", "marquee", "about", "faq", "featuredProducts", "cta", "gallery", "video", "reviews", "visit", "map"],
+    { title: "none", button: "glare", card: "none", badge: "gradient" },
+  ),
 ];
 
-/** Apply only presentation. Identity, legal text, commerce and custom pages survive. */
-export function applySiteTemplate(
-  config: SiteConfig,
-  template: SiteTemplate,
-  composition = false,
-): SiteConfig {
-  const next = structuredClone(config);
-  next.theme = structuredClone(template.theme);
-  if (composition && next.pages.home) {
+/** Build the factory pages separately from a merchant's draft. */
+function templateDefaults(template: SiteTemplate): SiteConfig {
+  const next = defaultConfig();
+  {
     const home = next.pages.home;
     const content = templateContent[template.id];
     // Inject sections declared by the template but missing from the home page,
@@ -490,6 +508,106 @@ export function applySiteTemplate(
         }
       }
     }
+    const defaults = defaultConfig().pages;
+    for (const key of ["galerie", "histoire", "contact", "avis"]) {
+      for (const section of next.pages[key]?.sections ?? []) {
+        const original = defaults[key].sections.find(item => item.id === section.id && item.type === section.type);
+        if (!original) continue;
+        const type = section.type as keyof typeof content;
+        const overrides = content?.[type];
+        if (!overrides) continue;
+        const props = section.props as Record<string, unknown>;
+        const initial = original.props as Record<string, unknown>;
+        for (const [field, value] of Object.entries(overrides)) {
+          const current = JSON.stringify(props[field]);
+          if (current === JSON.stringify(initial[field])) {
+            props[field] = structuredClone(value);
+          }
+        }
+      }
+    }
+    if (template.id === "temps-des-donuts") {
+      for (const section of home.sections) {
+        if (section.type === "video" || section.type === "featuredProducts") section.visible = false;
+      }
+    }
+    if (template.id === "collection") applyCollectionPages(next, defaults);
   }
+  return next;
+}
+
+function same(left: unknown, right: unknown): boolean {
+  if (left === right) return true;
+  if (!left || !right || typeof left !== "object" || typeof right !== "object") return false;
+  if (Array.isArray(left) !== Array.isArray(right)) return false;
+  const keys = Object.keys(left);
+  return keys.length === Object.keys(right).length && keys.every(key =>
+    Object.hasOwn(right, key) && same(Reflect.get(left, key), Reflect.get(right, key))
+  );
+}
+
+/** Replace factory values while retaining merchant edits, including removed optional fields. */
+function mergeFields<T extends object>(previous: T, current: T, target: T): T {
+  const result = structuredClone(target);
+  for (const key of new Set([...Object.keys(previous), ...Object.keys(current)]) as Set<keyof T>) {
+    if (same(previous[key], current[key])) continue;
+    if (Object.hasOwn(current,key)) result[key] = structuredClone(current[key]);
+    else delete result[key];
+  }
+  return result;
+}
+
+function mergePage(previous: Page, current: Page, target: Page): Page {
+  if (same(previous,current)) return structuredClone(target);
+  const page = mergeFields(previous,current,target);
+  page.seo = mergeFields(previous.seo,current.seo,target.seo);
+  const before = new Map(previous.sections.map(section => [section.id, section]));
+  const live = new Map(current.sections.map(section => [section.id, section]));
+  const sections = new Map<string,Section>();
+  for (const section of target.sections) {
+    const original = before.get(section.id);
+    const edited = live.get(section.id);
+    if (!original) sections.set(section.id, structuredClone(edited ?? section));
+    else if (edited) {
+      if (edited.type !== original.type || edited.type !== section.type) sections.set(section.id,structuredClone(edited));
+      else {
+        const merged = mergeFields(original,edited,section);
+        merged.props = mergeFields(original.props,edited.props,section.props);
+        sections.set(section.id,merged);
+      }
+    }
+  }
+  // A removed factory block survives a switch only if the merchant customised it.
+  for (const section of current.sections) {
+    if (!sections.has(section.id) && !same(section,before.get(section.id))) sections.set(section.id,structuredClone(section));
+  }
+  const retainedOrder = current.sections.filter(s=>before.has(s.id)).map(s=>s.id);
+  const reordered = !same(retainedOrder, previous.sections.filter(s=>live.has(s.id)).map(s=>s.id));
+  if (reordered) {
+    const order = new Set([...current.sections.map(s=>s.id), ...sections.keys()]);
+    page.sections = Array.from(order).flatMap(id => sections.get(id) ?? []);
+  } else page.sections = [...sections.values()];
+  return page;
+}
+
+export function applySiteTemplate(config: SiteConfig, template: SiteTemplate, composition = false): SiteConfig {
+  const next = structuredClone(config);
+  next.theme = structuredClone(template.theme);
+  const source = config.compositionLayout === undefined ? config.theme.presentation?.layout : config.compositionLayout;
+  next.compositionLayout = source ?? null;
+  if (!composition) return next;
+
+  const oldTemplate = siteTemplates.find(item => item.id === source);
+  const previous = oldTemplate ? templateDefaults(oldTemplate) : defaultConfig();
+  const target = templateDefaults(template);
+  next.compositionLayout = template.theme.presentation!.layout;
+  for (const [key,page] of Object.entries(previous.pages)) {
+    if (!target.pages[key] && same(page,config.pages[key])) delete next.pages[key];
+  }
+  for (const [key,page] of Object.entries(target.pages)) {
+    if (!previous.pages[key]) next.pages[key] ??= structuredClone(page);
+    else if (config.pages[key]) next.pages[key] = mergePage(previous.pages[key],config.pages[key],page);
+  }
+  if (template.id === "collection") next.collectionVehicles ??= [];
   return next;
 }

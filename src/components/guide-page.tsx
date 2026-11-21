@@ -141,6 +141,7 @@ export async function GuidePage({
           <Store size={20} aria-hidden /> STUDIO S
         </Link>
         <nav aria-label="Navigation du guide">
+          {demoHref && <Link href={demoHref}>Démo</Link>}
           <a href="#comprendre">Les bases</a>
           <a href="#cuisine-ia">STUDIO VOICE</a>
           <a href="#order">Commandes</a>
@@ -171,7 +172,7 @@ export async function GuidePage({
               <Play size={17} aria-hidden /> Lancer la visite interactive
             </Link>
             {demoHref && (
-              <Link className="landing-btn outline" href={demoHref} {...newTab}>
+              <Link className="landing-btn outline" href={demoHref}>
                 Explorer la démo, avec ses données
               </Link>
             )}
@@ -593,7 +594,7 @@ export async function GuidePage({
                   <Play size={17} aria-hidden /> Lancer la visite interactive
                 </Link>
                 {demoHref && (
-                  <Link className="landing-btn outline" href={demoHref} {...newTab}>
+                  <Link className="landing-btn outline" href={demoHref}>
                     Explorer la démo, avec ses données
                   </Link>
                 )}
@@ -609,7 +610,7 @@ export async function GuidePage({
         </span>
         <nav aria-label="Liens utiles">
           <Link href="/">Accueil</Link>
-          {demoHref && <Link href={demoHref} {...newTab}>Démonstration</Link>}
+          {demoHref && <Link href={demoHref}>Démonstration</Link>}
           {demoSiteHref && <Link href={demoSiteHref} {...newTab}>Exemple de site de commerce</Link>}
           <Link href="/platform">Espace client</Link>
           <LegalLinks />

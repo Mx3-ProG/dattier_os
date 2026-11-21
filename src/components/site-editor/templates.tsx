@@ -118,7 +118,7 @@ export function SiteHome({
             </span>
             <strong>Boutique de modèles</strong>
             <span className="site-choice-text">
-              {siteTemplates.length} modèles pensés pour la restauration.
+              {siteTemplates.length} modèles pensés pour différentes activités.
               Changez d’ambiance en un clic.
             </span>
             <span className="site-choice-meta">
@@ -265,7 +265,7 @@ export function TemplatesPanel({
             <button
               className="tpl-stage"
               aria-label={`Aperçu de ${t.name}`}
-              onClick={() => setSelected(t)}
+              onClick={() =>  { setComposition(true); setSelected(t); }}
             >
               <span className={`tpl-badge ${t.premium ? "premium" : ""}`}>
                 {t.premium ? (
@@ -311,7 +311,7 @@ export function TemplatesPanel({
                 <span className="tpl-price">
                   {t.premium ? "Dès 9 €" : "Inclus"}
                 </span>
-                <button className="tpl-choose" onClick={() => setSelected(t)}>
+                <button className="tpl-choose" onClick={() =>  { setComposition(true); setSelected(t); }}>
                   Choisir <ArrowRight size={15} />
                 </button>
               </div>
@@ -362,6 +362,7 @@ export function TemplatesPanel({
             <TemplatePreview template={selected} />
           </div>
           <p>{selected.description}</p>
+          <a href={selected.id === "temps-des-donuts" ? "/site-demo/gta-like" : `/site-demo/modeles/${selected.id}`} target="_blank" rel="noopener noreferrer">Ouvrir la démo {selected.name} ↗</a>
           <ul className="tpl-features">
             {selected.features.map((f) => (
               <li key={f}>
@@ -401,8 +402,9 @@ export function TemplatesPanel({
             </span>
           </label>
           <p className="muted">
-            Votre identité, vos autres pages et vos données sont conservées. Le
-            changement reste dans le brouillon et peut être annulé.
+            {selected.id === "collection" && composition
+              ? "La composition ajoute les pages automobile et un inventaire éditable. Votre identité et vos données existantes sont conservées. Le changement reste dans le brouillon."
+              : "Votre identité, vos autres pages et vos données sont conservées. Le changement reste dans le brouillon et peut être annulé."}
           </p>
           <div className="actions">
             <Button

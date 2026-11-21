@@ -1,6 +1,67 @@
 {
-  "checkedAt": "2026-11-03T01:52:37.695Z",
+  "checkedAt": "2026-11-16T11:15:07.040Z",
   "scope": "Tracked and untracked non-ignored working files and reachable Git blobs under 2 MB; pattern matching, not a guarantee of rights or absence of secrets.",
-  "textObjectsScanned": 386,
-  "findings": []
+  "textObjectsScanned": 4006,
+  "findings": [
+    {
+      "location": "docs/platform/PRODUCTION-CONNEXION-ET-ABONNEMENT.md",
+      "kind": "password-url"
+    },
+    {
+      "location": "docs/platform/TENANT_ISOLATION.md",
+      "kind": "password-url"
+    },
+    {
+      "location": "scripts/production-setup.sh",
+      "kind": "password-url"
+    },
+    {
+      "location": "history:790b486800:docs/platform/TENANT_ISOLATION.md",
+      "kind": "password-url"
+    },
+    {
+      "location": "history:37408987e2:docs/platform/PRODUCTION-CONNEXION-ET-ABONNEMENT.md",
+      "kind": "password-url"
+    },
+    {
+      "location": "history:b365689e49:scripts/production-setup.sh",
+      "kind": "password-url"
+    },
+    {
+      "location": "history:ba07c23307:docs/platform/PRODUCTION-CONNEXION-ET-ABONNEMENT.md",
+      "kind": "password-url"
+    },
+    {
+      "location": "history:bc5e882a72:docs/platform/TENANT_ISOLATION.md",
+      "kind": "password-url"
+    },
+    {
+      "location": "history:8384d6b09c:docs/platform/PRODUCTION-CONNEXION-ET-ABONNEMENT.md",
+      "kind": "password-url"
+    },
+    {
+      "location": "history:6529e594bf:docs/platform/TENANT_ISOLATION.md",
+      "kind": "password-url"
+    },
+    {
+      "location": "history:9da63ad15d:docs/platform/TENANT_ISOLATION.md",
+      "kind": "password-url"
+    },
+    {
+      "location": "history:79e093d1a2:docs/platform/TENANT_ISOLATION.md",
+      "kind": "password-url"
+    },
+    {
+      "location": "history:ae3346e0fc:docs/platform/TENANT_ISOLATION.md",
+      "kind": "password-url"
+    },
+    {
+      "location": "history:2b097f2712:docs/platform/TENANT_ISOLATION.md",
+      "kind": "password-url"
+    },
+    {
+      "location": "history:5db7b3710b:docs/platform/TENANT_ISOLATION.md",
+      "kind": "password-url"
+    }
+  ]
 }

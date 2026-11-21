@@ -45,7 +45,7 @@ export type TradeEntity = {
   /** Une seule fiche (réglages de l’outil). */
   singleton?: boolean;
 };
-export type TradeIndustry = "Restauration" | "BTP" | "Coiffure" | "Commerce" | "Tous métiers";
+export type TradeIndustry = "Restauration" | "BTP" | "Coiffure" | "Commerce" | "Aide à la personne" | "Tous métiers";
 export type TradeTool = {
   id: string;
   name: string;
@@ -66,6 +66,7 @@ export const tradeCategories = {
   BTP: { id: "metier-btp", position: 41, description: "Chantiers, rapports, devis et matériel pour les entreprises du bâtiment." },
   Coiffure: { id: "metier-coiffure", position: 42, description: "Rendez-vous, fauteuils, fiches clients et produits du salon." },
   Commerce: { id: "metier-commerce", position: 43, description: "Variantes, lots, livraison et relance des paiements non finalisés." },
+  "Aide à la personne": { id: "metier-aide-personne", position: 45, description: "Bénéficiaires, intervenants et interventions à domicile." },
   "Tous métiers": { id: "metier-tous", position: 44, description: "Segments, campagnes et parcours de conversion, quel que soit votre métier." },
 } as const satisfies Record<TradeIndustry, { id: string; position: number; description: string }>;
 
@@ -78,6 +79,13 @@ export const allergenList = [
 ] as const;
 
 export const tradeTools = [
+  {
+    id: "home-operations", name: "Interventions à domicile", industry: "Aide à la personne", category: tradeCategories["Aide à la personne"].id,
+    tagline: "Bénéficiaires, équipe et interventions", permission: "customers",
+    description: "Gère les bénéficiaires, les intervenants et les visites, avec affectation, comptes rendus et validation des durées.",
+    features: ["Dossiers bénéficiaires", "Intervenants", "Affectation sans chevauchement", "Compte rendu et durée validée"],
+    entities: [],
+  },
   // ——— Restauration ———
   {
     id: "kitchen-display", name: "Écran cuisine", industry: "Restauration", category: tradeCategories.Restauration.id,

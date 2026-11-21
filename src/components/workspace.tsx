@@ -85,6 +85,7 @@ const ProspectScannerCenter = dynamic(() => import("./pilotage-addons/center").t
 const PipelineCrmCenter = dynamic(() => import("./pilotage-addons/center").then((m) => m.PipelineCrmCenter));
 const CustomerHealthCenter = dynamic(() => import("./pilotage-addons/center").then((m) => m.CustomerHealthCenter));
 const ToolView = dynamic(() => import("./trade/trade-center").then((m) => m.ToolView));
+const HomeAssistanceCenter = dynamic(() => import("./home-assistance/center").then((m) => m.HomeAssistanceCenter));
 import { tradeTool } from "@/features/trade/definitions";
 const FinanceCenter = dynamic(() =>
   import("./finance-center").then((m) => m.FinanceCenter),
@@ -531,6 +532,8 @@ export function Workspace() {
             <PipelineCrmCenter key={restaurant} restaurant={restaurant} />
           ) : current?.id === "customer-health" ? (
             <CustomerHealthCenter key={restaurant} restaurant={restaurant} />
+          ) : current?.id === "tool-home-operations" ? (
+            <HomeAssistanceCenter key={restaurant} restaurant={restaurant} />
           ) : current && tradeTool(current.id.slice(5)) && current.id.startsWith("tool-") ? (
             <ToolView key={`${restaurant}-${current.id}`} tool={tradeTool(current.id.slice(5))!} restaurant={restaurant} act={act} />
           ) : current?.id === "finance" ? (

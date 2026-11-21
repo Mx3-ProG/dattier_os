@@ -12,6 +12,7 @@ import { ProductDetails } from "../product-details";
 import { productPath } from "@/domain/shared/product-pages";
 import { useTenantSite } from "./context";
 import { ContactInquiry } from "./contact-inquiry";
+import { CollectionCatalog, CollectionVehicleDetails } from "./collection-catalog";
 /* eslint-disable @next/next/no-img-element */
 import { TenantLink as Link } from "./context";
 import dynamic from "next/dynamic";
@@ -69,6 +70,7 @@ import { effectiveSiteBackground, effectiveSiteDecoration, emptySiteAddons, isAd
 import { type SiteAddonData } from "@/features/cms/public";
 import { siteBackgrounds, siteBackgroundStyle } from "@/features/cms/site-backgrounds";
 import { siteConfigSchema } from "@/features/cms/schema";
+import { GtaSections, GtaHeader, GtaFooter, gtaThemeStyle } from "./gta-home";
 import { type Section, type SiteConfig } from "@/features/cms/public";
 import { rich } from "@/features/cms/text";
 import { type PlaceholderContext } from "@/features/cms/public";
@@ -131,7 +133,7 @@ const badgeIcons = {
 } as const;
 /** Messages exchanged with the CMS editor (same origin only). */
 export type PreviewMessage =
-  | { type: "cms:config"; config: SiteConfig; page?: string }
+  | { type: "cms:config"; config: SiteConfig; context?: PlaceholderContext; page?: string }
   | { type: "cms:select"; id: string | null }
   | { type: "cms:drop"; files: File[]; id: string | null }
   | { type: "cms:ready" }
@@ -150,6 +152,7 @@ export function DonutStore({
   config: initialConfig,
   context,
   preview = false,
+  templateDemo = false,
   initialData = null,
   updatedAt = null,
   initialCategory = "Tout",
@@ -163,6 +166,7 @@ export function DonutStore({
   context: PlaceholderContext;
   /** CMS preview inside the editor iframe: live config, click-to-select, no navigation. */
   preview?: boolean;
+  templateDemo?: boolean;
   /** Catalogue loaded on the server so products are present in the initial HTML. */
   initialData?: Data | null;
   /** Publication date of the live version, shown so visitors and machines know how fresh the site is. */
@@ -186,6 +190,7 @@ export function DonutStore({
   } = useTenantSite();
   const router = { push: (path: string) => nextRouter.push(href(path)) };
   const [config, setConfig] = useState(initialConfig),
+    [editorContext, setEditorContext] = useState<PlaceholderContext>(),
     [previewPage, setPreviewPage] = useState<string>(),
     [selectedSection, setSelectedSection] = useState<string | null>(null);
   const route = previewPage ?? initialRoute;
@@ -201,6 +206,7 @@ export function DonutStore({
         const parsed = siteConfigSchema.safeParse(event.data.config);
         if (parsed.success) {
           setConfig(parsed.data as SiteConfig);
+          setEditorContext(event.data.context);
           const key = event.data.page;
           setPreviewPage(
             key && parsed.data.pages[key]?.kind === "custom" ? key : undefined,
@@ -269,6 +275,7 @@ export function DonutStore({
     [choices, setChoices] = useState<string[]>([]),
     [note, setNote] = useState(""),
     [category, setCategory] = useState(initialCategory),
+    [collectionVehicleId, setCollectionVehicleId] = useState(initialRoute.startsWith("vehicules/") ? initialRoute.slice("vehicules/".length) : ""),
     [toast, setToast] = useState(""),
     [nav, setNav] = useState(false),
     [burgerOpen, setBurgerOpen] = useState(false),
@@ -311,6 +318,7 @@ export function DonutStore({
     return d as Data;
   }, [fetch]);
   useEffect(() => {
+    if (templateDemo) return;
     void refresh().catch((e) => setError(e.message));
     try {
       const saved = JSON.parse(
@@ -340,7 +348,7 @@ export function DonutStore({
       30000,
     );
     return () => clearInterval(timer);
-  }, [refresh, preview, restaurant]);
+  }, [refresh, preview, restaurant, templateDemo]);
   useEffect(() => {
     if (preview) return;
     fetch("/api/shop/customer-session")
@@ -533,6 +541,7 @@ export function DonutStore({
     ),
     ctx: PlaceholderContext = {
       ...context,
+      ...editorContext,
       ...(data
         ? { address: data.settings.address, phone: data.settings.phone }
         : {}),
@@ -542,6 +551,29 @@ export function DonutStore({
     cms = (section: { id: string }): Record<string, string> =>
       preview ? { "data-cms-section": section.id } : {},
     { branding, header, footer } = config;
+  const gta = config.theme.presentation?.layout === "temps-des-donuts";
+  const collectionSite = config.theme.presentation?.layout === "collection" && !!config.pages["deja-vendues"] && !!config.collectionVehicles;
+  const collectionVehicle = collectionSite ? config.collectionVehicles?.find((vehicle) => vehicle.id === collectionVehicleId) : undefined;
+  useEffect(() => {
+    if (!preview) setCollectionVehicleId(initialRoute.startsWith("vehicules/") ? initialRoute.slice("vehicules/".length) : "");
+  }, [initialRoute, preview]);
+  useEffect(() => {
+    const sync = () => {
+      const match = window.location.pathname.match(/\/vehicules\/([a-z0-9-]{3,60})\/?$/);
+      setCollectionVehicleId(match?.[1] || "");
+    };
+    sync();
+    window.addEventListener("popstate", sync);
+    return () => window.removeEventListener("popstate", sync);
+  }, []);
+  const openCollectionVehicle = (vehicle: NonNullable<SiteConfig["collectionVehicles"]>[number]) => {
+    setCollectionVehicleId(vehicle.id);
+    if (!preview) router.push(`/vehicules/${vehicle.id}`);
+  };
+  const closeCollectionVehicle = () => {
+    setCollectionVehicleId("");
+    if (!preview) router.push(collectionVehicle?.status === "sold" ? "/deja-vendues" : "/carte");
+  };
   const css = useMemo(() => themeCss(config.theme), [config.theme]);
   // Effets du modèle : coupés si les animations sont désactivées par l'établissement.
   const effects =
@@ -698,6 +730,7 @@ export function DonutStore({
         );
       case "featuredProducts": {
         const fp = section.props;
+        if (collectionSite) return <CollectionCatalog key={section.id} vehicles={config.collectionVehicles ?? []} status="available" compact={route !== "carte"} open={openCollectionVehicle} />;
         return (
           <section
             className="donut-catalog donut-section"
@@ -821,7 +854,7 @@ export function DonutStore({
                             </small>
                           </span>
                         )}
-                        <button
+                        {!collectionSite && <button
                           type="button"
                           className="donut-review-quick"
                           onClick={(event) => {
@@ -832,8 +865,9 @@ export function DonutStore({
                           onKeyDown={(event) => event.stopPropagation()}
                         >
                           <Star size={15} /> Noter ce produit
-                        </button>
-                        {shopEnabled && (
+                        </button>}
+                        {collectionSite && <Link className="donut-text-link" href={productPath(p.id)}>Découvrir ce véhicule <ArrowRight size={16} /></Link>}
+                        {!collectionSite && shopEnabled && (
                           <button
                             type="button"
                             className="donut-add"
@@ -1663,10 +1697,10 @@ export function DonutStore({
   }
   return (
     <PublicAppearance theme={config.theme}
-      style={backgroundDesign ? siteBackgroundStyle(backgroundDesign) : undefined}
+      style={{...(backgroundDesign ? siteBackgroundStyle(backgroundDesign) : {}), ...(gta ? gtaThemeStyle(config) : {})}}
       data-site-background={backgroundDesign ?? undefined}
       data-bg-tier={backgroundDesign ? siteBackgrounds[backgroundDesign].tier : undefined}
-      className={`donut-site${preview ? " is-cms-preview" : ""}`}
+      className={`donut-site${gta ? " gta-home" : ""}${preview ? " is-cms-preview" : ""}`}
       data-template={config.theme.presentation?.layout}
       data-sticky-header={config.theme.presentation?.stickyHeader}
       data-motion={config.theme.presentation?.motion}
@@ -1682,7 +1716,7 @@ export function DonutStore({
           Démonstration locale · données fictives · aucun paiement réel.
         </aside>
       )}
-      {css && <style>{css}</style>}
+      {!gta && css && <style>{css}</style>}
       {preview && selectedSection && /^[a-z0-9-]+$/.test(selectedSection) && (
         <style>{`[data-cms-section="${selectedSection}"]{outline:3px solid #e83e91;outline-offset:-3px}`}</style>
       )}
@@ -1710,7 +1744,7 @@ export function DonutStore({
           </button>
         </div>
       )}
-      {(branding.announcement || branding.announcementHighlight) && (
+      {!gta && (branding.announcement || branding.announcementHighlight) && (
         <div
           className="donut-announcement"
           {...cms({ id: "site-announcement" })}
@@ -1721,7 +1755,7 @@ export function DonutStore({
           )}
         </div>
       )}
-      <header className="donut-header" {...cms({ id: "site-header" })}>
+      {gta ? <GtaHeader config={config} context={ctx} preview={preview} route={route} count={count}/> : <header className="donut-header" {...cms({ id: "site-header" })}>
         <Link href="/" className="donut-brand">
           <img
             src={branding.logo.src}
@@ -1735,22 +1769,38 @@ export function DonutStore({
           </span>
         </Link>
         <nav className={nav ? "expanded" : ""}>
-          <Link href="/carte">{header.navMenu}</Link>
-          <Link href="/histoire">{header.navUniverse}</Link>
-          <Link href="/contact">{header.navContact}</Link>
-          <Link href="/compte">{header.navAccount}</Link>
+          {collectionSite ? (
+            <>
+              <Link href="/carte">À vendre</Link>
+              <Link href="/deja-vendues">Déjà vendues</Link>
+              <Link href="/services">Services</Link>
+              <Link href="/pourquoi-nous">Pourquoi nous ?</Link>
+              <Link href="/garantie">Garantie</Link>
+              {config.pages.galerie?.visible && <Link href="/galerie">{config.pages.galerie.title}</Link>}
+              <Link href="/contact">Contact</Link>
+            </>
+          ) : (
+            <>
+              <Link href="/carte">{header.navMenu}</Link>
+              <Link href="/histoire">{header.navUniverse}</Link>
+              <Link href="/contact">{header.navContact}</Link>
+              {config.theme.presentation && config.pages.galerie?.visible && <Link href="/galerie">{config.pages.galerie.title}</Link>}
+              <Link href="/compte">{header.navAccount}</Link>
+            </>
+          )}
           {estimationEnabled && <Link href="/estimation">Estimation</Link>}
         </nav>
         <div className="donut-nav-actions">
           <PublicModeSwitch />
-          <Link
+          {!collectionSite && <Link
             className="donut-account-link"
             href="/compte"
             aria-label="Mon compte"
           >
             <UserRound size={20} />
-          </Link>
-          {canReserve && (
+          </Link>}
+          {collectionSite && <Link className="donut-button compact" href="/contact">Nous contacter <ArrowUpRight size={17} /></Link>}
+          {!collectionSite && canReserve && (
             <Link
               className={`donut-button compact donut-reserve-link${shopEnabled ? " outline" : ""}`}
               href="/reservations"
@@ -1760,7 +1810,7 @@ export function DonutStore({
               <span>Réserver</span>
             </Link>
           )}
-          {shopEnabled && (
+          {!collectionSite && shopEnabled && (
             <>
               <Link className="donut-button compact" href="/commander">
                 {header.orderLabel} <ArrowUpRight size={17} />
@@ -1783,7 +1833,7 @@ export function DonutStore({
             <Menu />
           </button>
         </div>
-      </header>
+      </header>}
       <main id="main">
         {error && (
           <div role="alert" className="donut-error">
@@ -1793,7 +1843,9 @@ export function DonutStore({
             </button>
           </div>
         )}
-        {detailProduct ? (
+        {collectionSite && collectionVehicle ? (
+          <CollectionVehicleDetails key={collectionVehicle.id} vehicle={collectionVehicle} back={closeCollectionVehicle} />
+        ) : detailProduct ? (
           <section className="donut-section donut-product-page">
             <ProductDetails
               product={detailProduct}
@@ -1846,85 +1898,22 @@ export function DonutStore({
                 ))}
             </ProductRecommendations>
           </section>
-        ) : (
+        ) : gta ? <GtaSections route={route} config={config} context={ctx} settings={data?.settings} reviews={data?.reviews ?? []} preview={preview} sample={templateDemo} sections={bookingFirst(route,page.sections).filter(s=>s.visible)} fallback={renderSection}/> : (
           bookingFirst(route, page.sections)
             .filter((s) => s.visible)
             .map(renderSection)
         )}
-        {route === "contact" && crmContactEnabled && !preview && <ContactInquiry />}
+        {collectionSite && route === "deja-vendues" && !collectionVehicle && <CollectionCatalog vehicles={config.collectionVehicles ?? []} status="sold" open={openCollectionVehicle} />}
+        {route === "contact" && crmContactEnabled && !preview && <ContactInquiry collection={collectionSite} />}
+        {route === "contact" && collectionSite && !crmContactEnabled && branding.email && (
+          <section className="donut-section collection-contact-fallback">
+            <h2>Écrivez-nous</h2>
+            <p>Parlez-nous de votre recherche ou demandez une visite.</p>
+            <a className="donut-button" href={`mailto:${branding.email}`}>Envoyer un courriel</a>
+          </section>
+        )}
       </main>
-      {route !== "checkout" && (
-        <footer className="donut-footer" {...cms({ id: "site-footer" })}>
-          <div className="donut-footer-top">
-            <Link href="/" className="donut-brand">
-              <img
-                loading="lazy"
-                decoding="async"
-                src={branding.logo.src}
-                width="70"
-                height="70"
-                alt={branding.logo.alt}
-              />
-              <span>{r(footer.tagline)}</span>
-            </Link>
-            {shopEnabled && (
-              <Link href="/commander">
-                {footer.cta} <ArrowUpRight />
-              </Link>
-            )}
-          </div>
-          {extraPages.length > 0 && (
-            <nav
-              className="donut-extra-pages"
-              aria-label={t("Autres pages du restaurant")}
-            >
-              {extraPages.map(([key, page]) => (
-                <Link
-                  key={key}
-                  href={`/${key}`}
-                  aria-current={key === route ? "page" : undefined}
-                >
-                  {page.title}
-                </Link>
-              ))}
-            </nav>
-          )}
-          <div className="donut-footer-bottom">
-            <span>
-              {r(footer.credit)} · <Link href="/source">Code source</Link>
-            </span>
-            <Link href="/mentions-legales">Mentions légales</Link>
-            <Link href="/conditions-generales-vente">CGV</Link>
-            <Link href="/confidentialite">Confidentialité</Link>
-            <Link href="/cookies">Cookies</Link>
-            <button
-              onClick={() =>
-                window.dispatchEvent(new Event("donuts:cookie-settings"))
-              }
-            >
-              Gérer mes cookies
-            </button>
-            <Link href="/demo">Espace équipe ↗</Link>
-          </div>
-          {footer.notice && <p>{r(footer.notice)}</p>}
-          {updatedAt && !preview && (
-            <p className="donut-updated">
-              <small>
-                Site mis à jour le{" "}
-                <time dateTime={new Date(updatedAt).toISOString()}>
-                  {new Date(updatedAt).toLocaleDateString("fr-FR", {
-                    timeZone: "Europe/Paris",
-                    day: "numeric",
-                    month: "long",
-                    year: "numeric",
-                  })}
-                </time>
-              </small>
-            </p>
-          )}
-        </footer>
-      )}
-      {!["checkout", "compte", "suivi"].includes(route || "") && (
+      {!gta && !["checkout", "compte", "suivi"].includes(route || "") && (
         <TemplateExtras
           presentation={config.theme.presentation}
           shopEnabled={shopEnabled}
@@ -2550,6 +2539,78 @@ export function DonutStore({
           </div>
         </Modal>
       )}
+      {!gta && (config.theme.presentation || route !== "checkout") && (
+        <footer className="donut-footer" {...cms({ id: "site-footer" })}>
+          <div className="donut-footer-top">
+            <Link href="/" className="donut-brand">
+              <img
+                loading="lazy"
+                decoding="async"
+                src={branding.logo.src}
+                width="70"
+                height="70"
+                alt={branding.logo.alt}
+              />
+              <span>{r(footer.tagline)}</span>
+            </Link>
+            {!collectionSite && shopEnabled && (
+              <Link href="/commander">
+                {footer.cta} <ArrowUpRight />
+              </Link>
+            )}
+          </div>
+          {extraPages.length > 0 && (
+            <nav
+              className="donut-extra-pages"
+              aria-label={t("Autres pages du restaurant")}
+            >
+              {extraPages.map(([key, page]) => (
+                <Link
+                  key={key}
+                  href={`/${key}`}
+                  aria-current={key === route ? "page" : undefined}
+                >
+                  {page.title}
+                </Link>
+              ))}
+            </nav>
+          )}
+          <div className="donut-footer-bottom">
+            <span>
+              {r(footer.credit)} · <Link href="/source">Code source</Link>
+            </span>
+            <Link href="/mentions-legales">Mentions légales</Link>
+            <Link href="/conditions-generales-vente">CGV</Link>
+            <Link href="/confidentialite">Confidentialité</Link>
+            <Link href="/cookies">Cookies</Link>
+            <button
+              onClick={() =>
+                window.dispatchEvent(new Event("donuts:cookie-settings"))
+              }
+            >
+              Gérer mes cookies
+            </button>
+            <Link href="/demo">Espace équipe ↗</Link>
+          </div>
+          {footer.notice && <p>{r(footer.notice)}</p>}
+          {updatedAt && !preview && (
+            <p className="donut-updated">
+              <small>
+                Site mis à jour le{" "}
+                <time dateTime={new Date(updatedAt).toISOString()}>
+                  {new Date(updatedAt).toLocaleDateString("fr-FR", {
+                    timeZone: "Europe/Paris",
+                    day: "numeric",
+                    month: "long",
+                    year: "numeric",
+                  })}
+                </time>
+              </small>
+            </p>
+          )}
+        </footer>
+      )}
+      {gta && <GtaFooter config={config} context={ctx} preview={preview}/>}
     </PublicAppearance>
   );
 }

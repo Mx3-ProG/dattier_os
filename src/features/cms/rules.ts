@@ -83,6 +83,7 @@ export const reservedSlugs = new Set([
   "logout",
   "panier",
   "produits",
+  "vehicules",
   "paiement",
   "commande",
   "connexion",
@@ -140,6 +141,8 @@ const fail = (message: string): never => {
 /** Invariants that hold for every role, on every save, publish and restore. */
 export function checkInvariants(config: SiteConfig) {
   const reference = defaultConfig();
+  if (config.collectionVehicles && new Set(config.collectionVehicles.map((vehicle) => vehicle.id)).size !== config.collectionVehicles.length)
+    fail("deux véhicules portent le même identifiant.");
   // Les effets payants en CPU sont réservés aux modèles premium : un modèle
   // gratuit ne peut pas les activer, même par une requête forgée.
   const presentation = config.theme.presentation;

@@ -13,6 +13,8 @@ import type { Section } from "./schema";
  * Sources listées dans `public/cms/assets-credits.json`.
  */
 export type TemplateContent = {
+  faq?: Extract<Section, { type: "faq" }>["props"];
+  cta?: Extract<Section, { type: "cta" }>["props"];
   hero?: {
     kicker?: string;
     title?: string;
@@ -42,6 +44,7 @@ export type TemplateContent = {
     allLink?: { label: string; href: string };
   };
   reviews?: {
+    highlights?: string[];
     kicker?: string;
     title?: string;
     text?: string;
@@ -62,6 +65,7 @@ export type TemplateContent = {
     burgerHint?: string;
   };
   map?: {
+    contactKicker?: string; contactTitle?: string; contactText?: string; emailLabel?: string;
     kicker?: string;
     title?: string;
     buttonLabel?: string;
@@ -94,6 +98,42 @@ export type TemplateContent = {
 
 export const templateContent: Record<string, TemplateContent> = {
   /* ── Restauration ─────────────────────────────────────────────────────── */
+  "temps-des-donuts": {
+    hero: {
+      kicker: "Donuts & street food", title: "{{restaurant.name}}",
+      lead: "Une vitrine de donuts, du street food salé et des boissons fraîches au comptoir.",
+      image: { src: "/cms/patisserie/hero.jpg", alt: "Pâtisseries au comptoir" },
+      primary: { label: "Au menu", href: "#donuts-faq" },
+      secondary: { label: "Horaires et accès", href: "#donuts-visit" },
+      badges: [], sticker: false,
+    },
+    marquee: { items: ["Les donuts", "Le salé", "À boire", "À emporter"] },
+    about: {
+      kicker: "La boutique", title: "Bienvenue *dans notre diner.*",
+      paragraphs: ["Rose fuchsia et bleu, une vitrine pleine de couleurs. On s’arrête pour un donut, on reste pour une pause salée ou un bubble tea."],
+      image: { src: "/cms/patisserie/gallery1.jpg", alt: "La vitrine de la boutique" },
+      artCaption: "Côté comptoir", cta: { label: "Voir le menu", href: "#donuts-faq" },
+    },
+    faq: {
+      kicker: "Au menu", title: "Ça donne faim, non ?",
+      items: [
+        { question: "Les donuts", answer: "Du glaçage aux éclats croustillants, chacun sa garniture.\n\nSpéculoos\nM&M’s\nKinder Bueno\nBrochettes de donuts\nÉditions de saison" },
+        { question: "Le salé", answer: "De la street food généreuse pour un repas sur le pouce.\n\nTasty crousty\nBagels poulet curry\nDonut sandwich\nPaninis et buns" },
+        { question: "À boire", answer: "Une boisson fraîche ou un café pour accompagner votre pause.\n\nBubble tea\nMilkshakes\nCafé\nBoissons et granités" },
+        { question: "Les prix", answer: "1 à 10 € par personne\n\nTarifs à confirmer en boutique" },
+      ],
+    },
+    featuredProducts: { kicker: "En boutique", title: "À la carte", aside: "", note: "", allLink: { label: "Toute la carte", href: "/carte" } },
+    cta: { kicker: "Commandes & traiteur", title: "Une fête ? Pensez donuts.", text: "Un anniversaire ou un plateau à partager ? Contactez la boutique pour préparer votre commande.", tone: "pink", link: { label: "Contacter la boutique", href: "#gta-contact" } },
+    video: { kicker: "En images", title: "De la rue au comptoir", caption: "", source: { kind: "file", src: "/cms/patisserie/video.mp4", poster: "/cms/patisserie/hero.jpg" } },
+    gallery: { kicker: "La vitrine", title: "Un œil au comptoir", intro: "", images: [
+      { src: "/cms/patisserie/gallery2.jpg", alt: "Sélection sucrée" },
+      { src: "/cms/patisserie/gallery1.jpg", alt: "Gourmandises en vitrine" },
+    ] },
+    reviews: { kicker: "Avis", title: "Les clients en parlent", text: "", highlights: ["Un accueil chaleureux", "Des donuts moelleux", "Du salé copieux"] },
+    visit: { kicker: "Horaires", title: "Quand passer ?", hoursTitle: "Les horaires", burger: false },
+    map: { kicker: "Accès", title: "Un petit creux ? Retrouvez-nous.", buttonLabel: "Itinéraire", contactKicker: "Contact", contactTitle: "Un petit creux ? Un coup de fil.", contactText: "Pour une commande ou un plateau à partager, contactez directement la boutique.", emailLabel: "Écrire à la boutique" },
+  },
   bistrot: {
     hero: {
       kicker: "DEPUIS 1998, LE MÊME ZINC",
@@ -1132,6 +1172,79 @@ export const templateContent: Record<string, TemplateContent> = {
       title: "Une journée\n*de chantier*",
       caption: "Le chantier en accéléré, du matin à la fermeture.",
       source: { kind: "file", src: "/cms/chantier/video.mp4", poster: "/cms/chantier/hero.jpg" },
+    },
+  },
+
+  collection: {
+    hero: {
+      kicker: "UNE COLLECTION À PART",
+      title: "Des automobiles\n*qui marquent les esprits.*",
+      lead: "Une sélection exigeante de véhicules de caractère, présentés avec transparence et accompagnés du premier échange jusqu’à la remise des clés.",
+      badges: [
+        { icon: "star", label: "Sélection exigeante" },
+        { icon: "card", label: "Accompagnement sur mesure" },
+      ],
+      image: { src: "/cms/racing/gallery1.jpg", alt: "Automobile sportive de la collection" },
+      sticker: false,
+      floatingText: "",
+      primary: { label: "Voir la collection", href: "/carte" },
+      secondary: { label: "Nous contacter", href: "/contact" },
+    },
+    featuredProducts: {
+      kicker: "LA COLLECTION",
+      title: "Les dernières\n*arrivées.*",
+      aside: "Des modèles choisis pour leur caractère, leur état et leur histoire.",
+      note: "Véhicules et prix de démonstration.",
+      limit: 6,
+      allLink: { label: "Explorer la collection", href: "/carte" },
+    },
+    about: {
+      image: { src: "/cms/racing/hero.jpg", alt: "Automobile de sport sur circuit" },
+      artCaption: "LE GOÛT.\nDE L’AUTOMOBILE.",
+      kicker: "NOTRE MAISON",
+      title: "Bien plus qu’une\n*automobile.*",
+      paragraphs: [
+        "Une voiture d’exception se choisit autant avec le cœur qu’avec les faits. Nous prenons le temps de comprendre votre recherche et de présenter chaque modèle avec précision.",
+        "De la première visite à la remise des clés, notre équipe vous accompagne à chaque étape et répond à vos questions sans détour.",
+      ],
+      cta: { label: "Découvrir notre approche", href: "/pourquoi-nous" },
+    },
+    reviews: {
+      kicker: "VOTRE CONFIANCE",
+      title: "Ce sont eux\n*qui en parlent le mieux.*",
+      text: "Découvrez les retours de ceux qui nous ont confié leur projet automobile.",
+      rateLabel: "Nous noter sur Google",
+      viewLabel: "Voir les avis Google",
+      sheetLabel: "Voir la fiche Google",
+      cardCaption: "Avis vérifiés sur Google",
+    },
+    gallery: {
+      kicker: "L’UNIVERS",
+      title: "La passion en images",
+      intro: "Des détails qui font toute la différence.",
+      images: [
+        { src: "/cms/racing/gallery1.jpg", alt: "Automobile de sport" },
+        { src: "/cms/racing/gallery2.jpg", alt: "Détail automobile" },
+      ],
+    },
+    video: {
+      kicker: "NOTRE UNIVERS",
+      title: "Vivre la passion\n*automobile.*",
+      caption: "Entrez dans l’univers de notre collection.",
+      source: { kind: "file", src: "/cms/racing/video.mp4", poster: "/cms/racing/gallery1.jpg" },
+    },
+    visit: {
+      kicker: "VENEZ NOUS RENCONTRER",
+      title: "Le premier échange\n*commence ici.*",
+      hoursTitle: "Visite sur rendez-vous",
+      hoursNote: "Horaires à personnaliser dans l’éditeur.",
+      cta: { label: "Nous contacter", href: "/contact" },
+      burger: false,
+    },
+    map: {
+      kicker: "NOUS TROUVER",
+      title: "Votre prochaine découverte nous attend.",
+      buttonLabel: "Préparer ma visite",
     },
   },
 

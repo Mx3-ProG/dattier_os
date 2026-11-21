@@ -29,6 +29,7 @@ const invitationRoles: Record<Industry, { id: string; label: string }[]> = {
   retail: [{ id: "MANAGER", label: "Responsable" }, { id: "WAITER", label: "Collaborateur" }],
   construction: [{ id: "MANAGER", label: "Responsable" }, { id: "WAITER", label: "Collaborateur" }],
   services: [{ id: "MANAGER", label: "Responsable" }, { id: "WAITER", label: "Collaborateur" }],
+  home_assistance: [{ id: "MANAGER", label: "Responsable" }, { id: "WAITER", label: "Intervenant" }],
   other: [{ id: "MANAGER", label: "Responsable" }, { id: "WAITER", label: "Collaborateur" }],
 };
 

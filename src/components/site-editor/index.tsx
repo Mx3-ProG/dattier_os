@@ -1,5 +1,6 @@
 "use client";
 import { PresentationFields } from "./presentation-fields";
+import { CollectionVehiclesEditor } from "./collection-vehicles";
 import { UtensilsLoader } from "@/components/brand/utensils";
 import { useTenantSite } from "../cms-site/context";
 import Link from "next/link";
@@ -380,6 +381,7 @@ export function SiteEditor({
           send({
             type: "cms:config",
             config: configRef.current,
+            context: meta?.context,
             page: previewPage,
           });
         send({ type: "cms:select", id: selectedRef.current });
@@ -402,11 +404,11 @@ export function SiteEditor({
     };
     window.addEventListener("message", onMessage);
     return () => window.removeEventListener("message", onMessage);
-  }, [send, previewPage]);
+  }, [send, previewPage, meta]);
   useEffect(() => {
     if (ready && config)
-      send({ type: "cms:config", config, page: previewPage });
-  }, [ready, config, send, previewPage]);
+      send({ type: "cms:config", config, context: meta?.context, page: previewPage });
+  }, [ready, config, send, previewPage, meta]);
   useEffect(() => {
     if (ready) send({ type: "cms:select", id: selected });
   }, [ready, selected, send]);
@@ -1291,7 +1293,9 @@ export function SiteEditor({
             <iframe
               key={pageKey}
               ref={frame}
-              src={previewPage ? `${base}/?cms=draft` : previewSrc}
+              src={config.theme.presentation?.layout === "temps-des-donuts"
+                ? `/site-demo/gta-like?studio=${encodeURIComponent(restaurant)}&page=${encodeURIComponent(pageKey)}`
+                : previewPage ? `${base}/?cms=draft` : previewSrc}
               title={`Aperçu : ${page.title}`}
               style={{
                 width,
@@ -1474,7 +1478,7 @@ function SectionProperties({
       {section.type === "legal" && (
         <LegalIdentityFields config={config} update={update} />
       )}
-      {def?.fields.map((f) => (
+      {def?.fields.filter(f => !["highlights","contactKicker","contactTitle","contactText","emailLabel"].includes(f.key) || config.theme.presentation?.layout === "temps-des-donuts").map((f) => (
         <Field
           key={f.key}
           def={f}
@@ -1757,6 +1761,7 @@ function ThemePanel({
           })
         }
       />
+      {t.presentation?.layout === "collection" && <CollectionVehiclesEditor config={config} update={update} />}
       <h4>Couleurs</h4>
       {colorLabels.map(([key, label]) => (
         <label className="site-color" key={key}>

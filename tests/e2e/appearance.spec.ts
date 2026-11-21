@@ -59,7 +59,7 @@ test("préférences personnelles : aperçu, sauvegarde, navigation, réseau et i
   await page.reload();
   await expect.poll(() => theme(page)).toBe("#b73578");
   await expect(page.locator(".workspace")).toHaveCSS("font-family", /Nunito/);
-  await page.goto("/restaurant/bernay");
+  await page.goto("/commerce/bernay");
   await expect.poll(() => theme(page)).toBe("#b73578");
   await page.goto("/platform");
   await expect.poll(() => theme(page)).toBe("#b73578");
@@ -245,8 +245,8 @@ test("violet jour/nuit : chargement, boutons, toutes les routes et persistance",
   for (const url of [
     "/dashboard?restaurant=bernay&module=orders",
     "/dashboard?restaurant=bernay&module=customers",
-    "/restaurant/bernay",
-    "/restaurant/bernay/site",
+    "/commerce/bernay",
+    "/commerce/bernay/site",
     "/platform",
     "/platform/parrainage",
     "/offline?restaurant=bernay",

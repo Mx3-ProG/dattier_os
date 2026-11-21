@@ -49,6 +49,7 @@ export function TemplateExtras({
                   loft: "L’espace qui vous ressemble.",
                   chantier: "Des fondations solides pour vos projets.",
                   racing: "La performance est une attitude.",
+                  collection: "Chaque voiture a son histoire.",
                   manuscrit: "Chaque mot a son importance.",
                   assurance: "La confiance se construit chaque jour.",
                   patisserie: "Le bonheur est dans le four.",
@@ -58,6 +59,7 @@ export function TemplateExtras({
                   gastronomique: "Chaque plat est une œuvre.",
                   baravin: "Le bon vin se partage.",
                   brunch: "Le matin qui fait du bien.",
+                  "temps-des-donuts": "Le dernier donut se partage… ou se garde pour le goûter.",
                   burger: "Une vraie faim, un vrai burger.",
                 }[p.layout]
               }

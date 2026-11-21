@@ -1,6 +1,6 @@
 {
   "name": "atacuisine_os",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "OS open source pour les restaurateurs : équipes, commandes, stocks, boutique et clients.",
   "main": "index.js",
   "scripts": {
