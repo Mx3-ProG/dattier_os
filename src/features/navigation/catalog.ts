@@ -42,7 +42,7 @@ import { bankNavigation } from "@/features/bank/navigation";
 import { payoutsNavigation } from "@/features/payments/navigation";
 import { customersNavigation } from "@/features/loyalty/navigation";
 import { menuNavigation } from "@/features/catalog/navigation";
-import { settingsNavigation } from "@/features/platform/navigation";
+import { settingsNavigation, dashboardNavigation } from "@/features/platform/navigation";
 import { siteNavigation } from "@/features/cms/navigation";
 import { tradeToolNavigation } from "@/features/trade/navigation";
 
@@ -86,4 +86,5 @@ export const workspaceNavigation = createNavigation([
   siteNavigation,
   securityNavigation,
   addonsNavigation,
+  dashboardNavigation,
 ]);
