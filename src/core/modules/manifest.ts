@@ -89,7 +89,7 @@ export const moduleManifest = [
   { id: "finance", label: "Finance et rapports", family: "finance", offer: "included", requires: [], enhancedBy: [], navigation: ["finance"], industries: [], legacy: plan },
   { id: "bank", label: "Banque", family: "finance", offer: "included", requires: [], enhancedBy: [], navigation: ["bank"], industries: [], legacy: plan },
   { id: "payouts", label: "Versements", family: "finance", offer: "included", requires: [], enhancedBy: [], navigation: ["payouts"], industries: [], legacy: plan },
-  { id: "settings", label: "Configuration", family: "configuration", offer: "included", requires: [], enhancedBy: [], navigation: ["settings", "addons"], industries: [], legacy: always },
+  { id: "settings", label: "Configuration", family: "configuration", offer: "included", requires: [], enhancedBy: [], navigation: ["settings", "addons", "dashboard"], industries: [], legacy: always },
   { id: "security", label: "Sécurité opérationnelle", family: "configuration", offer: "included", requires: [], enhancedBy: [], navigation: ["security"], industries: [], legacy: always },
   { id: "website", label: "Site internet", family: "site", offer: "included-optional", requires: [], enhancedBy: [], navigation: ["site"], industries: [], legacy: addon("website") },
 
