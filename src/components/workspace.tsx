@@ -1,5 +1,9 @@
 "use client";
 import { workspaceNavigation } from "@/features/navigation/catalog";
+import {
+  navigationPreferenceKey,
+  hiddenNavigationIds,
+} from "@/features/navigation/preferences";
 import { currentNavigation } from "@/core/navigation/registry";
 import { moduleCategory } from "@/features/appearance/categories";
 import { CategoryBadge } from "./appearance/category-badge";
@@ -51,6 +55,7 @@ import { roleLabels } from "@/core/permissions";
 import type { Snapshot } from "@/shared/types";
 import { Dining, Kds, OrderList } from "./operations";
 import { AddonsCenter } from "./addons-center";
+import { DashboardCustomizer } from "./dashboard-customizer";
 import {
   LoadingScreenSync,
   TenantLoader,
@@ -163,12 +168,22 @@ export function Workspace() {
     [notifications, setNotifications] = useState(false),
     [guide, setGuide] = useState(false),
     [dockSheet, setDockSheet] = useState(""),
-    [updated, setUpdated] = useState("");
+    [updated, setUpdated] = useState(""),
+    [hiddenNav, setHiddenNav] = useState<string[]>([]);
   const cursor = useRef(0);
   // Établissement affiché : une réponse arrivée pour un autre (premier chargement, changement rapide) est ignorée.
   const shown = useRef(restaurant);
   useEffect(() => {
     shown.current = restaurant;
+  }, [restaurant]);
+  useEffect(() => {
+    try {
+      const raw = window.localStorage.getItem(navigationPreferenceKey(restaurant));
+      const known = new Set(workspaceNavigation.list().map((e) => e.id));
+      setHiddenNav(hiddenNavigationIds(raw, known));
+    } catch {
+      setHiddenNav([]);
+    }
   }, [restaurant]);
   useEffect(() => {
     const query = new URLSearchParams(window.location.search);
@@ -241,17 +256,22 @@ export function Workspace() {
     }
   }
   const terms = businessTerms(data?.restaurant.industry);
+  const resolvedNavigation = data
+    ? workspaceNavigation.resolve({
+        plan: data.plan,
+        roles: data.user.roles ?? data.user.role,
+        addons: data.addons,
+        licenses: data.licenses,
+        uninstalledAddons: data.uninstalledAddons,
+        activeModules: data.activeModules,
+        modules: data.modules,
+      })
+    : [];
   const allowed = data
     ? decorateNavigation(
-        workspaceNavigation.resolve({
-          plan: data.plan,
-          roles: data.user.roles ?? data.user.role,
-          addons: data.addons,
-          licenses: data.licenses,
-          uninstalledAddons: data.uninstalledAddons,
-          activeModules: data.activeModules,
-          modules: data.modules,
-        }).map((entry) => ({ ...entry, name: terms.navigation[entry.id] ?? entry.name })),
+        resolvedNavigation
+          .filter((entry) => entry.id === "dashboard" || !hiddenNav.includes(entry.id))
+          .map((entry) => ({ ...entry, name: terms.navigation[entry.id] ?? entry.name })),
       )
     : [];
   const current = currentNavigation(allowed, module, data?.user.role);
@@ -501,6 +521,14 @@ export function Workspace() {
               accessibleModules={allowed.map((entry) => entry.id)}
               navigate={navigate}
               onModulesChanged={load}
+            />
+          ) : current?.id === "dashboard" ? (
+            <DashboardCustomizer
+              key={restaurant}
+              restaurant={restaurant}
+              entries={resolvedNavigation as any}
+              hidden={hiddenNav}
+              setHidden={setHiddenNav}
             />
           ) : current?.id === "overview" ? (
             <>
