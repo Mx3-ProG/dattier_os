@@ -43,6 +43,7 @@ export function moduleCategory(module: string): ActivityCategory {
       "domains",
       "integrations",
       "reconciliation",
+      "dashboard",
     ].includes(module)
   )
     return "configuration";
