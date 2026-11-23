@@ -7,10 +7,12 @@ import { notFound, permanentRedirect, redirect } from "next/navigation";
 import { getDb, demoEnabled, one } from "@/infrastructure/database/db";
 import { withDatabaseContext } from "@/infrastructure/database/context";
 import { actor } from "@/infrastructure/auth/session";
+import { NONCE_HEADER } from "@/lib/security/csp";
 import { website } from "@/features/cms/service";
 import type { SiteConfig } from "@/features/cms/schema";
 import { plain } from "@/features/cms/text";
 import { commerce } from "@/features/commerce/service";
+import { publicOffers } from "@/features/offers/service";
 import { seoFacts, platformUrl } from "@/features/seo/server";
 import { siteUrls, pageUrl, absoluteMedia } from "@/features/seo/urls";
 import { buildJsonLd, serializeJsonLd } from "@/features/seo/jsonld";
@@ -124,6 +126,7 @@ const loadSite = cache(
           const result = {
             product,
             siteAddons: await cms.siteAddons(db),
+            offers: await publicOffers(db, restaurant),
             redirect: null,
             shopEnabled: plan >= 39 && shopInstalled,
             archived: !!statusRow.archived_at,
@@ -270,6 +273,7 @@ export default async function Page(props: Props) {
       industry={data.industry}
       demo={demoEnabled()}
       shopEnabled={data.shopEnabled}
+      nonce={(await headers()).get(NONCE_HEADER) ?? undefined}
       preview={data.preview}
       platformOrigin={demoEnabled() ? "" : process.env.APP_URL || ""}
       audience={isAudienceMode(data.audience) ? data.audience : null}
@@ -301,6 +305,7 @@ export default async function Page(props: Props) {
         estimationEnabled={data.estimationEnabled}
         crmContactEnabled={data.crmContactEnabled}
         siteAddons={data.siteAddons}
+        offers={data.offers}
       />
     </TenantSiteProvider>
   );

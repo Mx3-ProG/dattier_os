@@ -481,6 +481,16 @@ const knowledge: Record<string, Knowledge> = {
       "Comparer avec le planning : le profil était-il en service ?",
     ],
   },
+  "access.denied.external": {
+    causes: [
+      ["Compte d’un autre établissement qui suit un lien erroné.", false],
+      ["Exploration volontaire d’identifiants d’établissement.", false],
+    ],
+    checks: [
+      "Regarder si l’empreinte source revient et combien de tentatives elle cumule.",
+      "Donner l’empreinte au support de la plateforme, seul à pouvoir retrouver le compte.",
+    ],
+  },
   "payment.provider.unreachable": {
     causes: [
       ["Indisponibilité ou lenteur du service Stripe.", false],

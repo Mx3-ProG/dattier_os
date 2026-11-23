@@ -1,0 +1,42 @@
+/* Sections « Nos services » et « Nos produits » du site public. Couleurs du thème du site. */
+.site-offer { display: grid; justify-items: center; gap: 22px; }
+.site-offer-head { display: grid; gap: 8px; max-width: 46rem; text-align: center; }
+.site-offer-head h2, .site-offer-head p { margin: 0; }
+.site-offer-lead, .site-offer-hint { color: var(--muted, #6b6560); }
+.site-offer-grid {
+  width: 100%; display: grid; gap: 18px;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 260px), 1fr));
+}
+.site-offer-card {
+  display: grid; grid-template-rows: auto 1fr; overflow: hidden; text-align: left;
+  border-radius: 20px; background: var(--surface, #fff);
+  border: 1px solid color-mix(in srgb, currentColor 12%, transparent);
+}
+.site-offer-card > img, .site-offer-gallery img { width: 100%; aspect-ratio: 4 / 3; object-fit: cover; display: block; }
+.site-offer-gallery { position: relative; }
+.site-offer-dots { position: absolute; bottom: 10px; left: 0; right: 0; display: flex; justify-content: center; gap: 6px; }
+.site-offer-dots button {
+  width: 9px; height: 9px; padding: 0; border: 0; border-radius: 99px; cursor: pointer;
+  background: rgb(255 255 255 / 0.6); box-shadow: 0 0 0 1px rgb(0 0 0 / 0.15);
+}
+.site-offer-dots button[aria-pressed="true"] { background: #fff; width: 20px; }
+.site-offer-placeholder {
+  aspect-ratio: 4 / 3; display: grid; place-items: center; opacity: 0.4;
+  background: color-mix(in srgb, var(--primary, currentColor) 10%, transparent);
+}
+.site-offer-body { display: grid; align-content: start; gap: 6px; padding: 16px 18px 18px; }
+.site-offer-body small { text-transform: uppercase; letter-spacing: 0.06em; font-size: 0.72rem; opacity: 0.7; }
+.site-offer-body h3 { margin: 0; font-size: 1.15rem; }
+.site-offer-body p { margin: 0; }
+.site-offer-price { font-size: 1.15rem; font-weight: 700; color: var(--primary, currentColor); }
+.site-offer-price s { font-weight: 400; font-size: 0.95rem; opacity: 0.6; }
+.site-offer-facts { list-style: none; margin: 4px 0 0; padding: 0; display: grid; gap: 4px; font-size: 0.9rem; }
+.site-offer-facts li { display: flex; align-items: center; gap: 6px; }
+.site-offer-stock { font-weight: 600; }
+.site-offer-stock.is-low { color: #a86400; }
+.site-offer-stock.is-out { color: #b3261e; }
+.site-offer-card[data-availability="out"] .site-offer-gallery img { filter: grayscale(0.6); }
+.site-offer-body details { margin-top: 6px; }
+.site-offer-body summary { cursor: pointer; font-weight: 600; }
+.site-offer-description { white-space: pre-line; margin-top: 8px !important; }
+.site-offer-hours { margin: 8px 0 0; padding-left: 18px; font-size: 0.9rem; }

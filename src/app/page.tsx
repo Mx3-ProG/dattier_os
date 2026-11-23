@@ -1,24 +1,44 @@
 import type { Metadata } from "next";
-import { demoEnabled } from "@/infrastructure/database/db";
 import { demoLinks } from "@/infrastructure/database/demo-links";
-import { Landing } from "@/components/landing";
+import { demoEnabled } from "@/infrastructure/database/db";
+import { Landing, type Account } from "@/components/landing";
+import { authenticated } from "@/features/platform/http";
+import { overview } from "@/features/platform/service";
+import { activePromotion, trialDays } from "@/features/platform/promotion";
 import "./landing.css";
 import "./legal.css";
 export const dynamic = "force-dynamic";
 export function generateMetadata(): Metadata {
+  const promo = activePromotion();
   return {
-    title: "STUDIO S · Votre commerce, votre temps, vos choix",
-    description:
-      "Pilotez clients, ventes, stocks, équipe, site web et boutique en ligne au même endroit. Essayez STUDIO S gratuitement pendant 7 jours, puis 39 € TTC par mois sans engagement.",
+    title: "STUDIO OS · Votre commerce, votre temps, vos choix",
+    description: `Pilotez clients, ventes, stocks, équipe, site web et boutique en ligne au même endroit. Essayez STUDIO OS gratuitement pendant ${trialDays()} jours, puis ${
+      promo ? `${promo.price} € TTC par mois pendant ${promo.months} mois avec le code ${promo.code} (Black Friday), ensuite ` : ""
+    }39 € TTC par mois sans engagement.`,
     robots: { index: !demoEnabled(), follow: !demoEnabled() },
   };
 }
-export default function Page() {
+/** The signed-in customer, if any, so the home page can open their own space directly. */
+async function account(): Promise<Account | null> {
+  try {
+    const data = await authenticated(undefined, overview);
+    return {
+      name: data.user.name,
+      restaurants: (data.restaurants as { id: string; name: string }[]).map(
+        ({ id, name }) => ({ id, name }),
+      ),
+    };
+  } catch {
+    return null;
+  }
+}
+export default async function Page() {
   const demo = demoEnabled();
   return (
     <Landing
       demo={demo}
       demoHref={demoLinks().demoHref}
+      account={await account()}
     />
   );
 }

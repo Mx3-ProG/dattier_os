@@ -35,6 +35,7 @@ const arranged = [
       : [entry],
   ),
   legacy.find((entry) => entry.id === "addons")!,
+  { id: "dashboard", name: "Modifier mon tableau de bord", group: "CONFIGURATION", icon: "LayoutDashboard", permission: "settings" as Permission },
 ];
 test("navigation preserves existing entries and moves addons to the final Configuration group", () => {
   assert.equal(legacy.length, 31);

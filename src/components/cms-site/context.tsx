@@ -19,6 +19,7 @@ const Context = createContext<{
   shopEnabled: boolean;
   audience: AudienceMode | null;
   industry?: Industry;
+  nonce?: string;
 }>({
   restaurant: "",
   demo: false,
@@ -36,6 +37,7 @@ export function TenantSiteProvider({
   shopEnabled = true,
   audience = null,
   industry,
+  nonce,
   children,
 }: {
   restaurant: string;
@@ -47,11 +49,12 @@ export function TenantSiteProvider({
   audience?: AudienceMode | null;
   /** Famille d'activité : adapte le vocabulaire du site (carte, table, restaurant…). */
   industry?: Industry;
+  nonce?: string;
   children?: ReactNode;
 }) {
   const value = useMemo(
-    () => ({ restaurant, demo, platformOrigin, showcase, preview, shopEnabled, audience, industry }),
-    [restaurant, demo, platformOrigin, showcase, preview, shopEnabled, audience, industry],
+    () => ({ restaurant, demo, platformOrigin, showcase, preview, shopEnabled, audience, industry, nonce }),
+    [restaurant, demo, platformOrigin, showcase, preview, shopEnabled, audience, industry, nonce],
   );
   return <Context.Provider value={value}>{children}</Context.Provider>;
 }

@@ -4,9 +4,11 @@ import { Gift, Store } from "lucide-react";
 import { cookies } from "next/headers";
 import { planBillingReady } from "@/features/platform/plan-billing";
 import { plans, referralCookie } from "@/features/platform/pricing";
+import { activePromotion, trialDays } from "@/features/platform/promotion";
 import { actor } from "@/infrastructure/auth/session";
 import { demoEnabled, getDb } from "@/infrastructure/database/db";
 import { SubscriptionForm } from "@/components/platform/subscription-form";
+
 import "@/components/platform/access.css";
 
 /** Name of the referrer behind the visitor's referral link, if still valid. */
@@ -36,8 +38,11 @@ export default async function Page({ params }: { params: Promise<{ plan: string 
     actor().catch(() => null),
     referrerName(),
   ]);
+  const promo = activePromotion();
+  const days = trialDays();
+  // Pendant l'offre, le paiement Stripe s'ouvre dès la création de l'espace.
   const cardRequired = !demoEnabled();
-  const ready = planBillingReady();
+
   const login = `/connexion?returnTo=${encodeURIComponent(`/checkout/${offer.price}`)}`;
   return (
     <main className="access-shell">
@@ -50,8 +55,25 @@ export default async function Page({ params }: { params: Promise<{ plan: string 
         <aside className="access-hero">
           <span className="access-label">Votre abonnement</span>
           <h1>{offer.title}</h1>
-          <p className="access-price"><strong>{offer.price} €</strong> TTC / mois</p>
-          <p>7 jours gratuits après l’enregistrement de votre carte sur Stripe, puis 39 € TTC par mois. Résiliez avant la fin de l’essai pour éviter le premier prélèvement.</p>
+          {promo ? (
+            <>
+              <p className="access-price">
+                <s>{offer.price} €</s> <strong>{promo.price} €</strong> TTC / mois pendant {promo.months} mois
+              </p>
+              <p className="access-referral" role="status">
+                <Gift size={18} aria-hidden />
+                <span>
+                  Black Friday : code <strong>{promo.code}</strong> à saisir sur Stripe. Offre valable
+                  jusqu’au {promo.lastDay} minuit, puis {offer.price} € TTC / mois. Sans engagement, résiliable à tout moment.
+                </span>
+              </p>
+            </>
+          ) : (
+            <>
+              <p className="access-price"><strong>{offer.price} €</strong> TTC / mois</p>
+              <p>{days} jours d’essai gratuits après confirmation de votre carte. Aucun paiement initial. Sans engagement.</p>
+            </>
+          )}
           <p>{offer.description}</p>
           <p>Premier établissement inclus.</p>
           {referrer && (
@@ -66,13 +88,13 @@ export default async function Page({ params }: { params: Promise<{ plan: string 
             <>
               <span className="access-label">Connecté en tant que {user.name}</span>
               <h2>Créer votre espace professionnel</h2>
-              <p>Enregistrez votre carte sur Stripe : 0 € aujourd’hui, puis 39 € TTC par mois après sept jours. La date et le montant sont affichés avant votre confirmation. Vous pouvez résilier pendant l’essai.</p>
-              {cardRequired && !ready ? <p role="status">L’activation par carte est momentanément indisponible. Aucun prélèvement ne sera effectué. Revenez lorsque le paiement sera disponible.</p> : <SubscriptionForm plan={offer.price} userName={user.name} userEmail={user.email} cardRequired={cardRequired} />}
+              <p>Enregistrez votre carte sur Stripe : 0 € aujourd’hui, sept jours gratuits après confirmation, puis {offer.price} € TTC par mois hors réduction. Vous pouvez résilier avant le premier prélèvement.</p>
+              {cardRequired && !planBillingReady() ? <p>Le paiement est momentanément indisponible.</p> : <SubscriptionForm plan={offer.price} userName={user.name} userEmail={user.email} cardRequired={cardRequired} />}
             </>
           ) : (
             <>
               <span className="access-label">Votre compte</span>
-              <h2>Commencer vos 7 jours gratuits</h2>
+              <h2>{promo ? `Profiter de ${promo.price} € / mois` : `Commencer vos ${days} jours gratuits`}</h2>
               <p>Votre offre sera conservée pendant la connexion.</p>
               <Link className="access-primary" href={demoEnabled() ? login : `${login}&mode=register`}>
                 {demoEnabled() ? "Choisir un profil de démonstration" : "Créer un compte"}

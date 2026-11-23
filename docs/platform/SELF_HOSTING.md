@@ -26,6 +26,21 @@ Le transport d’identité n’est pas testé avec un fournisseur de messagerie 
 
 Un domaine de restaurant est revendiqué dans Mon site puis vérifié par DNS TXT. La vérification applicative ne crée ni DNS de routage ni certificat. Le proxy résout uniquement les domaines vérifiés. Les connexions client sont ramenées vers le domaine central pour conserver une identité fiable sans cookie partagé entre domaines indépendants.
 
+## Content Security Policy
+
+Chaque page reçoit une CSP avec un nonce propre à la requête. `CSP_MODE` choisit son effet :
+
+- `report-only`, par défaut : rien n'est bloqué, les violations sont seulement signalées.
+- `enforce` : les violations sont bloquées.
+
+Les violations arrivent dans les journaux de l'application, sur des lignes `[csp]`, sans requête ni fragment d'URL :
+
+```sh
+docker compose --env-file .env.production logs app | grep '\[csp\]'
+```
+
+Observez ces lignes une à deux semaines, corrigez ce qui relève de l'application, puis passez à `CSP_MODE=enforce` et redémarrez le service `app`. Pour revenir en arrière, remettez `report-only`. Des extensions de navigateur peuvent aussi produire des lignes : elles n'indiquent pas un défaut de l'application.
+
 ## Stockage
 
 Le déploiement utilise Garage et ses clés/bucket initiaux. Son endpoint est interne et les médias publics passent par une route qui vérifie l’établissement et la publication. Un service S3 externe peut remplacer Garage par configuration.

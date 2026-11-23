@@ -16,6 +16,7 @@ export const blackFriday = {
  */
 export const promotionCodeId = () =>
   process.env.STUDIO_PLAN_PROMOTION_CODE || "promo_1UbcliApai8VVkXiYrVIX4en";
+export const standardTrialDays = 7;
 
 export type Promotion = typeof blackFriday & { price: number; lastDay: string };
 
@@ -24,4 +25,9 @@ export function activePromotion(now = new Date()): Promotion | null {
   if (now.getTime() >= Date.parse(blackFriday.endsAt)) return null;
   return { ...blackFriday, price: basePlan - blackFriday.discount, lastDay: "samedi 21 novembre" };
 }
+
+
+/** Durée de l’essai gratuit pour un espace créé maintenant. */
+export const trialDays = (now = new Date()) =>
+  activePromotion(now) ? blackFriday.trialDays : standardTrialDays;
 

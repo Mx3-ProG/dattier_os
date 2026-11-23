@@ -295,3 +295,13 @@
   min-height: 60px;
   font-size: 48px;
 }
+
+/* Afficher / masquer un add-on dans le tableau de bord. */
+.addon-display { display: grid; gap: 8px; margin-block: 8px; }
+.addon-display .addon-hint { display: flex; align-items: center; gap: 6px; margin: 0; }
+.addon-display[data-visible="false"] .addon-hint { opacity: 0.8; }
+.addon-link {
+  justify-self: start; padding: 0; border: 0; background: none; color: inherit;
+  font: inherit; font-size: 0.875rem; text-decoration: underline; cursor: pointer; opacity: 0.8;
+}
+.addon-link:disabled { cursor: progress; opacity: 0.5; }

@@ -1,6 +1,7 @@
+import { saasReady } from "@/features/billing/stripe-saas";
 import { compareLegacyThreshold, compareLegacyCapability, legacyMinimum, type Capability } from "@/core/modules/entitlements";
 import { demoEnabled, type DB } from "@/infrastructure/database/db";
-import { saasReady } from "@/features/billing/stripe-saas";
+
 import type { Plan } from "./pricing";
 
 export async function restaurantPlan(

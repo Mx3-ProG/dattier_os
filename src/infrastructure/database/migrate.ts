@@ -86,6 +86,8 @@ const migrations: [number, string][] = [
   [120, "120_seven_day_trial.sql"],
   [121, "121_modules_all_industries.sql"],
   [122, "122_pilotage_widgets_by_trade.sql"],
+  [130, "130_repair_text_encoding.sql"],
+  [131, "131_team_direct_member.sql"],
   [140, "140_operations_modules.sql"],
   [141, "141_crm_inbox.sql"],
   [142, "142_crm_campaign_drafts.sql"],
@@ -96,9 +98,11 @@ const migrations: [number, string][] = [
   [147, "147_crm_customer_context.sql"],
   [148, "148_crm_automations.sql"],
   [149, "149_crm_inquiry_assignment.sql"],
-  [151, "151_crm_checkout_followups.sql"],
+  [150, "150_module_display.sql"],
+  [151, "151_services_products.sql"],
   [152, "152_site_section_packs.sql"],
   [153, "153_customer_follows.sql"],
+  [160, "160_denied_access_journal.sql"],
   [171, "171_platform_billing.sql"],
   [172, "172_seo_platform_sites_addon.sql"],
   [173, "173_directory_opt_in.sql"],
@@ -113,6 +117,10 @@ const migrations: [number, string][] = [
   [182, "182_home_assistance_scheduling.sql"],
   [183, "183_home_worker_reports.sql"],
   [184, "184_home_customer_booking.sql"],
+  [185, "185_merge_crm_checkout_followups.sql"],
+  [186, "186_merge_services_products.sql"],
+  [187, "187_merge_module_availability.sql"],
+  [188, "188_home_tenant_indexes.sql"],
 ];
 /** Applies every additive migration not yet recorded, inside the caller's transaction. */
 export async function applyMigrations(tx: DB) {

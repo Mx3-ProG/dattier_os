@@ -59,3 +59,6 @@ export function relevantCapabilities(industry: Industry, workflows: readonly str
   if (workflows.includes("stock")) optional.push("Factures fournisseurs");
   return { included, optional };
 }
+
+/** Legacy sector filter retained for module display integrations. */
+export const restaurantOnlyNavigation = new Set(["dining", "orders", "kitchen", "bar", "reservations", "stocks", "recipes", "suppliers", "deliveries", "menu", "qr"]);

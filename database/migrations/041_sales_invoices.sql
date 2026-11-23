@@ -166,3 +166,11 @@ BEGIN
 END $$;
 
 INSERT INTO schema_versions(version) VALUES (41);
+
+-- Restore the later module link when replaying 041 after a preproduction rollback.
+DO $$ BEGIN
+  IF to_regclass('public.home_visits') IS NOT NULL
+    AND NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname='home_visits_invoice_id_fkey' AND conrelid=to_regclass('public.home_visits')) THEN
+    ALTER TABLE public.home_visits ADD CONSTRAINT home_visits_invoice_id_fkey FOREIGN KEY(invoice_id) REFERENCES public.fin_invoices(id);
+  END IF;
+END $$;

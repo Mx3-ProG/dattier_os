@@ -103,6 +103,16 @@ export function requirePermission(
 ) {
   if (!can(role, permission)) throw new Error("Accès refusé pour ce profil.");
 }
+/** Postes qu’un administrateur peut attribuer en ajoutant directement une personne. */
+export const teamRoles = [
+  "MANAGER",
+  "WAITER",
+  "CHEF",
+  "BARTENDER",
+  "STOCK_MANAGER",
+  "PURCHASING",
+  "ACCOUNTANT",
+] as const satisfies readonly Role[];
 export const roleLabels: Record<Role, string> = {
   SUPER_ADMIN: "Super Admin",
   OWNER: "Propriétaire",

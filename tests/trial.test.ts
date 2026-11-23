@@ -6,8 +6,9 @@ import { migrate } from "../src/infrastructure/database/migrate";
 import { platformPerform } from "../src/features/platform/service";
 import type { DB } from "../src/infrastructure/database/db";
 import { onboardingInput } from "./support/onboarding";
+import { trialDays } from "../src/features/platform/promotion";
 
-test("three-day trial grants access, expires, and cannot be restarted", async () => {
+test("seven-day trial grants access, expires, and cannot be restarted", async () => {
   const db = new PGlite();
   try {
     await db.exec(await readFile("database/migrations/001_core.sql", "utf8"));
@@ -35,6 +36,8 @@ test("three-day trial grants access, expires, and cannot be restarted", async ()
       action: "cancelSubscription", organization,
     }));
     assert.equal((await asOwner(async (tx) => (await tx.query<{ plan: number }>("SELECT app.restaurant_plan($1) AS plan", [restaurant])).rows[0].plan)), 0);
+    const kept = (await db.query<{ days: number }>("SELECT extract(epoch FROM trial_ends_at-trial_started_at)/86400 AS days FROM app.organization_plans WHERE organization_id=$1", [organization])).rows[0];
+    assert.equal(Number(kept.days), trialDays(), "cancelling keeps the granted trial length");
     await db.query("UPDATE app.organization_plans SET cancelled_at=NULL,trial_started_at=now()-interval '4 days',trial_ends_at=now()-interval '1 day' WHERE organization_id=$1", [organization]);
     assert.equal((await asOwner(async (tx) => (await tx.query<{ plan: number }>("SELECT app.restaurant_plan($1) AS plan", [restaurant])).rows[0].plan)), 0);
     await db.query("SELECT app.configure_organization_plan($1,39,1)", [organization]);

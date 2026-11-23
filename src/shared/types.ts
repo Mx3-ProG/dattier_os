@@ -180,6 +180,8 @@ export type Snapshot = {
   activeModules?: { floor: boolean; "table-booking": boolean };
   /** Modules disponibles (app.module_available) ; prioritaire pour la navigation. */
   modules?: string[];
+  /** Afficher / masquer chaque module dans le tableau de bord (table module_display). */
+  moduleDisplay?: { module_id: string; shown: boolean }[];
   addons?: string[];
   licenses?: string[];
   uninstalledAddons?: string[];

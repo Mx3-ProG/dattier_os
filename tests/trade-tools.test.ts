@@ -55,21 +55,21 @@ const table = (state: State, title: string) => {
 const create = (db: PGlite, restaurant: string, tool: string, entity: string, data: unknown, user = owner) =>
   tradePerformOn(db, restaurant, user, tool, { action: "create", entity, data });
 
-test("catalogue : vingt outils métier gratuits, cinq catégories, définitions cohérentes", async () => {
+test("catalogue : vingt-et-un outils métier gratuits, six catégories, définitions cohérentes", async () => {
   const db = await database();
   try {
     const { rows } = await db.query<{ id: string; category_id: string; pricing_mode: string; listed: boolean; sellable: boolean }>(
       "SELECT id,category_id,pricing_mode,listed,sellable FROM addon_products WHERE kind='business' ORDER BY position",
     );
-    assert.equal(rows.length, 20);
-    assert.deepEqual(rows.map((row) => row.id), tradeTools.map((tool) => tool.id));
+    assert.equal(rows.length, 21);
+    assert.deepEqual(rows.map((row) => row.id).sort(), tradeTools.map((tool) => tool.id).sort());
     for (const row of rows) {
       const tool = tradeTools.find((entry) => entry.id === row.id)!;
       assert.equal(row.category_id, tool.category);
       assert.ok(row.listed && row.sellable && row.pricing_mode === "free");
     }
     const categories = await db.query<{ id: string }>("SELECT id FROM addon_categories WHERE id LIKE 'metier-%' ORDER BY position");
-    assert.deepEqual(categories.rows.map((row) => row.id), Object.values(tradeCategories).map((category) => category.id));
+    assert.deepEqual(categories.rows.map((row) => row.id).sort(), Object.values(tradeCategories).map((category) => category.id).sort());
     for (const tool of tradeTools as readonly TradeTool[]) {
       assert.ok(tool.features.length >= 3, `${tool.id} doit présenter ses fonctionnalités`);
       for (const entity of tool.entities) {

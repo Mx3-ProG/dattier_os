@@ -1,8 +1,15 @@
 import { requirePlan } from "@/features/platform/entitlements";
 import { recordFailure } from "@/features/ops-security/http";
-import { withRequestContext, requestContext } from "@/features/ops-security/context";
+import {
+  withRequestContext,
+  requestContext,
+} from "@/features/ops-security/context";
 import { withDatabaseContext } from "@/infrastructure/database/context";
-import { assertOrigin, readBody } from "@/features/platform/http";
+import {
+  assertOrigin,
+  readBody,
+  v1FailureStatus,
+} from "@/features/platform/http";
 import { NextRequest, NextResponse } from "next/server";
 import {
   getDb,
@@ -31,25 +38,17 @@ function tenant(value: unknown) {
   throw new Error("Établissement requis.");
 }
 async function fail(e: unknown) {
+  const status = v1FailureStatus(e);
   await recordFailure(e, {
     endpoint: requestContext()?.route || "/api/v1",
-    status: 400,
+    status,
   });
   const message = e instanceof Error ? e.message : "Opération impossible";
   const safe =
     message.includes("query:") || message.includes("constraint")
       ? "Les données ne permettent pas cette opération."
       : message;
-  return NextResponse.json(
-    { error: safe },
-    {
-      status: message.includes("Connexion")
-        ? 401
-        : message.includes("refusé") || message.includes("autorisé")
-          ? 403
-          : 400,
-    },
-  );
+  return NextResponse.json({ error: safe }, { status });
 }
 async function handleGet(req: NextRequest) {
   try {

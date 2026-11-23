@@ -1,6 +1,6 @@
-import { BlackFridayBanner } from "@/components/auth/black-friday-banner";
-import { plans } from "@/features/platform/pricing";
-import { additionalRestaurantPrice } from "@/features/platform/referrals";
+import { plans, additionalRestaurantPrice } from "@/features/platform/pricing";
+import { activePromotion, trialDays, type Promotion } from "@/features/platform/promotion";
+import { BlackFridayBar } from "@/components/black-friday-bar";
 import { addonCatalog } from "@/features/addons/catalog";
 import Link from "next/link";
 import { LegalLinks } from "@/components/legal/legal-page";
@@ -11,6 +11,13 @@ import {
   Wrench,
   MessageCircle,
   Boxes,
+  Clock,
+  Eye,
+  HeartHandshake,
+  LayoutDashboard,
+  PenLine,
+  Smile,
+  UserCog,
   Building2,
   CalendarDays,
   Check,
@@ -71,6 +78,40 @@ const modules = [
   }
 ];
 
+// Ce que l'outil change au quotidien : le ressenti d'abord, la fonction qui le permet ensuite.
+const outcomes = [
+  {
+    icon: Smile,
+    feeling: "Des services plus sereins",
+    text: "Fini les bons perdus et les allers-retours en cuisine : chacun sait quoi faire, au bon moment.",
+    because: "Commandes envoyées directement en cuisine et au bar",
+  },
+  {
+    icon: Clock,
+    feeling: "Du temps rendu",
+    text: "Moins de ressaisie, moins de tableurs le soir. Vous passez ce temps en salle, ou chez vous.",
+    because: "Une saisie unique, à jour partout",
+  },
+  {
+    icon: HeartHandshake,
+    feeling: "Une équipe alignée",
+    text: "La salle, la cuisine et le bar regardent la même information. Moins de tensions, plus de coups de main.",
+    because: "Un poste et des accès par métier",
+  },
+  {
+    icon: Sparkles,
+    feeling: "Une vitrine dont vous êtes fier",
+    text: "Un site à votre image, que vous modifiez vous-même, sans dépendre d’une agence.",
+    because: "Studio de site, réservation et boutique intégrés",
+  },
+  {
+    icon: Eye,
+    feeling: "Tout sous contrôle",
+    text: "Ventes, stocks, réservations : vous savez où vous en êtes, sans attendre la fin du mois.",
+    because: "Tableau de bord et historique en temps réel",
+  },
+];
+
 const steps = [
   {
     title: "Créez votre compte",
@@ -86,14 +127,14 @@ const steps = [
   },
 ];
 
-const faq = [
+const faq = (days: number) => [
   {
     q: "L’IA peut-elle agir sans mon accord ?",
     a: "Non. STUDIO VOICE prépare les actions et vous demande de les confirmer. Vous pouvez lui écrire ou lui parler, selon la compatibilité de votre navigateur. Les réponses utilisent des crédits, avec des recharges payantes distinctes de votre abonnement.",
   },
   {
     q: "Puis-je essayer gratuitement et arrêter quand je veux ?",
-    a: "Oui. À la création de votre espace, vous disposez de 7 jours d’essai gratuits, sans paiement initial. À la fin, l’accès payant ne démarre qu’après activation de votre abonnement. Vous pouvez arrêter votre essai ou résilier votre abonnement à tout moment depuis votre espace, sans engagement. Les options et crédits IA sont facturés séparément.",
+    a: `Oui. À la création de votre espace, vous disposez de ${days} jours d’essai gratuits, sans paiement initial. À la fin, l’accès payant ne démarre qu’après activation de votre abonnement. Vous pouvez arrêter votre essai ou résilier votre abonnement à tout moment depuis votre espace, sans engagement. Les options et crédits IA sont facturés séparément.`,
   },
   {
     q: "Puis-je essayer avant de créer mon compte ?",
@@ -141,17 +182,16 @@ const faq = [
   }
 ];
 
-/** La démo s’ouvre dans un nouvel onglet : la page d’origine reste ouverte. */
 const newTab = { target: "_blank", rel: "noopener" } as const;
 
-function Cta({ demoHref, inverse }: { demoHref?: string; inverse?: boolean }) {
+function Cta({ demoHref, inverse, days, promo }: { demoHref?: string; inverse?: boolean; days: number; promo: Promotion | null }) {
   return (
     <div className="landing-cta">
       <Link
         className={`landing-btn ${inverse ? "light" : "primary"}`}
         href="/checkout/39"
       >
-        Essayer gratuitement 7 jours <ArrowUpRight size={16} aria-hidden />
+        {promo ? `Je m’abonne à ${promo.price} € / mois` : `Essayer gratuitement ${days} jours`} <ArrowUpRight size={16} aria-hidden />
       </Link>
       <Link className="landing-btn outline" href={demoHref || "/guide"}>
         {demoHref ? "Découvrir comment ça marche" : "Lire le guide"}
@@ -160,20 +200,94 @@ function Cta({ demoHref, inverse }: { demoHref?: string; inverse?: boolean }) {
   );
 }
 
+export type Account = {
+  name: string;
+  restaurants: { id: string; name: string }[];
+};
+
+// Raccourcis de l'espace client : tableau de bord, équipe, studio du site, site publié.
+const shortcuts = (id: string) => [
+  {
+    icon: LayoutDashboard,
+    label: "Tableau de bord",
+    href: `/dashboard?restaurant=${id}`,
+  },
+  { icon: UserCog, label: "Équipe et accès", href: `/restaurant/${id}` },
+  { icon: PenLine, label: "Modifier mon site", href: `/restaurant/${id}/site` },
+  { icon: Globe, label: "Voir mon site", href: `/r/${id}` },
+];
+
+function ClientSpace({ account }: { account: Account | null }) {
+  return (
+    <section className="landing-section landing-client" id="espace-client">
+      <div className="landing-heading">
+        <span className="landing-eyebrow">Déjà client ?</span>
+        <h2>
+          {account
+            ? `Bonjour ${account.name}, votre espace vous attend.`
+            : "Retrouvez votre espace en un clic."}
+        </h2>
+        <p>
+          Tableau de bord, équipe et accès, modification et publication de votre
+          site : tout se pilote depuis votre espace client.
+        </p>
+      </div>
+      {account && account.restaurants.length ? (
+        <div className="landing-client-list">
+          {account.restaurants.map((r) => (
+            <article key={r.id} className="landing-client-card">
+              <h3>{r.name}</h3>
+              <div className="landing-shortcuts">
+                {shortcuts(r.id).map((s) => (
+                  <Link key={s.label} href={s.href}>
+                    <s.icon size={18} aria-hidden /> {s.label}
+                  </Link>
+                ))}
+              </div>
+            </article>
+          ))}
+        </div>
+      ) : (
+        <div className="landing-client-card">
+          <div className="landing-shortcuts">
+            {[
+              { icon: LayoutDashboard, label: "Tableau de bord" },
+              { icon: UserCog, label: "Équipe et accès" },
+              { icon: PenLine, label: "Modifier mon site" },
+              { icon: Globe, label: "Voir mon site" },
+            ].map((s) => (
+              <Link key={s.label} href="/platform">
+                <s.icon size={18} aria-hidden /> {s.label}
+              </Link>
+            ))}
+          </div>
+          <Link className="landing-btn primary" href="/platform">
+            Se connecter à mon espace <ArrowUpRight size={16} aria-hidden />
+          </Link>
+        </div>
+      )}
+    </section>
+  );
+}
+
 export function Landing({
   demo,
   demoHref,
+  account = null,
 }: {
   demo: boolean;
   demoHref?: string;
+  account?: Account | null;
 }) {
+  const promo = activePromotion();
+  const days = trialDays();
   return (
     <div className="landing">
       <a className="skip-link" href="#contenu">
         Aller au contenu
       </a>
       <div className="landing-top">
-      <BlackFridayBanner />
+      {promo && <BlackFridayBar promo={promo} />}
       <header className="landing-header">
         <Link href="/" className="landing-brand">
           <Store size={20} aria-hidden /> STUDIO S
@@ -187,9 +301,13 @@ export function Landing({
           {demoHref && <Link href={demoHref}>Démo</Link>}
           <Link href="/guide">Guide</Link>
           <Link href="/site-demo/modeles">Modèles de sites</Link>
+          <a href="#espace-client">Espace client</a>
         </nav>
-        <Link className="landing-btn primary small" href="/platform">
-          Se connecter
+        <Link
+          className="landing-btn primary small"
+          href={account ? "#espace-client" : "/platform"}
+        >
+          {account ? "Mon espace" : "Se connecter"}
         </Link>
       </header>
       </div>
@@ -215,7 +333,7 @@ export function Landing({
               Relation client (CRM), gestion de votre activité (ERP) et création
               de site (CMS) : les outils de votre commerce réunis au même endroit.
             </p>
-            <Cta demoHref={demoHref} />
+            <Cta demoHref={demoHref} days={days} promo={promo} />
             <div className="landing-trust-links">
               <a href="#equipe">Maintenu par Studio ATS</a>
               <Link href="/guide">Un guide ouvert à tous</Link>
@@ -224,7 +342,9 @@ export function Landing({
               </a>
             </div>
             <p className="landing-note">
-              7 jours gratuits · Puis 39 € TTC / mois après activation · Sans engagement
+              {promo
+                ? `Black Friday : ${promo.price} € TTC / mois pendant ${promo.months} mois avec le code ${promo.code}, puis 39 € · Sans engagement, résiliable à tout moment`
+                : `${days} jours gratuits · Puis 39 € TTC / mois après activation · Sans engagement`}
             </p>
           </div>
           <div className="landing-hero-scene">
@@ -443,6 +563,30 @@ export function Landing({
               Illustration du parcours : aucune commande n’est envoyée depuis
               cette page.
             </p>
+          </div>
+        </section>
+
+        <section className="landing-section landing-outcomes">
+          <div className="landing-heading">
+            <span className="landing-eyebrow">Ce que ça change pour vous</span>
+            <h2>Moins de stress, plus de restaurant.</h2>
+            <p>
+              Un logiciel ne vaut que par ce qu’il vous rend : du calme pendant
+              le coup de feu, du temps après la fermeture, et la fierté d’un
+              établissement qui tourne.
+            </p>
+          </div>
+          <div className="landing-outcome-grid">
+            {outcomes.map((o) => (
+              <article key={o.feeling} className="landing-card">
+                <o.icon size={22} aria-hidden />
+                <h3>{o.feeling}</h3>
+                <p>{o.text}</p>
+                <span className="landing-because">
+                  <Check size={14} aria-hidden /> {o.because}
+                </span>
+              </article>
+            ))}
           </div>
         </section>
 
@@ -665,7 +809,7 @@ export function Landing({
             <span className="landing-eyebrow">Offres</span>
             <h2>Un abonnement. Des add-ons à la carte.</h2>
             <p>
-              7 jours d’essai gratuits, sans paiement initial. Puis un établissement
+              {days} jours d’essai gratuits, sans paiement initial. Puis un établissement
               inclus à 39 € TTC par mois après activation. Chaque établissement supplémentaire coûte{" "}
               {additionalRestaurantPrice} € TTC par mois et bénéficie du même
               abonnement. Le hors ligne, la sécurité, la traçabilité et les
@@ -692,9 +836,18 @@ export function Landing({
               <article key={p.price} className="landing-plan" data-featured>
                 <span className="landing-eyebrow">Votre activité, à votre façon</span>
                 <h3>{p.title}</h3>
-                <strong className="landing-plan-quota">
-                  {p.price} € TTC / mois
-                </strong>
+                {promo ? (
+                  <strong className="landing-plan-quota">
+                    <s>{p.price} €</s> {promo.price} € TTC / mois pendant {promo.months} mois
+                    <span className="landing-plan-promo">
+                      Code {promo.code} · puis {p.price} € TTC / mois · jusqu’au {promo.lastDay} minuit
+                    </span>
+                  </strong>
+                ) : (
+                  <strong className="landing-plan-quota">
+                    {p.price} € TTC / mois
+                  </strong>
+                )}
                 <ul>
                   {p.features.map((feature) => (
                     <li key={feature}>
@@ -703,7 +856,7 @@ export function Landing({
                   ))}
                 </ul>
                 <Link className="landing-btn light" href={`/checkout/${p.price}`}>
-                  Essayer {p.title} gratuitement
+                  {promo ? `Je m’abonne à ${promo.price} € / mois` : `Essayer ${p.title} gratuitement`}
                 </Link>
               </article>
             ))}
@@ -731,7 +884,7 @@ export function Landing({
             <h2>Avant de vous lancer.</h2>
           </div>
           <div className="landing-faq">
-            {faq.map((f) => (
+            {faq(days).map((f) => (
               <details key={f.q}>
                 <summary>{f.q}</summary>
                 <p>{f.a}</p>
@@ -740,6 +893,7 @@ export function Landing({
           </div>
         </section>
 
+        <ClientSpace account={account} />
         <section className="landing-section landing-contact" id="contact">
           <div className="landing-heading">
             <span className="landing-eyebrow">Parlons de votre quotidien</span>
@@ -787,7 +941,7 @@ export function Landing({
               ? "Prenez le temps de vous projeter dans la démo. Imaginez votre prochaine journée avec moins de choses à gérer."
               : "Commencez par ce qui vous pèse le plus. Les clients, le site, les commandes : avancez à votre rythme."}
           </p>
-          <Cta demoHref={demoHref} inverse />
+          <Cta demoHref={demoHref} inverse days={days} promo={promo} />
         </section>
       </main>
 

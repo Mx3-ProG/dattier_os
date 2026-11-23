@@ -6,6 +6,7 @@ import { isSuperAdminEmail } from "@/infrastructure/auth/superadmin";
 import { roles } from "@/core/permissions";
 import { log } from "@/features/orders/service";
 import { planBillingReady } from "./plan-billing";
+import { activePromotion } from "./promotion";
 import { setLayoutAccess } from "@/features/floor/service";
 import { industries } from "@/core/tenant/business";
 import { trades, freeTradeTools, discoverySources, workflowChoices } from "@/features/onboarding/catalog";
@@ -130,6 +131,7 @@ export async function overview(db: DB, user: Actor) {
   return {
     user,
     billingReady: planBillingReady(),
+    promotion: activePromotion(),
     draft: (await rows<{ draft: unknown }>(db, "SELECT draft FROM onboarding_drafts WHERE profile_id=$1", [user.id]))[0]?.draft ?? null,
     platformAdmin,
     isSuperAdmin: isSuper,

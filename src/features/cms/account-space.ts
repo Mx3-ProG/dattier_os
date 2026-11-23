@@ -108,6 +108,7 @@ export const spaceByTemplate: Record<string, AccountSpaceId> = {
   patisserie: "commerce",
   brunch: "commerce",
   burger: "commerce",
+  "temps-des-donuts": "commerce",
   baravin: "commerce",
   streetfood: "commerce",
   // Éditorial

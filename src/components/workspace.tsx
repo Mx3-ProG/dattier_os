@@ -1,4 +1,5 @@
 "use client";
+import { dashboardEntries } from "@/features/modules/display";
 import { workspaceNavigation } from "@/features/navigation/catalog";
 import {
   navigationPreferenceKey,
@@ -92,6 +93,7 @@ const CustomerHealthCenter = dynamic(() => import("./pilotage-addons/center").th
 const ToolView = dynamic(() => import("./trade/trade-center").then((m) => m.ToolView));
 const HomeAssistanceCenter = dynamic(() => import("./home-assistance/center").then((m) => m.HomeAssistanceCenter));
 import { tradeTool } from "@/features/trade/definitions";
+const OffersCenter = dynamic(() => import("./offers/offers-center").then((m) => m.OffersCenter));
 const FinanceCenter = dynamic(() =>
   import("./finance-center").then((m) => m.FinanceCenter),
 );
@@ -249,12 +251,12 @@ export function Workspace() {
       setError("");
       await load();
       return d.result as unknown;
-      return d.result;
     } catch (e) {
       setError((e as Error).message);
       throw e;
     }
   }
+  const perform = async (action: Record<string, unknown>) => { await act(action); };
   const terms = businessTerms(data?.restaurant.industry);
   const resolvedNavigation = data
     ? workspaceNavigation.resolve({
@@ -269,7 +271,7 @@ export function Workspace() {
     : [];
   const allowed = data
     ? decorateNavigation(
-        resolvedNavigation
+        dashboardEntries(resolvedNavigation, undefined, new Set(), data.moduleDisplay)
           .filter((entry) => entry.id === "dashboard" || !hiddenNav.includes(entry.id))
           .map((entry) => ({ ...entry, name: terms.navigation[entry.id] ?? entry.name })),
       )
@@ -519,6 +521,8 @@ export function Workspace() {
               restaurant={restaurant}
               accountId={data.user.id}
               accessibleModules={allowed.map((entry) => entry.id)}
+              moduleDisplay={data.moduleDisplay ?? []}
+              industry={data.restaurant.industry}
               navigate={navigate}
               onModulesChanged={load}
             />
@@ -526,7 +530,7 @@ export function Workspace() {
             <DashboardCustomizer
               key={restaurant}
               restaurant={restaurant}
-              entries={resolvedNavigation as any}
+              entries={resolvedNavigation}
               hidden={hiddenNav}
               setHidden={setHiddenNav}
             />
@@ -539,14 +543,14 @@ export function Workspace() {
               <Overview data={data} navigate={navigate} />
             </>
           ) : current?.id === "dining" ? (
-            <Dining data={data} act={act} />
+            <Dining data={data} act={perform} />
           ) : current?.id === "orders" ? (
-            <OrderList data={data} act={act} />
+            <OrderList data={data} act={perform} />
           ) : current?.id === "kitchen" || current?.id === "bar" ? (
             <Kds
               data={data}
               station={current.id === "kitchen" ? "kitchen" : "bar"}
-              act={act}
+              act={perform}
             />
           ) : current?.id === "qr" ? (
             <QrPortfolio restaurant={restaurant} />
@@ -564,6 +568,14 @@ export function Workspace() {
             <HomeAssistanceCenter key={restaurant} restaurant={restaurant} />
           ) : current && tradeTool(current.id.slice(5)) && current.id.startsWith("tool-") ? (
             <ToolView key={`${restaurant}-${current.id}`} tool={tradeTool(current.id.slice(5))!} restaurant={restaurant} act={act} />
+          ) : current?.id === "services" || current?.id === "products" ? (
+            <OffersCenter
+              key={`${current.id}-${restaurant}`}
+              restaurant={restaurant}
+              kind={current.id}
+              onOpenSite={allowed.some((entry) => entry.id === "site") ? () => navigate("site") : undefined}
+              onOpenStock={allowed.some((entry) => entry.id === "stocks") ? () => navigate("stocks") : undefined}
+            />
           ) : current?.id === "finance" ? (
             <Finance data={data} />
           ) : current?.id === "accounting" ? (
@@ -587,7 +599,7 @@ export function Workspace() {
               key={`${current?.id}-${restaurant}`}
               module={current?.id || ""}
               data={data}
-              act={act}
+              act={perform}
             />
           )}
         </main>
