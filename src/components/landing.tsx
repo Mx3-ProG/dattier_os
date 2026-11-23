@@ -186,6 +186,7 @@ export function Landing({
           <a href="#equipe">Studio ATS</a>
           {demoHref && <Link href={demoHref}>Démo</Link>}
           <Link href="/guide">Guide</Link>
+          <Link href="/site-demo/modeles">Modèles de sites</Link>
         </nav>
         <Link className="landing-btn primary small" href="/platform">
           Se connecter
@@ -796,7 +797,7 @@ export function Landing({
         </span>
         <nav aria-label="Liens utiles">
           {demoHref && <Link href={demoHref} {...newTab}>Démonstration</Link>}
-          {demo && <Link href="/site-demo">Exemple de site de commerce</Link>}
+          <Link href="/site-demo/modeles">Modèles de sites internet</Link>
           <Link href="/guide">Guide d’utilisation</Link>
           <Link href="/guide#evolutions">Évolutions et maintenance</Link>
           <a

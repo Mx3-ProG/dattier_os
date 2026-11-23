@@ -186,11 +186,13 @@ export function TemplatesPanel({
   apply,
   back,
   dirty = false,
+  browseOnly = false,
 }: {
   demo: boolean;
   apply: (template: SiteTemplate, composition: boolean) => void;
   back: () => void;
   dirty?: boolean;
+  browseOnly?: boolean;
 }) {
   const [filter, setFilter] = useState("all");
   const [query, setQuery] = useState("");
@@ -207,7 +209,7 @@ export function TemplatesPanel({
     <section className="template-shop">
       <button className="tpl-back" onClick={back}>
         <ArrowLeft size={16} />
-        Mon site web
+        {browseOnly ? "Accueil" : "Mon site web"}
       </button>
       <header className="tpl-heading">
         <span className="shop-eyebrow">BOUTIQUE DE MODÈLES</span>
@@ -386,7 +388,7 @@ export function TemplatesPanel({
                 </li>
               ))}
           </ul>
-          <label className="shop-apply-option">
+          {!browseOnly && <label className="shop-apply-option">
             <input
               type="checkbox"
               checked={composition}
@@ -400,14 +402,14 @@ export function TemplatesPanel({
                 polices, la composition visuelle et les interactions.
               </small>
             </span>
-          </label>
-          <p className="muted">
+          </label>}
+          {!browseOnly && <p className="muted">
             {selected.id === "collection" && composition
               ? "La composition ajoute les pages automobile et un inventaire éditable. Votre identité et vos données existantes sont conservées. Le changement reste dans le brouillon."
               : "Votre identité, vos autres pages et vos données sont conservées. Le changement reste dans le brouillon et peut être annulé."}
-          </p>
+          </p>}
           <div className="actions">
-            <Button
+            {browseOnly ? <a href="/platform">Créer mon site avec ce catalogue</a> : <Button
               disabled={selected.premium && !demo}
               onClick={() => {
                 apply(selected, composition);
@@ -420,7 +422,7 @@ export function TemplatesPanel({
                   : "Achat bientôt disponible"
                 : "Choisir ce modèle"}
               <ArrowRight size={16} />
-            </Button>
+            </Button>}
             <Button variant="ghost" onClick={() => setSelected(null)}>
               Continuer à explorer
             </Button>
