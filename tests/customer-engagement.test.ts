@@ -3,9 +3,9 @@ import assert from "node:assert/strict";
 import { PGlite } from "@electric-sql/pglite";
 import { readFile } from "node:fs/promises";
 import { randomUUID } from "node:crypto";
-import { migrate } from "../src/lib/database/migrate";
-import { seed } from "../src/lib/database/seed";
-import { one, rows } from "../src/lib/database/db";
+import { migrate } from "../src/infrastructure/database/migrate";
+import { seed } from "../src/infrastructure/database/seed";
+import { one, rows } from "../src/infrastructure/database/db";
 import { commerce } from "../src/features/commerce/service";
 import { customerForActor } from "../src/features/commerce/account";
 import { claimReward } from "../src/features/commerce/rewards";
@@ -31,7 +31,7 @@ import {
   reachedMilestones,
   type FlashRule,
 } from "../src/features/commerce/engagement-rules";
-import type { Actor } from "../src/lib/auth/session";
+import type { Actor } from "../src/infrastructure/auth/session";
 
 const owner: Actor = { id: "nadia", name: "Nadia", role: "OWNER" };
 const R = "bernay";

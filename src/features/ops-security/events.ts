@@ -1,7 +1,7 @@
-import { databaseContext } from "@/lib/database/context";
+import { databaseContext } from "@/infrastructure/database/context";
 import { randomUUID } from "node:crypto";
-import type { Database as PGlite } from "@/lib/database/types";
-import type { DB } from "@/lib/database/db";
+import type { Database as PGlite } from "@/infrastructure/database/types";
+import type { DB } from "@/infrastructure/database/db";
 import { requestContext } from "./context";
 import { classifyAudit } from "./classify";
 import { sanitize, scrubText } from "./sanitize";

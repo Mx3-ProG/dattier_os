@@ -10,6 +10,7 @@ import {
   Users,
 } from "lucide-react";
 import { FloorMap, ZoneSwitch, type MapTable } from "../floor-map";
+import { useTenantSite } from "../cms-site/context";
 
 type Day = { date: string; status: string; free: number; total: number };
 type Calendar = { month: string; largest: number; group: boolean; days: Day[] };
@@ -81,6 +82,7 @@ export function Booking({
   demo?: boolean;
 } = {}) {
   const RESTAURANT = restaurant;
+  const t = useTenantSite().text;
   const [guests, setGuests] = useState(2),
     [month, setMonth] = useState(() => todayParis().slice(0, 7)),
     [cal, setCal] = useState<Calendar | null>(null),
@@ -179,14 +181,14 @@ export function Booking({
     if (t.capacity < guests) return "small";
     return "taken";
   };
-  const caption = (t: MapTable) =>
+  const caption = (entry: MapTable) =>
     ({
       idle: "choisissez d’abord une heure",
-      selected: "votre table",
+      selected: t("votre table"),
       free: "libre",
       small: `trop petite pour ${guests}`,
       taken: "déjà réservée",
-    })[stateOf(t)] ?? "";
+    })[stateOf(entry)] ?? "";
 
   async function submit(form: HTMLFormElement) {
     if (!slot || !date || !time) return;
@@ -240,11 +242,10 @@ export function Booking({
           <p>
             {longDate(done.date)} à {done.time} · {done.guests}{" "}
             {done.guests > 1 ? "personnes" : "personne"}
-            {done.table ? ` · table ${done.table}` : ""}
+            {done.table ? t(` · table ${done.table}`) : ""}
           </p>
           <p className="muted">
-            Votre demande est enregistrée : la table est retenue et l’équipe
-            doit encore la confirmer.
+            {t("Votre demande est enregistrée : la table est retenue et l’équipe doit encore la confirmer.")}
             {demo
               ? " Démonstration locale : aucun e-mail ni SMS n’a été envoyé."
               : " Elle vous recontacte avec les coordonnées indiquées."}
@@ -268,11 +269,10 @@ export function Booking({
       <header className="booking-head">
         <span className="eyebrow">ON VOUS GARDE UNE PLACE ?</span>
         <h1>
-          Choisissez votre jour, votre heure <em>et votre table.</em>
+          Choisissez votre jour, votre heure <em>{t("et votre table.")}</em>
         </h1>
         <p>
-          Les disponibilités sont celles de la salle en temps réel. Votre
-          demande retient la table, l’équipe la confirme ensuite.
+          {t("Les disponibilités sont celles de la salle en temps réel. Votre demande retient la table, l’équipe la confirme ensuite.")}
         </p>
       </header>
       {error && (
@@ -441,7 +441,7 @@ export function Booking({
             <div className="plan-title">
               <span className="step-index">4</span>
               <div>
-                <b>Choisissez votre table</b>
+                <b>{t("Choisissez votre table")}</b>
                 <small>
                   {slot
                     ? `${longDate(date!)} · ${time} · ${guests} pers.`
@@ -451,7 +451,7 @@ export function Booking({
             </div>
             <ul className="map-legend" aria-label="Légende du plan">
               <li className="free">Libre</li>
-              <li className="selected">Votre table</li>
+              <li className="selected">{t("Votre table")}</li>
               <li className="taken">Réservée</li>
               <li className="small">Trop petite</li>
             </ul>
@@ -501,8 +501,7 @@ export function Booking({
                     </p>
                   ) : (
                     <p>
-                      Touchez une table verte, ou laissez l’équipe choisir la
-                      meilleure pour vous.
+                      {t("Touchez une table verte, ou laissez l’équipe choisir la meilleure pour vous.")}
                     </p>
                   )}
                 </div>

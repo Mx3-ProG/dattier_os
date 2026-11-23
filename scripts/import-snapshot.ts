@@ -1,6 +1,6 @@
 /** Offline import only: source MUST be a cold, operator-created snapshot. Never point this at a live directory. */
 import { PGlite } from "@electric-sql/pglite";
-import { PostgresDatabase } from "../src/lib/database/postgres";
+import { PostgresDatabase } from "../src/infrastructure/database/postgres";
 import { mkdtemp, cp, rm } from "node:fs/promises";
 import path from "node:path";
 import { tmpdir } from "node:os";

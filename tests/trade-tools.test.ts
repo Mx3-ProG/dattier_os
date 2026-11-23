@@ -2,8 +2,8 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import { PGlite } from "@electric-sql/pglite";
-import { migrate } from "../src/lib/database/migrate";
-import { seed } from "../src/lib/database/seed";
+import { migrate } from "../src/infrastructure/database/migrate";
+import { seed } from "../src/infrastructure/database/seed";
 import { allergenList, tradeCategories, tradeTools, type TradeTool } from "../src/features/trade/definitions";
 import {
   builtinSegment,
@@ -15,7 +15,7 @@ import {
   quoteTotals,
   shippingQuote,
 } from "../src/features/trade/model";
-import { parisTime, tradePerformOn, tradeStateOn, type Scoped } from "../src/features/trade/service";
+import { parisTime, tradePerformOn, tradePilotage, tradeStateOn, type Scoped } from "../src/features/trade/service";
 
 async function database() {
   const db = new PGlite();
@@ -55,21 +55,21 @@ const table = (state: State, title: string) => {
 const create = (db: PGlite, restaurant: string, tool: string, entity: string, data: unknown, user = owner) =>
   tradePerformOn(db, restaurant, user, tool, { action: "create", entity, data });
 
-test("catalogue : vingt outils métier gratuits, cinq catégories, définitions cohérentes", async () => {
+test("catalogue : vingt-et-un outils métier gratuits, six catégories, définitions cohérentes", async () => {
   const db = await database();
   try {
     const { rows } = await db.query<{ id: string; category_id: string; pricing_mode: string; listed: boolean; sellable: boolean }>(
       "SELECT id,category_id,pricing_mode,listed,sellable FROM addon_products WHERE kind='business' ORDER BY position",
     );
-    assert.equal(rows.length, 20);
-    assert.deepEqual(rows.map((row) => row.id), tradeTools.map((tool) => tool.id));
+    assert.equal(rows.length, 21);
+    assert.deepEqual(rows.map((row) => row.id).sort(), tradeTools.map((tool) => tool.id).sort());
     for (const row of rows) {
       const tool = tradeTools.find((entry) => entry.id === row.id)!;
       assert.equal(row.category_id, tool.category);
       assert.ok(row.listed && row.sellable && row.pricing_mode === "free");
     }
     const categories = await db.query<{ id: string }>("SELECT id FROM addon_categories WHERE id LIKE 'metier-%' ORDER BY position");
-    assert.deepEqual(categories.rows.map((row) => row.id), Object.values(tradeCategories).map((category) => category.id));
+    assert.deepEqual(categories.rows.map((row) => row.id).sort(), Object.values(tradeCategories).map((category) => category.id).sort());
     for (const tool of tradeTools as readonly TradeTool[]) {
       assert.ok(tool.features.length >= 3, `${tool.id} doit présenter ses fonctionnalités`);
       for (const entity of tool.entities) {
@@ -315,6 +315,28 @@ test("migration descendante : outils métier et fiches retirés, boutique intact
     assert.equal((await db.query("SELECT to_regclass('public.trade_records') AS t")).rows[0] && (await db.query<{ t: string | null }>("SELECT to_regclass('public.trade_records') AS t")).rows[0].t, null);
     assert.equal((await db.query("SELECT * FROM addon_products WHERE kind='business'")).rows.length, 0);
     assert.ok((await db.query("SELECT * FROM addon_products WHERE kind='loading_screen'")).rows.length >= 10);
+  } finally {
+    await db.close();
+  }
+});
+
+test("vue d’ensemble : chaque outil métier installé alimente ses blocs, les autres restent absents", async () => {
+  const db = await database();
+  try {
+    await as(db, "nadia", "bernay");
+    assert.deepEqual(await tradePilotage(db, "bernay", owner), {});
+    await install(db, "bernay", "site-planning", "quote-builder", "equipment-log");
+    await create(db, "bernay", "site-planning", "site", { name: "Maison Durand", status: "En cours", start: "2020-01-01", end: "2099-01-31" });
+    await create(db, "bernay", "site-planning", "site", { name: "Ancien", status: "Terminé", start: "2020-01-01", end: "2099-01-31" });
+    await create(db, "bernay", "quote-builder", "quote", { number: "D-1", title: "Toiture", client: "M. Durand", status: "Envoyé", lines: [{ label: "Tuiles", quantity: 1, unit: "u", unitPrice: 1000, vat: 20 }] });
+    await create(db, "bernay", "equipment-log", "equipment", { name: "Bétonnière", kind: "Engin", status: "Disponible", nextService: "2020-01-01" });
+    const summary = await tradePilotage(db, "bernay", owner);
+    assert.deepEqual(summary.sites, { active: 1 });
+    assert.deepEqual(summary.quotes, { pending: 1 });
+    assert.deepEqual(summary.equipment, { due: 1 });
+    assert.equal(summary.agenda, undefined);
+    // Un profil sans la permission d’un outil ne voit pas son bloc.
+    assert.equal((await tradePilotage(db, "bernay", waiter)).quotes, undefined);
   } finally {
     await db.close();
   }

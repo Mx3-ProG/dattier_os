@@ -1,5 +1,6 @@
 import { z } from "zod";
-import { themedVisuals, type ThemedVisualId } from "@/features/cms/themed-visuals";
+import { themedVisuals } from "@/features/cms/themed-visuals";
+import { type ThemedVisualId } from "@/features/cms/public";
 
 /**
  * Moteur commun des écrans de chargement : ce module ne dépend ni du serveur
@@ -149,7 +150,7 @@ export function parseLoadingCache(raw: string | null, restaurant: string): Loadi
 export function restaurantFromLocation(pathname: string, search: string): string | null {
   const query = new URLSearchParams(search).get("restaurant");
   if (query) return query;
-  const match = /^\/restaurant\/([^/]+)/.exec(pathname);
+  const match = /^\/(?:restaurant|commerce)\/([^/]+)/.exec(pathname);
   if (!match) return null;
   try {
     return decodeURIComponent(match[1]);

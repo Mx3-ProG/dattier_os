@@ -1,9 +1,9 @@
 "use client";
 import { SiteEditor } from "./index";
 import { TenantSiteProvider } from "../cms-site/context";
-import type { Role } from "@/lib/permissions";
-import { RestaurantAdminShell } from "@/components/platform/restaurant-admin-shell";
-import type { Industry } from "@/features/onboarding/catalog";
+import type { Role } from "@/core/permissions";
+import { BusinessAdminShell } from "@/components/platform/restaurant-admin-shell";
+import type { Industry } from "@/features/onboarding/public";
 
 export function WebsiteStudio({
   restaurant,
@@ -24,8 +24,8 @@ export function WebsiteStudio({
 }) {
   const dashboard = `/dashboard?restaurant=${encodeURIComponent(restaurant)}`;
   return (
-    <TenantSiteProvider restaurant={restaurant} demo={demo}>
-      <RestaurantAdminShell
+    <TenantSiteProvider restaurant={restaurant} demo={demo} industry={industry}>
+      <BusinessAdminShell
         restaurant={restaurant}
         restaurantName={restaurantName}
         industry={industry}
@@ -37,12 +37,12 @@ export function WebsiteStudio({
       >
         <SiteEditor
           liveDataHref={(module) =>
-            industry !== "restaurant" ? dashboard + "&module=trade-tools" : module === "menu"
-              ? `${dashboard}&module=menu`
-              : `/restaurant/${restaurant}?module=shop${module === "reviews" ? "#avis" : "#reglages-commande"}`
+            module === "menu" || module.startsWith("tool-")
+              ? `${dashboard}&module=${module}`
+              : `/commerce/${restaurant}?module=shop${module === "reviews" ? "#avis" : "#reglages-commande"}`
           }
         />
-      </RestaurantAdminShell>
+      </BusinessAdminShell>
     </TenantSiteProvider>
   );
 }

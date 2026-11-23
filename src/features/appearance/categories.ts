@@ -14,7 +14,7 @@ export const defaultCategoryColors = Object.fromEntries(
   Object.entries(activityCategories).map(([key, value]) => [key, value.color]),
 ) as Record<ActivityCategory, string>;
 export function moduleCategory(module: string): ActivityCategory {
-  if (["orders", "dining", "kitchen", "bar", "reservations"].includes(module))
+  if (["orders", "dining", "kitchen", "bar", "reservations"].includes(module) || module.startsWith("tool-"))
     return "operations";
   if (
     [
@@ -25,9 +25,6 @@ export function moduleCategory(module: string): ActivityCategory {
       "purchases",
       "suppliers",
       "deliveries",
-      "trade-tools",
-      "services",
-      "products",
     ].includes(module)
   )
     return "management";
@@ -46,6 +43,7 @@ export function moduleCategory(module: string): ActivityCategory {
       "domains",
       "integrations",
       "reconciliation",
+      "dashboard",
     ].includes(module)
   )
     return "configuration";

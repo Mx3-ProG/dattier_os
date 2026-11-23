@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import { RestaurantHub } from "@/components/platform/restaurant-hub";
+import { BusinessHub } from "@/components/platform/restaurant-hub";
 import { restaurantAdminContext } from "@/features/platform/admin-context";
 export default async function Page({
   params,
@@ -10,7 +10,7 @@ export default async function Page({
   const access = await restaurantAdminContext(restaurant).catch(() => null);
   if (!access) notFound();
   return (
-    <RestaurantHub
+    <BusinessHub
       restaurant={restaurant}
       restaurantName={access.restaurantName}
       activity={access.activity}

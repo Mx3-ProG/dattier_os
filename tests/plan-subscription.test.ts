@@ -2,9 +2,9 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import { PGlite } from "@electric-sql/pglite";
-import { migrate } from "../src/lib/database/migrate";
+import { migrate } from "../src/infrastructure/database/migrate";
 import { platformPerform } from "../src/features/platform/service";
-import type { DB } from "../src/lib/database/db";
+import type { DB } from "../src/infrastructure/database/db";
 import { onboardingInput } from "./support/onboarding";
 
 test("abonnement Stripe : activation, impayé, résiliation, droits réservés au rôle de facturation", async () => {

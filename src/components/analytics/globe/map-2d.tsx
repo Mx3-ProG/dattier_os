@@ -2,7 +2,8 @@
 import { geoNaturalEarth1, geoPath } from "d3-geo";
 import { useEffect, useMemo, useState } from "react";
 import { countryGeo } from "@/features/analytics/country-geo";
-import { clusterPoints, type GlobePoint } from "@/features/analytics/cluster";
+import { clusterPoints } from "@/features/analytics/cluster";
+import { type GlobePoint } from "@/features/analytics/public";
 import { loadWorldFeatures } from "./assets";
 
 const WIDTH = 960;

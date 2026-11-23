@@ -1,6 +1,6 @@
 "use client";
 import { CategoryBadge } from "./appearance/category-badge";
-import { can } from "@/lib/permissions";
+import { can } from "@/core/permissions";
 import { useEffect, useState } from "react";
 import {
   Plus,
@@ -13,12 +13,13 @@ import {
   Wine,
   QrCode,
 } from "lucide-react";
-import type { Snapshot, Table, MenuItem } from "@/lib/types";
-import { money, dateTime } from "@/lib/domain";
+import type { Snapshot, Table, MenuItem } from "@/shared/types";
+import { money, dateTime } from "@/domain/shared/units";
 import { Button } from "./ui/button";
 import { Badge, Form, Modal, type Act } from "./forms";
 import { FloorEditor } from "./floor-editor";
 import { QrButton, QrPortfolio } from "./qr/qr-portfolio";
+import { adaptText } from "@/core/tenant/vocabulary";
 export function Composer({
   data,
   table,
@@ -30,6 +31,7 @@ export function Composer({
   act: Act;
   close: () => void;
 }) {
+  const t = (text: string) => adaptText(text, data.restaurant.industry);
   const [cart, setCart] = useState<Record<string, number>>({}),
     [category, setCategory] = useState(
       data.user.role === "BARTENDER" ? "Boissons" : "Plats",
@@ -52,7 +54,7 @@ export function Composer({
       <input
         className="search"
         aria-label="Rechercher un produit"
-        placeholder="Rechercher un plat ou une boisson…"
+        placeholder={t("Rechercher un plat ou une boisson…")}
         value={query}
         onChange={(e) => setQuery(e.target.value)}
       />
@@ -155,6 +157,7 @@ export function Composer({
   );
 }
 export function Dining({ data, act }: { data: Snapshot; act: Act }) {
+  const t = (text: string) => adaptText(text, data.restaurant.industry);
   const [selected, setSelected] = useState<Table | null>(null),
     [view, setView] = useState<"service" | "layout">("service"),
     [qrOpen, setQrOpen] = useState(false);
@@ -199,7 +202,7 @@ export function Dining({ data, act }: { data: Snapshot; act: Act }) {
           {(
             [
               ["service", "Service"],
-              ["layout", "Aménager la salle"],
+              ["layout", t("Aménager la salle")],
             ] as const
           ).map(([id, label]) => (
             <button
@@ -216,8 +219,7 @@ export function Dining({ data, act }: { data: Snapshot; act: Act }) {
       )}
       <div className="qr-floor-bar">
         <span className="muted">
-          {tables.length} table{tables.length > 1 ? "s" : ""} · un QR code par
-          table, créé ou retiré automatiquement avec la table.
+          {t(`${tables.length} table${tables.length > 1 ? "s" : ""} · un QR code par table, créé ou retiré automatiquement avec la table.`)}
         </span>
         <Button variant="secondary" onClick={() => setQrOpen(true)}>
           <QrCode size={16} /> Gérer les QR codes
@@ -225,8 +227,8 @@ export function Dining({ data, act }: { data: Snapshot; act: Act }) {
       </div>
       {qrOpen && (
         <Modal
-          title="QR codes des tables"
-          description="Scanné par un client : la commande à table. Par l’équipe : la table s’ouvre dans le plan de salle."
+          title={t("QR codes des tables")}
+          description={t("Scanné par un client : la commande à table. Par l’équipe : la table s’ouvre dans le plan de salle.")}
           close={() => setQrOpen(false)}
         >
           <QrPortfolio
@@ -242,8 +244,8 @@ export function Dining({ data, act }: { data: Snapshot; act: Act }) {
         <>
           <div className="section-heading">
             <div>
-              <h2>La salle, en un regard</h2>
-              <p>Ouvrez une table pour prendre une commande.</p>
+              <h2>{t("La salle, en un regard")}</h2>
+              <p>{t("Ouvrez une table pour prendre une commande.")}</p>
             </div>
             <span className="pill">
               <span className="dot" />
@@ -336,6 +338,7 @@ export function OrderList({
   act: Act;
   compact?: boolean;
 }) {
+  const t = (text: string) => adaptText(text, data.restaurant.industry);
   // An order QR scanned by the team lands here with ?focus=<order>.
   const focus =
     typeof window === "undefined"
@@ -404,9 +407,9 @@ export function OrderList({
             <small>
               <Clock size={13} /> {dateTime(o.created_at)} ·{" "}
               {o.channel === "staff"
-                ? "Salle"
+                ? t("Salle")
                 : o.channel === "qr"
-                  ? "QR table"
+                  ? t("QR table")
                   : "Site public"}
             </small>
             {o.customer_name && (
@@ -466,7 +469,7 @@ export function OrderList({
             </div>
             {o.payment_amount !== null && o.payment_amount !== undefined && (
               <p className="note">
-                Règlement déclaré {o.session_id ? "de la table" : ""} :{" "}
+                Règlement déclaré {o.session_id ? t("de la table") : ""} :{" "}
                 {money(o.payment_amount)} · remise : {money(o.discount ?? 0)}
               </p>
             )}
@@ -510,7 +513,7 @@ export function OrderList({
       {payment && (
         <Modal title="Déclarer le règlement" close={() => setPayment(null)}>
           <p>
-            Cette opération clôture toutes les commandes de la session de table.
+            {t("Cette opération clôture toutes les commandes de la session de table.")}
             Aucun encaissement réel n’est effectué.
           </p>
           <Form
@@ -568,6 +571,7 @@ export function Kds({
   station: "kitchen" | "bar";
   act: Act;
 }) {
+  const t = (text: string) => adaptText(text, data.restaurant.industry);
   const [showDone, setShowDone] = useState(false);
   const [choosing, setChoosing] = useState(false),
     [table, setTable] = useState<Table | null>(null);
@@ -592,7 +596,7 @@ export function Kds({
       )}
       {choosing && (
         <Modal
-          title="Nouvelle commande · choisir une table"
+          title={t("Nouvelle commande · choisir une table")}
           close={() => setChoosing(false)}
         >
           <div className="three-grid">

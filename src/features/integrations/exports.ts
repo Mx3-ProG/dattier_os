@@ -1,6 +1,6 @@
-import { rows, type DB } from "@/lib/database/db";
-import { scope, type Actor } from "@/lib/auth/session";
-import { requirePermission } from "@/lib/permissions";
+import { rows, type DB } from "@/infrastructure/database/db";
+import { scope, type Actor } from "@/infrastructure/auth/session";
+import { requirePermission } from "@/core/permissions";
 import { log } from "@/features/orders/service";
 const cell = (value: unknown) => {
   let s = String(value ?? "");

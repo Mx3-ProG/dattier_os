@@ -77,6 +77,20 @@
     "permission": "stock"
   },
   {
+    "id": "products",
+    "name": "Produits",
+    "group": "GESTION",
+    "icon": "Package",
+    "permission": "catalog"
+  },
+  {
+    "id": "services",
+    "name": "Services",
+    "group": "GESTION",
+    "icon": "HandCoins",
+    "permission": "catalog"
+  },
+  {
     "id": "suppliers",
     "name": "Fournisseurs",
     "group": "GESTION",

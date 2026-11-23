@@ -2,8 +2,8 @@ import { before, after, test } from "node:test";
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import { PGlite } from "@electric-sql/pglite";
-import { migrate } from "../src/lib/database/migrate";
-import { seed } from "../src/lib/database/seed";
+import { migrate } from "../src/infrastructure/database/migrate";
+import { seed } from "../src/infrastructure/database/seed";
 import { sitePerform } from "../src/features/site/service";
 import { defaultConfig } from "../src/features/cms/defaults";
 import { siteConfigSchema, type SiteConfig } from "../src/features/cms/schema";
@@ -22,7 +22,7 @@ import {
 import { buildJsonLd, serializeJsonLd } from "../src/features/seo/jsonld";
 import { seoFacts } from "../src/features/seo/server";
 import type { Product, Settings } from "../src/features/commerce/schema";
-import type { DB } from "../src/lib/database/db";
+import type { DB } from "../src/infrastructure/database/db";
 
 /* ───────────── Fictitious tenants: different domains, sectors, languages ───────────── */
 

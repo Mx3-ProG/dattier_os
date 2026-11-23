@@ -2,9 +2,9 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import { PGlite } from "@electric-sql/pglite";
-import { migrate } from "../src/lib/database/migrate";
-import { seed } from "../src/lib/database/seed";
-import { calculateEstimation, estimationSaveSchema } from "../src/features/estimation/model";
+import { migrate } from "../src/infrastructure/database/migrate";
+import { seed } from "../src/infrastructure/database/seed";
+import { calculateEstimation, estimationSaveSchema } from "../src/domain/estimation/model";
 
 const item = { id: "3d9ae3c6-e998-4469-b0a9-44649b452777", kind: "service" as const,
   name: "Prestation", unit: "heure", priceCents: 12000, costCents: 4000,

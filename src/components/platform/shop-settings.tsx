@@ -1,6 +1,6 @@
 "use client";
 import { useState } from "react";
-import type { Settings } from "@/features/commerce/schema";
+import type { Settings } from "@/features/commerce/public";
 const days = [
   "Dimanche",
   "Lundi",

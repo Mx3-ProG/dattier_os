@@ -1,4 +1,4 @@
-import type { DB } from "@/lib/database/types";
+import type { DB } from "@/infrastructure/database/types";
 
 export type ActiveModule = "floor" | "table-booking";
 export async function moduleEnabled(

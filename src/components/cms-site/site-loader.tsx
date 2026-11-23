@@ -1,7 +1,8 @@
 "use client";
 import { useEffect, useSyncExternalStore } from "react";
 import { LoadingScreenView } from "@/components/loading-screens/engine";
-import { isLoadingRenderer, loadingRenderers, type LoadingRendererDefinition, type LoadingRendererId } from "@/features/addons/loading-screens";
+import { isLoadingRenderer, loadingRenderers } from "@/features/addons/loading-screens";
+import { type LoadingRendererDefinition, type LoadingRendererId } from "@/features/addons/public";
 import { siteLoaderKey } from "@/features/cms/site-addons";
 
 type Stored = { renderer: LoadingRendererId; name: string };

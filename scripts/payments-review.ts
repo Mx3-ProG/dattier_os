@@ -1,7 +1,7 @@
 /* Contrôle anti-fraude humain des paiements signalés. Réservé à l’opérateur :
    un restaurateur ne peut pas lever lui-même le contrôle sur ses propres ventes. */
-import { PostgresDatabase } from "../src/lib/database/postgres";
-import { rows } from "../src/lib/database/db";
+import { PostgresDatabase } from "../src/infrastructure/database/postgres";
+import { rows } from "../src/infrastructure/database/db";
 
 const url = process.env.MIGRATION_DATABASE_URL;
 if (!url) throw new Error("MIGRATION_DATABASE_URL requis.");

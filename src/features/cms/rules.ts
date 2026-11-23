@@ -1,5 +1,7 @@
 import { defaultConfig, systemPageKeys } from "./defaults";
 import { registry } from "./registry";
+import { siteTemplates } from "./templates";
+import { effectIsPremium, effectLabels } from "./effects";
 import type { Section, SectionType, SiteConfig, Theme } from "./schema";
 
 /* ───────────────────────── Contrast (WCAG 2.x) ───────────────────────── */
@@ -81,6 +83,7 @@ export const reservedSlugs = new Set([
   "logout",
   "panier",
   "produits",
+  "vehicules",
   "paiement",
   "commande",
   "connexion",
@@ -138,6 +141,21 @@ const fail = (message: string): never => {
 /** Invariants that hold for every role, on every save, publish and restore. */
 export function checkInvariants(config: SiteConfig) {
   const reference = defaultConfig();
+  if (config.collectionVehicles && new Set(config.collectionVehicles.map((vehicle) => vehicle.id)).size !== config.collectionVehicles.length)
+    fail("deux véhicules portent le même identifiant.");
+  // Les effets payants en CPU sont réservés aux modèles premium : un modèle
+  // gratuit ne peut pas les activer, même par une requête forgée.
+  const presentation = config.theme.presentation;
+  if (presentation?.effects) {
+    const template = siteTemplates.find((t) => t.id === presentation.layout);
+    if (template && !template.premium) {
+      const used = Object.values(presentation.effects).filter(effectIsPremium);
+      if (used.length)
+        fail(
+          `l’effet « ${effectLabels[used[0]]} » est réservé aux modèles premium`,
+        );
+    }
+  }
   for (const key of systemPageKeys) {
     const page = config.pages[key];
     if (!page)

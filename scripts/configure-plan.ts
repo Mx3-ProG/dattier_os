@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { PostgresDatabase } from "../src/lib/database/postgres";
+import { PostgresDatabase } from "../src/infrastructure/database/postgres";
 import { referralPricing } from "../src/features/platform/referrals";
 
 const [organization, rawPlan, rawSeats, ...archive] = process.argv.slice(2);

@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
-import { demoEnabled } from "@/lib/database/db";
+import { demoLinks } from "@/infrastructure/database/demo-links";
+import { demoEnabled } from "@/infrastructure/database/db";
 import { Landing, type Account } from "@/components/landing";
 import { authenticated } from "@/features/platform/http";
 import { overview } from "@/features/platform/service";
@@ -36,7 +37,7 @@ export default async function Page() {
   return (
     <Landing
       demo={demo}
-      demoHref={demo ? "/demo" : process.env.ATACUISINE_PUBLIC_DEMO_URL}
+      demoHref={demoLinks().demoHref}
       account={await account()}
     />
   );

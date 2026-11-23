@@ -1,7 +1,10 @@
 "use client";
-import { workspaceNavigation } from "@/features/navigation/catalog";
-import { restaurantOnlyNavigation } from "@/features/onboarding/catalog";
 import { dashboardEntries } from "@/features/modules/display";
+import { workspaceNavigation } from "@/features/navigation/catalog";
+import {
+  navigationPreferenceKey,
+  hiddenNavigationIds,
+} from "@/features/navigation/preferences";
 import { currentNavigation } from "@/core/navigation/registry";
 import { moduleCategory } from "@/features/appearance/categories";
 import { CategoryBadge } from "./appearance/category-badge";
@@ -49,15 +52,18 @@ import {
   GraduationCap,
   QrCode,
 } from "lucide-react";
-import { roleLabels } from "@/lib/permissions";
-import type { Snapshot } from "@/lib/types";
+import { roleLabels } from "@/core/permissions";
+import type { Snapshot } from "@/shared/types";
 import { Dining, Kds, OrderList } from "./operations";
 import { AddonsCenter } from "./addons-center";
+import { DashboardCustomizer } from "./dashboard-customizer";
 import {
   LoadingScreenSync,
   TenantLoader,
 } from "./loading-screens/tenant-loader";
 import { Management } from "./management";
+import { TrialReminder } from "./billing/trial-reminder";
+import { adaptText, businessTerms } from "@/core/tenant/vocabulary";
 import dynamic from "next/dynamic";
 const Overview = dynamic(() => import("./overview").then((m) => m.Overview), {
   loading: () => <p>Chargement du tableau de bord…</p>,
@@ -84,12 +90,14 @@ const EstimationCenter = dynamic(() => import("./estimation/center").then((m) =>
 const ProspectScannerCenter = dynamic(() => import("./pilotage-addons/center").then((m) => m.ProspectScannerCenter));
 const PipelineCrmCenter = dynamic(() => import("./pilotage-addons/center").then((m) => m.PipelineCrmCenter));
 const CustomerHealthCenter = dynamic(() => import("./pilotage-addons/center").then((m) => m.CustomerHealthCenter));
+const ToolView = dynamic(() => import("./trade/trade-center").then((m) => m.ToolView));
+const HomeAssistanceCenter = dynamic(() => import("./home-assistance/center").then((m) => m.HomeAssistanceCenter));
+import { tradeTool } from "@/features/trade/definitions";
 const OffersCenter = dynamic(() => import("./offers/offers-center").then((m) => m.OffersCenter));
-const TradeCenter = dynamic(() => import("./trade/trade-center").then((m) => m.TradeCenter));
 const FinanceCenter = dynamic(() =>
   import("./finance-center").then((m) => m.FinanceCenter),
 );
-import { dateTime } from "@/lib/domain";
+import { dateTime } from "@/domain/shared/units";
 import { Tutorial } from "./tutorial/tour";
 import { CuisineIa } from "./assistant/cuisine-ia";
 import { QrPortfolio } from "./qr/qr-portfolio";
@@ -162,8 +170,23 @@ export function Workspace() {
     [notifications, setNotifications] = useState(false),
     [guide, setGuide] = useState(false),
     [dockSheet, setDockSheet] = useState(""),
-    [updated, setUpdated] = useState("");
+    [updated, setUpdated] = useState(""),
+    [hiddenNav, setHiddenNav] = useState<string[]>([]);
   const cursor = useRef(0);
+  // Établissement affiché : une réponse arrivée pour un autre (premier chargement, changement rapide) est ignorée.
+  const shown = useRef(restaurant);
+  useEffect(() => {
+    shown.current = restaurant;
+  }, [restaurant]);
+  useEffect(() => {
+    try {
+      const raw = window.localStorage.getItem(navigationPreferenceKey(restaurant));
+      const known = new Set(workspaceNavigation.list().map((e) => e.id));
+      setHiddenNav(hiddenNavigationIds(raw, known));
+    } catch {
+      setHiddenNav([]);
+    }
+  }, [restaurant]);
   useEffect(() => {
     const query = new URLSearchParams(window.location.search);
     const r = query.get("restaurant");
@@ -177,6 +200,7 @@ export function Workspace() {
       `/api/v1/state?restaurant=${encodeURIComponent(restaurant)}`,
     );
     const d = await r.json();
+    if (shown.current !== restaurant) return;
     if (r.status === 401) {
       router.push("/platform");
       return;
@@ -227,29 +251,41 @@ export function Workspace() {
       setError("");
       await load();
       return d.result as unknown;
-      return d.result;
     } catch (e) {
       setError((e as Error).message);
       throw e;
     }
   }
+  const perform = async (action: Record<string, unknown>) => { await act(action); };
+  const terms = businessTerms(data?.restaurant.industry);
+  const resolvedNavigation = data
+    ? workspaceNavigation.resolve({
+        plan: data.plan,
+        roles: data.user.roles ?? data.user.role,
+        addons: data.addons,
+        licenses: data.licenses,
+        uninstalledAddons: data.uninstalledAddons,
+        activeModules: data.activeModules,
+        modules: data.modules,
+      })
+    : [];
   const allowed = data
     ? decorateNavigation(
-        dashboardEntries(workspaceNavigation.resolve({
-          plan: data.plan,
-          roles: data.user.roles ?? data.user.role,
-          addons: data.addons,
-          licenses: data.licenses,
-          uninstalledAddons: data.uninstalledAddons,
-          activeModules: data.activeModules,
-          modules: data.modules,
-        }), data.restaurant.industry, restaurantOnlyNavigation, data.moduleDisplay).map((entry) =>
-            entry.id === "trade-tools" && data.restaurant.industry !== "restaurant"
-              ? { ...entry, name: "Mon métier" } : entry),
+        dashboardEntries(resolvedNavigation, undefined, new Set(), data.moduleDisplay)
+          .filter((entry) => entry.id === "dashboard" || !hiddenNav.includes(entry.id))
+          .map((entry) => ({ ...entry, name: terms.navigation[entry.id] ?? entry.name })),
       )
     : [];
   const current = currentNavigation(allowed, module, data?.user.role);
-  const navigate = (s: string) => {
+  const navigate = (target: string) => {
+    // Ancien point d'entrée unique des outils métier : premier outil installé, sinon la boutique.
+    // « operations » : premier écran du groupe OPÉRATIONS de ce métier.
+    const s =
+      target === "trade-tools"
+        ? allowed.find((entry) => entry.id.startsWith("tool-"))?.id ?? "addons"
+        : target === "operations"
+          ? allowed.find((entry) => entry.group === "OPÉRATIONS")?.id ?? "addons"
+          : target;
     if (["site", "security"].includes(s)) {
       router.push(`/restaurant/${restaurant}/${s}`);
       return;
@@ -272,7 +308,7 @@ export function Workspace() {
     return (
       <TenantLoader
         restaurant={restaurant}
-        label="Votre restaurant se prépare"
+        label="Votre espace se prépare"
       />
     );
   if (!data)
@@ -280,8 +316,8 @@ export function Workspace() {
       <main className="loading">
         <Leaf />
         <h1>STUDIO OS</h1>
-        <p>{error || "Votre restaurant se prépare…"}</p>
-        <Link href="/platform">Mes restaurants et connexion</Link>
+        <p>{error || "Votre espace se prépare…"}</p>
+        <Link href="/platform">Mes établissements et connexion</Link>
       </main>
     );
   return (
@@ -345,7 +381,7 @@ export function Workspace() {
           <Globe size={17} /> Voir le site public <ArrowUpRight size={16} />
         </Link>
         <Link
-          href={`/restaurant/${restaurant}`}
+          href={`/commerce/${restaurant}`}
           className="sidebar-profile"
           data-tour="profile"
         >
@@ -423,10 +459,10 @@ export function Workspace() {
         ) : (
           <div className="demo-banner" data-tour="banner">
             <span>{data.restaurant.name}</span>
-            <Link href={`/restaurant/${restaurant}`}>
-              Administrer le restaurant
+            <Link href={`/commerce/${restaurant}`}>
+              {adaptText("Administrer le restaurant", data.restaurant.industry)}
             </Link>
-            <Link href="/platform">Mes restaurants</Link>
+            <Link href="/platform">Mes établissements</Link>
           </div>
         )}
         {notifications && (
@@ -463,6 +499,7 @@ export function Workspace() {
           data-activity-category={moduleCategory(current?.id || "overview")}
         >
           <CategoryBadge category={moduleCategory(current?.id || "overview")} />
+          <TrialReminder trial={data.trial} />
           {error && (
             <div className="error" role="alert">
               {error}
@@ -489,19 +526,31 @@ export function Workspace() {
               navigate={navigate}
               onModulesChanged={load}
             />
+          ) : current?.id === "dashboard" ? (
+            <DashboardCustomizer
+              key={restaurant}
+              restaurant={restaurant}
+              entries={resolvedNavigation}
+              hidden={hiddenNav}
+              setHidden={setHiddenNav}
+            />
           ) : current?.id === "overview" ? (
-            data.restaurant.industry && data.restaurant.industry !== "restaurant"
-              ? <section className="card"><h1>Bienvenue chez {data.restaurant.name}</h1><p>Votre espace {data.restaurant.trade || "professionnel"} réunit vos outils, votre équipe et votre activité.</p><div className="actions"><button onClick={() => navigate("trade-tools")}>Ouvrir mes outils métier</button><Link href={"/restaurant/" + restaurant + "/import-clients"}>Importer des clients</Link><Link href={"/restaurant/" + restaurant + "?module=team"}>Inviter mon équipe</Link></div></section>
-              : <Overview data={data} navigate={navigate} />
+            <>
+              {data.restaurant.industry && data.restaurant.industry !== "restaurant" && (
+                <section className="card" style={{ marginBottom: 20 }}><h2>Bienvenue chez {data.restaurant.name}</h2><p>Votre espace {data.restaurant.trade || "professionnel"} réunit vos outils, votre équipe et votre activité.</p><div className="actions"><button onClick={() => navigate("trade-tools")}>Ouvrir mes opérations</button><Link href={"/restaurant/" + restaurant + "/import-clients"}>Importer des clients</Link><Link href={"/commerce/" + restaurant + "?module=team"}>Inviter mon équipe</Link></div></section>
+              )}
+              {/* Stats are shown for every business family; each block can be hidden in « Personnaliser mon pilotage ». */}
+              <Overview data={data} navigate={navigate} />
+            </>
           ) : current?.id === "dining" ? (
-            <Dining data={data} act={act} />
+            <Dining data={data} act={perform} />
           ) : current?.id === "orders" ? (
-            <OrderList data={data} act={act} />
+            <OrderList data={data} act={perform} />
           ) : current?.id === "kitchen" || current?.id === "bar" ? (
             <Kds
               data={data}
               station={current.id === "kitchen" ? "kitchen" : "bar"}
-              act={act}
+              act={perform}
             />
           ) : current?.id === "qr" ? (
             <QrPortfolio restaurant={restaurant} />
@@ -515,6 +564,10 @@ export function Workspace() {
             <PipelineCrmCenter key={restaurant} restaurant={restaurant} />
           ) : current?.id === "customer-health" ? (
             <CustomerHealthCenter key={restaurant} restaurant={restaurant} />
+          ) : current?.id === "tool-home-operations" ? (
+            <HomeAssistanceCenter key={restaurant} restaurant={restaurant} />
+          ) : current && tradeTool(current.id.slice(5)) && current.id.startsWith("tool-") ? (
+            <ToolView key={`${restaurant}-${current.id}`} tool={tradeTool(current.id.slice(5))!} restaurant={restaurant} act={act} />
           ) : current?.id === "services" || current?.id === "products" ? (
             <OffersCenter
               key={`${current.id}-${restaurant}`}
@@ -523,8 +576,6 @@ export function Workspace() {
               onOpenSite={allowed.some((entry) => entry.id === "site") ? () => navigate("site") : undefined}
               onOpenStock={allowed.some((entry) => entry.id === "stocks") ? () => navigate("stocks") : undefined}
             />
-          ) : current?.id === "trade-tools" ? (
-            <TradeCenter key={restaurant} restaurant={restaurant} act={act} onOpenStore={() => navigate("addons")} />
           ) : current?.id === "finance" ? (
             <Finance data={data} />
           ) : current?.id === "accounting" ? (
@@ -548,7 +599,7 @@ export function Workspace() {
               key={`${current?.id}-${restaurant}`}
               module={current?.id || ""}
               data={data}
-              act={act}
+              act={perform}
             />
           )}
         </main>
@@ -619,7 +670,7 @@ export function Workspace() {
         </>
       )}
       {data.restaurant.industry === "restaurant" && <CuisineIa restaurant={restaurant} execute={act} onNavigate={navigate} />}
-      {data.restaurant.industry === "restaurant" && <Tutorial
+      {<Tutorial
         data={data}
         restaurant={restaurant}
         modules={allowed.map((m) => m.id)}

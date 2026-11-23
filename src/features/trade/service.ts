@@ -24,9 +24,9 @@ import {
 import { log } from "@/features/orders/service";
 import { authenticated as authenticatedRequest } from "@/features/platform/http";
 import { withBusinessErrors } from "@/features/addons/store-service";
-import { scope } from "@/lib/auth/session";
-import { one, rows, type DB } from "@/lib/database/db";
-import { can } from "@/lib/permissions";
+import { scope } from "@/infrastructure/auth/session";
+import { one, rows, type DB } from "@/infrastructure/database/db";
+import { can } from "@/core/permissions";
 
 const authenticated: typeof authenticatedRequest = (restaurant, fn) =>
   withBusinessErrors(() => authenticatedRequest(restaurant, fn));
@@ -688,4 +688,95 @@ export async function tradePerformOn(db: DB, restaurant: string, scoped: Scoped,
     }
     return tradeStateOn(db, restaurant, scoped, tool.id);
   }
+}
+
+/** Chiffres des outils métier repris par la vue d'ensemble (outils installés et permis seulement). */
+export type TradePilotage = {
+  agenda?: { today: number; upcoming: { client: string; service: string; start: string; status: string }[] };
+  sites?: { active: number };
+  quotes?: { pending: number };
+  reports?: { reservesOpen: number };
+  equipment?: { due: number };
+  salonStock?: { low: number };
+  followups?: { week: number };
+};
+export async function tradePilotage(
+  db: DB,
+  restaurant: string,
+  user: { role: Scoped["role"]; roles?: Scoped["roles"] },
+): Promise<TradePilotage> {
+  const open = async (id: string) => {
+    const tool = isTradeTool(id) ? tradeTool(id) : undefined;
+    if (!tool || (tool.permission !== null && !can(user.roles ?? user.role, tool.permission))) return null;
+    if (!(await installed(db, restaurant, id))) return null;
+    return records(db, restaurant, id);
+  };
+  const today = todayIso();
+  const summary: TradePilotage = {};
+  const agenda = await open("appointment-booking");
+  if (agenda) {
+    const services = byEntity(agenda, "service");
+    const live = byEntity(agenda, "appointment").filter((record) => !["Annulé", "Absent"].includes(str(record.data.status)));
+    const dayOf = (value: string) => new Date(value).toLocaleDateString("sv-SE", { timeZone: "Europe/Paris" });
+    const now = Date.now();
+    summary.agenda = {
+      today: live.filter((record) => dayOf(str(record.data.start)) === today).length,
+      upcoming: live
+        .filter((record) => Date.parse(str(record.data.start)) >= now - 3_600_000 && str(record.data.status) !== "Terminé")
+        .sort((a, b) => Date.parse(str(a.data.start)) - Date.parse(str(b.data.start)))
+        .slice(0, 4)
+        .map((record) => ({
+          client: str(record.data.client),
+          service: str(services.find((service) => service.id === record.data.service)?.data.name),
+          start: str(record.data.start),
+          status: str(record.data.status),
+        })),
+    };
+  }
+  const sites = await open("site-planning");
+  if (sites)
+    summary.sites = {
+      active: byEntity(sites, "site").filter((record) => {
+        const start = str(record.data.start), end = str(record.data.end);
+        return record.data.status !== "Terminé" && (!start || start <= today) && (!end || end >= today);
+      }).length,
+    };
+  const quotes = await open("quote-builder");
+  if (quotes) summary.quotes = { pending: byEntity(quotes, "quote").filter((record) => record.data.status === "Envoyé").length };
+  const reports = await open("site-report");
+  if (reports) {
+    // Seul le dernier rapport de chaque chantier dit si des réserves restent ouvertes.
+    const latest = new Map<string, TradeRecord>();
+    for (const record of byEntity(reports, "report")) {
+      const site = str(record.data.site).trim().toLowerCase();
+      const known = latest.get(site);
+      if (!known || str(record.data.date) > str(known.data.date)) latest.set(site, record);
+    }
+    summary.reports = { reservesOpen: [...latest.values()].filter((record) => record.data.reservesOpen === true).length };
+  }
+  const equipment = await open("equipment-log");
+  if (equipment) {
+    const limit = new Date(Date.now() + 7 * 86_400_000).toLocaleDateString("sv-SE", { timeZone: "Europe/Paris" });
+    summary.equipment = {
+      due: byEntity(equipment, "equipment").filter((record) => {
+        const next = str(record.data.nextService);
+        return next !== "" && next <= limit;
+      }).length,
+    };
+  }
+  const salon = await open("salon-stock");
+  if (salon) {
+    const movements = byEntity(salon, "movement");
+    summary.salonStock = {
+      low: byEntity(salon, "product").filter((product) => {
+        const level = movements
+          .filter((movement) => movement.data.product === product.id)
+          .reduce((total, movement) => total + (movement.data.type === "Entrée" ? 1 : -1) * n(movement.data.quantity), n(product.data.initial));
+        return level <= n(product.data.threshold);
+      }).length,
+    };
+  }
+  const carts = await open("abandoned-cart");
+  if (carts) summary.followups = { week: byEntity(carts, "followup").filter((record) => daysAgo(str(record.data.date)) <= 7).length };
+  return summary;
 }

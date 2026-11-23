@@ -10,9 +10,9 @@ import { purchaseCheckoutReady, reconcilePurchase } from "./purchases";
 import type { StoreState } from "./store-catalog";
 import { log } from "@/features/orders/service";
 import { authenticated as authenticatedRequest } from "@/features/platform/http";
-import { scope } from "@/lib/auth/session";
-import { demoEnabled, one, rows, type DB } from "@/lib/database/db";
-import { can } from "@/lib/permissions";
+import { scope } from "@/infrastructure/auth/session";
+import { demoEnabled, one, rows, type DB } from "@/infrastructure/database/db";
+import { can } from "@/core/permissions";
 
 /**
  * Les refus levés par nos fonctions SQL (RAISE EXCEPTION, code P0001) sont des
@@ -188,8 +188,10 @@ type OpenOrder = {
   stripe_session: string | null;
   stale: boolean;
 };
+/** Identifiant Stripe fixe, pour comparer ce parcours dans le tableau de bord. */
+
 export async function purchaseAddon(restaurant: string, product: string) {
-  if (!purchaseCheckoutReady()) throw new Error("Le paiement de cet achat n’est pas encore configuré.");
+  if (!purchaseCheckoutReady()) throw new Error("Le paiement en ligne n’est pas encore configuré.");
   const stripe = addonStripe();
   const open = () =>
     authenticated(restaurant, async (db, user) => {
@@ -222,6 +224,7 @@ export async function purchaseAddon(restaurant: string, product: string) {
         },
       ],
       ...(saasAutomaticTax() ? { automatic_tax: { enabled: true } } : {}),
+      locale: "fr",
       success_url: returnUrl,
       cancel_url: returnUrl,
       metadata: { addon_purchase: order.id },

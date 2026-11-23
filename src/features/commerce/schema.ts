@@ -1,6 +1,6 @@
 import type { AccountEngagement } from "./engagement";
 import type { FlashInfo } from "./engagement-rules";
-import type { ProductPageFields } from "@/lib/product-pages";
+import type { ProductPageFields } from "@/domain/shared/product-pages";
 import { z } from "zod";
 const publicUrlSchema = z.union([
   z
@@ -191,6 +191,14 @@ export type CustomerAccount = {
   }[];
   orders: ShopOrder[];
   engagement: AccountEngagement;
+  /** Ce que le client suit : articles, formations, prestations. */
+  follows: {
+    kind: "article" | "course" | "service";
+    ref_id: string;
+    label: string;
+    progress: number;
+    updated_at: string;
+  }[];
 };
 export function preparation(o: ShopOrder) {
   if (o.status === "cancelled") return "cancelled";

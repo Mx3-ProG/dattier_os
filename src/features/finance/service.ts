@@ -2,9 +2,9 @@
    Réservé à la permission « finance » ; les politiques RLS appliquent la même règle. */
 import { randomUUID } from "node:crypto";
 import { z } from "zod";
-import { one, rows, type DB } from "@/lib/database/db";
-import { scope, type Actor } from "@/lib/auth/session";
-import { requirePermission } from "@/lib/permissions";
+import { one, rows, type DB } from "@/infrastructure/database/db";
+import { scope, type Actor } from "@/infrastructure/auth/session";
+import { requirePermission } from "@/core/permissions";
 import { requireCommercialCapability } from "@/features/platform/entitlements";
 import { log } from "@/features/orders/service";
 import { declarationItems, processPayment } from "./books";

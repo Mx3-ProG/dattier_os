@@ -1,8 +1,8 @@
 import { randomUUID } from "node:crypto";
 import { z } from "zod";
-import { rows, type DB } from "@/lib/database/db";
-import type { Actor } from "@/lib/auth/session";
-import { requirePermission } from "@/lib/permissions";
+import { rows, type DB } from "@/infrastructure/database/db";
+import type { Actor } from "@/infrastructure/auth/session";
+import { requirePermission } from "@/core/permissions";
 import { enqueue } from "./jobs";
 import { log } from "@/features/orders/service";
 export async function securityAction(

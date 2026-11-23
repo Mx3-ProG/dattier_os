@@ -1,0 +1,317 @@
+{
+  "_readme": "Photos et vidéos libres de droit (Pexels License, usage commercial autorisé sans attribution). Chaque entrée indique l'identifiant de la ressource et l'URL de la page source. Les fichiers sont stockés dans public/cms/<template>/.",
+  "templates": {
+    "bistrot": {
+      "photos": {
+        "hero": 262978,
+        "about": 958545,
+        "gallery1": 1640777,
+        "gallery2": 3184183
+      },
+      "video": {
+        "id": 7818021,
+        "file": "7818021-sd_960_540_24fps.mp4",
+        "title": "Restaurant cooking"
+      }
+    },
+    "jardin": {
+      "photos": {
+        "hero": 416537,
+        "about": 3737645,
+        "gallery1": 4551517,
+        "gallery2": 4947396
+      },
+      "video": {
+        "id": 6508747,
+        "file": "6508747-sd_960_540_24fps.mp4",
+        "title": "Greenery plants garden"
+      }
+    },
+    "comptoir": {
+      "photos": {
+        "hero": 1366594,
+        "about": 4551312,
+        "gallery1": 4570082,
+        "gallery2": 5920643
+      },
+      "video": {
+        "id": 8626681,
+        "file": "8626681-sd_960_540_25fps.mp4",
+        "title": "Restaurant cooking"
+      }
+    },
+    "pause": {
+      "photos": {
+        "hero": 6747870,
+        "about": 8480694,
+        "gallery1": 11847639,
+        "gallery2": 12181619
+      },
+      "video": {
+        "id": 6942749,
+        "file": "6942749-sd_960_540_25fps.mp4",
+        "title": "Pastry baking cake"
+      }
+    },
+    "signature": {
+      "photos": {
+        "hero": 1327393,
+        "about": 3167309,
+        "gallery1": 4393017,
+        "gallery2": 5156929
+      },
+      "video": {
+        "id": 20315763,
+        "file": "20315763-sd_960_540_25fps.mp4",
+        "title": "Pastry baking cake"
+      }
+    },
+    "riviera": {
+      "photos": {
+        "hero": 1618913,
+        "about": 4553374,
+        "gallery1": 4702633,
+        "gallery2": 5531093
+      },
+      "video": {
+        "id": 20243314,
+        "file": "20243314-sd_960_540_24fps.mp4",
+        "title": "Bar wine pouring"
+      }
+    },
+    "atelier": {
+      "photos": {
+        "hero": 1289672,
+        "about": 1855214,
+        "gallery1": 3616740,
+        "gallery2": 3745526
+      },
+      "video": {
+        "id": 10135507,
+        "file": "10135507-sd_960_540_30fps.mp4",
+        "title": "Modern interior living room"
+      }
+    },
+    "escale": {
+      "photos": {
+        "hero": 357743,
+        "about": 625422,
+        "gallery1": 2802527,
+        "gallery2": 2995012
+      },
+      "video": {
+        "id": 11553208,
+        "file": "11553208-sd_960_540_25fps.mp4",
+        "title": "Street food night market"
+      }
+    },
+    "pizzeria": {
+      "photos": {
+        "hero": 905847,
+        "about": 1082342,
+        "gallery1": 6068717,
+        "gallery2": 5953500
+      },
+      "video": {
+        "id": 6603321,
+        "file": "6603321-sd_960_540_25fps.mp4",
+        "title": "Pizza making oven"
+      }
+    },
+    "sushi": {
+      "photos": {
+        "hero": 958547,
+        "about": 1422384,
+        "gallery1": 3656787,
+        "gallery2": 4981715
+      },
+      "video": {
+        "id": 8901915,
+        "file": "8901915-sd_960_540_25fps.mp4",
+        "title": "Sushi chef"
+      }
+    },
+    "coiffeur": {
+      "photos": {
+        "hero": 2301842,
+        "about": 3356170,
+        "gallery1": 3993308,
+        "gallery2": 3993320
+      },
+      "video": {
+        "id": 11633108,
+        "file": "11633108-sd_960_540_30fps.mp4",
+        "title": "Hair salon"
+      }
+    },
+    "loft": {
+      "photos": {
+        "hero": 1662159,
+        "about": 1816031,
+        "gallery1": 1824392,
+        "gallery2": 1870768
+      },
+      "video": {
+        "id": 16454952,
+        "file": "16454952-sd_960_540_30fps.mp4",
+        "title": "Modern interior living room"
+      }
+    },
+    "chantier": {
+      "photos": {
+        "hero": 1804173,
+        "about": 2590716,
+        "gallery1": 3862371,
+        "gallery2": 6082416
+      },
+      "video": {
+        "id": 5434220,
+        "file": "5434220-sd_960_540_24fps.mp4",
+        "title": "Builder construction worker helmet"
+      }
+    },
+    "racing": {
+      "photos": {
+        "hero": 2036544,
+        "about": 3646108,
+        "gallery1": 3752194,
+        "gallery2": 5640510
+      },
+      "video": {
+        "id": 1192116,
+        "file": "1192116-sd_960_540_30fps.mp4",
+        "title": "City traffic car"
+      }
+    },
+    "manuscrit": {
+      "photos": {
+        "hero": 207756,
+        "about": 771317,
+        "gallery1": 921716,
+        "gallery2": 3278767
+      },
+      "video": {
+        "id": 5923409,
+        "file": "5923409-sd_960_540_30fps.mp4",
+        "title": "Office desk writing papers"
+      }
+    },
+    "assurance": {
+      "photos": {
+        "hero": 5398879,
+        "about": 5922678,
+        "gallery1": 6077915,
+        "gallery2": 7693692
+      },
+      "video": {
+        "id": 6672502,
+        "file": "6672502-sd_960_540_24fps.mp4",
+        "title": "Office desk writing papers"
+      }
+    },
+    "patisserie": {
+      "photos": {
+        "hero": 1313659,
+        "about": 3341067,
+        "gallery1": 3923555,
+        "gallery2": 5426071
+      },
+      "video": {
+        "id": 4109929,
+        "file": "4109929-sd_960_540_30fps.mp4",
+        "title": "Pastry baking cake"
+      }
+    },
+    "streetfood": {
+      "photos": {
+        "hero": 1766682,
+        "about": 4501417,
+        "gallery1": 4857606,
+        "gallery2": 5058349
+      },
+      "video": {
+        "id": 15721552,
+        "file": "15721552-sd_960_540_24fps.mp4",
+        "title": "Street food night market"
+      }
+    },
+    "compta": {
+      "photos": {
+        "hero": 210990,
+        "about": 265101,
+        "gallery1": 4386366,
+        "gallery2": 4476375
+      },
+      "video": {
+        "id": 4872863,
+        "file": "4872863-sd_960_540_25fps.mp4",
+        "title": "Office desk writing papers"
+      }
+    },
+    "ecole": {
+      "photos": {
+        "hero": 764681,
+        "about": 5212342,
+        "gallery1": 5212648,
+        "gallery2": 5554303
+      },
+      "video": {
+        "id": 5734770,
+        "file": "5734770-sd_960_540_30fps.mp4",
+        "title": "School classroom study"
+      }
+    },
+    "gastronomique": {
+      "photos": {
+        "hero": 5491046,
+        "about": 5863642,
+        "gallery1": 5395180,
+        "gallery2": 6375553
+      },
+      "video": {
+        "id": 8627105,
+        "file": "8627105-sd_960_540_25fps.mp4",
+        "title": "Restaurant cooking"
+      }
+    },
+    "baravin": {
+      "photos": {
+        "hero": 4254034,
+        "about": 4254037,
+        "gallery1": 5858205,
+        "gallery2": 6152270
+      },
+      "video": {
+        "id": 1003933,
+        "file": "1003933-sd_960_540_25fps.mp4",
+        "title": "Bar wine pouring"
+      }
+    },
+    "brunch": {
+      "photos": {
+        "hero": 566564,
+        "about": 2874780,
+        "gallery1": 5728168,
+        "gallery2": 5837000
+      },
+      "video": {
+        "id": 4186967,
+        "file": "4186967-sd_960_540_25fps.mp4",
+        "title": "Bakery bread oven"
+      }
+    },
+    "burger": {
+      "photos": {
+        "hero": 534285,
+        "about": 4021939,
+        "gallery1": 4315148,
+        "gallery2": 5179783
+      },
+      "video": {
+        "id": 6603825,
+        "file": "6603825-sd_960_540_25fps.mp4",
+        "title": "Pizza making oven"
+      }
+    }
+  }
+}

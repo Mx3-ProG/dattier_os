@@ -1,18 +1,10 @@
 "use client";
 import { useState } from "react";
 import { Mail, MessageSquare } from "lucide-react";
-import type { Customer, Promo, Snapshot } from "@/lib/types";
-import { money } from "@/lib/domain";
-import {
-  asEmail,
-  asPhone,
-  commercial,
-  draft,
-  optOut,
-  purposes,
-  type Channel,
-  type Purpose,
-} from "@/features/messaging/contact";
+import type { Customer, Promo, Snapshot } from "@/shared/types";
+import { money } from "@/domain/shared/units";
+import { asEmail, asPhone, commercial, draft, optOut, purposes } from "@/features/messaging/contact";
+import { type Channel, type Purpose } from "@/features/messaging/public";
 import { Button } from "./ui/button";
 
 export type SendResult = {

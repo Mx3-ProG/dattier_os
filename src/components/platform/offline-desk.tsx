@@ -1,14 +1,8 @@
 "use client";
 import Link from "next/link";
 import { useState, useEffect, useCallback } from "react";
-import {
-  localState,
-  updateLocal,
-  queueOrder,
-  available,
-  type LocalState,
-  type Quota,
-} from "@/features/offline/client";
+import { localState, updateLocal, queueOrder, available } from "@/features/offline/client";
+import { type LocalState, type Quota } from "@/features/offline/public";
 import "./platform.css";
 export function OfflineDesk() {
   const [restaurant, setRestaurant] = useState(""),
@@ -149,7 +143,7 @@ export function OfflineDesk() {
   return (
     <main className="platform">
       <header>
-        <Link href="/platform">← Mes restaurants</Link>
+        <Link href="/platform">← Mes établissements</Link>
         <h1>Poste de service hors ligne</h1>
         <p role="status">
           {online ? "Connexion disponible" : "Hors ligne"} · Les tickets restent
@@ -162,7 +156,7 @@ export function OfflineDesk() {
         </p>
       )}
       {!restaurant ? (
-        <p>Ouvrez le poste depuis votre restaurant.</p>
+        <p>Ouvrez le poste depuis votre établissement.</p>
       ) : !state || state.closed ? (
         <section>
           <h2>Préparer cet appareil</h2>

@@ -2,9 +2,9 @@ import { before, after, test } from "node:test";
 import assert from "node:assert/strict";
 import { PGlite } from "@electric-sql/pglite";
 import { readFile } from "node:fs/promises";
-import { migrate } from "../src/lib/database/migrate";
-import { seed } from "../src/lib/database/seed";
-import { one, rows } from "../src/lib/database/db";
+import { migrate } from "../src/infrastructure/database/migrate";
+import { seed } from "../src/infrastructure/database/seed";
+import { one, rows } from "../src/infrastructure/database/db";
 import {
   ensureQr,
   qrAction,
@@ -12,7 +12,7 @@ import {
   scanDestination,
   syncQrCodes,
 } from "../src/features/qr/service";
-import type { Actor } from "../src/lib/auth/session";
+import type { Actor } from "../src/infrastructure/auth/session";
 
 const owner: Actor = { id: "nadia", name: "Nadia", role: "OWNER", roles: ["OWNER"] };
 const chef: Actor = { id: "karim", name: "Karim", role: "CHEF", roles: ["CHEF"] };

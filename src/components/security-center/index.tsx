@@ -12,25 +12,11 @@ import {
   Users,
   Wrench,
 } from "lucide-react";
-import { dateTime } from "@/lib/domain";
+import { dateTime } from "@/domain/shared/units";
 import { Button } from "../ui/button";
 import { Modal } from "../forms";
-import {
-  modules,
-  remediationLabels,
-  resolutionLabels,
-  resolutionStatuses,
-  severities,
-  severityLabels,
-  severityName,
-  type ArchiveRow,
-  type Diagnosis,
-  type Metric,
-  type Remediation,
-  type SecurityEvent,
-  type SecurityIncident,
-  type SecurityOverview,
-} from "@/features/ops-security/model";
+import { modules, remediationLabels, resolutionLabels, resolutionStatuses, severities, severityLabels, severityName } from "@/features/ops-security/model";
+import { type ArchiveRow, type Diagnosis, type Metric, type Remediation, type SecurityEvent, type SecurityIncident, type SecurityOverview } from "@/features/ops-security/public";
 
 type Tab = "overview" | "journal" | "incidents" | "corrections" | "archives";
 const tabs: [Tab, string][] = [
@@ -216,7 +202,7 @@ export function SecurityCenter({ restaurant }: { restaurant: string }) {
           <h2>Ce centre n’est pas disponible avec votre profil</h2>
           <p>{error}</p>
           <div className="actions">
-            <Link href={`/restaurant/${restaurant}`}>
+            <Link href={`/commerce/${restaurant}`}>
               Retour à l’administration
             </Link>
             <Link href={`/dashboard?restaurant=${encodeURIComponent(restaurant)}`}>

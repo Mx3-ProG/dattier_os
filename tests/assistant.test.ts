@@ -9,7 +9,7 @@ import {
   minimumLlmCredits,
   packs,
   providerCostEur,
-} from "../src/features/assistant/pricing";
+} from "../src/domain/assistant/pricing";
 import type { AssistantContext } from "../src/features/assistant/types";
 
 const now = "2026-11-07T19:30:00.000Z";

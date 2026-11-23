@@ -1,7 +1,7 @@
 import { plans, additionalRestaurantPrice } from "@/features/platform/pricing";
 import { activePromotion, trialDays, type Promotion } from "@/features/platform/promotion";
 import { BlackFridayBar } from "@/components/black-friday-bar";
-import { addonCatalog, addonMonthlyCents } from "@/features/addons/catalog";
+import { addonCatalog } from "@/features/addons/catalog";
 import Link from "next/link";
 import { LegalLinks } from "@/components/legal/legal-page";
 import { PlatformCookieConsent } from "@/components/legal/platform-cookie-consent";
@@ -44,7 +44,7 @@ const modules = [
   {
     icon: LayoutGrid,
     title: "Gardez le fil de votre commerce",
-    text: "Suivez vos espaces, vos commandes et votre activité en direct. Pour la restauration, aménagez aussi votre salle et vos tables en quelques gestes.",
+    text: "Suivez vos espaces, vos commandes et votre activité en direct. Boutique, salon, atelier ou restaurant : adaptez vos espaces à votre métier.",
   },
   {
     icon: CalendarDays,
@@ -138,7 +138,7 @@ const faq = (days: number) => [
   },
   {
     q: "Puis-je essayer avant de créer mon compte ?",
-    a: "Oui. La démonstration montre un restaurant fictif pour explorer concrètement les écrans et le travail d’une équipe.",
+    a: "Oui. Explorez les écrans et le travail d’une équipe dans une démonstration avec des données fictives. L’exemple présenté est un restaurant ; STUDIO S s’adresse aussi aux boutiques, salons et autres commerces.",
   },
   {
     q: "Mes données sont-elles visibles par d’autres commerces ?",
@@ -150,7 +150,7 @@ const faq = (days: number) => [
   },
   {
     q: "Le code est-il ouvert ?",
-    a: "Oui. STUDIO OS est distribué sous licence AGPL-3.0. Le code de la version en service reste consultable à tout moment en ligne.",
+    a: "Oui. STUDIO S est distribué sous licence AGPL-3.0. Le code de la version en service reste consultable à tout moment en ligne.",
   },
   {
     q: "Comment puis-je migrer mes données ?",
@@ -158,7 +158,7 @@ const faq = (days: number) => [
   },
   {
     q: "Puis-je essayer avant de créer mon compte ?",
-    a: "Oui. La démonstration montre un restaurant fictif pour explorer concrètement les écrans et le travail d’une équipe.",
+    a: "Oui. Explorez les écrans et le travail d’une équipe dans une démonstration avec des données fictives. L’exemple présenté est un restaurant ; STUDIO S s’adresse aussi aux boutiques, salons et autres commerces.",
   },
   {
     q: "Mes données sont-elles visibles par d’autres commerces ?",
@@ -182,6 +182,8 @@ const faq = (days: number) => [
   }
 ];
 
+const newTab = { target: "_blank", rel: "noopener" } as const;
+
 function Cta({ demoHref, inverse, days, promo }: { demoHref?: string; inverse?: boolean; days: number; promo: Promotion | null }) {
   return (
     <div className="landing-cta">
@@ -192,7 +194,7 @@ function Cta({ demoHref, inverse, days, promo }: { demoHref?: string; inverse?: 
         {promo ? `Je m’abonne à ${promo.price} € / mois` : `Essayer gratuitement ${days} jours`} <ArrowUpRight size={16} aria-hidden />
       </Link>
       <Link className="landing-btn outline" href={demoHref || "/guide"}>
-        {demoHref ? "Me projeter dans la démo" : "Découvrir comment ça marche"}
+        {demoHref ? "Découvrir comment ça marche" : "Lire le guide"}
       </Link>
     </div>
   );
@@ -288,7 +290,7 @@ export function Landing({
       {promo && <BlackFridayBar promo={promo} />}
       <header className="landing-header">
         <Link href="/" className="landing-brand">
-          <Store size={20} aria-hidden /> STUDIO OS
+          <Store size={20} aria-hidden /> STUDIO S
         </Link>
         <nav aria-label="Navigation principale">
           <a href="#modules">Votre quotidien</a>
@@ -296,7 +298,9 @@ export function Landing({
 
           <a href="#offres">Offres</a>
           <a href="#equipe">Studio ATS</a>
+          {demoHref && <Link href={demoHref}>Démo</Link>}
           <Link href="/guide">Guide</Link>
+          <Link href="/site-demo/modeles">Modèles de sites</Link>
           <a href="#espace-client">Espace client</a>
         </nav>
         <Link
@@ -320,7 +324,7 @@ export function Landing({
             </h1>
             <p className="landing-lead">
               Vous avez lancé votre affaire pour la faire vivre, pas pour passer
-              vos soirées à jongler entre les outils. STUDIO OS réunit vos
+              vos soirées à jongler entre les outils. STUDIO S réunit vos
               clients, vos ventes, votre équipe, vos stocks et votre site dans
               un même espace. Moins d’administratif, plus de temps pour vos idées
               et les personnes qui comptent.
@@ -393,7 +397,7 @@ export function Landing({
               de vos clients.
             </p>
             <span className="landing-note">
-              Illustration d’une journée avec STUDIO OS
+              Illustration d’une journée avec STUDIO S
             </span>
           </div>
         </section>
@@ -755,10 +759,10 @@ export function Landing({
 
         <section className="landing-section landing-team" id="equipe">
           <div className="landing-heading">
-            <span className="landing-eyebrow">Derrière STUDIO OS</span>
+            <span className="landing-eyebrow">Derrière STUDIO S</span>
             <h2>Une plateforme. Une équipe identifiée.</h2>
             <p>
-              Studio ATS assure le développement et la maintenance de STUDIO OS.
+              Studio ATS assure le développement et la maintenance de STUDIO S.
               Un même interlocuteur pour faire évoluer l’outil qui accompagne
               votre commerce.
             </p>
@@ -943,12 +947,12 @@ export function Landing({
 
       <footer className="landing-footer">
         <span className="landing-brand">
-          <Store size={18} aria-hidden /> STUDIO OS
+          <Store size={18} aria-hidden /> STUDIO S
         </span>
         <nav aria-label="Liens utiles">
-          {demoHref && <Link href={demoHref}>Démonstration</Link>}
-          {demo && <Link href="/site-demo">Exemple de site restaurant</Link>}
-          <Link href="/guide">Comment ça marche</Link>
+          {demoHref && <Link href={demoHref} {...newTab}>Démonstration</Link>}
+          <Link href="/site-demo/modeles">Modèles de sites internet</Link>
+          <Link href="/guide">Guide d’utilisation</Link>
           <Link href="/guide#evolutions">Évolutions et maintenance</Link>
           <a
             href="https://www.studio-ats.com"
@@ -963,7 +967,7 @@ export function Landing({
           <Link href="/source">Code source et licence</Link>
           <LegalLinks />
         </nav>
-        <small>© Wayne-web SAS · STUDIO OS, logiciel libre sous licence AGPL-3.0</small>
+        <small>© Wayne-web SAS · STUDIO S, logiciel libre sous licence AGPL-3.0</small>
       </footer>
       <PlatformCookieConsent />
     </div>

@@ -19,7 +19,7 @@ export const account: Chapter = {
     },
     {
       title: "Votre compte, en trois temps",
-      body: "1. Créez votre compte et vérifiez votre e-mail. 2. Dans le parcours de bienvenue, décrivez votre métier et votre façon de travailler. 3. Vérifiez le récapitulatif : la validation crée votre organisation et votre premier établissement et démarre l’essai de trois jours. Vous pouvez ensuite inviter l’équipe et importer vos clients.",
+      body: "1. Créez votre compte et vérifiez votre e-mail. 2. Dans le parcours de bienvenue, décrivez votre métier et votre façon de travailler. 3. Vérifiez le récapitulatif : la validation crée votre organisation et votre premier établissement et démarre l’essai de sept jours. Vous pouvez ensuite inviter l’équipe et importer vos clients.",
       link: { label: "Revoir la création de compte", href: "/guide#account" },
     },
     {

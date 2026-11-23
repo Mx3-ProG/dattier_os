@@ -2,7 +2,8 @@
 import { useTenantSite } from "./context";
 
 import { TenantLink as Link } from "./context";
-import { consentChangedEvent, type AudienceMode } from "@/features/analytics/consent";
+import { consentChangedEvent } from "@/features/analytics/consent";
+import { type AudienceMode } from "@/features/analytics/public";
 import { useEffect, useState } from "react";
 import { Settings2, ShieldCheck, X } from "lucide-react";
 

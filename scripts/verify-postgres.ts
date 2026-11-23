@@ -1,8 +1,8 @@
 import assert from "node:assert/strict";
-import { PostgresDatabase } from "../src/lib/database/postgres";
-import { withDatabaseContext } from "../src/lib/database/context";
-import { seed } from "../src/lib/database/seed";
-import { one, rows, type DB } from "../src/lib/database/db";
+import { PostgresDatabase } from "../src/infrastructure/database/postgres";
+import { withDatabaseContext } from "../src/infrastructure/database/context";
+import { seed } from "../src/infrastructure/database/seed";
+import { one, rows, type DB } from "../src/infrastructure/database/db";
 import { platformPerform } from "../src/features/platform/service";
 import { offlinePerform } from "../src/features/offline/service";
 import { changeItem, createOrder, pay } from "../src/features/orders/service";

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getDb, productionEnabled } from "@/lib/database/db";
-import { withDatabaseContext } from "@/lib/database/context";
-import { actor } from "@/lib/auth/session";
+import { getDb, productionEnabled } from "@/infrastructure/database/db";
+import { withDatabaseContext } from "@/infrastructure/database/context";
+import { actor } from "@/infrastructure/auth/session";
 import { isQrKind, scanDestination } from "@/features/qr/service";
 
 export const dynamic = "force-dynamic";

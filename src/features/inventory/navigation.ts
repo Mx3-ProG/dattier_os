@@ -16,3 +16,19 @@ export const recipesNavigation = {
   icon: "BookOpen",
   permission: "stock",
 } satisfies NavigationContribution;
+
+export const productsNavigation = {
+  id: "products",
+  name: "Produits",
+  group: "GESTION",
+  icon: "Package",
+  permission: "catalog",
+} satisfies NavigationContribution;
+
+export const servicesNavigation = {
+  id: "services",
+  name: "Services",
+  group: "GESTION",
+  icon: "HandCoins",
+  permission: "catalog",
+} satisfies NavigationContribution;

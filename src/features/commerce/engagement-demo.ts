@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto";
-import { rows, type DB } from "@/lib/database/db";
+import { rows, type DB } from "@/infrastructure/database/db";
 import {
   creditPoints,
   ensureReferralCode,

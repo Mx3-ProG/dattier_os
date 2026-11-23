@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getDb, productionEnabled } from "@/lib/database/db";
+import { getDb, productionEnabled } from "@/infrastructure/database/db";
 import { SITE_HEADER } from "@/features/seo/locale";
 import {
   contentSecurityPolicy,
@@ -45,6 +45,22 @@ function sitePath(pathname: string) {
     return null;
   }
 }
+type DomainResolution = { restaurant: string | null; primary: string | null; at: number };
+const domainCache = new Map<string, DomainResolution>();
+const DOMAIN_TTL = 60_000;
+
+async function resolveDomain(host: string) {
+  const cached = domainCache.get(host);
+  if (cached && Date.now() - cached.at < DOMAIN_TTL) return cached;
+  const { rows } = await (await getDb()).query<{ restaurant: string | null; primary: string | null }>(
+    "SELECT d.r AS restaurant,app.primary_domain(d.r) AS primary FROM (SELECT app.resolve_domain($1) AS r) d",
+    [host],
+  );
+  const entry = { restaurant: rows[0]?.restaurant ?? null, primary: rows[0]?.primary ?? null, at: Date.now() };
+  domainCache.set(host, entry);
+  return entry;
+}
+
 /** API responses are not documents: next.config.ts gives them a fixed baseline. */
 function pageSecurity(req: NextRequest, tenantHost: boolean): PageSecurity {
   const { pathname } = req.nextUrl;
@@ -84,16 +100,11 @@ async function route(
   if (host === app.hostname)
     return NextResponse.next(forwarded(req, sitePath(pathname), security));
   try {
-    const { rows } = await (
-      await getDb()
-    ).query<{ restaurant: string | null; primary: string | null }>(
-      "SELECT d.r AS restaurant,app.primary_domain(d.r) AS primary FROM (SELECT app.resolve_domain($1) AS r) d",
-      [host],
-    );
-    const r = rows[0]?.restaurant;
+    const resolved = await resolveDomain(host);
+    const r = resolved.restaurant;
     if (!r) return new NextResponse("Domaine non configuré.", { status: 404 });
     // Secondary verified domains send visitors and crawlers to the primary one.
-    const primary = rows[0]?.primary;
+    const primary = resolved.primary;
     if (primary && primary !== host && !pathname.startsWith("/api/"))
       return NextResponse.redirect(
         `${app.protocol}//${primary}${pathname}${search}`,
@@ -103,9 +114,9 @@ async function route(
       return NextResponse.next(forwarded(req, r, security));
     if (pathname.startsWith("/r/"))
       return new NextResponse("Établissement non autorisé.", { status: 403 });
-    if (/^\/(restaurant|platform|dashboard)(\/|$)/.test(pathname))
+    if (/^\/(restaurant|commerce|platform|dashboard)(\/|$)/.test(pathname))
       return NextResponse.redirect(
-        new URL(`/restaurant/${r}`, process.env.APP_URL),
+        new URL(`/commerce/${r}`, process.env.APP_URL),
       );
     // Collecteur d’audience : l’établissement est résolu côté serveur à partir de ce domaine.
     if (pathname === "/api/analytics/collect")

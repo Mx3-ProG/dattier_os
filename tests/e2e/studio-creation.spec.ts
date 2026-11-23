@@ -7,7 +7,7 @@ test("Créer une page sur téléphone, composer son contenu et la publier", asyn
   await page.goto("/demo");
   await page.getByRole("button", { name: /Nadia/ }).click();
   await expect(page).toHaveURL(/dashboard/);
-  await page.goto("/restaurant/bernay/site");
+  await page.goto("/commerce/bernay/site");
 
   await page.getByRole("button", { name: "Guide de création" }).click();
   await expect(
@@ -47,7 +47,7 @@ test("Créer une page sur téléphone, composer son contenu et la publier", asyn
   ).toBeVisible();
   await expect(
     page.getByRole("link", { name: /Ouvrir les réglages/ }),
-  ).toHaveAttribute("href", "/restaurant/bernay?module=shop#reglages-commande");
+  ).toHaveAttribute("href", "/commerce/bernay?module=shop#reglages-commande");
   await page.getByRole("button", { name: "Fermer les propriétés" }).click();
   await page
     .getByRole("button", { name: /Monter Catégories de produits/ })

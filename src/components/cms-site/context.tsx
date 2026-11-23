@@ -1,6 +1,6 @@
 "use client";
 import NextLink from "next/link";
-import type { AudienceMode } from "@/features/analytics/consent";
+import type { AudienceMode } from "@/features/analytics/public";
 import {
   createContext,
   useContext,
@@ -8,13 +8,17 @@ import {
   type ComponentProps,
   type ReactNode,
 } from "react";
+import type { Industry } from "@/core/tenant/business";
+import { adaptText } from "@/core/tenant/vocabulary";
 const Context = createContext<{
   restaurant: string;
   demo: boolean;
   platformOrigin: string;
+  showcase?: string;
   preview: boolean;
   shopEnabled: boolean;
   audience: AudienceMode | null;
+  industry?: Industry;
   nonce?: string;
 }>({
   restaurant: "",
@@ -28,25 +32,29 @@ export function TenantSiteProvider({
   restaurant,
   demo = false,
   platformOrigin = "",
+  showcase,
   preview = false,
   shopEnabled = true,
   audience = null,
+  industry,
   nonce,
   children,
 }: {
   restaurant: string;
   demo?: boolean;
   platformOrigin?: string;
+  showcase?: string;
   preview?: boolean;
   shopEnabled?: boolean;
   audience?: AudienceMode | null;
-  /** Nonce CSP de la requête, pour le seul script en ligne du site. */
+  /** Famille d'activité : adapte le vocabulaire du site (carte, table, restaurant…). */
+  industry?: Industry;
   nonce?: string;
-  children: ReactNode;
+  children?: ReactNode;
 }) {
   const value = useMemo(
-    () => ({ restaurant, demo, platformOrigin, preview, shopEnabled, audience, nonce }),
-    [restaurant, demo, platformOrigin, preview, shopEnabled, audience, nonce],
+    () => ({ restaurant, demo, platformOrigin, showcase, preview, shopEnabled, audience, industry, nonce }),
+    [restaurant, demo, platformOrigin, showcase, preview, shopEnabled, audience, industry, nonce],
   );
   return <Context.Provider value={value}>{children}</Context.Provider>;
 }
@@ -76,8 +84,14 @@ export function useTenantSite() {
       )
         return context.platformOrigin + base + path;
       if (["/demo", "/dashboard", "/platform"].includes(path))
-        return `${context.platformOrigin}/restaurant/${context.restaurant}`;
+        return `${context.platformOrigin}/commerce/${context.restaurant}`;
       if (path === "/source") return `${context.platformOrigin}/source`;
+      if (context.showcase) {
+        const target = new URL(path,"https://preview.invalid");
+        const query = target.searchParams;
+        if (target.pathname !== "/") query.set("page",target.pathname.slice(1));
+        return context.showcase + (query.size ? "?"+query.toString() : "") + target.hash;
+      }
       return base + (path === "/" ? "" : path);
     }
     async function request(input: string, init?: RequestInit) {
@@ -124,7 +138,9 @@ export function useTenantSite() {
       if (!response.ok) throw new Error(result.error);
       return result;
     }
-    return { ...context, base, href, request, shopPost };
+    /** Texte écrit pour la restauration, dans le vocabulaire du métier. */
+    const text = (value: string) => adaptText(value, context.industry);
+    return { ...context, base, href, request, shopPost, text };
   }, [context]);
 }
 export function TenantLink({

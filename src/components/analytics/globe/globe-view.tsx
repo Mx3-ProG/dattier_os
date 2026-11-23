@@ -1,7 +1,7 @@
 "use client";
 import { Expand, Minimize, Minus, Pause, Play, Plus, Eye, EyeOff } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
-import type { GlobePoint } from "@/features/analytics/cluster";
+import type { GlobePoint } from "@/features/analytics/public";
 import { globeAssets, loadGlobeEngine, webglAvailable } from "./assets";
 import { WorldMap2D } from "./map-2d";
 import type { GlobeHandle, GlobeHover, GlobeSelection } from "./types";

@@ -2,8 +2,8 @@ import { before, after, test } from "node:test";
 import assert from "node:assert/strict";
 import { PGlite } from "@electric-sql/pglite";
 import { readFile } from "node:fs/promises";
-import { migrate } from "../src/lib/database/migrate";
-import { seed } from "../src/lib/database/seed";
+import { migrate } from "../src/infrastructure/database/migrate";
+import { seed } from "../src/infrastructure/database/seed";
 import {
   sitePerform,
   publicSite,
@@ -11,7 +11,7 @@ import {
 } from "../src/features/site/service";
 import { inventoryPerform } from "../src/features/platform/inventory";
 import { commerce } from "../src/features/commerce/service";
-import { one, rows } from "../src/lib/database/db";
+import { one, rows } from "../src/infrastructure/database/db";
 import {
   encryptSecret,
   decryptSecret,

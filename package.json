@@ -1,6 +1,6 @@
 {
   "name": "atacuisine_os",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "OS open source pour les restaurateurs : équipes, commandes, stocks, boutique et clients.",
   "main": "index.js",
   "scripts": {
@@ -16,11 +16,16 @@
     "payments:review": "node --import tsx scripts/payments-review.ts",
     "ai:credits": "node --import tsx scripts/ai-credits.ts",
     "db:migrate": "node --import tsx scripts/migrate.ts",
+    "demo:snapshot": "node --import tsx scripts/demo-snapshot.ts",
     "worker": "node --import tsx scripts/worker.ts",
     "setup:env": "node --import tsx scripts/setup-env.ts",
     "test:postgres": "node --import tsx scripts/verify-postgres.ts",
     "test:isolation": "node --import tsx scripts/verify-tenant-isolation.ts",
-    "test:load": "node --import tsx scripts/load-platform.ts"
+    "test:load": "node --import tsx scripts/load-platform.ts",
+    "layers:check": "node --import tsx scripts/check-layers.ts",
+    "modules:check": "node --import tsx scripts/check-module-boundaries.ts",
+    "template:new": "node --import tsx scripts/new-template.ts",
+    "assets:fetch": "node --import tsx scripts/fetch-template-assets.ts"
   },
   "keywords": [],
   "author": "",

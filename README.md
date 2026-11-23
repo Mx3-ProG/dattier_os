@@ -83,3 +83,19 @@ l’instance commerciale, configurez
 `ATACUISINE_PUBLIC_DEMO_URL=https://demo.example.com/demo` pour afficher le
 lien « Essayer la démo ». Gardez les paramètres de production (PostgreSQL,
 identité, paiement et messagerie) sur l’instance commerciale.
+
+### Démo publique sur Vercel (lecture et essai, remise à zéro)
+
+La démo publique tourne sur un **projet Vercel séparé** (ex. `demo.studio-os.digital`),
+branché sur le même dépôt. Elle charge en mémoire l’instantané
+`database/demo-snapshot/studio-demo.tar.gz` : rien n’est écrit sur disque, les
+modifications des visiteurs disparaissent au redémarrage de chaque instance.
+
+1. Figer la démo locale : `npm run demo:snapshot` (lit une copie de
+   `.data/atacuisine-demo`, efface sessions et journaux techniques), puis commiter l’instantané.
+2. Variables du projet démo : `ATACUISINE_DEMO=true`, `ATACUISINE_PUBLIC_DEMO=true`,
+   `ATACUISINE_DATA_DIR=/tmp/atacuisine-demo`, `SESSION_SECRET` (32 caractères ou plus),
+   `APP_URL=https://demo.studio-os.digital`, `ATACUISINE_PURCHASE_URL=https://www.studio-os.digital/#offres`.
+   Ne définir **aucune** clé Stripe, Anthropic, Resend, Twilio, S3 ni `DATABASE_URL`.
+3. Sur le site commercial : `ATACUISINE_PUBLIC_DEMO_URL=https://demo.studio-os.digital`
+   affiche « Me projeter dans la démo » sur la Home et « Explorer la démo » sur `/guide`.

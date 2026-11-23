@@ -1,14 +1,15 @@
 import { restaurantPlan } from "@/features/platform/entitlements";
-import { productPath } from "@/lib/product-pages";
+import { productPath } from "@/domain/shared/product-pages";
 import type { Metadata } from "next";
 import { cache } from "react";
 import { headers } from "next/headers";
 import { notFound, permanentRedirect, redirect } from "next/navigation";
-import { getDb, demoEnabled, one } from "@/lib/database/db";
-import { withDatabaseContext } from "@/lib/database/context";
-import { actor } from "@/lib/auth/session";
+import { getDb, demoEnabled, one } from "@/infrastructure/database/db";
+import { withDatabaseContext } from "@/infrastructure/database/context";
+import { actor } from "@/infrastructure/auth/session";
 import { NONCE_HEADER } from "@/lib/security/csp";
 import { website } from "@/features/cms/service";
+import type { SiteConfig } from "@/features/cms/schema";
 import { plain } from "@/features/cms/text";
 import { commerce } from "@/features/commerce/service";
 import { publicOffers } from "@/features/offers/service";
@@ -19,6 +20,8 @@ import { findRedirect, siteLocale } from "@/features/seo/locale";
 import { effectiveTitle, effectiveDescription } from "@/features/seo/meta";
 import { DonutStore } from "@/components/cms-site/store";
 import { TenantSiteProvider } from "@/components/cms-site/context";
+import type { Industry } from "@/core/tenant/business";
+import { indexable as isIndexable } from "@/domain/seo/indexability";
 import { AudienceBeacon } from "@/components/cms-site/audience-beacon";
 import { SiteLoaderSync } from "@/components/cms-site/site-loader";
 import { effectiveSiteLoader } from "@/features/cms/site-addons";
@@ -31,10 +34,18 @@ type Props = {
   params: Promise<{ restaurant: string; page?: string[] }>;
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 };
+import { getSiteCache, setSiteCache } from "@/infrastructure/cache/site-cache";
+
 /** Memoised per request: metadata and page share a single database round. */
 const loadSite = cache(
   async (restaurant: string, raw: string, mode: string, host: string) => {
     const preview = mode === "draft" || /^version:[a-f0-9-]{36}$/.test(mode);
+    const cacheable = !preview && mode === "" && !demoEnabled();
+    if (cacheable) {
+      const cached = getSiteCache(restaurant, host, raw, demoEnabled());
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      if (cached) return cached as any;
+    }
     const user = preview ? await actor().catch(() => null) : null;
     if (preview && !user) notFound();
     return withDatabaseContext(
@@ -42,7 +53,7 @@ const loadSite = cache(
       async () =>
         (await getDb()).transaction(async (db) => {
           await db.exec("SET LOCAL ROLE atacuisine_app");
-          await one(db, "SELECT id FROM restaurants WHERE id=$1", [restaurant]);
+          const { industry } = await one<{ industry: Industry }>(db, "SELECT id,industry FROM restaurants WHERE id=$1", [restaurant]);
           const plan = await restaurantPlan(db, restaurant);
           const { websiteInstalled, shopInstalled } = await one<{ websiteInstalled: boolean; shopInstalled: boolean }>(
             db,
@@ -54,6 +65,12 @@ const loadSite = cache(
             ((!shopInstalled || plan < 39) && ["commander", "checkout", "panier"].includes(raw))
           )
             notFound();
+          const statusRow = await one<{ archived_at: string | null; org_status: string | null }>(
+            db,
+            "SELECT r.archived_at, b.status AS org_status FROM restaurants r LEFT JOIN LATERAL app.plan_billing_context(r.organization_id) b ON true WHERE r.id=$1",
+            [restaurant],
+          );
+          if (statusRow.archived_at || statusRow.org_status === "suspended") notFound();
           const cms = website(restaurant);
           if (preview) await cms.siteScope(db, user!);
           const config = preview
@@ -63,9 +80,13 @@ const loadSite = cache(
             : await cms.getPublishedConfig(db);
           const estimationEnabled = (await one<{ enabled: boolean }>(db,
             "SELECT app.estimation_public($1) IS NOT NULL AS enabled", [restaurant])).enabled;
+          const crmContactEnabled = (await one<{ enabled: boolean }>(db,
+            "SELECT app.addon_installed($1,'pipeline-crm') AS enabled", [restaurant])).enabled;
           const route = raw === "account" ? "compte" : raw;
           const isProduct = /^produits\/[^/]+$/.test(route);
-          const key = isProduct ? "carte" : route || "home";
+          const isCollectionVehicle = /^vehicules\/[a-z0-9-]{3,60}$/.test(route) && config.theme.presentation?.layout === "collection";
+          if (isCollectionVehicle && !config.collectionVehicles?.some((vehicle: NonNullable<SiteConfig["collectionVehicles"]>[number]) => vehicle.id === route.slice("vehicules/".length))) notFound();
+          const key = isProduct || isCollectionVehicle ? "carte" : route || "home";
           const facts = await seoFacts(db, restaurant);
           const urls = siteUrls({
             restaurant,
@@ -101,14 +122,20 @@ const loadSite = cache(
               )
             : undefined;
           if (isProduct && !product) notFound();
-          return {
+          if (isProduct && config.theme.presentation?.layout === "collection") notFound();
+          const result = {
             product,
             siteAddons: await cms.siteAddons(db),
             offers: await publicOffers(db, restaurant),
             redirect: null,
             shopEnabled: plan >= 39 && shopInstalled,
+            archived: !!statusRow.archived_at,
+            suspended: statusRow.org_status === "suspended",
+            websiteInstalled,
             estimationEnabled,
+            crmContactEnabled,
             restaurant,
+            industry,
             route,
             key,
             config,
@@ -127,6 +154,10 @@ const loadSite = cache(
                   )
                 ).rows[0]?.mode ?? null,
           };
+          if (cacheable) {
+            setSiteCache(restaurant, host, raw, demoEnabled(), result);
+          }
+          return result;
         }),
     );
   },
@@ -144,35 +175,49 @@ async function load(props: Props) {
   return data;
 }
 export async function generateMetadata(props: Props): Promise<Metadata> {
-  const { config, context, key, preview, urls, product } = await load(props),
+  const { config, context, key, preview, urls, product, websiteInstalled, archived, suspended } = await load(props),
     page = config.pages[key];
+  const { page: routeParts } = await props.params;
+  const vehicleId = routeParts?.length === 2 && routeParts[0] === "vehicules" ? routeParts[1] : "";
+  const vehicle = config.theme.presentation?.layout === "collection" ? config.collectionVehicles?.find((item: NonNullable<SiteConfig["collectionVehicles"]>[number]) => item.id === vehicleId) : undefined;
   const title = product
     ? product.seo_title || `${product.name} · ${context.name}`
+    : vehicle ? `${vehicle.brand} ${vehicle.model} · ${context.name}`
     : effectiveTitle(config, key, context);
   const description = product
     ? product.seo_description ||
       product.description.slice(0, 200) ||
       `Découvrez ${product.name} à la carte de ${context.name}.`
+    : vehicle ? vehicle.description.slice(0, 170)
     : effectiveDescription(config, key, context);
   const origin = new URL(urls.canonicalBase).origin;
   const image = absoluteMedia(
     origin,
     product?.images[0] ||
+      vehicle?.images[0]?.src ||
       page.seo.ogImage ||
       config.seo.ogImage ||
       config.branding.logo.src,
   );
   const canonical = product
     ? urls.canonicalBase + productPath(product.id)
+    : vehicle ? `${urls.canonicalBase}/vehicules/${vehicle.id}`
     : pageUrl(urls.canonicalBase, key);
   const locale = siteLocale(config);
-  const indexable =
-    !demoEnabled() &&
-    !preview &&
-    config.seo.noIndex === false &&
-    !page.seo.noIndex &&
-    (!product || page.visible) &&
-    page.kind !== "protected";
+  const indexable = isIndexable({
+    demo: demoEnabled(),
+    preview,
+    mirror: urls.canonicalBase !== urls.servedBase,
+    addonInstalled: websiteInstalled,
+    archived: !!archived,
+    suspended: !!suspended,
+    siteNoIndex: config.seo.noIndex !== false,
+    pageNoIndex: !!page.seo.noIndex,
+    pageVisible: page.visible,
+    pageKind: page.kind,
+    productPage: !!product,
+    productVisible: product ? page.visible : undefined,
+  });
   return {
     metadataBase: new URL(origin),
     alternates: { canonical },
@@ -210,7 +255,7 @@ export default async function Page(props: Props) {
       ? categorie
       : "Tout";
   const jsonLd =
-    data.preview || data.product
+    data.preview || data.product || data.config.theme.presentation?.layout === "collection"
       ? null
       : buildJsonLd({
           pageKey: data.key,
@@ -225,6 +270,7 @@ export default async function Page(props: Props) {
   return (
     <TenantSiteProvider
       restaurant={data.restaurant}
+      industry={data.industry}
       demo={demoEnabled()}
       shopEnabled={data.shopEnabled}
       nonce={(await headers()).get(NONCE_HEADER) ?? undefined}
@@ -257,6 +303,7 @@ export default async function Page(props: Props) {
         detailProduct={data.product}
         updatedAt={data.publishedAt}
         estimationEnabled={data.estimationEnabled}
+        crmContactEnabled={data.crmContactEnabled}
         siteAddons={data.siteAddons}
         offers={data.offers}
       />

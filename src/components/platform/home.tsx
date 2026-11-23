@@ -1,22 +1,26 @@
 "use client";
 import { UtensilsLoader } from "@/components/brand/utensils";
-import { type Plan } from "@/features/platform/pricing";
+import { type Plan } from "@/features/platform/public";
+import { referralPricing } from "@/features/platform/referrals";
+import { type PaidPlan } from "@/features/platform/public";
 import type { Promotion } from "@/features/platform/promotion";
-import { referralPricing, type PaidPlan } from "@/features/platform/referrals";
-import { BillingAccount } from "./billing-account";
 import { AccountWorkspace } from "./account-workspace";
+import { BillingAccount } from "./billing-account";
 import { ReferralPanel } from "./referral-panel";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, useEffect, useCallback } from "react";
 import { ArrowUpRight, Building2, Plus } from "lucide-react";
-import { can, type Role } from "@/lib/permissions";
-import { industries, industryLabels, trades, discoveryLabels, type Industry } from "@/features/onboarding/catalog";
+import { can, type Role } from "@/core/permissions";
+import { industries } from "@/core/tenant/business";
+import { industryLabels, trades, discoveryLabels } from "@/features/onboarding/catalog";
+import { type Industry } from "@/features/onboarding/public";
 import "./platform.css";
 import "./access.css";
 type Overview = {
   user: { id: string; name: string };
   platformAdmin?: boolean;
+  isSuperAdmin?: boolean;
   billingReady?: boolean;
   promotion?: Promotion | null;
   organizations: {
@@ -143,6 +147,7 @@ export function PlatformHome() {
       restaurants={data?.restaurants || []}
       canCreate={canCreate}
       platformAdmin={data?.platformAdmin}
+      isSuperAdmin={data?.isSuperAdmin}
     >
       <main className="platform restaurant-workspace-content account-home-content">
         <header className="account-page-heading">
@@ -158,7 +163,7 @@ export function PlatformHome() {
             </a>
           )}
         </header>
-        {data && (
+        {data && data.restaurants.length > 0 && (
           <div className="account-overview">
             <div>
               <Building2 size={22} />
@@ -216,7 +221,7 @@ export function PlatformHome() {
                         >
                           Ouvrir le poste de travail <ArrowUpRight size={16} />
                         </a>
-                        <a href={`/restaurant/${r.id}`}>Administrer</a>
+                        <a href={`/commerce/${r.id}`}>Administrer</a>
                         {plan >= 39 && <a href={`/r/${r.id}`}>Voir le site</a>}
                         {can(r.user_roles, "orders") && (
                           <a href={`/offline?restaurant=${r.id}`}>
@@ -229,7 +234,11 @@ export function PlatformHome() {
                 );
               })}
             </div>
-            <section id="abonnements"><h2>Abonnements et achats</h2>{data.organizations.filter(o=>o.role==="OWNER").map(o=><BillingAccount key={o.id} organization={o.id} name={o.name} onChanged={load} />)}</section>
+            <section id="abonnements"><h2>Abonnements et achats</h2>
+              <p>Vos échéances, factures, add-ons et recharges, organisation par organisation.</p>
+              {data.organizations.filter(o=>o.role==="OWNER").map(o=><BillingAccount key={o.id} organization={o.id} name={o.name} onChanged={load}/>)}
+              {!data.organizations.some(o=>o.role==="OWNER")&&<p>La facturation est réservée au propriétaire de chaque organisation.</p>}
+            </section>
             {data.organizations.map((o) => {
               const paying = o.paying_referrals ?? 0;
               const price = referralPricing(o.paid_plan, o.seats, paying);
@@ -282,9 +291,7 @@ export function PlatformHome() {
                     )}
                     {data.billingReady && o.role === "OWNER" && !o.paid_plan && !["active", "trialing", "past_due"].includes(o.billing_status || "") && (
                       <button type="button" className="access-primary" disabled={busy} onClick={() => void billing("checkout", o.id)}>
-                        {data.promotion
-                          ? `Payer ${data.promotion.price} € et activer mon abonnement`
-                          : "S’abonner · 39 € TTC / mois"}
+                        {o.trial_active ? "Activer mon abonnement · 39 € TTC / mois" : "S’abonner · 39 € TTC / mois"}
                       </button>
                     )}
                     {data.billingReady && o.role === "OWNER" && o.billing_customer && (
@@ -376,8 +383,7 @@ export function PlatformHome() {
                   {organization &&
                     organization.occupied >= organization.seats && (
                       <p>
-                        Demandez l’activation d’une place supplémentaire à 39 €
-                        TTC par mois.
+                        Votre capacité est atteinte. <a href="#abonnements">Ajouter une place à votre abonnement</a> (39 € TTC par mois).
                       </p>
                     )}
                   <button
@@ -393,14 +399,22 @@ export function PlatformHome() {
               </section>
             )}
             {data.organizations.length === 0 && !token && (
-              <section>
-                <h2>Ouvrez votre premier espace</h2>
+              <section className="first-establishment">
+                <span className="account-eyebrow">BIENVENUE</span>
+                <h2>Créez votre premier établissement</h2>
                 <p>
-                  Souscrivez l’abonnement Studio pour préparer votre
-                  organisation et votre premier établissement.
+                  Votre compte est prêt. En quelques questions, décrivez votre
+                  structure et votre activité : votre tableau de bord s’ouvre
+                  ensuite avec les outils adaptés à votre métier.
                 </p>
+                <ol>
+                  <li>Votre profil et votre structure</li>
+                  <li>Votre métier et votre quotidien</li>
+                  <li>Votre espace activé, avec 7 jours d’essai gratuits et toutes les fonctionnalités</li>
+                </ol>
                 <Link className="button" href="/checkout/39">
-                  Souscrire
+                  <Plus size={16} />
+                  Créer mon premier établissement
                 </Link>
               </section>
             )}

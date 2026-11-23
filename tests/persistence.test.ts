@@ -1,12 +1,12 @@
-import { migrate } from "../src/lib/database/migrate";
+import { migrate } from "../src/infrastructure/database/migrate";
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { mkdtemp, rm, readFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { PGlite } from "@electric-sql/pglite";
-import { seed } from "../src/lib/database/seed";
-import { one } from "../src/lib/database/db";
+import { seed } from "../src/infrastructure/database/seed";
+import { one } from "../src/infrastructure/database/db";
 test("base persistante : fermeture puis réouverture indépendante", async () => {
   const dir = await mkdtemp(path.join(tmpdir(), "atacuisine-demo-test-"));
   let db: PGlite | undefined;

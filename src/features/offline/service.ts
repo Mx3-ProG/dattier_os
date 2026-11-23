@@ -1,8 +1,8 @@
 import { randomUUID, createHash, randomBytes } from "node:crypto";
 import { z } from "zod";
-import { rows, one, type DB } from "@/lib/database/db";
-import { scope, type Actor } from "@/lib/auth/session";
-import { requirePermission } from "@/lib/permissions";
+import { rows, one, type DB } from "@/infrastructure/database/db";
+import { scope, type Actor } from "@/infrastructure/auth/session";
+import { requirePermission } from "@/core/permissions";
 import { log, changeItem } from "@/features/orders/service";
 import { requirePaidAddon } from "@/features/platform/entitlements";
 const id = z.string().min(1).max(150);

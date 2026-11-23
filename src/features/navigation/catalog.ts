@@ -18,6 +18,8 @@ import { tableBookingNavigation } from "@/features/reservations/navigation";
 import {
   stocksNavigation,
   recipesNavigation,
+  productsNavigation,
+  servicesNavigation,
 } from "@/features/inventory/navigation";
 import {
   suppliersNavigation,
@@ -40,10 +42,9 @@ import { bankNavigation } from "@/features/bank/navigation";
 import { payoutsNavigation } from "@/features/payments/navigation";
 import { customersNavigation } from "@/features/loyalty/navigation";
 import { menuNavigation } from "@/features/catalog/navigation";
-import { settingsNavigation } from "@/features/platform/navigation";
+import { settingsNavigation, dashboardNavigation } from "@/features/platform/navigation";
 import { siteNavigation } from "@/features/cms/navigation";
-import { tradeNavigation } from "@/features/trade/navigation";
-import { servicesNavigation, productsNavigation } from "@/features/offers/navigation";
+import { tradeToolNavigation } from "@/features/trade/navigation";
 
 /** Restaurant composition: preserve historic order; features own their contributions. */
 export const workspaceNavigation = createNavigation([
@@ -60,13 +61,14 @@ export const workspaceNavigation = createNavigation([
   kitchenNavigation,
   barNavigation,
   tableBookingNavigation,
-  servicesNavigation,
-  productsNavigation,
+  // Outils métier : chacun dans OPÉRATIONS, après les écrans de service.
+  ...tradeToolNavigation,
   stocksNavigation,
   recipesNavigation,
+  productsNavigation,
+  servicesNavigation,
   suppliersNavigation,
   deliveriesNavigation,
-  tradeNavigation,
   teamNavigation,
   attendanceNavigation,
   hrNavigation,
@@ -84,4 +86,5 @@ export const workspaceNavigation = createNavigation([
   siteNavigation,
   securityNavigation,
   addonsNavigation,
+  dashboardNavigation,
 ]);

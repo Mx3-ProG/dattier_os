@@ -1,5 +1,11 @@
 import { z } from "zod";
 import { isSafeHref } from "./text";
+import {
+  badgeEffectIds,
+  buttonEffectIds,
+  cardEffectIds,
+  titleEffectIds,
+} from "./effects";
 
 /** Bump when the shape changes; add a migration step in `upgrade()` (service.ts). */
 export const SCHEMA_VERSION = 1;
@@ -43,6 +49,15 @@ export const fontIds = [
 export type FontId = (typeof fontIds)[number];
 
 export const presentationSchema = z.object({
+  /** Effets d'interface du modèle (React Bits) : optionnels pour les sites existants. */
+  effects: z
+    .object({
+      title: z.enum(titleEffectIds),
+      button: z.enum(buttonEffectIds),
+      card: z.enum(cardEffectIds),
+      badge: z.enum(badgeEffectIds),
+    })
+    .optional(),
   layout: z.enum([
     "bistrot",
     "jardin",
@@ -52,6 +67,24 @@ export const presentationSchema = z.object({
     "riviera",
     "atelier",
     "escale",
+    "pizzeria",
+    "sushi",
+    "coiffeur",
+    "loft",
+    "chantier",
+    "racing",
+    "collection",
+    "manuscrit",
+    "assurance",
+    "temps-des-donuts",
+    "patisserie",
+    "streetfood",
+    "compta",
+    "ecole",
+    "gastronomique",
+    "baravin",
+    "brunch",
+    "burger",
   ]),
   stickyHeader: z.boolean(),
   stickyAction: z.enum(["none", "order", "reserve"]),
@@ -139,6 +172,7 @@ export const sectionProps = {
     burgerHint: text(120),
   }),
   reviews: z.object({
+    highlights: z.array(text(120)).max(6).optional(),
     kicker: text(80),
     title: text(160),
     text: text(600),
@@ -147,7 +181,7 @@ export const sectionProps = {
     sheetLabel: text(60),
     cardCaption: text(80),
   }),
-  map: z.object({ kicker: text(80), title: text(160), buttonLabel: text(60) }),
+  map: z.object({ kicker: text(80), title: text(160), buttonLabel: text(60), contactKicker: text(80).optional(), contactTitle: text(160).optional(), contactText: text(600).optional(), emailLabel: text(80).optional() }),
   gallery: z.object({
     kicker: text(80),
     title: text(160),
@@ -180,7 +214,7 @@ export const sectionProps = {
           z
             .string()
             .regex(
-              /^\/api\/cms\/[a-zA-Z0-9_-]+\/media\/[a-f0-9-]{36}\.(mp4|webm)$/,
+              /^(\/cms\/[a-z0-9/_.-]+\.(mp4|webm)|\/api\/cms\/[a-zA-Z0-9_-]+\/media\/[a-f0-9-]{36}\.(mp4|webm))$/,
             ),
           z.literal(""),
         ]),
@@ -203,6 +237,7 @@ export const sectionProps = {
       .max(20),
   }),
   cta: z.object({
+    kicker: text(80).optional(),
     title: text(160),
     text: text(400),
     link: linkSchema,
@@ -233,6 +268,182 @@ export const sectionProps = {
       "reviewForm",
       "reservationForm",
     ]),
+  }),
+  newsletter: z.object({
+    kicker: text(80),
+    title: text(160),
+    text: text(400),
+    placeholder: text(80),
+    buttonLabel: text(60),
+  }),
+  team: z.object({
+    kicker: text(80),
+    title: text(160),
+    intro: text(600),
+    members: z
+      .array(
+        z.object({
+          name: text(80),
+          role: text(80),
+          bio: text(400),
+          image: imageSchema,
+        }),
+      )
+      .max(12),
+  }),
+  stats: z.object({
+    kicker: text(80),
+    title: text(160),
+    items: z
+      .array(z.object({ value: text(40), label: text(80) }))
+      .min(1)
+      .max(6),
+  }),
+  partners: z.object({
+    kicker: text(80),
+    title: text(160),
+    logos: z
+      .array(z.object({ name: text(80), image: imageSchema, link: linkSchema }))
+      .max(20),
+  }),
+  timeline: z.object({
+    kicker: text(80),
+    title: text(160),
+    intro: text(600),
+    steps: z
+      .array(
+        z.object({
+          title: text(120),
+          text: text(400),
+          image: optionalImage,
+        }),
+      )
+      .min(1)
+      .max(8),
+  }),
+  testimonials: z.object({
+    kicker: text(80),
+    title: text(160),
+    items: z
+      .array(
+        z.object({
+          quote: text(600),
+          author: text(80),
+          role: text(80),
+          image: optionalImage,
+          rating: z.number().int().min(1).max(5),
+        }),
+      )
+      .min(1)
+      .max(12),
+  }),
+  pricing: z.object({
+    kicker: text(80),
+    title: text(160),
+    intro: text(600),
+    plans: z
+      .array(
+        z.object({
+          name: text(80),
+          price: text(40),
+          period: text(40),
+          features: z.array(text(120)).max(12),
+          cta: linkSchema,
+          highlight: z.boolean(),
+        }),
+      )
+      .min(1)
+      .max(6),
+  }),
+  urgency: z.object({
+    kicker: text(80),
+    title: text(160),
+    text: text(400),
+    endDate: text(40),
+    stock: z.number().int().min(0).max(10000),
+    stockLabel: text(80),
+    cta: linkSchema,
+  }),
+  hook: z.object({
+    text: text(200),
+    link: linkSchema,
+    tone: z.enum(["pink", "dark", "light"]),
+  }),
+  reviewForm: z.object({
+    kicker: text(80),
+    title: text(160),
+    text: text(400),
+    buttonLabel: text(60),
+  }),
+  blogList: z.object({
+    kicker: text(80),
+    title: text(160),
+    intro: text(600),
+    articles: z
+      .array(
+        z.object({
+          title: text(160),
+          excerpt: text(400),
+          image: optionalImage,
+          date: text(40),
+          href: text(300),
+        }),
+      )
+      .max(20),
+  }),
+  article: z.object({
+    kicker: text(80),
+    title: text(160),
+    image: optionalImage,
+    author: text(80),
+    date: text(40),
+    body: text(10000),
+  }),
+  comparison: z.object({
+    kicker: text(80),
+    title: text(160),
+    intro: text(600),
+    columns: z.array(text(80)).min(2).max(5),
+    rows: z
+      .array(
+        z.object({
+          label: text(120),
+          values: z.array(text(120)).min(2).max(5),
+        }),
+      )
+      .max(20),
+  }),
+  reviewAdvanced: z.object({
+    kicker: text(80),
+    title: text(160),
+    text: text(400),
+    allowPhoto: z.boolean(),
+    allowRating: z.boolean(),
+    buttonLabel: text(60),
+  }),
+  faqAdvanced: z.object({
+    kicker: text(80),
+    title: text(160),
+    intro: text(400),
+    categories: z
+      .array(
+        z.object({
+          name: text(80),
+          items: z.array(z.object({ question: text(200), answer: text(2000) })).max(20),
+        }),
+      )
+      .max(8),
+  }),
+  wheel: z.object({
+    kicker: text(80),
+    title: text(160),
+    text: text(400),
+    prizes: z
+      .array(z.object({ label: text(80), color: text(20) }))
+      .min(2)
+      .max(12),
+    buttonLabel: text(60),
+    resultText: text(200),
   }),
 } as const;
 export type SectionType = keyof typeof sectionProps;
@@ -382,6 +593,7 @@ export type Business = z.infer<typeof businessSchema>;
 
 export const siteConfigSchema = z.object({
   schemaVersion: z.literal(SCHEMA_VERSION),
+  compositionLayout: presentationSchema.shape.layout.nullable().optional(),
   branding: z.object({
     publicName: text(80),
     brandLines: text(80),
@@ -422,6 +634,19 @@ export const siteConfigSchema = z.object({
   }),
   /** Business identity used for structured data. Every field is optional. */
   business: businessSchema.optional(),
+  /** Vehicle inventory for the Collection template, independent from the restaurant menu. */
+  collectionVehicles: z.array(z.object({
+    id: z.string().regex(/^[a-z0-9-]{3,60}$/),
+    brand: text(80),
+    model: text(160),
+    priceCents: z.number().int().min(0).max(2000000000),
+    year: z.number().int().min(1900).max(2100),
+    mileageKm: z.number().int().min(0).max(2000000),
+    location: text(120),
+    description: text(5000),
+    images: z.array(imageSchema).min(1).max(30),
+    status: z.enum(["available", "sold"]),
+  })).max(200).optional(),
   header: z.object({
     navMenu: text(40),
     navUniverse: text(40),

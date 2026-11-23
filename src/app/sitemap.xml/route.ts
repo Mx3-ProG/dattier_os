@@ -1,4 +1,4 @@
-import { getDb, demoEnabled } from "@/lib/database/db";
+import { getDb, demoEnabled } from "@/infrastructure/database/db";
 import { platformSites } from "@/features/seo/server";
 import { renderSitemapIndex } from "@/features/seo/sitemap";
 export const dynamic = "force-dynamic";

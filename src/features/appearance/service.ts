@@ -1,4 +1,4 @@
-import type { DB } from "@/lib/database/types";
+import type { DB } from "@/infrastructure/database/types";
 import { appearanceSchema, defaultAppearance } from "./theme";
 export async function readAppearance(db: DB, userId: string) {
   const { rows } = await db.query(

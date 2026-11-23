@@ -2,9 +2,9 @@ import { requireCommercialCapability } from "@/features/platform/entitlements";
 import { randomUUID } from "node:crypto";
 
 import { z } from "zod";
-import { one, rows, type DB } from "@/lib/database/db";
-import { scope, type Actor } from "@/lib/auth/session";
-import { requirePermission } from "@/lib/permissions";
+import { one, rows, type DB } from "@/infrastructure/database/db";
+import { scope, type Actor } from "@/infrastructure/auth/session";
+import { requirePermission } from "@/core/permissions";
 import { log } from "@/features/orders/service";
 import { commerce } from "@/features/commerce/service";
 import { defaultConfig } from "./defaults";

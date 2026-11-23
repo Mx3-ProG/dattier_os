@@ -6,6 +6,7 @@ export const ordersNavigation = {
   group: "OPÉRATIONS",
   icon: "ClipboardList",
   permission: "orders",
+  license: "ops-orders",
 } satisfies NavigationContribution;
 
 export const kitchenNavigation = {
@@ -14,6 +15,7 @@ export const kitchenNavigation = {
   group: "OPÉRATIONS",
   icon: "ChefHat",
   permission: "kitchen",
+  license: "ops-kitchen",
 } satisfies NavigationContribution;
 
 export const barNavigation = {
@@ -22,4 +24,5 @@ export const barNavigation = {
   group: "OPÉRATIONS",
   icon: "Wine",
   permission: "bar",
+  license: "ops-bar",
 } satisfies NavigationContribution;

@@ -2,7 +2,8 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { ArrowUpRight } from "lucide-react";
-import type { Promotion } from "@/features/platform/promotion";
+import "./black-friday-bar.css";
+import type { Promotion } from "@/features/platform/public";
 
 /** Time left before the offer ends, shown only after mount to avoid a hydration mismatch. */
 function useRemaining(endsAt: string) {

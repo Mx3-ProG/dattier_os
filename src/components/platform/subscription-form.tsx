@@ -2,7 +2,9 @@
 import { useEffect, useState, type FormEvent } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { industries, industryLabels, trades, discoverySources, discoveryLabels, workflowChoices, workflowLabels, relevantCapabilities, type Industry } from "@/features/onboarding/catalog";
+import { industries } from "@/core/tenant/business";
+import { industryLabels, trades, discoverySources, discoveryLabels, workflowChoices, workflowLabels, relevantCapabilities } from "@/features/onboarding/catalog";
+import { type Industry } from "@/features/onboarding/public";
 import "./onboarding.css";
 
 type Draft = {
@@ -27,6 +29,7 @@ const invitationRoles: Record<Industry, { id: string; label: string }[]> = {
   retail: [{ id: "MANAGER", label: "Responsable" }, { id: "WAITER", label: "Collaborateur" }],
   construction: [{ id: "MANAGER", label: "Responsable" }, { id: "WAITER", label: "Collaborateur" }],
   services: [{ id: "MANAGER", label: "Responsable" }, { id: "WAITER", label: "Collaborateur" }],
+  home_assistance: [{ id: "MANAGER", label: "Responsable" }, { id: "WAITER", label: "Intervenant" }],
   other: [{ id: "MANAGER", label: "Responsable" }, { id: "WAITER", label: "Collaborateur" }],
 };
 

@@ -1,8 +1,8 @@
 import { redirect } from "next/navigation";
 import { cache } from "react";
 import type { Metadata } from "next";
-import { menu } from "@/lib/snapshot";
-import { getDb, productionEnabled } from "@/lib/database/db";
+import { menu } from "@/application/snapshot";
+import { getDb, productionEnabled } from "@/infrastructure/database/db";
 import { PublicSite } from "@/components/public-site";
 import { notFound } from "next/navigation";
 type Props = {

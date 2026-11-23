@@ -25,21 +25,21 @@ import {
   Sparkles,
   X,
 } from "lucide-react";
-import { roleLabels } from "@/lib/permissions";
-import {
-  availableRestaurantModules,
-  restaurantModuleHref,
-  type RestaurantModuleId,
-} from "@/features/platform/admin-navigation";
-import { openCuisineIa } from "../assistant/cuisine-ia";
-import type { Snapshot } from "@/lib/types";
-import {
-  chapterAllowed,
-  chapterRoles,
-  chapters,
-  type Chapter,
-  type TourStep,
-} from "@/features/guide/content";
+import { roleLabels } from "@/core/permissions";
+import { availableRestaurantModules, restaurantModuleHref } from "@/features/platform/admin-navigation";
+import { type RestaurantModuleId } from "@/features/platform/public";
+const openCuisineIa = (prompt?: string) => {
+  import("../assistant/cuisine-ia")
+    .then((m) => m.openCuisineIa(prompt))
+    .catch(() => {
+      /* module IA absent : rien à faire */
+    });
+};
+import type { Snapshot } from "@/shared/types";
+import { chapterAllowed, chapterRoles, chapters as allChapters } from "@/features/guide/content";
+import { type Chapter, type TourStep } from "@/features/guide/public";
+import { adaptTexts } from "@/core/tenant/vocabulary";
+import type { Industry } from "@/core/tenant/business";
 import { chapterIcons } from "./icons";
 import "./tutorial.css";
 
@@ -73,7 +73,17 @@ type Run = {
   adminModules: string[];
 };
 /** Ce que la visite lit du profil, sur le poste comme dans l’administration. */
-type TutorialData = Pick<Snapshot, "user" | "demo" | "plan">;
+type TutorialData = Pick<Snapshot, "user" | "demo" | "plan"> & {
+  restaurant?: { industry?: Industry };
+};
+/** Chapitres du guide dans le vocabulaire du métier (mémorisés par famille). */
+const adaptedChapters = new Map<string, Chapter[]>();
+function chaptersFor(industry: Industry | undefined): Chapter[] {
+  const key = industry ?? "restaurant";
+  let list = adaptedChapters.get(key);
+  if (!list) adaptedChapters.set(key, (list = adaptTexts(allChapters, industry)));
+  return list;
+}
 type Rect = { top: number; left: number; width: number; height: number };
 
 const storageKey = (user: string) => `atacuisine-tour:v1:${user}`;
@@ -176,6 +186,7 @@ export function Tutorial({
 }) {
   const user = data.user.id;
   const userRoles = data.user.roles ?? data.user.role;
+  const chapters = chaptersFor(data.restaurant?.industry);
   const available = chapters.filter((c) => chapterAllowed(c, userRoles));
   const [progress, setProgress] = useState<Progress>({ done: [], seen: true }),
     [welcome, setWelcome] = useState(false),
@@ -816,6 +827,7 @@ function Center({
   playable: (c: Chapter) => TourStep[];
 }) {
   const userRoles = data.user.roles ?? data.user.role;
+  const chapters = chaptersFor(data.restaurant?.industry);
   const open = chapters.filter(
     (c) => chapterAllowed(c, userRoles) && playable(c).length,
   );
@@ -887,7 +899,7 @@ function Center({
             <BookOpenText size={15} /> Guide écrit
           </Link>
         </div>
-        <div className="tour-ia">
+        {(!data.restaurant?.industry || data.restaurant.industry === "restaurant") && (<div className="tour-ia">
           <div className="tour-ia-head">
             <Sparkles size={18} aria-hidden />
             <div>
@@ -924,7 +936,7 @@ function Center({
               </button>
             ))}
           </div>
-        </div>
+        </div>)}
         <ol className="tour-chapters">
           {chapters.map((c) => {
             const Icon = chapterIcons[c.icon] || Sparkles;
@@ -1026,7 +1038,7 @@ function Finished({
             </Link>
           )}
           <button className="tour-secondary" onClick={close}>
-            Retour au service
+            Retour au tableau de bord
           </button>
         </div>
       </div>

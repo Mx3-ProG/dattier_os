@@ -1,13 +1,7 @@
 import { NextRequest } from "next/server";
 import { z } from "zod";
 import { periodQuery, resolvePeriod } from "@/features/analytics/period";
-import {
-  purgeStatistics,
-  readLive,
-  readOverview,
-  readSettings,
-  saveSettings,
-} from "@/features/analytics/service";
+import { purgeStatistics, readLive, readOverview, readSettings, saveSettings } from "@/features/analytics/service";
 import { log } from "@/features/orders/service";
 import { assertOrigin, authenticated, failure, json, readBody } from "@/features/platform/http";
 

@@ -2,7 +2,7 @@
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { EstimationCalculator } from "./calculator";
-import { cents, estimationSaveSchema, type EstimationItem, type EstimationSave } from "@/features/estimation/model";
+import { cents, estimationSaveSchema, type EstimationItem, type EstimationSave } from "@/domain/estimation/model";
 import "./estimation.css";
 
 type State = {
@@ -75,7 +75,7 @@ export function EstimationCenter({ restaurant }: { restaurant: string }) {
         <Button variant="secondary" onClick={() => draft && patch({ items: [...draft.items, { id: crypto.randomUUID(), kind: "product", name: "", unit: "unité", priceCents: 0, costCents: null, defaultQuantity: 1, maxQuantity: 100, featured: false }] })} disabled={draft.items.length >= 20}>Ajouter un produit</Button>
       </div>
       {state.menu.length > 0 && <div className="estimation-editor-actions">
-        <label>Importer un produit de la carte<select value={menuId} onChange={(event) => setMenuId(event.target.value)}><option value="">Choisir…</option>{state.menu.map((item) => <option key={item.id} value={item.id}>{item.name} · {cents(item.price_cents)}</option>)}</select></label>
+        <label>Importer un produit du catalogue<select value={menuId} onChange={(event) => setMenuId(event.target.value)}><option value="">Choisir…</option>{state.menu.map((item) => <option key={item.id} value={item.id}>{item.name} · {cents(item.price_cents)}</option>)}</select></label>
         <Button variant="secondary" disabled={!menuId || draft.items.length >= 20} onClick={() => { const item = state.menu.find((entry) => entry.id === menuId); if (item) addItem(item); setMenuId(""); }}>Importer</Button>
       </div>}
       {draft.items.map((item, index) => <div className="estimation-editor-row" key={item.id}>

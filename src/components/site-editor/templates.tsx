@@ -8,8 +8,12 @@ import {
   LayoutTemplate,
   PenLine,
   Search,
+  Sparkles,
 } from "lucide-react";
-import { siteTemplates, type SiteTemplate } from "@/features/cms/templates";
+import { siteTemplates } from "@/features/cms/templates";
+import { type SiteTemplate } from "@/features/cms/public";
+import { templateContent } from "@/features/cms/template-content";
+import { effectLabels } from "@/features/cms/effects";
 import { fonts } from "@/features/cms/theme";
 import { Button } from "../ui/button";
 import { Modal } from "../forms";
@@ -51,9 +55,11 @@ function TemplatePreview({ template: t }: { template: SiteTemplate }) {
           </div>
           <div
             className="tpl-site-photo"
-            style={{ backgroundImage: `url("${t.image}")` }}
+            style={{
+              backgroundImage: `url("${templateContent[t.id]?.hero?.image?.src ?? t.image}")`,
+            }}
             role="img"
-            aria-label="Illustration culinaire de démonstration"
+            aria-label="Aperçu du modèle"
           />
         </div>
         {t.premium && (
@@ -112,7 +118,7 @@ export function SiteHome({
             </span>
             <strong>Boutique de modèles</strong>
             <span className="site-choice-text">
-              {siteTemplates.length} modèles pensés pour la restauration.
+              {siteTemplates.length} modèles pensés pour différentes activités.
               Changez d’ambiance en un clic.
             </span>
             <span className="site-choice-meta">
@@ -180,11 +186,13 @@ export function TemplatesPanel({
   apply,
   back,
   dirty = false,
+  browseOnly = false,
 }: {
   demo: boolean;
   apply: (template: SiteTemplate, composition: boolean) => void;
   back: () => void;
   dirty?: boolean;
+  browseOnly?: boolean;
 }) {
   const [filter, setFilter] = useState("all");
   const [query, setQuery] = useState("");
@@ -201,7 +209,7 @@ export function TemplatesPanel({
     <section className="template-shop">
       <button className="tpl-back" onClick={back}>
         <ArrowLeft size={16} />
-        Mon site web
+        {browseOnly ? "Accueil" : "Mon site web"}
       </button>
       <header className="tpl-heading">
         <span className="shop-eyebrow">BOUTIQUE DE MODÈLES</span>
@@ -259,7 +267,7 @@ export function TemplatesPanel({
             <button
               className="tpl-stage"
               aria-label={`Aperçu de ${t.name}`}
-              onClick={() => setSelected(t)}
+              onClick={() =>  { setComposition(true); setSelected(t); }}
             >
               <span className={`tpl-badge ${t.premium ? "premium" : ""}`}>
                 {t.premium ? (
@@ -287,6 +295,16 @@ export function TemplatesPanel({
                   </li>
                 ))}
               </ul>
+              <ul className="tpl-features tpl-effects">
+                {([t.effects.title, t.effects.button, t.effects.card] as const)
+                  .filter((e) => e !== "none")
+                  .map((e) => (
+                    <li key={e}>
+                      <Sparkles size={13} />
+                      {effectLabels[e]}
+                    </li>
+                  ))}
+              </ul>
               <div className="tpl-card-foot">
                 <span className="tpl-swatches" aria-hidden="true">
                   <i style={{ background: t.theme.colors.primary }} />
@@ -295,7 +313,7 @@ export function TemplatesPanel({
                 <span className="tpl-price">
                   {t.premium ? "Dès 9 €" : "Inclus"}
                 </span>
-                <button className="tpl-choose" onClick={() => setSelected(t)}>
+                <button className="tpl-choose" onClick={() =>  { setComposition(true); setSelected(t); }}>
                   Choisir <ArrowRight size={15} />
                 </button>
               </div>
@@ -346,6 +364,7 @@ export function TemplatesPanel({
             <TemplatePreview template={selected} />
           </div>
           <p>{selected.description}</p>
+          <a href={selected.id === "temps-des-donuts" ? "/site-demo/gta-like" : `/site-demo/modeles/${selected.id}`} target="_blank" rel="noopener noreferrer">Ouvrir la démo {selected.name} ↗</a>
           <ul className="tpl-features">
             {selected.features.map((f) => (
               <li key={f}>
@@ -353,7 +372,23 @@ export function TemplatesPanel({
               </li>
             ))}
           </ul>
-          <label className="shop-apply-option">
+          <ul className="tpl-features tpl-effects">
+            {(
+              [
+                selected.effects.title,
+                selected.effects.button,
+                selected.effects.card,
+                selected.effects.badge,
+              ] as const
+            )
+              .filter((e) => e !== "none")
+              .map((e) => (
+                <li key={e}>
+                  <Sparkles size={14} /> {effectLabels[e]}
+                </li>
+              ))}
+          </ul>
+          {!browseOnly && <label className="shop-apply-option">
             <input
               type="checkbox"
               checked={composition}
@@ -367,13 +402,14 @@ export function TemplatesPanel({
                 polices, la composition visuelle et les interactions.
               </small>
             </span>
-          </label>
-          <p className="muted">
-            Votre identité, vos autres pages et vos données sont conservées. Le
-            changement reste dans le brouillon et peut être annulé.
-          </p>
+          </label>}
+          {!browseOnly && <p className="muted">
+            {selected.id === "collection" && composition
+              ? "La composition ajoute les pages automobile et un inventaire éditable. Votre identité et vos données existantes sont conservées. Le changement reste dans le brouillon."
+              : "Votre identité, vos autres pages et vos données sont conservées. Le changement reste dans le brouillon et peut être annulé."}
+          </p>}
           <div className="actions">
-            <Button
+            {browseOnly ? <a href="/platform">Créer mon site avec ce catalogue</a> : <Button
               disabled={selected.premium && !demo}
               onClick={() => {
                 apply(selected, composition);
@@ -386,7 +422,7 @@ export function TemplatesPanel({
                   : "Achat bientôt disponible"
                 : "Choisir ce modèle"}
               <ArrowRight size={16} />
-            </Button>
+            </Button>}
             <Button variant="ghost" onClick={() => setSelected(null)}>
               Continuer à explorer
             </Button>

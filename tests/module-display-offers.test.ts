@@ -2,8 +2,8 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import { PGlite } from "@electric-sql/pglite";
-import { migrate } from "../src/lib/database/migrate";
-import { seed } from "../src/lib/database/seed";
+import { migrate } from "../src/infrastructure/database/migrate";
+import { seed } from "../src/infrastructure/database/seed";
 import { workspaceNavigation } from "../src/features/navigation/catalog";
 import { restaurantOnlyNavigation } from "../src/features/onboarding/catalog";
 import { dashboardEntries, displayModuleForAddon, displayableModules } from "../src/features/modules/display";
@@ -83,9 +83,10 @@ test("module_display: only the establishment super admin sets it; showing opens 
     assert.equal(await available("services"), true);
     assert.equal(await available("products"), true);
 
+    const kitchenBefore = await available("kitchen");
     await owner("SELECT app.module_display_set('atelier','floor',true)");
     assert.equal(await available("floor"), true);
-    assert.equal(await available("kitchen"), false, "only the chosen module is opened");
+    assert.equal(await available("kitchen"), kitchenBefore, "the chosen display setting does not alter other installed modules");
     assert.equal((await owner<{ ok: boolean }>("SELECT app.module_enabled('atelier','floor') AS ok"))[0].ok, true);
 
     // Masquer ne retire aucun droit : c'est un choix de présentation.

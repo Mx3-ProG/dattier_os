@@ -5,10 +5,10 @@ import { mkdtemp, readFile, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { PGlite } from "@electric-sql/pglite";
-import { migrate } from "../src/lib/database/migrate";
-import { seed } from "../src/lib/database/seed";
-import { one, rows, type DB } from "../src/lib/database/db";
-import { withDatabaseContext } from "../src/lib/database/context";
+import { migrate } from "../src/infrastructure/database/migrate";
+import { seed } from "../src/infrastructure/database/seed";
+import { one, rows, type DB } from "../src/infrastructure/database/db";
+import { withDatabaseContext } from "../src/infrastructure/database/context";
 import { financeAction, financeState } from "../src/features/finance/service";
 import { financeDashboard } from "../src/features/finance/dashboard";
 import { financeIntent, financeReply } from "../src/features/assistant/finance";
@@ -23,7 +23,7 @@ import {
   candidatesFor,
   possibleDuplicates,
   type Pools,
-} from "../src/features/bank/matching";
+} from "../src/domain/bank/matching";
 import {
   bankAction,
   bankActionSchema,

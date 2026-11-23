@@ -1,7 +1,7 @@
 import { NextRequest } from "next/server";
 import { authenticated, assertOrigin, json, failure } from "@/features/platform/http";
 import { planBillingReady } from "@/features/platform/plan-billing";
-import { one } from "@/lib/database/db";
+import { one } from "@/infrastructure/database/db";
 export const runtime="nodejs";
 export async function POST(req:NextRequest) {
   try {

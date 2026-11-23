@@ -1,4 +1,4 @@
-import { demoEnabled } from "@/lib/database/db";
+import { demoEnabled } from "@/infrastructure/database/db";
 import { renderSitemap } from "@/features/seo/sitemap";
 export const dynamic = "force-dynamic";
 /** Public pages of the atacuisine platform itself (distinct from restaurant sites). */

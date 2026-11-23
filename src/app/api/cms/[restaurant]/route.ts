@@ -1,15 +1,10 @@
 import { withRequestContext } from "@/features/ops-security/context";
 import { NextRequest } from "next/server";
 import { revalidatePath } from "next/cache";
-import {
-  authenticated,
-  assertOrigin,
-  readBody,
-  json,
-  failure,
-} from "@/features/platform/http";
+import { authenticated, assertOrigin, readBody, json, failure } from "@/features/platform/http";
 import { website } from "@/features/cms/service";
-import { limits } from "@/features/cms/media";
+import { invalidateSiteCache } from "@/infrastructure/cache/site-cache";
+import { limits } from "@/features/cms/media-optimizer";
 type Context = { params: Promise<{ restaurant: string }> };
 async function routeGET(req: NextRequest, c: Context) {
   try {
@@ -39,8 +34,10 @@ async function routePOST(req: NextRequest, c: Context) {
       const cms = website(restaurant);
       return cms.siteAction(db, await cms.siteScope(db, user), body);
     });
-    if (["publish", "restore"].includes(body.op))
+    if (["publish", "restore"].includes(body.op)) {
       revalidatePath(`/r/${restaurant}`, "layout");
+      invalidateSiteCache(restaurant);
+    }
     return json(result);
   } catch (e) {
     return failure(e);

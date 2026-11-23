@@ -1,16 +1,12 @@
 import { withRequestContext } from "@/features/ops-security/context";
 import { NextRequest } from "next/server";
-import {
-  authenticated,
-  assertOrigin,
-  json,
-  failure,
-} from "@/features/platform/http";
+import { authenticated, assertOrigin, json, failure } from "@/features/platform/http";
 import { optimizeMedia, reserveMediaJob } from "@/features/cms/media-optimizer";
-import { cmsMedia, limits } from "@/features/cms/media";
+import { cmsMedia } from "@/features/cms/media";
+import { limits } from "@/features/cms/media-optimizer";
 import { website } from "@/features/cms/service";
 import { log } from "@/features/orders/service";
-import { demoEnabled } from "@/lib/database/db";
+import { demoEnabled } from "@/infrastructure/database/db";
 async function routePOST(
   req: NextRequest,
   c: { params: Promise<{ restaurant: string }> },

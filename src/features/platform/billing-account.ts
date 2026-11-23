@@ -1,7 +1,7 @@
 import { authenticated } from "./http";
 import { billingContext, planBillingReady, planStripe, planPriceId } from "./plan-billing";
-import { one, rows, type DB } from "@/lib/database/db";
-import { appOrigin } from "@/lib/auth/oidc";
+import { one, rows, type DB } from "@/infrastructure/database/db";
+import { appOrigin } from "@/infrastructure/auth/oidc";
 import { assertSameMode, saasLive } from "@/features/billing/stripe-saas";
 import { validateCapacity } from "./billing-rules";
 import { addonCatalog } from "@/features/addons/catalog";

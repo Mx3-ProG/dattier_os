@@ -1,11 +1,11 @@
-import { migrate } from "../src/lib/database/migrate";
+import { migrate } from "../src/infrastructure/database/migrate";
 import { test, before, after } from "node:test";
 import assert from "node:assert/strict";
 import { PGlite } from "@electric-sql/pglite";
 import { readFile } from "node:fs/promises";
 import { randomUUID } from "node:crypto";
-import { seed } from "../src/lib/database/seed";
-import { rows, one } from "../src/lib/database/db";
+import { seed } from "../src/infrastructure/database/seed";
+import { rows, one } from "../src/infrastructure/database/db";
 import {
   orderSchema,
   createOrder,
@@ -16,8 +16,8 @@ import {
   perform,
   requestReservation,
   reservationSchema,
-} from "../src/lib/actions";
-import { snapshot, menu } from "../src/lib/snapshot";
+} from "../src/application/actions";
+import { snapshot, menu } from "../src/application/snapshot";
 import {
   booking,
   parisDate,
@@ -33,7 +33,7 @@ const openDay = (ahead: number) => {
       return d;
   }
 };
-import { scope, type Actor } from "../src/lib/auth/session";
+import { scope, type Actor } from "../src/infrastructure/auth/session";
 let db: PGlite;
 const sarah: Actor = { id: "sarah", name: "Sarah", role: "WAITER" },
   karim: Actor = { id: "karim", name: "Karim", role: "CHEF" },

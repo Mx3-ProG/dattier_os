@@ -15,6 +15,7 @@ import {
   LogOut,
   ArrowUpRight,
   Package,
+  ShieldAlert,
 } from "lucide-react";
 import { clearLoadingConfigs } from "@/components/loading-screens/tenant-loader";
 export function AccountWorkspace({
@@ -24,6 +25,7 @@ export function AccountWorkspace({
   restaurants,
   canCreate,
   platformAdmin = false,
+  isSuperAdmin = false,
 }: {
   children: ReactNode;
   userId?: string;
@@ -31,6 +33,7 @@ export function AccountWorkspace({
   restaurants: { id: string; name: string; plan: number }[];
   canCreate: boolean;
   platformAdmin?: boolean;
+  isSuperAdmin?: boolean;
 }) {
   const [mobile, setMobile] = useState(false);
   const first = restaurants.find((r) => r.plan > 0);
@@ -71,6 +74,9 @@ export function AccountWorkspace({
             <Building2 size={18} />
             Mes établissements
           </Link>
+          <Link className="restaurant-nav-link" href="/platform#abonnements" onClick={()=>setMobile(false)}>
+            <Package size={18}/> Abonnements et achats
+          </Link>
           {first && (
             <Link
               className="restaurant-nav-link"
@@ -87,18 +93,27 @@ export function AccountWorkspace({
               <Link
                 className="restaurant-nav-link"
                 key={r.id}
-                href={`/restaurant/${encodeURIComponent(r.id)}`}
+                href={`/commerce/${encodeURIComponent(r.id)}`}
               >
                 <Building2 size={18} />
                 <span>{r.name}</span>
               </Link>
             ))}
+          {isSuperAdmin && (
+            <>
+              <span className="nav-group">ADMINISTRATION MONOLITHE</span>
+              <Link className="restaurant-nav-link" href="/platform/admin">
+                <ShieldAlert size={18} />
+                <span>Super Admin</span>
+              </Link>
+            </>
+          )}
           {platformAdmin && (
             <>
-              <span className="nav-group">ADMINISTRATION</span>
+              <span className="nav-group">ADMINISTRATION MONOLITHE</span>
               <Link className="restaurant-nav-link" href="/platform/boutique">
                 <Package size={18} />
-                Boutique d’add-ons
+                <span>Boutique d’add-ons</span>
               </Link>
             </>
           )}

@@ -1,5 +1,5 @@
 "use client";
-/* Bandeau et centre de préférences cookies du site STUDIO OS (home, guide,
+/* Bandeau et centre de préférences cookies du site STUDIO S (home, guide,
    pages légales). Les sites des commerçants ont leur propre bandeau
    (components/cms-site/cookie-consent.tsx).
 
@@ -9,13 +9,8 @@
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import { BarChart3, Cookie, Megaphone, ShieldCheck, X } from "lucide-react";
-import {
-  consentMaxAgeMs,
-  platformConsentEvent,
-  platformConsentKey,
-  readPlatformConsent,
-  type PlatformConsent,
-} from "@/features/legal/consent";
+import { consentMaxAgeMs, platformConsentEvent, platformConsentKey, readPlatformConsent } from "@/features/legal/consent";
+import { type PlatformConsent } from "@/features/legal/public";
 
 const openEvent = "studio:cookie-settings";
 
@@ -83,7 +78,7 @@ export function PlatformCookieConsent() {
                 Les cookies essentiels font fonctionner le site, votre connexion et
                 le parrainage. Avec votre accord, nous mesurons aussi les visites,
                 leur provenance et les inscriptions qu’elles génèrent, pour
-                améliorer STUDIO OS. Aucune revente de données.{" "}
+                améliorer STUDIO S. Aucune revente de données.{" "}
                 <Link href="/cookies">En savoir plus</Link>
               </small>
             </span>
@@ -123,7 +118,7 @@ export function PlatformCookieConsent() {
               <BarChart3 aria-hidden size={20} />
               <span>
                 <strong>Mesure d’audience et des ventes</strong>
-                <small>Pages vues, parcours de visite, zone géographique approximative, appareil, et suivi des essais et abonnements issus de ces visites. Statistiques agrégées, utilisées uniquement par STUDIO OS.</small>
+                <small>Pages vues, parcours de visite, zone géographique approximative, appareil, et suivi des essais et abonnements issus de ces visites. Statistiques agrégées, utilisées uniquement par STUDIO S.</small>
               </span>
               <input type="checkbox" checked={audience} onChange={(e) => setAudience(e.target.checked)} />
             </label>

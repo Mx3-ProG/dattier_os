@@ -1,6 +1,6 @@
 import { randomUUID as uuid } from "node:crypto";
 import { z } from "zod";
-import { rows, one, type DB } from "@/lib/database/db";
+import { rows, one, type DB } from "@/infrastructure/database/db";
 import { log, notify } from "@/features/orders/service";
 import { moduleEnabled, requireModule } from "@/features/modules/access";
 

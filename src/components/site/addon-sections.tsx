@@ -2,11 +2,14 @@
 import { useState } from "react";
 import { ArrowUpRight, Check } from "lucide-react";
 import { SiteLink } from "./sections";
-import type { SectionOf } from "@/features/cms/schema";
-import { rich, type PlaceholderContext } from "@/features/cms/text";
+import { useTenantSite } from "../cms-site/context";
+import type { SectionOf } from "@/features/cms/public";
+import { rich } from "@/features/cms/text";
+import { type PlaceholderContext } from "@/features/cms/public";
 import { allergenList } from "@/features/trade/definitions";
 import { parseAllergens } from "@/features/trade/model";
-import { postcodeZone, type SiteAddonData } from "@/features/cms/site-addons";
+import { postcodeZone } from "@/features/cms/site-addons";
+import { type SiteAddonData } from "@/features/cms/public";
 import "./addon-sections.css";
 
 type Common = { ctx: PlaceholderContext; attrs: Record<string, string> };
@@ -54,11 +57,12 @@ export function LoyaltySection({ props: p, ctx, attrs }: Common & { props: Secti
 }
 
 export function ReservationSection({ props: p, ctx, attrs, canReserve }: Common & { props: SectionOf<"reservation">["props"]; canReserve: boolean }) {
+  const t = useTenantSite().text;
   return (
     <section className="donut-section site-addon site-addon-reservation" {...attrs}>
       <Head {...p} ctx={ctx} />
       {canReserve ? (
-        <SiteLink link={{ label: p.buttonLabel || "Réserver une table", href: "/reservations" }} className="donut-button dark"><ArrowUpRight size={18} /></SiteLink>
+        <SiteLink link={{ label: p.buttonLabel || t("Réserver une table"), href: "/reservations" }} className="donut-button dark"><ArrowUpRight size={18} /></SiteLink>
       ) : (
         <p className="site-addon-hint">La réservation en ligne n’est pas encore ouverte.</p>
       )}
@@ -68,11 +72,12 @@ export function ReservationSection({ props: p, ctx, attrs, canReserve }: Common 
 
 export function AllergensSection({ props: p, ctx, attrs, products }: Common & { props: SectionOf<"allergens">["props"]; products: { id: string; name: string; allergens: string }[] }) {
   const rows = products.map((product) => ({ ...product, ...parseAllergens(product.allergens ?? "", allergenList) }));
+  const t = useTenantSite().text;
   return (
     <section className="donut-section site-addon site-addon-allergens" {...attrs}>
       <Head {...p} ctx={ctx} />
       {rows.length === 0 ? (
-        <p className="site-addon-hint">La carte sera bientôt en ligne.</p>
+        <p className="site-addon-hint">{t("La carte sera bientôt en ligne.")}</p>
       ) : (
         <div className="site-addon-table">
           <table>

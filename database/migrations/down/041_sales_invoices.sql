@@ -25,6 +25,9 @@ BEGIN
 END $$;
 DROP TABLE fin_invoice_payments;
 DROP TABLE fin_invoice_lines;
+-- The later home assistance module links visits to invoices. The guard above
+-- guarantees that no invoice data is removed by this preproduction rollback.
+ALTER TABLE IF EXISTS public.home_visits DROP CONSTRAINT IF EXISTS home_visits_invoice_id_fkey;
 DROP TABLE fin_invoices;
 DROP TABLE fin_invoice_sequences;
 DROP TABLE fin_company;

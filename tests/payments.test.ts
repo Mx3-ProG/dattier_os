@@ -4,10 +4,10 @@ import { randomUUID } from "node:crypto";
 import { readFile } from "node:fs/promises";
 import { PGlite } from "@electric-sql/pglite";
 import Stripe from "stripe";
-import { migrate } from "../src/lib/database/migrate";
-import { seed } from "../src/lib/database/seed";
-import { one, rows } from "../src/lib/database/db";
-import { withDatabaseContext } from "../src/lib/database/context";
+import { migrate } from "../src/infrastructure/database/migrate";
+import { seed } from "../src/infrastructure/database/seed";
+import { one, rows } from "../src/infrastructure/database/db";
+import { withDatabaseContext } from "../src/infrastructure/database/context";
 import { changeItem, createOrder } from "../src/features/orders/service";
 import { commerce } from "../src/features/commerce/service";
 import { financeAction, financeState } from "../src/features/finance/service";
@@ -31,7 +31,7 @@ import {
   type MinimalEvent,
   type Run,
 } from "../src/features/payments/service";
-import { snapshot } from "../src/lib/snapshot";
+import { snapshot } from "../src/application/snapshot";
 
 const R = "bernay";
 const owner = { id: "nadia", name: "Nadia", role: "OWNER" as const };

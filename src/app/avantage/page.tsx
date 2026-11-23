@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
-import { money } from "@/lib/domain";
+import { money } from "@/domain/shared/units";
 type Reward = {
   name: string;
   code: string;

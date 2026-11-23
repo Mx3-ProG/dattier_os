@@ -1,8 +1,8 @@
 import { randomBytes, randomUUID } from "node:crypto";
 import { z } from "zod";
-import { one, rows, type DB } from "@/lib/database/db";
-import { requirePermission } from "@/lib/permissions";
-import type { Actor } from "@/lib/auth/session";
+import { one, rows, type DB } from "@/infrastructure/database/db";
+import { requirePermission } from "@/core/permissions";
+import type { Actor } from "@/infrastructure/auth/session";
 import { log } from "@/features/orders/service";
 import {
   applyFlash,

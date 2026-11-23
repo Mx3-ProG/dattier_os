@@ -1,5 +1,5 @@
-import { PostgresDatabase } from "../src/lib/database/postgres";
-import { withDatabaseContext } from "../src/lib/database/context";
+import { PostgresDatabase } from "../src/infrastructure/database/postgres";
+import { withDatabaseContext } from "../src/infrastructure/database/context";
 import { createOrder, orderSchema } from "../src/features/orders/service";
 import { randomUUID } from "node:crypto";
 const url = process.env.MIGRATION_DATABASE_URL;

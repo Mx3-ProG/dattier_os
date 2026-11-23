@@ -1,13 +1,8 @@
 import { withRequestContext } from "@/features/ops-security/context";
 import { NextRequest } from "next/server";
-import {
-  authenticated,
-  assertOrigin,
-  json,
-  failure,
-} from "@/features/platform/http";
-import { scope } from "@/lib/auth/session";
-import { requirePermission } from "@/lib/permissions";
+import { authenticated, assertOrigin, json, failure } from "@/features/platform/http";
+import { scope } from "@/infrastructure/auth/session";
+import { requirePermission } from "@/core/permissions";
 import { saveAsset } from "@/features/site/media";
 async function routePOST(
   req: NextRequest,

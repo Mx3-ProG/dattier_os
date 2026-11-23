@@ -1,7 +1,7 @@
 /* Passage en écriture d’un règlement, dans la transaction du règlement lui-même.
    Ce module sert aussi aux profils de salle : il ne lit donc jamais les écritures,
    réservées à la finance, et écrit uniquement par les fonctions SQL contrôlées. */
-import { rows, type DB } from "@/lib/database/db";
+import { rows, type DB } from "@/infrastructure/database/db";
 import { saleEntryLines, type EntryLine } from "./posting";
 
 type Declaration = {

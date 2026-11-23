@@ -1,5 +1,5 @@
 import type { CSSProperties } from "react";
-import type { NotFoundDesign } from "@/features/cms/site-addons";
+import type { NotFoundDesign } from "@/features/cms/public";
 import { isThemedVisual, themedVisuals } from "@/features/cms/themed-visuals";
 import "./site-not-found.css";
 import "./site-not-found-themes.css";

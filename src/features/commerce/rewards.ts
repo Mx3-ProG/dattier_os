@@ -1,7 +1,7 @@
 import { randomUUID, randomBytes } from "node:crypto";
 import { z } from "zod";
-import { one, type DB } from "@/lib/database/db";
-import type { Actor } from "@/lib/auth/session";
+import { one, type DB } from "@/infrastructure/database/db";
+import type { Actor } from "@/infrastructure/auth/session";
 import { customerForActor } from "./account";
 import { log } from "@/features/orders/service";
 export async function claimReward(

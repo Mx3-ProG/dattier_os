@@ -2,12 +2,13 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Gift, Store } from "lucide-react";
 import { cookies } from "next/headers";
+import { planBillingReady } from "@/features/platform/plan-billing";
 import { plans, referralCookie } from "@/features/platform/pricing";
 import { activePromotion, trialDays } from "@/features/platform/promotion";
-import { actor } from "@/lib/auth/session";
-import { demoEnabled, getDb } from "@/lib/database/db";
+import { actor } from "@/infrastructure/auth/session";
+import { demoEnabled, getDb } from "@/infrastructure/database/db";
 import { SubscriptionForm } from "@/components/platform/subscription-form";
-import { planBillingReady } from "@/features/platform/plan-billing";
+
 import "@/components/platform/access.css";
 
 /** Name of the referrer behind the visitor's referral link, if still valid. */
@@ -46,7 +47,7 @@ export default async function Page({ params }: { params: Promise<{ plan: string 
   return (
     <main className="access-shell">
       <nav className="access-nav" aria-label="Souscription">
-        <Link href="/" className="access-brand"><Store size={22} /> STUDIO OS</Link>
+        <Link href="/" className="access-brand"><Store size={22} /> STUDIO S</Link>
         <Link href="/#offres">Changer d’offre</Link>
         {user && <form action="/auth/logout" method="post"><button>Se déconnecter</button></form>}
       </nav>

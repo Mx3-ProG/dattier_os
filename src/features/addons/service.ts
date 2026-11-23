@@ -3,11 +3,11 @@ import { randomUUID } from "node:crypto";
 import { Pool } from "pg";
 import { addonStripe, addonBillingReady } from "./billing-config";
 import { authenticated } from "@/features/platform/http";
-import { one, rows } from "@/lib/database/db";
-import { scope } from "@/lib/auth/session";
+import { one, rows } from "@/infrastructure/database/db";
+import { scope } from "@/infrastructure/auth/session";
 import { addonCatalog, addonPriceCents, monthlyAddonIds, type MonthlyAddonId } from "./catalog";
 import { resolveMonthlyPrice, saasAutomaticTax, saasLive } from "@/features/billing/stripe-saas";
-import { demoEnabled } from "@/lib/database/db";
+import { demoEnabled } from "@/infrastructure/database/db";
 export { monthlyAddonIds, type MonthlyAddonId } from "./catalog";
 const addonEnv = (addon: MonthlyAddonId) =>
   `STUDIO_ADDON_${addon.replaceAll("-", "_").toUpperCase()}_PRICE_ID`;

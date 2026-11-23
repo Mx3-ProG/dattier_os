@@ -1,7 +1,7 @@
 import { cookies, headers as nextHeaders } from "next/headers";
-import { actor } from "@/lib/auth/session";
-import { withDatabaseContext } from "@/lib/database/context";
-import { getDb, productionEnabled, type DB } from "@/lib/database/db";
+import { actor } from "@/infrastructure/auth/session";
+import { withDatabaseContext } from "@/infrastructure/database/context";
+import { getDb, productionEnabled, type DB } from "@/infrastructure/database/db";
 import {
   clientAddress,
   isAutomated,

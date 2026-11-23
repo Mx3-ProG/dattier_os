@@ -1,6 +1,7 @@
 import { DeleteObjectCommand, GetObjectCommand, PutObjectCommand } from "@aws-sdk/client-s3";
-import { rows, type DB } from "@/lib/database/db";
-import { mediaStorage, mediaObjectKey } from "./media";
+import { rows, type DB } from "@/infrastructure/database/db";
+import { mediaObjectKey } from "./media";
+import { s3Client } from "@/infrastructure/storage/s3";
 import { optimizeMedia } from "./media-optimizer";
 
 type Run = <T>(fn: (tx: DB) => Promise<T>) => Promise<T>;
@@ -27,7 +28,7 @@ export async function transcodeMedia(run: Run, restaurant: string, id: string) {
     )
   )[0];
   if (!media) return;
-  const store = mediaStorage(),
+  const store = s3Client(),
     Bucket = process.env.S3_BUCKET;
   const source = await store.send(
     new GetObjectCommand({ Bucket, Key: media.source_key }),

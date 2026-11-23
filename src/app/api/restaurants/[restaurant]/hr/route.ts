@@ -1,12 +1,6 @@
 import { NextRequest } from "next/server";
 import { withRequestContext } from "@/features/ops-security/context";
-import {
-  assertOrigin,
-  authenticated,
-  failure,
-  json,
-  readBody,
-} from "@/features/platform/http";
+import { assertOrigin, authenticated, failure, json, readBody } from "@/features/platform/http";
 import { hrAction, hrActionSchema, hrState } from "@/features/hr/service";
 
 export const runtime = "nodejs";

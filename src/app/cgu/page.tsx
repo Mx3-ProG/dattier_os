@@ -10,7 +10,7 @@ export const dynamic = "force-dynamic";
 export const metadata: Metadata = {
   title: "Conditions générales d’utilisation et de vente · STUDIO OS",
   description:
-    "Conditions générales de STUDIO OS : abonnement Studio à 39 € TTC par mois sans engagement, résiliable à tout moment, add-ons à la carte, essai gratuit de 3 jours.",
+    "Conditions générales de STUDIO OS : abonnement Studio à 39 € TTC par mois sans engagement, résiliable à tout moment, add-ons à la carte, essai gratuit de 7 jours.",
 };
 
 const e = legalEntity;

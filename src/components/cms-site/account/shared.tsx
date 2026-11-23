@@ -14,7 +14,7 @@ import {
   Zap,
   type LucideIcon,
 } from "lucide-react";
-import type { CustomerAccount } from "@/features/commerce/schema";
+import type { CustomerAccount } from "@/features/commerce/public";
 
 export type Account = CustomerAccount;
 export type Engagement = CustomerAccount["engagement"];

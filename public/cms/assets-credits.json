@@ -1,0 +1,630 @@
+{
+  "license": "Pexels License — usage commercial libre, sans attribution obligatoire",
+  "generatedAt": "2026-11-13T12:19:05.010Z",
+  "assets": [
+    {
+      "template": "bistrot",
+      "photos": [
+        {
+          "file": "public/cms/bistrot/hero.jpg",
+          "source": "https://www.pexels.com/photo/262978/"
+        },
+        {
+          "file": "public/cms/bistrot/about.jpg",
+          "source": "https://www.pexels.com/photo/958545/"
+        },
+        {
+          "file": "public/cms/bistrot/gallery1.jpg",
+          "source": "https://www.pexels.com/photo/1640777/"
+        },
+        {
+          "file": "public/cms/bistrot/gallery2.jpg",
+          "source": "https://www.pexels.com/photo/3184183/"
+        }
+      ],
+      "video": {
+        "file": "public/cms/bistrot/video.mp4",
+        "source": "https://www.pexels.com/video/7818021/",
+        "title": "Restaurant cooking"
+      }
+    },
+    {
+      "template": "jardin",
+      "photos": [
+        {
+          "file": "public/cms/jardin/hero.jpg",
+          "source": "https://www.pexels.com/photo/416537/"
+        },
+        {
+          "file": "public/cms/jardin/about.jpg",
+          "source": "https://www.pexels.com/photo/3737645/"
+        },
+        {
+          "file": "public/cms/jardin/gallery1.jpg",
+          "source": "https://www.pexels.com/photo/4551517/"
+        },
+        {
+          "file": "public/cms/jardin/gallery2.jpg",
+          "source": "https://www.pexels.com/photo/4947396/"
+        }
+      ],
+      "video": {
+        "file": "public/cms/jardin/video.mp4",
+        "source": "https://www.pexels.com/video/6508747/",
+        "title": "Greenery plants garden"
+      }
+    },
+    {
+      "template": "comptoir",
+      "photos": [
+        {
+          "file": "public/cms/comptoir/hero.jpg",
+          "source": "https://www.pexels.com/photo/1366594/"
+        },
+        {
+          "file": "public/cms/comptoir/about.jpg",
+          "source": "https://www.pexels.com/photo/4551312/"
+        },
+        {
+          "file": "public/cms/comptoir/gallery1.jpg",
+          "source": "https://www.pexels.com/photo/4570082/"
+        },
+        {
+          "file": "public/cms/comptoir/gallery2.jpg",
+          "source": "https://www.pexels.com/photo/5920643/"
+        }
+      ],
+      "video": {
+        "file": "public/cms/comptoir/video.mp4",
+        "source": "https://www.pexels.com/video/8626681/",
+        "title": "Restaurant cooking"
+      }
+    },
+    {
+      "template": "pause",
+      "photos": [
+        {
+          "file": "public/cms/pause/hero.jpg",
+          "source": "https://www.pexels.com/photo/6747870/"
+        },
+        {
+          "file": "public/cms/pause/about.jpg",
+          "source": "https://www.pexels.com/photo/8480694/"
+        },
+        {
+          "file": "public/cms/pause/gallery1.jpg",
+          "source": "https://www.pexels.com/photo/11847639/"
+        },
+        {
+          "file": "public/cms/pause/gallery2.jpg",
+          "source": "https://www.pexels.com/photo/12181619/"
+        }
+      ],
+      "video": {
+        "file": "public/cms/pause/video.mp4",
+        "source": "https://www.pexels.com/video/6942749/",
+        "title": "Pastry baking cake"
+      }
+    },
+    {
+      "template": "signature",
+      "photos": [
+        {
+          "file": "public/cms/signature/hero.jpg",
+          "source": "https://www.pexels.com/photo/1327393/"
+        },
+        {
+          "file": "public/cms/signature/about.jpg",
+          "source": "https://www.pexels.com/photo/3167309/"
+        },
+        {
+          "file": "public/cms/signature/gallery1.jpg",
+          "source": "https://www.pexels.com/photo/4393017/"
+        },
+        {
+          "file": "public/cms/signature/gallery2.jpg",
+          "source": "https://www.pexels.com/photo/5156929/"
+        }
+      ],
+      "video": {
+        "file": "public/cms/signature/video.mp4",
+        "source": "https://www.pexels.com/video/20315763/",
+        "title": "Pastry baking cake"
+      }
+    },
+    {
+      "template": "riviera",
+      "photos": [
+        {
+          "file": "public/cms/riviera/hero.jpg",
+          "source": "https://www.pexels.com/photo/1618913/"
+        },
+        {
+          "file": "public/cms/riviera/about.jpg",
+          "source": "https://www.pexels.com/photo/4553374/"
+        },
+        {
+          "file": "public/cms/riviera/gallery1.jpg",
+          "source": "https://www.pexels.com/photo/4702633/"
+        },
+        {
+          "file": "public/cms/riviera/gallery2.jpg",
+          "source": "https://www.pexels.com/photo/5531093/"
+        }
+      ],
+      "video": {
+        "file": "public/cms/riviera/video.mp4",
+        "source": "https://www.pexels.com/video/20243314/",
+        "title": "Bar wine pouring"
+      }
+    },
+    {
+      "template": "atelier",
+      "photos": [
+        {
+          "file": "public/cms/atelier/hero.jpg",
+          "source": "https://www.pexels.com/photo/1289672/"
+        },
+        {
+          "file": "public/cms/atelier/about.jpg",
+          "source": "https://www.pexels.com/photo/1855214/"
+        },
+        {
+          "file": "public/cms/atelier/gallery1.jpg",
+          "source": "https://www.pexels.com/photo/3616740/"
+        },
+        {
+          "file": "public/cms/atelier/gallery2.jpg",
+          "source": "https://www.pexels.com/photo/3745526/"
+        }
+      ],
+      "video": {
+        "file": "public/cms/atelier/video.mp4",
+        "source": "https://www.pexels.com/video/10135507/",
+        "title": "Modern interior living room"
+      }
+    },
+    {
+      "template": "escale",
+      "photos": [
+        {
+          "file": "public/cms/escale/hero.jpg",
+          "source": "https://www.pexels.com/photo/357743/"
+        },
+        {
+          "file": "public/cms/escale/about.jpg",
+          "source": "https://www.pexels.com/photo/625422/"
+        },
+        {
+          "file": "public/cms/escale/gallery1.jpg",
+          "source": "https://www.pexels.com/photo/2802527/"
+        },
+        {
+          "file": "public/cms/escale/gallery2.jpg",
+          "source": "https://www.pexels.com/photo/2995012/"
+        }
+      ],
+      "video": {
+        "file": "public/cms/escale/video.mp4",
+        "source": "https://www.pexels.com/video/11553208/",
+        "title": "Street food night market"
+      }
+    },
+    {
+      "template": "pizzeria",
+      "photos": [
+        {
+          "file": "public/cms/pizzeria/hero.jpg",
+          "source": "https://www.pexels.com/photo/905847/"
+        },
+        {
+          "file": "public/cms/pizzeria/about.jpg",
+          "source": "https://www.pexels.com/photo/1082342/"
+        },
+        {
+          "file": "public/cms/pizzeria/gallery1.jpg",
+          "source": "https://www.pexels.com/photo/6068717/"
+        },
+        {
+          "file": "public/cms/pizzeria/gallery2.jpg",
+          "source": "https://www.pexels.com/photo/5953500/"
+        }
+      ],
+      "video": {
+        "file": "public/cms/pizzeria/video.mp4",
+        "source": "https://www.pexels.com/video/6603321/",
+        "title": "Pizza making oven"
+      }
+    },
+    {
+      "template": "sushi",
+      "photos": [
+        {
+          "file": "public/cms/sushi/hero.jpg",
+          "source": "https://www.pexels.com/photo/958547/"
+        },
+        {
+          "file": "public/cms/sushi/about.jpg",
+          "source": "https://www.pexels.com/photo/1422384/"
+        },
+        {
+          "file": "public/cms/sushi/gallery1.jpg",
+          "source": "https://www.pexels.com/photo/3656787/"
+        },
+        {
+          "file": "public/cms/sushi/gallery2.jpg",
+          "source": "https://www.pexels.com/photo/4981715/"
+        }
+      ],
+      "video": {
+        "file": "public/cms/sushi/video.mp4",
+        "source": "https://www.pexels.com/video/8901915/",
+        "title": "Sushi chef"
+      }
+    },
+    {
+      "template": "coiffeur",
+      "photos": [
+        {
+          "file": "public/cms/coiffeur/hero.jpg",
+          "source": "https://www.pexels.com/photo/2301842/"
+        },
+        {
+          "file": "public/cms/coiffeur/about.jpg",
+          "source": "https://www.pexels.com/photo/3356170/"
+        },
+        {
+          "file": "public/cms/coiffeur/gallery1.jpg",
+          "source": "https://www.pexels.com/photo/3993308/"
+        },
+        {
+          "file": "public/cms/coiffeur/gallery2.jpg",
+          "source": "https://www.pexels.com/photo/3993320/"
+        }
+      ],
+      "video": {
+        "file": "public/cms/coiffeur/video.mp4",
+        "source": "https://www.pexels.com/video/11633108/",
+        "title": "Hair salon"
+      }
+    },
+    {
+      "template": "loft",
+      "photos": [
+        {
+          "file": "public/cms/loft/hero.jpg",
+          "source": "https://www.pexels.com/photo/1662159/"
+        },
+        {
+          "file": "public/cms/loft/about.jpg",
+          "source": "https://www.pexels.com/photo/1816031/"
+        },
+        {
+          "file": "public/cms/loft/gallery1.jpg",
+          "source": "https://www.pexels.com/photo/1824392/"
+        },
+        {
+          "file": "public/cms/loft/gallery2.jpg",
+          "source": "https://www.pexels.com/photo/1870768/"
+        }
+      ],
+      "video": {
+        "file": "public/cms/loft/video.mp4",
+        "source": "https://www.pexels.com/video/16454952/",
+        "title": "Modern interior living room"
+      }
+    },
+    {
+      "template": "chantier",
+      "photos": [
+        {
+          "file": "public/cms/chantier/hero.jpg",
+          "source": "https://www.pexels.com/photo/1804173/"
+        },
+        {
+          "file": "public/cms/chantier/about.jpg",
+          "source": "https://www.pexels.com/photo/2590716/"
+        },
+        {
+          "file": "public/cms/chantier/gallery1.jpg",
+          "source": "https://www.pexels.com/photo/3862371/"
+        },
+        {
+          "file": "public/cms/chantier/gallery2.jpg",
+          "source": "https://www.pexels.com/photo/6082416/"
+        }
+      ],
+      "video": {
+        "file": "public/cms/chantier/video.mp4",
+        "source": "https://www.pexels.com/video/5434220/",
+        "title": "Builder construction worker helmet"
+      }
+    },
+    {
+      "template": "racing",
+      "photos": [
+        {
+          "file": "public/cms/racing/hero.jpg",
+          "source": "https://www.pexels.com/photo/2036544/"
+        },
+        {
+          "file": "public/cms/racing/about.jpg",
+          "source": "https://www.pexels.com/photo/3646108/"
+        },
+        {
+          "file": "public/cms/racing/gallery1.jpg",
+          "source": "https://www.pexels.com/photo/3752194/"
+        },
+        {
+          "file": "public/cms/racing/gallery2.jpg",
+          "source": "https://www.pexels.com/photo/5640510/"
+        }
+      ],
+      "video": {
+        "file": "public/cms/racing/video.mp4",
+        "source": "https://www.pexels.com/video/1192116/",
+        "title": "City traffic car"
+      }
+    },
+    {
+      "template": "manuscrit",
+      "photos": [
+        {
+          "file": "public/cms/manuscrit/hero.jpg",
+          "source": "https://www.pexels.com/photo/207756/"
+        },
+        {
+          "file": "public/cms/manuscrit/about.jpg",
+          "source": "https://www.pexels.com/photo/771317/"
+        },
+        {
+          "file": "public/cms/manuscrit/gallery1.jpg",
+          "source": "https://www.pexels.com/photo/921716/"
+        },
+        {
+          "file": "public/cms/manuscrit/gallery2.jpg",
+          "source": "https://www.pexels.com/photo/3278767/"
+        }
+      ],
+      "video": {
+        "file": "public/cms/manuscrit/video.mp4",
+        "source": "https://www.pexels.com/video/5923409/",
+        "title": "Office desk writing papers"
+      }
+    },
+    {
+      "template": "assurance",
+      "photos": [
+        {
+          "file": "public/cms/assurance/hero.jpg",
+          "source": "https://www.pexels.com/photo/5398879/"
+        },
+        {
+          "file": "public/cms/assurance/about.jpg",
+          "source": "https://www.pexels.com/photo/5922678/"
+        },
+        {
+          "file": "public/cms/assurance/gallery1.jpg",
+          "source": "https://www.pexels.com/photo/6077915/"
+        },
+        {
+          "file": "public/cms/assurance/gallery2.jpg",
+          "source": "https://www.pexels.com/photo/7693692/"
+        }
+      ],
+      "video": {
+        "file": "public/cms/assurance/video.mp4",
+        "source": "https://www.pexels.com/video/6672502/",
+        "title": "Office desk writing papers"
+      }
+    },
+    {
+      "template": "patisserie",
+      "photos": [
+        {
+          "file": "public/cms/patisserie/hero.jpg",
+          "source": "https://www.pexels.com/photo/1313659/"
+        },
+        {
+          "file": "public/cms/patisserie/about.jpg",
+          "source": "https://www.pexels.com/photo/3341067/"
+        },
+        {
+          "file": "public/cms/patisserie/gallery1.jpg",
+          "source": "https://www.pexels.com/photo/3923555/"
+        },
+        {
+          "file": "public/cms/patisserie/gallery2.jpg",
+          "source": "https://www.pexels.com/photo/5426071/"
+        }
+      ],
+      "video": {
+        "file": "public/cms/patisserie/video.mp4",
+        "source": "https://www.pexels.com/video/4109929/",
+        "title": "Pastry baking cake"
+      }
+    },
+    {
+      "template": "streetfood",
+      "photos": [
+        {
+          "file": "public/cms/streetfood/hero.jpg",
+          "source": "https://www.pexels.com/photo/1766682/"
+        },
+        {
+          "file": "public/cms/streetfood/about.jpg",
+          "source": "https://www.pexels.com/photo/4501417/"
+        },
+        {
+          "file": "public/cms/streetfood/gallery1.jpg",
+          "source": "https://www.pexels.com/photo/4857606/"
+        },
+        {
+          "file": "public/cms/streetfood/gallery2.jpg",
+          "source": "https://www.pexels.com/photo/5058349/"
+        }
+      ],
+      "video": {
+        "file": "public/cms/streetfood/video.mp4",
+        "source": "https://www.pexels.com/video/15721552/",
+        "title": "Street food night market"
+      }
+    },
+    {
+      "template": "compta",
+      "photos": [
+        {
+          "file": "public/cms/compta/hero.jpg",
+          "source": "https://www.pexels.com/photo/210990/"
+        },
+        {
+          "file": "public/cms/compta/about.jpg",
+          "source": "https://www.pexels.com/photo/265101/"
+        },
+        {
+          "file": "public/cms/compta/gallery1.jpg",
+          "source": "https://www.pexels.com/photo/4386366/"
+        },
+        {
+          "file": "public/cms/compta/gallery2.jpg",
+          "source": "https://www.pexels.com/photo/4476375/"
+        }
+      ],
+      "video": {
+        "file": "public/cms/compta/video.mp4",
+        "source": "https://www.pexels.com/video/4872863/",
+        "title": "Office desk writing papers"
+      }
+    },
+    {
+      "template": "ecole",
+      "photos": [
+        {
+          "file": "public/cms/ecole/hero.jpg",
+          "source": "https://www.pexels.com/photo/764681/"
+        },
+        {
+          "file": "public/cms/ecole/about.jpg",
+          "source": "https://www.pexels.com/photo/5212342/"
+        },
+        {
+          "file": "public/cms/ecole/gallery1.jpg",
+          "source": "https://www.pexels.com/photo/5212648/"
+        },
+        {
+          "file": "public/cms/ecole/gallery2.jpg",
+          "source": "https://www.pexels.com/photo/5554303/"
+        }
+      ],
+      "video": {
+        "file": "public/cms/ecole/video.mp4",
+        "source": "https://www.pexels.com/video/5734770/",
+        "title": "School classroom study"
+      }
+    },
+    {
+      "template": "gastronomique",
+      "photos": [
+        {
+          "file": "public/cms/gastronomique/hero.jpg",
+          "source": "https://www.pexels.com/photo/5491046/"
+        },
+        {
+          "file": "public/cms/gastronomique/about.jpg",
+          "source": "https://www.pexels.com/photo/5863642/"
+        },
+        {
+          "file": "public/cms/gastronomique/gallery1.jpg",
+          "source": "https://www.pexels.com/photo/5395180/"
+        },
+        {
+          "file": "public/cms/gastronomique/gallery2.jpg",
+          "source": "https://www.pexels.com/photo/6375553/"
+        }
+      ],
+      "video": {
+        "file": "public/cms/gastronomique/video.mp4",
+        "source": "https://www.pexels.com/video/8627105/",
+        "title": "Restaurant cooking"
+      }
+    },
+    {
+      "template": "baravin",
+      "photos": [
+        {
+          "file": "public/cms/baravin/hero.jpg",
+          "source": "https://www.pexels.com/photo/4254034/"
+        },
+        {
+          "file": "public/cms/baravin/about.jpg",
+          "source": "https://www.pexels.com/photo/4254037/"
+        },
+        {
+          "file": "public/cms/baravin/gallery1.jpg",
+          "source": "https://www.pexels.com/photo/5858205/"
+        },
+        {
+          "file": "public/cms/baravin/gallery2.jpg",
+          "source": "https://www.pexels.com/photo/6152270/"
+        }
+      ],
+      "video": {
+        "file": "public/cms/baravin/video.mp4",
+        "source": "https://www.pexels.com/video/1003933/",
+        "title": "Bar wine pouring"
+      }
+    },
+    {
+      "template": "brunch",
+      "photos": [
+        {
+          "file": "public/cms/brunch/hero.jpg",
+          "source": "https://www.pexels.com/photo/566564/"
+        },
+        {
+          "file": "public/cms/brunch/about.jpg",
+          "source": "https://www.pexels.com/photo/2874780/"
+        },
+        {
+          "file": "public/cms/brunch/gallery1.jpg",
+          "source": "https://www.pexels.com/photo/5728168/"
+        },
+        {
+          "file": "public/cms/brunch/gallery2.jpg",
+          "source": "https://www.pexels.com/photo/5837000/"
+        }
+      ],
+      "video": {
+        "file": "public/cms/brunch/video.mp4",
+        "source": "https://www.pexels.com/video/4186967/",
+        "title": "Bakery bread oven"
+      }
+    },
+    {
+      "template": "burger",
+      "photos": [
+        {
+          "file": "public/cms/burger/hero.jpg",
+          "source": "https://www.pexels.com/photo/534285/"
+        },
+        {
+          "file": "public/cms/burger/about.jpg",
+          "source": "https://www.pexels.com/photo/4021939/"
+        },
+        {
+          "file": "public/cms/burger/gallery1.jpg",
+          "source": "https://www.pexels.com/photo/4315148/"
+        },
+        {
+          "file": "public/cms/burger/gallery2.jpg",
+          "source": "https://www.pexels.com/photo/5179783/"
+        }
+      ],
+      "video": {
+        "file": "public/cms/burger/video.mp4",
+        "source": "https://www.pexels.com/video/6603825/",
+        "title": "Pizza making oven"
+      }
+    }
+  ]
+}

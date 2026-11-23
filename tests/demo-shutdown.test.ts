@@ -5,7 +5,7 @@ import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { PGlite } from "@electric-sql/pglite";
-import { closeOnShutdown } from "../src/lib/database/demo-shutdown";
+import { closeOnShutdown } from "../src/infrastructure/database/demo-shutdown";
 
 test("SIGTERM closes the demo database before the process exits, and it reopens", async () => {
   const dir = await mkdtemp(path.join(tmpdir(), "atacuisine-demo-shutdown-"));

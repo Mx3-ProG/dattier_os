@@ -1,7 +1,7 @@
 import { z } from "zod";
-import { scope, type Actor } from "@/lib/auth/session";
-import { rows, one, type DB } from "@/lib/database/db";
-import { can } from "@/lib/permissions";
+import { scope, type Actor } from "@/infrastructure/auth/session";
+import { rows, one, type DB } from "@/infrastructure/database/db";
+import { can } from "@/core/permissions";
 import { geoBreakdown, toZones, type GeoRow } from "./aggregate";
 import { geoSource } from "./geo";
 import { earthTrackerProduct } from "./modules";

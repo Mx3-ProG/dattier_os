@@ -2,11 +2,11 @@ import { test, before, after } from "node:test";
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import { PGlite } from "@electric-sql/pglite";
-import { migrate } from "../src/lib/database/migrate";
-import { seed } from "../src/lib/database/seed";
-import { rows } from "../src/lib/database/db";
-import { perform, actionSchema } from "../src/lib/actions";
-import { scope, type Actor } from "../src/lib/auth/session";
+import { migrate } from "../src/infrastructure/database/migrate";
+import { seed } from "../src/infrastructure/database/seed";
+import { rows } from "../src/infrastructure/database/db";
+import { perform, actionSchema } from "../src/application/actions";
+import { scope, type Actor } from "../src/infrastructure/auth/session";
 import { asEmail, asPhone, draft } from "../src/features/messaging/contact";
 
 let db: PGlite;

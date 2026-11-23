@@ -1,6 +1,6 @@
 import { SecurityCenter } from "@/components/security-center";
 import "@/app/security.css";
-import { RestaurantAdminShell } from "@/components/platform/restaurant-admin-shell";
+import { BusinessAdminShell } from "@/components/platform/restaurant-admin-shell";
 import { restaurantAdminContext } from "@/features/platform/admin-context";
 import { notFound } from "next/navigation";
 export default async function Page({
@@ -12,7 +12,7 @@ export default async function Page({
   const access = await restaurantAdminContext(restaurant).catch(() => null);
   if (!access) notFound();
   return (
-    <RestaurantAdminShell
+    <BusinessAdminShell
       restaurant={restaurant}
       restaurantName={access.restaurantName}
       industry={access.activity.industry}
@@ -23,6 +23,6 @@ export default async function Page({
       pageTitle="Sécurité opérationnelle"
     >
       <SecurityCenter restaurant={restaurant} />
-    </RestaurantAdminShell>
+    </BusinessAdminShell>
   );
 }

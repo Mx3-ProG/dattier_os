@@ -13,4 +13,16 @@
 .tpl-site-atelier .tpl-site-hero strong { font-size: 30px; letter-spacing: -.06em; }
 .tpl-site-atelier .tpl-site-photo { min-height: 80px; background-size: contain; background-repeat: no-repeat; }
 .tpl-site-escale .tpl-site-photo { transform: rotate(5deg); border-radius: 4px; box-shadow: 5px 5px 0 var(--tpl-primary); }
+.tpl-site-collection .tpl-site-hero { position: relative; display: block; min-height: 185px; color: white; background: #102d1e; }
+.tpl-site-collection .tpl-site-photo { position: absolute; inset: 0; min-height: 100%; border-radius: 0; opacity: .7; }
+.tpl-site-collection .tpl-site-hero > div:first-child { position: relative; z-index: 1; padding: 24px; text-shadow: 0 1px 8px #0009; }
+.tpl-site-collection .tpl-site-hero strong { max-width: 220px; color: white; font-size: 25px; text-transform: uppercase; line-height: 1.05; }
+.tpl-site-collection .tpl-site-cta { border-radius: 0; background: #102d1e; }
+.collection-vehicles-editor { display: grid; gap: 14px; padding: 22px; margin: 24px 0; border: 1px solid #102d1e33; }
+.collection-vehicles-editor details { padding: 15px; }
+.collection-vehicle-fields { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 14px; padding-top: 18px; }
+.collection-vehicle-fields label { display: grid; gap: 6px; }
+.collection-vehicle-fields :is(input,select,textarea) { width: 100%; padding: 10px; }
+.collection-vehicle-description,.collection-vehicle-image { grid-column: 1/-1; }
+@media (max-width: 600px) { .collection-vehicle-fields { grid-template-columns: 1fr; } }
 .tpl-variant-dock { display: flex; justify-content: space-between; gap: 12px; margin: 0 20px 12px; padding: 8px 12px; border: 1px solid var(--tpl-primary); border-radius: 15px; font: 8px Arial,sans-serif; }

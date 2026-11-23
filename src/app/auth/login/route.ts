@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import { beginLogin, oidcConfigured, safeReturnTo } from "@/lib/auth/oidc";
-import { supabaseConfigured } from "@/lib/auth/supabase";
-import { demoEnabled } from "@/lib/database/db";
+import { beginLogin, oidcConfigured, safeReturnTo } from "@/infrastructure/auth/oidc";
+import { supabaseConfigured } from "@/infrastructure/auth/supabase";
+import { demoEnabled } from "@/infrastructure/database/db";
 
 export async function GET(req: NextRequest) {
   const returnTo = safeReturnTo(req.nextUrl.searchParams.get("returnTo") ?? undefined);

@@ -1306,3 +1306,118 @@ button.ca-card:active {
   background: var(--ca-fill);
   color: var(--ca-muted);
 }
+
+/* ── Espace client contextuel ── */
+.ca-count {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--ca-muted, #6b6b6b);
+  font-size: 13px;
+}
+.ca-follows {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: 12px;
+}
+.ca-follows li {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 6px 16px;
+  align-items: center;
+  padding: 14px 16px;
+  border: 1px solid var(--ca-line, #e6e2dc);
+  border-radius: 14px;
+}
+.ca-follow-main {
+  display: grid;
+  gap: 2px;
+}
+.ca-follow-main small {
+  color: var(--ca-muted, #6b6b6b);
+  font-size: 13px;
+}
+.ca-follow-bar {
+  grid-column: 1 / -1;
+  height: 6px;
+  border-radius: 999px;
+  background: var(--ca-line, #e6e2dc);
+  overflow: hidden;
+}
+.ca-follow-bar > span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--ca-accent, #184d3b);
+  transition: width 0.3s;
+}
+.ca-progress {
+  display: grid;
+  gap: 10px;
+}
+.ca-progress-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.ca-progress-row span {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.ca-progress-bar {
+  height: 10px;
+  border-radius: 999px;
+  background: var(--ca-line, #e6e2dc);
+  overflow: hidden;
+}
+.ca-progress-bar > span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--ca-accent, #184d3b);
+}
+.ca-follow {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 14px;
+  border: 1px solid var(--ca-line, #e6e2dc);
+  border-radius: 999px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+}
+.ca-follow:hover:not(:disabled) {
+  border-color: var(--ca-accent, #184d3b);
+}
+.ca-follow.is-following {
+  background: var(--ca-accent, #184d3b);
+  border-color: var(--ca-accent, #184d3b);
+  color: #fff;
+}
+.ca-follow:disabled {
+  opacity: 0.6;
+  cursor: progress;
+}
+.ca-follow-error {
+  display: inline-flex;
+  gap: 6px;
+  align-items: center;
+  font-size: 13px;
+  color: #b3261e;
+}
+.ca-follow-spin {
+  animation: ca-spin 0.9s linear infinite;
+}
+@keyframes ca-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}

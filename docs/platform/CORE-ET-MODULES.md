@@ -398,6 +398,19 @@ Les libellés visibles (« établissement », « commerce ») se traitent à par
   - `addon-installations`, `module-registry` et `module-runtime` sont mis à jour selon la nouvelle règle.
 - **Reste à faire pour un commerce non restaurant :** les commandes, le catalogue et le stock sont encore réservés au secteur restauration (`restaurantOnly`), et un article a toujours un poste cuisine ou bar (`menu_items.station`). Ces deux points relèvent de P1-a4 (stock simple et catalogue neutre).
 
+### Opérations modulaires par métier (12 novembre 2026)
+
+Décision du 12 novembre 2026, qui remplace le §9 pour ces trois modules : **Commandes, Cuisine et Bar sont des modules gratuits**, et non plus un socle Studio (commandes) ni des add-ons payants (cuisine, bar).
+
+- **Migration 121** : plus aucun module n'est réservé au secteur restauration. Les gardes `requireRestaurantIndustry` de l'API ont été retirées ; seul l'assistant Cuisine IA reste propre à la restauration.
+- **Migration 140** : produits gratuits `ops-orders`, `ops-kitchen` et `ops-bar` (catégorie « Opérations », `kind='operations'`). `app.module_available` lit leur licence pour `orders`, `kitchen` et `bar`. Les droits existants sont convertis en licences :
+  - les trois pour la restauration ;
+  - `ops-orders` pour le commerce, « autre » et tout établissement ayant déjà des commandes ;
+  - agenda et devis pour « services » et « autre ».
+- **Modules installés au choix du métier** (`freeTradeTools`, src/features/onboarding/catalog.ts) : opérations et outils métier. Un changement de métier désinstalle ceux de l'ancien et installe ceux du nouveau ; tout reste activable depuis la boutique d'add-ons.
+- **Navigation** : chaque outil métier installé a sa propre entrée `tool-<id>` dans OPÉRATIONS (src/features/trade/navigation.ts), portée par le module `trade-tools` via `navigationPrefix`. L'ancienne entrée unique « Outils métier » de GESTION a disparu ; `resolve()` exige la licence de l'entrée.
+- **Vue d'ensemble modulaire** (src/features/pilotage/catalog.ts) : chaque bloc déclare sa source de données et les métiers pour lesquels il est conseillé. Un bloc dont la source manque n'est pas proposé ; les autres s'activent ou se masquent dans « Personnaliser mon pilotage ». Les chiffres métier viennent de `tradePilotage` (src/features/trade/service.ts).
+
 
 ### Incident du 10 novembre 2026 — base de démonstration et fermeture propre
 

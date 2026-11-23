@@ -3,18 +3,18 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import { randomUUID } from "node:crypto";
 import { PGlite } from "@electric-sql/pglite";
-import { migrate } from "../src/lib/database/migrate";
-import { seed } from "../src/lib/database/seed";
-import { one, rows } from "../src/lib/database/db";
-import { snapshot, menu } from "../src/lib/snapshot";
-import { perform, actionSchema } from "../src/lib/actions";
+import { migrate } from "../src/infrastructure/database/migrate";
+import { seed } from "../src/infrastructure/database/seed";
+import { one, rows } from "../src/infrastructure/database/db";
+import { snapshot, menu } from "../src/application/snapshot";
+import { perform, actionSchema } from "../src/application/actions";
 import {
   createOrder,
   changeItem,
   pay,
   orderSchema,
 } from "../src/features/orders/service";
-import type { Actor } from "../src/lib/auth/session";
+import type { Actor } from "../src/infrastructure/auth/session";
 let db: PGlite;
 const owner: Actor = { id: "nadia", name: "Nadia", role: "OWNER" },
   manager: Actor = { id: "lina", name: "Lina", role: "MANAGER" },

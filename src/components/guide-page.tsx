@@ -1,4 +1,4 @@
-/* Page /guide : le mode d’emploi écrit de STUDIO OS. Même contenu que la
+/* Page /guide : le mode d’emploi écrit de STUDIO S. Même contenu que la
    visite interactive du poste (features/guide/content.ts). */
 import Link from "next/link";
 import {
@@ -13,15 +13,15 @@ import {
   Play,
   ShieldCheck,
   Sparkles,
-  UtensilsCrossed,
+  Store,
 } from "lucide-react";
-import { can, roleLabels, roles, type Permission } from "@/lib/permissions";
+import { can, roleLabels, roles, type Permission } from "@/core/permissions";
 import { chapterRoles, chapters, glossary } from "@/features/guide/content";
 import { chapterIcons } from "./tutorial/icons";
 import { GuideToc } from "./guide-toc";
 import { LegalLinks } from "./legal/legal-page";
 import { PlatformCookieConsent } from "./legal/platform-cookie-consent";
-import { packs, welcomeCredits, eur } from "@/features/assistant/pricing";
+
 
 const matrix: [Permission, string][] = [
   ["orders", "Commandes"],
@@ -41,15 +41,12 @@ const matrix: [Permission, string][] = [
 ];
 
 const service = [
-  ["Commande", "Prise en salle, au QR code de table ou sur le site."],
-  [
-    "Préparation",
-    "Les plats en cuisine, les boissons au bar, chacun à son rythme.",
-  ],
-  ["Prêt", "La salle est prévenue instantanément."],
-  ["Service", "Chaque ligne est marquée servie."],
-  ["Règlement", "Déclaré une fois pour toute la table, code promo compris."],
-  ["Table libre", "Débarrassée, elle repart pour la tablée suivante."],
+  ["Commande", "Au comptoir, en boutique ou sur votre site web."],
+  ["Préparation", "L’équipe retrouve les produits et prépare la commande."],
+  ["Prêt", "La commande est prête pour sa remise au client."],
+  ["Remise", "Les produits sont remis au client et le suivi est mis à jour."],
+  ["Règlement", "Le paiement est déclaré et intégré au suivi des ventes."],
+  ["Suivi", "Retrouvez la vente, le client et les mouvements de stock."],
 ];
 const stock = [
   ["Livraison", "Un lot avec sa date limite."],
@@ -58,25 +55,25 @@ const stock = [
   ["Perte", "Si une préparation commencée est annulée."],
 ];
 
-const faq = [
+const faq = (welcomeCredits: number) => [
   [
-    "STUDIO OS encaisse-t-il l’argent en salle ?",
-    "Non. Vous encaissez avec votre terminal de paiement ou en espèces, puis vous déclarez le règlement dans STUDIO OS. Les ventes, la fidélité et les rapports restent ainsi justes. Pour la commande en ligne, le paiement peut passer par Stripe.",
+    "STUDIO S encaisse-t-il l’argent dans mon commerce ?",
+    "Non. Vous encaissez avec votre terminal de paiement ou en espèces, puis vous déclarez le règlement dans STUDIO S. Les ventes, la fidélité et les rapports restent ainsi justes. Pour la commande en ligne, le paiement peut passer par Stripe.",
   ],
   [
     "Comment un client paie-t-il une commande sur le site ?",
     "À la dernière étape de la commande, il choisit « Au comptoir » (carte ou espèces au retrait) ou « En ligne » via Stripe. Il accepte les conditions de vente, valide, et suit sa commande sur une page de suivi.",
   ],
   [
-    "Puis-je gérer plusieurs restaurants ?",
+    "Puis-je gérer plusieurs établissements ?",
     "Oui. Chaque forfait inclut un établissement. Les établissements supplémentaires coûtent 39 € TTC par mois chacun et bénéficient du même forfait.",
   ],
   [
-    "Mes données sont-elles séparées de celles des autres restaurants ?",
+    "Mes données sont-elles séparées de celles des autres commerces ?",
     "Oui. Chaque établissement appartient à une seule organisation, et le cloisonnement est appliqué par l’application et par la base de données elle-même.",
   ],
   [
-    "Que se passe-t-il si Internet coupe pendant le service ?",
+    "Que se passe-t-il si Internet coupe pendant l’activité ?",
     "Le poste de service hors ligne permet de préparer un appareil avec des quotas de stock et de continuer à prendre des commandes. Les tickets restent sur l’appareil et se réconcilient au retour du réseau.",
   ],
   [
@@ -93,11 +90,38 @@ const faq = [
   ],
 ];
 
-export function GuidePage({ demo }: { demo: boolean }) {
+/** La démo s’ouvre dans un nouvel onglet : la page d’origine reste ouverte. */
+const newTab = { target: "_blank", rel: "noopener" } as const;
+
+export async function GuidePage({
+  demoHref,
+  demoSiteHref,
+}: {
+  /** Choix du profil de démo : /demo en local, la démo publique en production. */
+  demoHref?: string;
+  demoSiteHref?: string;
+}) {
+  let packs: { id: string; title: string; credits: number; priceCents: number; hint: string }[] = [];
+  let welcomeCredits = 0;
+  let eur = (cents: number) =>
+    new Intl.NumberFormat("fr-FR", { style: "currency", currency: "EUR" }).format(cents / 100);
+  try {
+    const moduleName = "@/domain/assistant/pricing";
+    const mod = (await import(moduleName)) as {
+      packs?: typeof packs;
+      welcomeCredits?: number;
+      eur?: (cents: number) => string;
+    };
+    if (mod.packs) packs = mod.packs;
+    if (typeof mod.welcomeCredits === "number") welcomeCredits = mod.welcomeCredits;
+    if (mod.eur) eur = mod.eur;
+  } catch {
+    // module IA absent : section crédits masquée
+  }
   const toc = [
     { id: "bien-demarrer", label: "Bien démarrer, pas à pas" },
-    { id: "comprendre", label: "Comprendre STUDIO OS" },
-    { id: "service", label: "Le cycle d’un service" },
+    { id: "comprendre", label: "Comprendre STUDIO S" },
+    { id: "service", label: "Le parcours d’une commande" },
     { id: "roles", label: "Qui fait quoi" },
     { id: "cuisine-ia", label: "STUDIO VOICE, votre assistant" },
     ...chapters.map((c) => ({ id: c.id, label: c.title })),
@@ -114,9 +138,10 @@ export function GuidePage({ demo }: { demo: boolean }) {
       </a>
       <header className="landing-header">
         <Link href="/" className="landing-brand">
-          <UtensilsCrossed size={20} aria-hidden /> STUDIO OS
+          <Store size={20} aria-hidden /> STUDIO S
         </Link>
         <nav aria-label="Navigation du guide">
+          {demoHref && <Link href={demoHref}>Démo</Link>}
           <a href="#comprendre">Les bases</a>
           <a href="#cuisine-ia">STUDIO VOICE</a>
           <a href="#order">Commandes</a>
@@ -133,11 +158,11 @@ export function GuidePage({ demo }: { demo: boolean }) {
         <section className="guide-hero">
           <span className="landing-eyebrow">Guide d’utilisation</span>
           <h1>
-            STUDIO OS, <em>de A à Z.</em>
+            STUDIO S, <em>de A à Z.</em>
           </h1>
           <p className="landing-lead">
-            Tout ce qu’il faut savoir pour faire tourner votre restaurant :
-            créer votre carte, prendre et préparer les commandes, déclarer les
+            Tout ce qu’il faut savoir pour faire tourner votre commerce :
+            créer votre carte ou votre catalogue, prendre et préparer les commandes, déclarer les
             règlements, gérer les stocks, fidéliser vos clients et vendre en
             ligne. Chaque chapitre se lit ici, et se pratique en direct dans le
             poste de travail.
@@ -146,9 +171,9 @@ export function GuidePage({ demo }: { demo: boolean }) {
             <Link className="landing-btn primary" href={tour("all")}>
               <Play size={17} aria-hidden /> Lancer la visite interactive
             </Link>
-            {demo && (
-              <Link className="landing-btn outline" href="/demo">
-                Choisir un profil de démonstration
+            {demoHref && (
+              <Link className="landing-btn outline" href={demoHref}>
+                Explorer la démo, avec ses données
               </Link>
             )}
           </div>
@@ -206,9 +231,9 @@ export function GuidePage({ demo }: { demo: boolean }) {
 
             <section id="comprendre" className="guide-section">
               <span className="landing-eyebrow">Les bases</span>
-              <h2>Comprendre STUDIO OS en deux minutes</h2>
+              <h2>Comprendre STUDIO S en deux minutes</h2>
               <p>
-                STUDIO OS est un seul logiciel partagé par toute l’équipe.
+                STUDIO S est un seul logiciel partagé par toute l’équipe.
                 Chacun y travaille avec son propre écran, mais tout le monde lit
                 et écrit les mêmes données, en temps réel.
               </p>
@@ -218,7 +243,7 @@ export function GuidePage({ demo }: { demo: boolean }) {
                   <h3>Organisation et établissements</h3>
                   <p>
                     Votre organisation regroupe vos établissements. Chaque
-                    établissement a sa carte, ses tables, ses stocks, son équipe
+                    établissement a son catalogue, ses espaces, ses stocks, son équipe
                     et son site, parfaitement cloisonnés.
                   </p>
                 </article>
@@ -226,7 +251,7 @@ export function GuidePage({ demo }: { demo: boolean }) {
                   <ShieldCheck aria-hidden />
                   <h3>Un rôle, un écran</h3>
                   <p>
-                    Salle, cuisine, bar, stocks, achats, comptabilité, manager,
+                    Ventes, stocks, achats, comptabilité, management,
                     propriétaire : chaque rôle ne voit que ses modules, et le
                     serveur revérifie chaque action.
                   </p>
@@ -235,8 +260,8 @@ export function GuidePage({ demo }: { demo: boolean }) {
                   <Network aria-hidden />
                   <h3>Tout est relié</h3>
                   <p>
-                    Une recette relie la carte au stock ; une commande relie la
-                    salle à la cuisine ; le site lit la même carte. Une
+                    Le catalogue relie vos produits au stock ; les commandes et
+                    le site partagent les mêmes informations. Une
                     information saisie une fois est à jour partout.
                   </p>
                 </article>
@@ -246,12 +271,12 @@ export function GuidePage({ demo }: { demo: boolean }) {
                 <li>
                   <b>Le poste de travail</b> <code>/dashboard</code>
                   <span>
-                    Le service au quotidien : salle, cuisine, bar, stocks,
-                    clients, finances.
+                    Votre activité au quotidien : commandes, stocks,
+                    clients, équipe et finances.
                   </span>
                 </li>
                 <li>
-                  <b>L’administration</b> <code>/restaurant/…</code>
+                  <b>L’administration de votre établissement</b>
                   <span>
                     Équipe et invitations, boutique, fidélité, domaines, achats,
                     sécurité.
@@ -260,7 +285,7 @@ export function GuidePage({ demo }: { demo: boolean }) {
                 <li>
                   <b>Le site public</b> <code>/r/…</code>
                   <span>
-                    Pour vos clients : carte, commande en ligne, réservation et
+                    Pour vos clients : catalogue, commande en ligne, réservation et
                     espace client.
                   </span>
                 </li>
@@ -269,10 +294,10 @@ export function GuidePage({ demo }: { demo: boolean }) {
 
             <section id="service" className="guide-section">
               <span className="landing-eyebrow">Vue d’ensemble</span>
-              <h2>Le cycle d’un service</h2>
+              <h2>Le parcours d’une commande</h2>
               <p>
-                De la commande à la table libérée, voici le chemin parcouru par
-                chaque commande, et ce qui se passe en parallèle dans le stock.
+                Boutique, salon, atelier ou restaurant : suivez votre activité dans un
+                même espace. Voici le parcours d’une commande de produits, à adapter à votre métier.
               </p>
               <ol className="guide-flow">
                 {service.map(([t, d], i) => (
@@ -344,11 +369,11 @@ export function GuidePage({ demo }: { demo: boolean }) {
 
             <section id="cuisine-ia" className="guide-section guide-ia">
               <span className="landing-eyebrow">Nouveau</span>
-              <h2>STUDIO VOICE, votre second qui ne dort jamais</h2>
+              <h2>STUDIO VOICE, votre assistant au quotidien</h2>
               <p>
                 STUDIO VOICE est l’assistant intégré au poste de travail et à
                 l’administration. Vous lui parlez comme à un membre de l’équipe,
-                à l’écrit ou à la voix : il comprend le service en cours,
+                à l’écrit ou à la voix : il comprend votre activité,
                 prépare les actions et vous propose la suite logique. Ouvrez-le
                 avec le bouton flottant <b>STUDIO VOICE</b> en bas à droite, ou{" "}
                 <kbd>⌘K</kbd> / <kbd>Ctrl K</kbd>.
@@ -358,7 +383,7 @@ export function GuidePage({ demo }: { demo: boolean }) {
                   <Wand2 aria-hidden />
                   <h3>Il agit pour vous</h3>
                   <p>
-                    « Commande table 4 : deux couscous agneau et un thé » : la
+                    Dans un restaurant, par exemple : « Commande table 4 : deux couscous et un thé ». La
                     commande est prête, vous confirmez, elle part en cuisine et
                     au bar. Puis « encaisse la table 4 en espèces », « libère la
                     table 4 ».
@@ -368,8 +393,8 @@ export function GuidePage({ demo }: { demo: boolean }) {
                   <MessageSquareText aria-hidden />
                   <h3>Il répond à tout</h3>
                   <p>
-                    Stocks sous le seuil, chiffre du jour, réservations de ce
-                    soir, tables libres, prix d’un plat, et tout le mode
+                    Stocks sous le seuil, chiffre du jour, réservations à venir,
+                    prix d’un produit, et tout le mode
                     d’emploi de ce guide, avec un lien vers la visite guidée.
                   </p>
                 </article>
@@ -378,8 +403,8 @@ export function GuidePage({ demo }: { demo: boolean }) {
                   <h3>En temps réel, à la voix</h3>
                   <p>
                     Activez le micro : STUDIO VOICE écoute, répond à voix haute et
-                    attend votre « oui » pour exécuter. Les mains restent sur le
-                    service.
+                    attend votre « oui » pour exécuter. Vous restez concentré sur votre
+                    activité.
                   </p>
                 </article>
               </div>
@@ -398,20 +423,24 @@ export function GuidePage({ demo }: { demo: boolean }) {
                   STUDIO VOICE vous propose la suite : suivi, règlement, table.
                 </li>
               </ol>
-              <h3 className="guide-sub">Crédits</h3>
-              <p>
-                {welcomeCredits} crédits offerts à l’inscription. Réponse
-                réflexe : 1 crédit. Analyse IA avancée : 2 à 60 crédits selon la
-                longueur. Solde, aide et navigation : gratuits.
-              </p>
-              <ul className="guide-points">
-                {packs.map((p) => (
-                  <li key={p.id}>
-                    <b>Pack {p.title}</b> : {p.credits.toLocaleString("fr-FR")}{" "}
-                    crédits pour {eur(p.priceCents)} TTC · {p.hint}
-                  </li>
-                ))}
-              </ul>
+              {(packs.length > 0 || welcomeCredits > 0) && (
+                <>
+                  <h3 className="guide-sub">Crédits</h3>
+                  <p>
+                    {welcomeCredits} crédits offerts à l’inscription. Réponse
+                    réflexe : 1 crédit. Analyse IA avancée : 2 à 60 crédits selon la
+                    longueur. Solde, aide et navigation : gratuits.
+                  </p>
+                  <ul className="guide-points">
+                    {packs.map((p) => (
+                      <li key={p.id}>
+                        <b>Pack {p.title}</b> : {p.credits.toLocaleString("fr-FR")}{" "}
+                        crédits pour {eur(p.priceCents)} TTC · {p.hint}
+                      </li>
+                    ))}
+                  </ul>
+                </>
+              )}
               <Link className="guide-practice" href="/dashboard">
                 <Wand2 size={15} aria-hidden /> Essayer STUDIO VOICE dans le poste
                 <ArrowRight size={15} aria-hidden />
@@ -487,7 +516,7 @@ export function GuidePage({ demo }: { demo: boolean }) {
               <h2>Évolutions et maintenance</h2>
               <p>
                 Studio ATS assure le développement, la maintenance et les
-                corrections de STUDIO OS. Voici les repères de la version
+                corrections de STUDIO S. Voici les repères de la version
                 présentée dans ce guide.
               </p>
               <div className="guide-cards">
@@ -545,7 +574,7 @@ export function GuidePage({ demo }: { demo: boolean }) {
               <span className="landing-eyebrow">Questions fréquentes</span>
               <h2>Vous vous demandez peut-être…</h2>
               <div className="guide-faq">
-                {faq.map(([q, a]) => (
+                {faq(welcomeCredits).map(([q, a]) => (
                   <details key={q}>
                     <summary>{q}</summary>
                     <p>{a}</p>
@@ -560,9 +589,16 @@ export function GuidePage({ demo }: { demo: boolean }) {
                 La visite interactive vous guide sur les vrais écrans, adaptée à
                 votre rôle. Vous pouvez agir vous-même à chaque étape.
               </p>
-              <Link className="landing-btn primary" href={tour("all")}>
-                <Play size={17} aria-hidden /> Lancer la visite interactive
-              </Link>
+              <div className="guide-hero-actions">
+                <Link className="landing-btn primary" href={tour("all")}>
+                  <Play size={17} aria-hidden /> Lancer la visite interactive
+                </Link>
+                {demoHref && (
+                  <Link className="landing-btn outline" href={demoHref}>
+                    Explorer la démo, avec ses données
+                  </Link>
+                )}
+              </div>
             </section>
           </div>
         </div>
@@ -570,16 +606,16 @@ export function GuidePage({ demo }: { demo: boolean }) {
 
       <footer className="landing-footer">
         <span className="landing-brand">
-          <UtensilsCrossed size={18} aria-hidden /> STUDIO OS
+          <Store size={18} aria-hidden /> STUDIO S
         </span>
         <nav aria-label="Liens utiles">
           <Link href="/">Accueil</Link>
-          {demo && <Link href="/demo">Démonstration</Link>}
-          {demo && <Link href="/site-demo">Exemple de site restaurant</Link>}
+          {demoHref && <Link href={demoHref}>Démonstration</Link>}
+          {demoSiteHref && <Link href={demoSiteHref} {...newTab}>Exemple de site de commerce</Link>}
           <Link href="/platform">Espace client</Link>
           <LegalLinks />
         </nav>
-        <small>© Wayne-web SAS · STUDIO OS, logiciel libre sous licence AGPL-3.0</small>
+        <small>© Wayne-web SAS · STUDIO S, logiciel libre sous licence AGPL-3.0</small>
       </footer>
       <PlatformCookieConsent />
     </div>

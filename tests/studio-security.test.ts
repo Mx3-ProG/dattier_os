@@ -7,8 +7,8 @@ import { before, after, test } from "node:test";
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import { PGlite } from "@electric-sql/pglite";
-import { migrate } from "../src/lib/database/migrate";
-import { seed } from "../src/lib/database/seed";
+import { migrate } from "../src/infrastructure/database/migrate";
+import { seed } from "../src/infrastructure/database/seed";
 import { website } from "../src/features/cms/service";
 import {
   securityScope,
@@ -16,9 +16,9 @@ import {
   securityAction,
 } from "../src/features/ops-security/service";
 import { emit } from "../src/features/ops-security/events";
-import { withDatabaseContext } from "../src/lib/database/context";
-import { nestedDatabase } from "../src/lib/database/nested";
-import type { DB } from "../src/lib/database/db";
+import { withDatabaseContext } from "../src/infrastructure/database/context";
+import { nestedDatabase } from "../src/infrastructure/database/nested";
+import type { DB } from "../src/infrastructure/database/db";
 let db: PGlite;
 const owner = { id: "nadia", name: "Nadia", role: "OWNER" as const };
 before(async () => {

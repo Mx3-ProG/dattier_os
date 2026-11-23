@@ -2,7 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { capabilities, type Capability } from "../src/core/modules/entitlements";
 import { requireCommercialCapability, requirePlan } from "../src/features/platform/entitlements";
-import type { DB } from "../src/lib/database/db";
+import type { DB } from "../src/infrastructure/database/db";
 
 test("named gates follow the single subscription and query the requested establishment", async () => {
   const thresholds = { operations:39,website:39,loyalty:39,finance:39,"online-orders":39 } as const;

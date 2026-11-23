@@ -1,8 +1,5 @@
 "use client";
-import {
-  activityPresentation,
-  activityCategories,
-} from "@/features/appearance/categories";
+import { activityPresentation, activityCategories } from "@/features/appearance/categories";
 import { CategoryBadge } from "./appearance/category-badge";
 import { Recipes } from "./recipes";
 import { Catalog } from "./catalog";
@@ -10,12 +7,13 @@ import { Customers } from "./customers";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useState } from "react";
-import type { Snapshot } from "@/lib/types";
-import { money, dateTime } from "@/lib/domain";
-import { roleLabels, teamRoles } from "@/lib/permissions";
+import type { Snapshot } from "@/shared/types";
+import { money, dateTime } from "@/domain/shared/units";
+import { roleLabels, teamRoles } from "@/core/permissions";
 import { Button } from "./ui/button";
 import { Form, Modal, Badge, type Act, type Field } from "./forms";
 import { QrButton } from "./qr/qr-portfolio";
+import { adaptText } from "@/core/tenant/vocabulary";
 type Editor = {
   title: string;
   fields: Field[];
@@ -32,6 +30,7 @@ export function Management({
   data: Snapshot;
   act: Act;
 }) {
+  const t = (text: string) => adaptText(text, data.restaurant.industry);
   const router = useRouter();
   const [activityFilter, setActivityFilter] = useState("all");
   const [editor, setEditor] = useState<Editor | null>(null),
@@ -49,7 +48,7 @@ export function Management({
     body = (
       <>
         <div className="section-heading">
-          <h2>Des stocks maîtrisés, un service serein.</h2>
+          <h2>{t("Des stocks maîtrisés, un service serein.")}</h2>
           <span className="pill">Lots expirés exclus du disponible</span>
         </div>
         <div className="card table-scroll">
@@ -321,7 +320,7 @@ export function Management({
                                 // Sans plan de salle actif, la réservation se gère sans table.
                                 ...(data.activeModules?.floor === false ? [] : [{
                                   name: "table",
-                                  label: "Table",
+                                  label: t("Table"),
                                   value: r.table_id || "",
                                   options: [
                                     { value: "", label: "Non affectée" },
@@ -365,7 +364,7 @@ export function Management({
         <div className="section-heading">
           <h2>
             {module === "suppliers"
-              ? "Nos partenaires de cuisine"
+              ? t("Nos partenaires de cuisine")
               : "Approvisionnements & réceptions"}
           </h2>
           <div className="actions">
@@ -677,13 +676,14 @@ export function Management({
       </>
     );
   if (module === "customers") body = <Customers data={data} act={act} />;
-  if (module === "menu") body = <Catalog data={data} act={act} />;
+  if (module === "menu" || module === "products") body = <Catalog data={data} act={act} />;
+  if (module === "services") body = <ServicesCatalog />;
   if (module === "recipes")
     body = <Recipes data={data} act={act} query={query} />;
   if (module === "activity")
     body = (
       <>
-        <h2>Le fil du restaurant</h2>
+        <h2>{t("Le fil du restaurant")}</h2>
         <div
           className="activity-filters"
           role="group"
@@ -902,6 +902,47 @@ export function Management({
             onSubmit={async (v) => {
               await editor.submit(v);
               setEditor(null);
+            }}
+          />
+        </Modal>
+      )}
+    </>
+  );
+}
+
+export function ServicesCatalog() {
+  const [items, setItems] = useState<{ id: string; name: string; price: string; description: string }[]>([]);
+  const [open, setOpen] = useState(false);
+  return (
+    <>
+      <div className="section-heading">
+        <h2>Services</h2>
+        <Button onClick={() => setOpen(true)}>Ajouter un service</Button>
+      </div>
+      {items.length === 0 && <p className="empty">Aucun service enregistré.</p>}
+      <div className="three-grid">
+        {items.map((s) => (
+          <article className="card" key={s.id}>
+            <h3>{s.name}</h3>
+            <b>{s.price}</b>
+            <p className="muted">{s.description}</p>
+          </article>
+        ))}
+      </div>
+      {open && (
+        <Modal title="Ajouter un service" close={() => setOpen(false)}>
+          <Form
+            fields={[
+              { name: "name", label: "Nom du service" },
+              { name: "price", label: "Prix (€)", type: "number", min: 0, step: "0.01" },
+              { name: "description", label: "Description", required: false },
+            ]}
+            onSubmit={async (v) => {
+              setItems((prev) => [
+                ...prev,
+                { id: crypto.randomUUID(), name: v.name, price: v.price, description: v.description || "" },
+              ]);
+              setOpen(false);
             }}
           />
         </Modal>

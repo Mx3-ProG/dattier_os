@@ -2,6 +2,7 @@
 import { useEffect, useState, type FormEvent } from "react";
 import Link from "next/link";
 import { callAuth, openSession, type SupabasePublic } from "./password-auth";
+import { NewPasswordFields, newPasswordError } from "./password-field";
 
 type State =
   | { step: "working" }
@@ -9,13 +10,16 @@ type State =
   | { step: "failed"; message: string };
 
 /**
- * Landing page of the links Supabase e-mails (sign-up confirmation, password
- * recovery). Handles the default link format (tokens in the URL fragment) and
- * custom templates passing `token_hash`, so it works from any device.
+ * Landing page of the links Supabase e-mails (sign-up confirmation, magic
+ * link, password recovery, e-mail change). Handles the default link format
+ * (tokens in the URL fragment) and the custom templates of
+ * docs/platform/email-templates, which pass `token_hash` so the token is only
+ * spent here (not by mail link scanners) and works from any device.
  */
 export function AuthConfirmation({ config, returnTo }: { config: SupabasePublic; returnTo: string }) {
   const [state, setState] = useState<State>({ step: "working" });
   const [password, setPassword] = useState("");
+  const [confirm, setConfirm] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
 
@@ -54,10 +58,17 @@ export function AuthConfirmation({ config, returnTo }: { config: SupabasePublic;
   async function choosePassword(event: FormEvent) {
     event.preventDefault();
     if (state.step !== "recovery" || busy) return;
-    if (password.length < 8) { setError("Mot de passe trop faible : 8 caractères minimum."); return; }
+    const weak = newPasswordError(password, confirm);
+    if (weak) { setError(weak); return; }
     setBusy(true); setError("");
     try {
-      await callAuth(config, "user", { password }, { method: "PUT", token: state.token });
+      const response = await fetch("/auth/password", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ accessToken: state.token, password, confirm }),
+      });
+      const data = (await response.json().catch(() => ({}))) as { error?: string };
+      if (!response.ok) throw new Error(data.error || "Changement impossible pour le moment. Réessayez.");
       await openSession(state.token, returnTo);
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e));
@@ -71,11 +82,8 @@ export function AuthConfirmation({ config, returnTo }: { config: SupabasePublic;
       <>
         <span className="access-label">Espace client</span>
         <h1>Nouveau mot de passe</h1>
-        <form className="access-form" onSubmit={choosePassword}>
-          <label>
-            Mot de passe
-            <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} autoComplete="new-password" minLength={8} required />
-          </label>
+        <form className="access-form" onSubmit={choosePassword} noValidate>
+          <NewPasswordFields password={password} confirm={confirm} onPassword={setPassword} onConfirm={setConfirm} />
           {error && <p role="alert" className="access-error">{error}</p>}
           <button className="access-primary" disabled={busy}>{busy ? "Un instant…" : "Enregistrer et me connecter"}</button>
         </form>

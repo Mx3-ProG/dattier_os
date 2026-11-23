@@ -1,18 +1,7 @@
 import { NextRequest } from "next/server";
-import {
-  authenticated,
-  assertOrigin,
-  failure,
-  json,
-  rateLimit,
-  readBody,
-} from "@/features/platform/http";
+import { authenticated, assertOrigin, failure, json, rateLimit, readBody } from "@/features/platform/http";
 import { withRequestContext } from "@/features/ops-security/context";
-import {
-  readModuleSettings,
-  requestModuleSetting,
-  applyModuleSetting,
-} from "@/features/modules/service";
+import { readModuleSettings, requestModuleSetting, applyModuleSetting } from "@/features/modules/service";
 
 export const runtime = "nodejs";
 type Context = { params: Promise<{ restaurant: string }> };

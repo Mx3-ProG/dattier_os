@@ -3,16 +3,15 @@ import { createReward, rewardSchema } from "@/features/loyalty/service";
 import { offlinePerform } from "@/features/offline/service";
 import { securityAction } from "./security";
 import { z } from "zod";
-import { rows, one, type DB } from "@/lib/database/db";
-import { scope, type Actor } from "@/lib/auth/session";
-import { requirePermission } from "@/lib/permissions";
+import { rows, one, type DB } from "@/infrastructure/database/db";
+import { scope, type Actor } from "@/infrastructure/auth/session";
+import { requirePermission } from "@/core/permissions";
 import { commerce } from "@/features/commerce/service";
 import { siteState, sitePerform } from "@/features/site/service";
 import { platformPerform } from "./service";
 import { log } from "@/features/orders/service";
 import { inventoryPerform, inventoryState } from "./inventory";
 import { seoPerform, seoState } from "@/features/seo/admin";
-import { requireRestaurantIndustry } from "@/features/onboarding/access";
 export async function adminState(
   db: DB,
   r: string,
@@ -21,7 +20,6 @@ export async function adminState(
   after = 0,
 ) {
   user = await scope(db, user, r);
-  if (["shop","inventory"].includes(module)) await requireRestaurantIndustry(db,r);
   if (["site", "seo", "loyalty"].includes(module)) await requireCommercialCapability(db, r, module === "loyalty" ? "loyalty" : "website");
   if (module === "site") return siteState(db, r, user);
   if (module === "seo") return seoState(db, r, user);
@@ -154,7 +152,6 @@ export async function adminPerform(
   raw: unknown,
 ) {
   user = await scope(db, user, r);
-  if (["shop","inventory"].includes(module)) await requireRestaurantIndustry(db,r);
   if (["site", "seo", "loyalty"].includes(module)) await requireCommercialCapability(db, r, module === "loyalty" ? "loyalty" : "website");
   if (module === "site") return sitePerform(db, r, user, raw);
   if (module === "seo") return seoPerform(db, r, user, raw);

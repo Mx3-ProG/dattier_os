@@ -1,4 +1,4 @@
-import { PostgresDatabase } from "../src/lib/database/postgres";
+import { PostgresDatabase } from "../src/infrastructure/database/postgres";
 const email = process.argv[2],
   url = process.env.MIGRATION_DATABASE_URL;
 if (!url || !email || !email.includes("@"))

@@ -1,19 +1,7 @@
 import { NextRequest } from "next/server";
 import { withRequestContext } from "@/features/ops-security/context";
-import {
-  assertOrigin,
-  authenticated,
-  failure,
-  json,
-  readBody,
-} from "@/features/platform/http";
-import {
-  ask,
-  askSchema,
-  assistantState,
-  packSchema,
-  requestPack,
-} from "@/features/assistant/service";
+import { assertOrigin, authenticated, failure, json, readBody } from "@/features/platform/http";
+import { ask, askSchema, assistantState, packSchema, requestPack } from "@/features/assistant/service";
 import { requireRestaurantIndustry } from "@/features/onboarding/access";
 
 export const runtime = "nodejs";

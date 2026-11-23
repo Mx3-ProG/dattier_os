@@ -1,4 +1,4 @@
-import type { Snapshot } from "@/lib/types";
+import type { Snapshot } from "@/shared/types";
 
 /** Corps envoyé tel quel à POST /api/v1/action après confirmation. Une valeur
     « $N » est remplacée par l’identifiant renvoyé par la N-ième action de la

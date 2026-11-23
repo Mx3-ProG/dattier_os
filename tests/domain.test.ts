@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { convert, portions } from "../src/lib/domain";
-import { can, requirePermission } from "../src/lib/permissions";
+import { convert, portions } from "../src/domain/shared/units";
+import { can, requirePermission } from "../src/core/permissions";
 test("conversions explicites, incompatibilités et portions limitantes", () => {
   assert.equal(convert(2, "kg", "g"), 2000);
   assert.equal(convert(300, "ml", "l"), 0.3);

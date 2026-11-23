@@ -1,6 +1,6 @@
 import { z } from "zod";
-import type { DB } from "@/lib/database/types";
-import { scope, type Actor } from "@/lib/auth/session";
+import type { DB } from "@/infrastructure/database/types";
+import { scope, type Actor } from "@/infrastructure/auth/session";
 import { moduleRegistry } from "@/core/modules/catalog";
 import {
   legacyBusinessModules,

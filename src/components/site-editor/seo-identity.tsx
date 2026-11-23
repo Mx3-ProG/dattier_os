@@ -1,11 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
-import {
-  businessTypes,
-  redirectSchema,
-  type Business,
-  type SiteConfig,
-} from "@/features/cms/schema";
+import { businessTypes, redirectSchema } from "@/features/cms/schema";
+import { type Business, type SiteConfig } from "@/features/cms/public";
 
 type Update = (mutate: (c: SiteConfig) => void, key?: string) => void;
 

@@ -16,12 +16,12 @@ test("Studio : édition publiée, aperçus responsive et centre de sécurité", 
   await page.goto("/demo");
   await page.getByRole("button", { name: /Nadia/ }).click();
   await expect(page).toHaveURL(/dashboard/);
-  await page.goto("/restaurant/bernay");
+  await page.goto("/commerce/bernay");
   await page.getByRole("button", { name: "Domaines", exact: true }).click();
   await expect(
     page.getByRole("heading", { name: "Domaine personnalisé" }),
   ).toBeVisible();
-  await page.goto("/restaurant/bernay/site");
+  await page.goto("/commerce/bernay/site");
   await page
     .getByRole("combobox", { name: "Page à modifier" })
     .selectOption("compte");
@@ -90,7 +90,7 @@ test("Studio : édition publiée, aperçus responsive et centre de sécurité", 
       ),
     ).toBeTruthy();
   }
-  await page.goto("/restaurant/bernay/security");
+  await page.goto("/commerce/bernay/security");
   await page.getByRole("tab", { name: "Journal d’activité" }).click();
   await expect(
     page.getByRole("heading", { name: "Sécurité opérationnelle" }),

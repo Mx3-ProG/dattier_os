@@ -1,7 +1,7 @@
 "use client";
 import dynamic from "next/dynamic";
 import type { CSSProperties, ComponentType } from "react";
-import type { LoadingRendererId } from "@/features/addons/loading-screens";
+import type { LoadingRendererId } from "@/features/addons/public";
 import { isThemedVisual } from "@/features/cms/themed-visuals";
 import "./engine.css";
 

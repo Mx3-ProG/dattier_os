@@ -1,6 +1,6 @@
 "use client";
 import { useCallback, useEffect, useState } from "react";
-import { dateTime, money } from "@/lib/domain";
+import { dateTime, money } from "@/domain/shared/units";
 import { Form, Modal, type Field } from "./forms";
 import { Button } from "./ui/button";
 
@@ -620,7 +620,7 @@ export function FinanceCenter({ restaurant }: { restaurant: string }) {
           </tbody>
         </table>
         {!state.products.length && (
-          <p className="empty">Aucun produit à la carte.</p>
+          <p className="empty">Aucun produit au catalogue.</p>
         )}
       </div>
 

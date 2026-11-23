@@ -1,10 +1,10 @@
 import { requirePlan } from "@/features/platform/entitlements";
 import { withRequestContext } from "@/features/ops-security/context";
 import { NextRequest, NextResponse } from "next/server";
-import { withDatabaseContext } from "@/lib/database/context";
-import { getDb } from "@/lib/database/db";
+import { withDatabaseContext } from "@/infrastructure/database/context";
+import { getDb } from "@/infrastructure/database/db";
 import { openAsset, resolveAsset, resolveStaffAsset } from "@/features/site/media";
-import { actor, scope } from "@/lib/auth/session";
+import { actor, scope } from "@/infrastructure/auth/session";
 import { MEDIA_CSP } from "@/lib/security/csp";
 async function staffPreview(restaurant: string, asset: string) {
   const user = await actor().catch(() => null);

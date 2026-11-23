@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { appOrigin } from "@/lib/auth/oidc";
+import { appOrigin } from "@/infrastructure/auth/oidc";
 import { reconcilePlanSession } from "@/features/platform/plan-billing";
 
 export const runtime = "nodejs";

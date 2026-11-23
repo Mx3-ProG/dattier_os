@@ -4,7 +4,7 @@ import { foodMedia } from "./food-media";
 import Link from "next/link";
 import { Fragment } from "react";
 import { ArrowUpRight, ChevronDown, MapPin, Phone } from "lucide-react";
-import type { MenuItem, Restaurant } from "@/lib/types";
+import type { MenuItem, Restaurant } from "@/shared/types";
 import { homeAnchors, sitePath } from "./navigation";
 import { QuickBooking, TiltCard, useHeroMotion } from "./home-motion";
 

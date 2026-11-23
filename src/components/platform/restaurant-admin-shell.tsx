@@ -25,16 +25,21 @@ import {
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { useEffect, useState, type ReactNode } from "react";
-import { can, roleLabels, type Role } from "@/lib/permissions";
-import {
-  availableRestaurantModules,
-  restaurantModuleHref,
-  type RestaurantModuleId,
-} from "@/features/platform/admin-navigation";
-import { CuisineIa } from "@/components/assistant/cuisine-ia";
+import { can, roleLabels, type Role } from "@/core/permissions";
+import { availableRestaurantModules, restaurantModuleHref } from "@/features/platform/admin-navigation";
+import { type RestaurantModuleId } from "@/features/platform/public";
+import dynamic from "next/dynamic";
+const CuisineIa = dynamic(
+  () =>
+    import("@/components/assistant/cuisine-ia")
+      .then((m) => m.CuisineIa)
+      .catch(() => () => null),
+  { ssr: false },
+);
 import { AdminTutorial } from "@/components/tutorial/tour";
-import type { Industry } from "@/features/onboarding/catalog";
+import type { Industry } from "@/features/onboarding/public";
 import "./platform.css";
+import { adaptText } from "@/core/tenant/vocabulary";
 
 const moduleIcons = {
   team: UsersRound,
@@ -53,6 +58,7 @@ const moduleDescriptions: Partial<Record<RestaurantModuleId, string>> = {
   team: "Les bonnes personnes, les bons accès. Organisez votre équipe en toute simplicité.",
   shop: "Votre boutique, vos commandes en ligne et les retours de vos clients, au même endroit.",
   loyalty: "Donnez à vos clients de bonnes raisons de revenir.",
+  site: "Votre présence en ligne, à votre image.",
   domains:
     "Votre restaurant, à sa propre adresse. Gérez les domaines de votre site.",
   seo: "Aidez vos futurs clients à vous trouver sur les moteurs de recherche et les assistants IA.",
@@ -90,14 +96,17 @@ export function RestaurantAdminShell({
   demo?: boolean;
 }) {
   const [mobile, setMobile] = useState(false);
-  const modules = availableRestaurantModules(userRoles, plan, addons, industry);
+  const modules = availableRestaurantModules(userRoles, plan, addons);
   const dashboard = `/dashboard?restaurant=${encodeURIComponent(restaurant)}`;
   const isSite = activeModule === "site";
-  const title = isSite
-    ? "Mon site web"
-    : modules.find((m) => m.id === activeModule)?.label ||
-      pageTitle ||
-      "Mon établissement";
+  const title = adaptText(
+    isSite
+      ? "Mon site web"
+      : modules.find((m) => m.id === activeModule)?.label ||
+        pageTitle ||
+        "Mon établissement",
+    industry,
+  );
   useEffect(() => {
     if (!mobile) return;
     const close = (event: KeyboardEvent) => {
@@ -138,7 +147,7 @@ export function RestaurantAdminShell({
             <LayoutDashboard size={18} />
             Vue d’ensemble
           </Link>
-          <span className="nav-group">MON RESTAURANT</span>
+          <span className="nav-group">{adaptText("Mon restaurant", industry).toUpperCase()}</span>
           {modules.map(({ id, label }) => {
             const Icon = moduleIcons[id];
             return (
@@ -152,7 +161,7 @@ export function RestaurantAdminShell({
                 onClick={() => setMobile(false)}
               >
                 <Icon size={18} />
-                <span>{id === "site" ? "Mon site web" : label}</span>
+                <span>{adaptText(id === "site" ? "Mon site web" : label, industry)}</span>
               </Link>
             );
           })}
@@ -230,7 +239,7 @@ export function RestaurantAdminShell({
               <span>{restaurantName} · MON ÉTABLISSEMENT</span>
               <h1>{title}</h1>
               {activeModule && moduleDescriptions[activeModule] && (
-                <p>{moduleDescriptions[activeModule]}</p>
+                <p>{adaptText(moduleDescriptions[activeModule] ?? "", industry)}</p>
               )}
             </div>
           )}
@@ -243,10 +252,13 @@ export function RestaurantAdminShell({
         )}
       </div>
       {industry === "restaurant" && <CuisineIa restaurant={restaurant} />}
-      {industry === "restaurant" && <AdminTutorial
+      {<AdminTutorial
         restaurant={restaurant}
         surface={`admin:${activeModule ?? ""}`}
       />}
     </AppearanceScope>
   );
 }
+
+// Alias neutre pour la vision multi-métiers (compatibilité conservée).
+export { RestaurantAdminShell as BusinessAdminShell };

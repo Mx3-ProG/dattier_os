@@ -15,7 +15,7 @@ import {
   PUBLIC_INSERT_ONLY_TABLES,
   PUBLIC_ROOT_TABLES,
   PUBLIC_TABLES,
-} from "../src/lib/database/public-tables";
+} from "../src/infrastructure/database/public-tables";
 
 /**
  * Deux clients, deux organisations : aucune donnée ne doit passer de l'un à l'autre.

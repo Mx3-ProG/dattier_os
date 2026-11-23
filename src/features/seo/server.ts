@@ -1,6 +1,6 @@
 import { cache } from "react";
-import { getDb, rows, type DB } from "@/lib/database/db";
-import { withDatabaseContext } from "@/lib/database/context";
+import { getDb, rows, type DB } from "@/infrastructure/database/db";
+import { withDatabaseContext } from "@/infrastructure/database/context";
 import { DEFAULT_LOCALE, safeLanguage } from "./locale";
 
 /** Published language of a site, for <html lang>. Falls back to French on any error. */

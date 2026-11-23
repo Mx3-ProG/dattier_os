@@ -1,0 +1,13 @@
+DROP FUNCTION IF EXISTS app.crm_public_inquiry(text,text,text,text,text);
+DROP TABLE IF EXISTS public.crm_proposal_deliveries;
+DROP TABLE IF EXISTS public.crm_inquiries;
+DROP TRIGGER IF EXISTS crm_proposal_guard ON public.crm_opportunities;
+DROP FUNCTION IF EXISTS app.crm_proposal_guard();
+ALTER TABLE public.crm_opportunities DROP COLUMN IF EXISTS follow_up_at;
+ALTER TABLE public.crm_opportunities DROP COLUMN IF EXISTS valid_until;
+ALTER TABLE public.crm_opportunities DROP COLUMN IF EXISTS proposal_description;
+ALTER TABLE public.crm_opportunities DROP COLUMN IF EXISTS proposal_sent_at;
+ALTER TABLE public.crm_opportunities DROP COLUMN IF EXISTS proposal_status;
+ALTER TABLE public.crm_opportunities DROP COLUMN IF EXISTS customer_id;
+DROP INDEX IF EXISTS public.customers_restaurant_id_id;
+DELETE FROM schema_versions WHERE version=141;

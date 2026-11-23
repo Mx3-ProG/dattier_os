@@ -1,12 +1,12 @@
 import { z } from "zod";
-import type { DB } from "@/lib/database/types";
-import { scope, type Actor } from "@/lib/auth/session";
-import { requirePermission } from "@/lib/permissions";
+import type { DB } from "@/infrastructure/database/types";
+import { scope, type Actor } from "@/infrastructure/auth/session";
+import { requirePermission } from "@/core/permissions";
 import { pilotageWidgets, type PilotageWidgetId } from "./catalog";
 const ids = new Set<string>(pilotageWidgets.map((w) => w.id));
 export const pilotageSaveSchema = z
   .object({
-    hidden: z.array(z.string().refine((id) => ids.has(id))).max(10),
+    hidden: z.array(z.string().refine((id) => ids.has(id))).max(40),
     revision: z.number().int().min(0).max(2147483646),
   })
   .strict();

@@ -1,22 +1,9 @@
 "use client";
 import { useState, useEffect } from "react";
 import dynamic from "next/dynamic";
-import {
-  addonCollections,
-  addonDetails,
-  addonDestination,
-  addonPriceCents,
-  monthlyAddonIds,
-} from "@/features/addons/catalog";
-import {
-  defaultStoreFilters,
-  featuresVisible,
-  installedAddonCount,
-  pilotageCategoryId,
-  pilotageMonthlyAddonIds,
-  featuresCategoryId,
-  type StoreState,
-} from "@/features/addons/store-catalog";
+import { addonCollections, addonDetails, addonDestination, addonPriceCents, monthlyAddonIds } from "@/features/addons/catalog";
+import { defaultStoreFilters, featuresVisible, installedAddonCount, pilotageCategoryId, pilotageMonthlyAddonIds, featuresCategoryId } from "@/features/addons/store-catalog";
+import { type StoreState } from "@/features/addons/public";
 
 import { Button } from "./ui/button";
 import { ModuleDisplayContext, ModuleDisplayControl } from "./addons/module-display";
@@ -423,7 +410,7 @@ export function AddonsCenter({
           {view === "shop" && (
             <p>
               <strong>Tarif mensuel TTC indiqué sur chaque add-on.</strong>{" "}
-              {state?.demo ? "Ces abonnements sont utilisables dans la démo sans paiement. Sur un établissement réel, leur tarif reste applicable." : "Par établissement. Les achats ouvrent progressivement ; le paiement est disponible en mode test pour les modules configurés."}
+              {state?.demo ? "Ces abonnements sont utilisables dans la démo sans paiement. Sur un établissement réel, leur tarif reste applicable." : "Par établissement, sans engagement : paiement sécurisé par Stripe, résiliable à tout moment depuis cette page."}
             </p>
           )}
           {!collections && (
@@ -567,9 +554,9 @@ export function AddonsCenter({
                         : addon.included
                         ? state?.legacyGrants.includes(addon.id) ? "Accès historique conservé" : "Inclus dans votre forfait"
                         : addon.active
-                          ? "Actif · abonnement de test"
+                          ? "Actif · abonnement mensuel"
                           : addon.pending
-                            ? "Paiement de test en attente"
+                            ? "Paiement en attente de confirmation"
                             : `${addonPriceCents(addon.id) / 100} € TTC / mois`}
                     </strong>
                   </p>
@@ -620,7 +607,7 @@ export function AddonsCenter({
                     addon.includedFrom === null &&
                     !state?.readyAddons.includes(addon.id) && (
                       <p>
-                        L’achat en mode test n’est pas encore ouvert pour cet
+                        Le paiement en ligne sera disponible très bientôt pour cet
                         établissement.
                       </p>
                     )}
@@ -695,7 +682,7 @@ export function AddonsCenter({
                       {addon.included
                         ? "Aucun supplément d’abonnement pour cette fonctionnalité. Les permissions de chaque membre continuent de s’appliquer."
                         : addon.active
-                          ? "L’abonnement de test est actif jusqu’à la fin de sa période payée. Les permissions de chaque membre continuent de s’appliquer."
+                          ? "L’abonnement est actif jusqu’à la fin de sa période payée. Les permissions de chaque membre continuent de s’appliquer."
                           : "L’ajout d’une fonctionnalité bénéficiera à votre équipe dans cet établissement, selon les droits de chaque membre."}
                     </p>
                   </details>
@@ -734,10 +721,10 @@ export function AddonsCenter({
           {credits?.admin && credits.ready ? (
             <div style={{ display: "flex", flexWrap: "wrap", gap: 12 }}>
               {credits.packs.map((pack) => <Button key={pack} disabled={busy} onClick={() => void buyCredits(pack)}>
-                Acheter {(pack / 100).toFixed(2)} € de crédits · test
+                Acheter {(pack / 100).toFixed(2)} € de crédits
               </Button>)}
             </div>
-          ) : <p>Recharge de test indisponible actuellement.</p>}
+          ) : <p>Recharge en ligne indisponible actuellement.</p>}
           {credits?.admin && credits.orders.length > 0 && <section aria-label="Historique des recharges">
             <h3>Recharges récentes</h3>
             <ul>{credits.orders.map((order) => <li key={order.id}>
