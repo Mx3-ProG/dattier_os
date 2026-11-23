@@ -5,6 +5,7 @@ import { PGlite } from "@electric-sql/pglite";
 import { migrate } from "../src/infrastructure/database/migrate";
 import { seed } from "../src/infrastructure/database/seed";
 import { grantDemoAddons } from "../src/infrastructure/database/demo-addons";
+import { freeTradeTools } from "../src/features/onboarding/catalog";
 import { monthlyAddonIds } from "../src/features/addons/catalog";
 
 test("la démo donne accès à chaque add-on payant visible sans simuler un achat", async () => {
@@ -29,6 +30,12 @@ test("la démo donne accès à chaque add-on payant visible sans simuler un acha
       const fakePayments = await db.query<{ count: number }>("SELECT count(*)::int AS count FROM addon_purchases WHERE restaurant_id=$1", [restaurant]);
       assert.equal(fakePayments.rows[0].count, 0);
     }
+    for (const tool of freeTradeTools.restaurant.filter(id => !id.startsWith("ops-"))) {
+      const result = await db.query<{ available: boolean }>("SELECT app.addon_installed('bernay',$1) AS available", [tool]);
+      assert.equal(result.rows[0].available, true, `Restaurant demo: ${tool}`);
+    }
+    const unrelated = await db.query<{ count: number }>("SELECT count(*)::integer AS count FROM addon_licenses WHERE restaurant_id='bernay' AND product_id='site-planning'");
+    assert.equal(unrelated.rows[0].count, 0, "a restaurant does not receive construction tools");
     const demoLicense = await db.query<{ source: string }>("SELECT source FROM addon_licenses WHERE restaurant_id='bernay' AND product_id='liquid-flow'");
     assert.equal(demoLicense.rows[0].source, "demo");
   } finally {

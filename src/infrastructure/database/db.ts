@@ -120,9 +120,9 @@ export async function getDb(): Promise<Database> {
   // Enregistré ici, une fois par processus, y compris dans un serveur déjà lancé.
   if (!publicDemoEnabled()) closeOnShutdown(() => db.close());
   await migrate(db);
-  if (globalDb.demoAddonGrantsVersion !== 1) {
+  if (globalDb.demoAddonGrantsVersion !== 2) {
     await db.transaction(grantDemoAddons);
-    globalDb.demoAddonGrantsVersion = 1;
+    globalDb.demoAddonGrantsVersion = 2;
   }
   return db;
 }
