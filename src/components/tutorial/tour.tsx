@@ -1046,7 +1046,7 @@ function Finished({
   );
 }
 
-/** Reprend dans l’administration du restaurant une visite commencée ailleurs. */
+/** Reprend dans l’administration du commerce une visite commencée ailleurs. */
 export function AdminTutorial({
   restaurant,
   surface,
